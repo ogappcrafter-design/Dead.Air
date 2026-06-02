@@ -1,0 +1,30 @@
+{
+  "name": "dead-air-radio",
+  "version": "1.0.0",
+  "description": "A paranormal late-night radio game",
+  "main": "node_modules/expo/AppEntry.js",
+  "scripts": {
+    "start": "expo start",
+    "web": "expo start --web",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "build-android": "eas build --platform android",
+    "build-ios": "eas build --platform ios",
+    "eject": "expo eject"
+  },
+  "dependencies": {
+    "expo": "^51.0.0",
+    "expo-constants": "^16.0.0",
+    "expo-device": "^6.0.0",
+    "expo-file-system": "^16.0.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-native": "^0.74.0",
+    "react-native-web": "^0.19.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.22.0",
+    "babel-preset-expo": "^10.0.0"
+  },
+  "private": true
+}
