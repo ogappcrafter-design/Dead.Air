@@ -1,18 +1,14 @@
 {
   "expo": {
     "name": "Dead.Air",
-    "slug": "dead-air-radio",
+    "slug": "dead-air-opal",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
-    "splash": {
-      "image": "./assets/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#000000"
-    },
+
     "ios": {
-      "supportsTabletMode": true
+      "supportsTablet": true
     },
     "android": {
       "adaptiveIcon": {
@@ -24,11 +20,19 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
+    "extra": {
+      "eas": {
+        "projectId": "c4d8ec91-b038-4fc5-83a8-af266aeca7ff"
+      }
+    },
+    "owner": "daggerstuffer",
     "plugins": [
       [
-        "expo-font",
+        "expo-splash-screen",
         {
-          "fonts": []
+          "image": "./assets/splash.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#000000"
         }
       ]
     ]
