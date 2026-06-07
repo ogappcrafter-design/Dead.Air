@@ -4,7 +4,7 @@ import {
   StyleSheet, ActivityIndicator
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { CALLS, BANDS, ALL_TAPES, BAND_VIBES, SYM } from './Calls';
+import { CALLS, BANDS, ALL_TAPES, BAND_VIBES, SYM } from './calls';
 
 async function generateAICall(band, recentNames) {
   const prompt = `You are writing a paranormal radio call for DEAD AIR RADIO, an atmospheric horror mobile game.
