@@ -9,6 +9,7 @@
     "@react-native-async-storage/async-storage": "2.2.0",
     "expo": "~56.0.0",
     "expo-font": "~56.0.5",
+    "expo-insights": "~56.0.16",
     "expo-splash-screen": "~56.0.10",
     "expo-updates": "~56.0.18",
     "react": "19.2.3",
@@ -26,5 +27,8 @@
   },
   "overrides": {
     "uuid": "^11.1.1"
+  },
+  "allowScripts": {
+    "msgpackr-extract@3.0.4": true
   }
 }
