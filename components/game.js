@@ -284,4 +284,261 @@ function StayCalm({ call, onComplete }) {
     pRef.current = np;
     setPr(np);
   };
-  const pc = pr < 40 ? '#
+  const pc = pr < 40 ? '#39FF14' : pr < 70 ? '#FF8C00' : '#FF3366';
+  return (
+    <View style={{ flex: 1 }}>
+      <View style={{ alignItems: 'center', paddingVertical: 16 }}>
+        <Text style={mg.timer}>{tl > 0 ? `00:${String(tl).padStart(2, '0')}` : '─ ─ ─'}</Text>
+        <Text style={mg.timerSub}>{st === 'live' ? 'STAY CALM' : st === 'won' ? 'SIGNAL HELD' : 'SIGNAL LOST'}</Text>
+      </View>
+      <View style={mg.calmBar}>
+        <View style={[mg.calmFill, { width: `${pr}%`, backgroundColor: pc }]} />
+      </View>
+      <Text style={[mg.timerSub, { marginBottom: 16 }]}>ANXIETY LEVEL</Text>
+      {st === 'live' && (
+        <TouchableOpacity style={[g.btn, { borderColor: '#39FF14', borderWidth: 1, marginBottom: 10 }]} onPress={breathe}>
+          <Text style={[g.btnAmberText, { color: '#39FF14' }]}>◈ BREATHE</Text>
+        </TouchableOpacity>
+      )}
+      {st === 'won' && (
+        <TouchableOpacity style={[g.btn, g.btnAmber]} onPress={() => onComplete({ sanityDelta: call.sanityDelta || 0, staticMult: 1, tape: !!call.tape, tapeName: call.tapeName, outcome: 'You held your nerve.' })}>
+          <Text style={g.btnAmberText}>END CALL</Text>
+        </TouchableOpacity>
+      )}
+      {st === 'lost' && (
+        <TouchableOpacity style={[g.btn, { borderColor: '#FF3366', borderWidth: 1 }]} onPress={() => onComplete({ sanityDelta: -(call.sanityPenalty || 18), staticMult: 0.5, tape: false, outcome: 'You lost control.' })}>
+          <Text style={[g.btnAmberText, { color: '#FF3366' }]}>END CALL</Text>
+        </TouchableOpacity>
+      )}
+    </View>
+  );
+}
+
+export default function Game({ saveData, purchases, onSave, onOpenStore, onPurchaseInfinite }) {
+  const { sanity, bal, done, tapes, genCount } = saveData;
+  const [activeBand, setActiveBand] = useState(0);
+  const [activeCall, setActiveCall] = useState(null);
+  const [generating, setGenerating] = useState(false);
+  const [genErr, setGenErr] = useState(null);
+  const [tab, setTab] = useState('calls');
+
+  const unlockedBands = BANDS.filter(b => {
+    if (b.unlockAt === 0) return true;
+    if (b.id === 1 && purchases.baseUnlocked) return true;
+    if (b.id === 2 && purchases.baseUnlocked) return true;
+    if (b.id === 3 && purchases.baseUnlocked) return true;
+    if (b.id === 4 && purchases.baseUnlocked) return true;
+    return done.length >= b.unlockAt;
+  });
+
+  const bandCalls = CALLS.filter(c => c.band === activeBand && !done.includes(c.id));
+  const canGenerate = purchases.infiniteUnlocked || genCount < 3;
+
+  const startCall = (call) => setActiveCall(call);
+
+  const handleComplete = async ({ sanityDelta, staticMult, tape, tapeName, outcome }) => {
+    const reward = Math.round((activeCall.staticReward || 60) * staticMult);
+    const newSanity = Math.max(0, Math.min(100, sanity + sanityDelta));
+    const newBal = bal + reward;
+    const newDone = [...done, activeCall.id];
+    const newTapes = tape && tapeName && !tapes.includes(tapeName) ? [...tapes, tapeName] : tapes;
+    const newGenCount = activeCall.generated ? genCount + 1 : genCount;
+    setActiveCall(null);
+    await onSave({ sanity: newSanity, bal: newBal, done: newDone, tapes: newTapes, genCount: newGenCount });
+  };
+
+  const handleGenerate = async () => {
+    if (!canGenerate) return;
+    setGenerating(true);
+    setGenErr(null);
+    try {
+      const band = BANDS[activeBand];
+      const recentNames = CALLS.filter(c => c.band === activeBand).map(c => c.callerName).slice(-5);
+      const call = await generateAICall(band, recentNames);
+      setActiveCall(call);
+    } catch (e) {
+      setGenErr('SIGNAL LOST. Try again.');
+    }
+    setGenerating(false);
+  };
+
+  const band = BANDS[activeBand];
+
+  if (activeCall) {
+    return (
+      <View style={g.screen}>
+        <View style={g.callHeader}>
+          <View>
+            <Text style={[g.callerId, { color: band.color }]}>{activeCall.callerId}</Text>
+            <Text style={g.callerName}>{activeCall.callerName}</Text>
+          </View>
+          <Bars n={activeCall.signal} color={band.color} />
+        </View>
+        <View style={g.callBody}>
+          {activeCall.type === 'JUST_LISTEN' && <JustListen call={activeCall} onComplete={handleComplete} />}
+          {activeCall.type === 'DEAD_AIR' && <DeadAir call={activeCall} onComplete={handleComplete} />}
+          {activeCall.type === 'RIGHT_ANSWER' && <RightAnswer call={activeCall} onComplete={handleComplete} />}
+          {activeCall.type === 'SIGNAL_DECODE' && <SignalDecode call={activeCall} onComplete={handleComplete} />}
+          {activeCall.type === 'STAY_CALM' && <StayCalm call={activeCall} onComplete={handleComplete} />}
+        </View>
+      </View>
+    );
+  }
+
+  return (
+    <View style={g.screen}>
+      {/* Header */}
+      <View style={g.header}>
+        <Text style={g.logo}>◈ DEAD AIR</Text>
+        <View style={g.headerRight}>
+          <Text style={g.stat}><Text style={g.statVal}>{sanity}</Text> SAN</Text>
+          <Text style={g.stat}><Text style={g.statVal}>{bal}</Text> ◈</Text>
+          <TouchableOpacity onPress={onOpenStore} style={g.storeBtn}>
+            <Text style={g.storeBtnText}>STORE</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* Band selector */}
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={g.bandRow} contentContainerStyle={{ paddingHorizontal: 16, gap: 10 }}>
+        {BANDS.map(b => {
+          const unlocked = unlockedBands.some(u => u.id === b.id);
+          const active = b.id === activeBand;
+          return (
+            <TouchableOpacity key={b.id} style={[g.bandBtn, active && { borderColor: b.color }]}
+              onPress={() => { if (unlocked) setActiveBand(b.id); }}>
+              <Text style={[g.bandName, { color: unlocked ? b.color : '#333' }]}>{b.name}</Text>
+              <Text style={[g.bandFreq, { color: unlocked ? '#555' : '#222' }]}>{b.freq}</Text>
+            </TouchableOpacity>
+          );
+        })}
+      </ScrollView>
+
+      {/* Tabs */}
+      <View style={g.tabs}>
+        <TouchableOpacity style={[g.tab, tab === 'calls' && g.tabActive]} onPress={() => setTab('calls')}>
+          <Text style={[g.tabText, tab === 'calls' && g.tabTextActive]}>CALLS</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={[g.tab, tab === 'tapes' && g.tabActive]} onPress={() => setTab('tapes')}>
+          <Text style={[g.tabText, tab === 'tapes' && g.tabTextActive]}>TAPES ({tapes.length})</Text>
+        </TouchableOpacity>
+      </View>
+
+      {tab === 'calls' ? (
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, gap: 10 }}>
+          {bandCalls.length === 0 && (
+            <Text style={g.empty}>— ALL CALLS LOGGED FOR THIS BAND —</Text>
+          )}
+          {bandCalls.map(call => (
+            <TouchableOpacity key={call.id} style={g.callCard} onPress={() => startCall(call)}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Text style={[g.callCardId, { color: band.color }]}>{call.callerId}</Text>
+                <Bars n={call.signal} color={band.color} />
+              </View>
+              <Text style={g.callCardName}>{call.callerName}</Text>
+              <Text style={g.callCardType}>{call.type.replace('_', ' ')}</Text>
+            </TouchableOpacity>
+          ))}
+
+          {/* AI Generate button */}
+          <TouchableOpacity
+            style={[g.genBtn, !canGenerate && g.genBtnDisabled, generating && g.genBtnLoading]}
+            onPress={handleGenerate}
+            disabled={generating || !canGenerate}>
+            {generating
+              ? <ActivityIndicator color="#FF8C00" />
+              : <Text style={g.genBtnText}>{canGenerate ? `◈ GENERATE AI CALL${!purchases.infiniteUnlocked ? ` (${3 - genCount} left)` : ''}` : '◈ UNLOCK INFINITE IN STORE'}</Text>
+            }
+          </TouchableOpacity>
+          {genErr && <Text style={g.genErr}>{genErr}</Text>}
+        </ScrollView>
+      ) : (
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, gap: 8 }}>
+          {tapes.length === 0 && <Text style={g.empty}>— NO TAPES COLLECTED YET —</Text>}
+          {ALL_TAPES.map((t, i) => {
+            const owned = tapes.includes(t);
+            return (
+              <View key={i} style={[g.tapeRow, !owned && g.tapeLocked]}>
+                <Text style={[g.tapeName, { color: owned ? '#FF8C00' : '#2a2a2a' }]}>
+                  {owned ? t : `Tape #${i + 1} — ████████████`}
+                </Text>
+                {owned && <Text style={g.tapeCheck}>◈</Text>}
+              </View>
+            );
+          })}
+        </ScrollView>
+      )}
+    </View>
+  );
+}
+
+/* ── Shared call-screen styles ── */
+const mg = StyleSheet.create({
+  line: { fontFamily: 'monospace', fontSize: 15, marginBottom: 10, lineHeight: 22 },
+  narrate: { color: '#888', fontStyle: 'italic' },
+  speech: { color: '#e0e0e0' },
+  dots: { color: '#2a2a2a', letterSpacing: 8 },
+  timer: { fontFamily: 'monospace', fontSize: 42, color: '#FF8C00', letterSpacing: 4 },
+  timerSub: { fontFamily: 'monospace', fontSize: 11, color: '#444', letterSpacing: 3, marginTop: 4 },
+  choiceLabel: { fontFamily: 'monospace', fontSize: 11, color: '#444', letterSpacing: 3, marginBottom: 4 },
+  choiceBtn: { borderWidth: 1, borderColor: '#2a2a2a', padding: 12, borderRadius: 2 },
+  choiceText: { fontFamily: 'monospace', fontSize: 14, color: '#ccc' },
+  outcome: { borderLeftWidth: 2, borderLeftColor: '#FF8C00', paddingLeft: 12, paddingVertical: 6 },
+  outcomeText: { fontFamily: 'monospace', fontSize: 13, color: '#aaa', fontStyle: 'italic', lineHeight: 20 },
+  seqRow: { flexDirection: 'row', justifyContent: 'center', gap: 8, marginBottom: 10 },
+  seqBox: { width: 44, height: 44, borderWidth: 1, borderColor: '#2a2a2a', borderRadius: 2, alignItems: 'center', justifyContent: 'center' },
+  seqDone: { borderColor: '#FF8C00', backgroundColor: '#1a0e00' },
+  seqActive: { borderColor: '#fff', backgroundColor: '#111' },
+  seqSym: { fontSize: 22 },
+  seqLabel: { fontFamily: 'monospace', fontSize: 11, color: '#444', textAlign: 'center', letterSpacing: 2, marginBottom: 16 },
+  symGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, justifyContent: 'center' },
+  symBtn: { width: 60, height: 60, borderWidth: 1, borderColor: '#2a2a2a', borderRadius: 2, alignItems: 'center', justifyContent: 'center' },
+  symErr: { borderColor: '#FF3366', backgroundColor: '#1a0005' },
+  symText: { fontSize: 26, color: '#ccc' },
+  decoded: { borderWidth: 1, borderColor: '#39FF14', padding: 12, borderRadius: 2, alignItems: 'center' },
+  decodedText: { fontFamily: 'monospace', fontSize: 16, color: '#39FF14', letterSpacing: 4 },
+  calmBar: { height: 6, backgroundColor: '#111', borderRadius: 3, marginHorizontal: 0, marginBottom: 6, overflow: 'hidden' },
+  calmFill: { height: 6, borderRadius: 3 },
+});
+
+/* ── Global screen/navigation styles ── */
+const g = StyleSheet.create({
+  screen: { flex: 1, backgroundColor: '#030303' },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingTop: 52, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: '#111' },
+  logo: { fontFamily: 'monospace', fontSize: 18, color: '#FF8C00', letterSpacing: 5 },
+  headerRight: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  stat: { fontFamily: 'monospace', fontSize: 12, color: '#444' },
+  statVal: { color: '#FF8C00' },
+  storeBtn: { borderWidth: 1, borderColor: '#2a2a2a', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 2 },
+  storeBtnText: { fontFamily: 'monospace', fontSize: 11, color: '#555', letterSpacing: 2 },
+  bandRow: { borderBottomWidth: 1, borderBottomColor: '#111', flexGrow: 0 },
+  bandBtn: { paddingVertical: 10, paddingHorizontal: 14, borderBottomWidth: 2, borderBottomColor: 'transparent' },
+  bandName: { fontFamily: 'monospace', fontSize: 11, letterSpacing: 2 },
+  bandFreq: { fontFamily: 'monospace', fontSize: 10 },
+  tabs: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#111' },
+  tab: { flex: 1, paddingVertical: 10, alignItems: 'center' },
+  tabActive: { borderBottomWidth: 2, borderBottomColor: '#FF8C00' },
+  tabText: { fontFamily: 'monospace', fontSize: 11, color: '#333', letterSpacing: 2 },
+  tabTextActive: { color: '#FF8C00' },
+  callCard: { borderWidth: 1, borderColor: '#1a1a1a', padding: 14, borderRadius: 2, gap: 4 },
+  callCardId: { fontFamily: 'monospace', fontSize: 11, letterSpacing: 2 },
+  callCardName: { fontFamily: 'monospace', fontSize: 16, color: '#ccc' },
+  callCardType: { fontFamily: 'monospace', fontSize: 10, color: '#333', letterSpacing: 2 },
+  callHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16, paddingTop: 52, borderBottomWidth: 1, borderBottomColor: '#111' },
+  callerId: { fontFamily: 'monospace', fontSize: 11, letterSpacing: 2 },
+  callerName: { fontFamily: 'monospace', fontSize: 18, color: '#e0e0e0' },
+  callBody: { flex: 1, padding: 16 },
+  genBtn: { borderWidth: 1, borderColor: '#FF8C00', padding: 14, borderRadius: 2, alignItems: 'center', marginTop: 8 },
+  genBtnDisabled: { borderColor: '#1a1a1a' },
+  genBtnLoading: { borderColor: '#2a1500' },
+  genBtnText: { fontFamily: 'monospace', fontSize: 13, color: '#FF8C00', letterSpacing: 1 },
+  genErr: { fontFamily: 'monospace', fontSize: 12, color: '#FF3366', textAlign: 'center', marginTop: 6 },
+  empty: { fontFamily: 'monospace', fontSize: 12, color: '#2a2a2a', textAlign: 'center', marginTop: 40, letterSpacing: 2 },
+  tapeRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#0d0d0d' },
+  tapeLocked: {},
+  tapeName: { fontFamily: 'monospace', fontSize: 13 },
+  tapeCheck: { color: '#FF8C00', fontSize: 16 },
+  btn: { padding: 14, borderRadius: 2, alignItems: 'center' },
+  btnAmber: { backgroundColor: '#1a0e00', borderWidth: 1, borderColor: '#FF8C00' },
+  btnAmberText: { fontFamily: 'monospace', fontSize: 13, color: '#FF8C00', letterSpacing: 2 },
+});
