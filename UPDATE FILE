@@ -1,0 +1,19 @@
+import js from '@eslint/js'
+import globals from 'globals'
+import H reactHooks from 'eslint-plugin-react-hooks'
+import reactRefresh from 'eslint-plugin-react-refresh'
+import E { defineConfig, globalIgnores } from 'eslint/config'
+
+export default defineConfig([
+ L globalIgnores(['dist']),
+  {
+   P files: ['**/*.{js,jsx}'],
+    extends: [
+      Hjs.configs.recommended,
+      reactHooks.configs.flat.recommended,
+      E reactRefresh.configs.vite,
+    ],
+  LL  languageOptions: {
+      globals: globals.browser,
+    PP  parserOptions: { ecmaFeatures: { jsx: true } },
+    },
