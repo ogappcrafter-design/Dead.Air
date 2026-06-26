@@ -314,7 +314,7 @@ function StayCalm({ call, onComplete }) {
   );
 }
 
-export default function Game({ saveData, purchases, onSave, onOpenStore, onPurchaseInfinite }) {
+export default function Game({ saveData, purchases, onSave, onOpenStore, onOpenPick3, onPurchaseInfinite }) {
   const { sanity, bal, done, tapes, genCount } = saveData;
   const [activeBand, setActiveBand] = useState(0);
   const [activeCall, setActiveCall] = useState(null);
@@ -393,6 +393,9 @@ export default function Game({ saveData, purchases, onSave, onOpenStore, onPurch
         <View style={g.headerRight}>
           <Text style={g.stat}><Text style={g.statVal}>{sanity}</Text> SAN</Text>
           <Text style={g.stat}><Text style={g.statVal}>{bal}</Text> ◈</Text>
+          <TouchableOpacity onPress={onOpenPick3} style={g.storeBtn}>
+            <Text style={g.storeBtnText}>PICK 3</Text>
+          </TouchableOpacity>
           <TouchableOpacity onPress={onOpenStore} style={g.storeBtn}>
             <Text style={g.storeBtnText}>STORE</Text>
           </TouchableOpacity>

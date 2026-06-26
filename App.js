@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Game from './components/game';
 import Store from './components/Store';
+import Pick3Screen from './components/Pick3Screen';
 
 const SAVE_KEY = 'dead_air_save_v1';
 const PURCHASE_KEY = 'dead_air_purchases_v1';
@@ -16,6 +17,7 @@ export default function App() {
     baseUnlocked:false, infiniteUnlocked:false
   });
   const [storeOpen, setStoreOpen] = useState(false);
+  const [pick3Open, setPick3Open] = useState(false);
 
   useEffect(()=>{
     (async()=>{
@@ -46,6 +48,10 @@ export default function App() {
     </View>
   );
 
+  if(pick3Open) return (
+    <Pick3Screen onClose={()=>setPick3Open(false)} />
+  );
+
   if(storeOpen) return (
     <Store
       purchases={purchases}
@@ -68,6 +74,7 @@ export default function App() {
       purchases={purchases}
       onSave={persistSave}
       onOpenStore={()=>setStoreOpen(true)}
+      onOpenPick3={()=>setPick3Open(true)}
       onPurchaseInfinite={()=>persistPurchases({...purchases,infiniteUnlocked:true})}
     />
   );
