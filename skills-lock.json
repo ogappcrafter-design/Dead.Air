@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "skills": {
+    "game-designer": {
+      "source": "dylantarre/animation-principles",
+      "sourceType": "github",
+      "skillPath": "skills/03-by-role-persona/game-designer/SKILL.md",
+      "computedHash": "bb186153afaa4020b09dd35f22813c89fa58aefafcf8d065a45cbf3d0b2cd69e"
+    },
+    "opengame-agentic-game-creation": {
+      "source": "aradotso/trending-skills",
+      "sourceType": "github",
+      "skillPath": "skills/opengame-agentic-game-creation/SKILL.md",
+      "computedHash": "1938322481b6eceaefa55c280dd60077482d347f370efe3de22aa87d5803e73f"
+    },
+    "pixel-art-sprites": {
+      "source": "omer-metin/skills-for-antigravity",
+      "sourceType": "github",
+      "skillPath": "skills/pixel-art-sprites/SKILL.md",
+      "computedHash": "6d7f3d45af2fa94e0fe9abe08575e859aa0f24297305ee8b89ac64a7534c9825"
+    },
+    "pixijs-create": {
+      "source": "pixijs/pixijs-skills",
+      "sourceType": "github",
+      "skillPath": "skills/pixijs-create/SKILL.md",
+      "computedHash": "4fb084181f2585c1e130df85882f75a7fdc9af8c9c94c432d5098c1756f85ea8"
+    },
+    "remix-game-best-practices": {
+      "source": "farworld-labs/remix-skills",
+      "sourceType": "github",
+      "skillPath": "skills/remix-game-best-practices/SKILL.md",
+      "computedHash": "31080a8f87ef69617569cac22c2145a7d3103693f9eb0164022fcb3a0def966e"
+    },
+    "tabletop-rpg-design": {
+      "source": "omer-metin/skills-for-antigravity",
+      "sourceType": "github",
+      "skillPath": "skills/tabletop-rpg-design/SKILL.md",
+      "computedHash": "cbce185d031036713a6d5a5c84d6b666cdf4e2ba12afe51109310f844025538e"
+    }
+  }
+}

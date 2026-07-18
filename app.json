@@ -1,14 +1,16 @@
 {
   "expo": {
-    "name": "Dead.Air",
-    "slug": "dead-air-opal",
+    "name": "Dead Air",
+    "slug": "dead-air",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
+    "scheme": "deadair",
 
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.deadair.app"
     },
     "android": {
       "adaptiveIcon": {
@@ -18,7 +20,9 @@
       "package": "com.deadair.app"
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro",
+      "output": "single"
     },
     "extra": {
       "eas": {

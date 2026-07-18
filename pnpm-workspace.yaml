@@ -1,3 +1,8 @@
 allowBuilds:
   dtrace-provider: set this to true or false
   msgpackr-extract: true
+minimumReleaseAgeExclude:
+  - '@expo/ui@57.0.7'
+  - expo-constants@57.0.6
+  - expo-router@57.0.7
+  - react-native-gesture-handler@3.1.0
