@@ -7,7 +7,6 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
     "scheme": "deadair",
-
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.deadair.app"
@@ -38,7 +37,9 @@
           "resizeMode": "contain",
           "backgroundColor": "#000000"
         }
-      ]
+      ],
+      "expo-router",
+      "expo-status-bar"
     ]
   }
 }
