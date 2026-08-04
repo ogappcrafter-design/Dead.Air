@@ -3,7 +3,7 @@
 > *The signal is forming. Follow the plan.*
 
 **Created:** 2026-07-18  
-**Status:** Phases 1-2 complete, Phase 3 next  
+**Status:** Phases 1-2 complete, Phase 3 in progress (worker has uncommitted work)
 **Repo:** github.com/daggerstuff/deadair
 
 ---
@@ -161,22 +161,46 @@ AudioEngine (singleton)
 
 **Duration:** Week 7-8
 
-**Deliverables:**
-- 5 call type renderer components:
-  - `JustListenRenderer` — player listens, no interaction (tension builds)
-  - `DeadAirRenderer` — silence timer, player must hold (static reward)
-  - `RightAnswerRenderer` — multiple choice, correct answer advances
-  - `SignalDecodeRenderer` — pattern matching / number input
-  - `StayCalmRenderer` — stress test, timer with sanity drain
-- Call scheduler (procedural timing, band-appropriate calls)
-- Procedural variation (randomized caller names, details, timing)
-- Sanity effects per call type
-- Static currency rewards
-- Call history / progress tracking
+**Ship size:** Per feature (one task = one shippable feature, not one file)
+
+**Task Breakdown — 9 tasks, 3 dependency layers:**
+
+#### Layer 1: Foundation (blocking)
+
+| Task | Name | Scope | Key Files |
+|------|------|-------|----------|
+| P4-1 | Call Infrastructure | `CallManager` (singleton, call lifecycle, routing) + `CallScheduler` (timing, band-appropriate selection) | `engine/calls/CallManager.ts`, `engine/calls/CallScheduler.ts` |
+
+#### Layer 2: Call Renderers (parallel, all depend on P4-1)
+
+| Task | Name | Mechanic | Key Files |
+|------|------|----------|----------|
+| P4-2 | Just Listen | Player listens, no interaction, tension builds | `components/calls/JustListenRenderer.tsx` |
+| P4-3 | Dead Air | Silence timer, player must hold through dead air, static reward | `components/calls/DeadAirRenderer.tsx` |
+| P4-4 | Right Answer | Multiple choice, correct answer advances call | `components/calls/RightAnswerRenderer.tsx` |
+| P4-5 | Signal Decode | Pattern matching / number input from audio | `components/calls/SignalDecodeRenderer.tsx` |
+| P4-6 | Stay Calm | Stress test, timer with sanity drain, don't hang up | `components/calls/StayCalmRenderer.tsx` |
+
+#### Layer 3: Systems (parallel, depend on all renderers)
+
+| Task | Name | Scope | Key Files |
+|------|------|-------|----------|
+| P4-7 | Procedural Variation | Randomized caller names, details, timing, branching | `engine/calls/ProceduralVariation.ts` |
+| P4-8 | Sanity Effects | Per-call-type sanity consequences, drain/recovery curves | `engine/calls/SanityEffects.ts` |
+| P4-9 | Static Rewards | Completion rewards, static currency economy | `engine/calls/StaticRewards.ts` |
+
+**Dispatch map: 3 waves**
+```
+Wave 1: P4-1 (Call Infrastructure)
+  ↓
+Wave 2: P4-2 | P4-3 | P4-4 | P4-5 | P4-6  (5 renderers in parallel)
+  ↓
+Wave 3: P4-7 | P4-8 | P4-9  (3 systems in parallel)
+```
 
 **Architecture:**
 ```
-CallManager
+CallManager (singleton)
 ├── CallScheduler        — when calls happen, which band
 ├── CallRenderer         — routes to correct type component
 ├── ProceduralVariation  — randomized details per call
@@ -184,14 +208,10 @@ CallManager
 └── StaticRewards        — completion rewards
 ```
 
-**Key files to create:**
-- `engine/calls/CallManager.ts`
-- `engine/calls/CallScheduler.ts`
-- `components/calls/JustListenRenderer.tsx`
-- `components/calls/DeadAirRenderer.tsx`
-- `components/calls/RightAnswerRenderer.tsx`
-- `components/calls/SignalDecodeRenderer.tsx`
-- `components/calls/StayCalmRenderer.tsx`
+**Testing:**
+- Per-task unit tests (Jest, mock RN where needed)
+- Integration tests begin here — call flow end-to-end
+- Component tests deferred (React 19 + RN + Jest incompatible)
 
 ---
 
@@ -201,27 +221,39 @@ CallManager
 
 **Duration:** Week 9-10
 
-**Deliverables:**
-- Night shift structure (4-hour sessions with breaks)
-- Band unlocking (metroidvania-style — unlock deeper frequencies)
-- Tape collection UI (15 tapes, rarity tiers, playback)
-- Store/IAP integration (base game + Infinite Signal expansion)
-- Real-time radio schedule (calls at specific times of day)
-- Achievement / milestone system
-- Cloud sync (optional, opt-in)
+**Ship size:** Per feature
 
-**Key decisions to make:**
-- Night shift length and pacing
-- Band unlock requirements (calls survived, tapes found, sanity thresholds)
-- Tape playback UX (full audio vs transcript + ambient)
-- IAP pricing and what each tier unlocks
+**Task Breakdown — 6 tasks, 2 dependency layers:**
 
-**Files to create:**
-- `engine/progression/NightShift.ts`
-- `engine/progression/BandUnlock.ts`
-- `components/tapes/TapeCollection.tsx`
-- `components/tapes/TapePlayer.tsx`
-- `components/store/IAPStore.tsx`
+#### Layer 1: Foundation (blocking)
+
+| Task | Name | Scope | Key Files |
+|------|------|-------|----------|
+| P5-1 | Night Shift | Session structure (4-hour blocks w/ breaks), real-time schedule, call timing | `engine/progression/NightShift.ts` |
+| P5-2 | Band Unlock | Metroidvania gates, unlock criteria (calls survived, tapes found, sanity thresholds) | `engine/progression/BandUnlock.ts` |
+
+#### Layer 2: Features (parallel, depend on P5-1 + P5-2)
+
+| Task | Name | Scope | Key Files |
+|------|------|-------|----------|
+| P5-3 | Tape Collection | 15 tapes, rarity tiers, playback UI, collection screen | `components/tapes/TapeCollection.tsx`, `components/tapes/TapePlayer.tsx` |
+| P5-4 | IAP Store | Base game purchase + Infinite Signal expansion, store UI | `components/store/IAPStore.tsx` |
+| P5-5 | Achievements | Milestone tracking, unlock notifications, badge display | `engine/progression/Achievements.ts` |
+| P5-6 | Cloud Sync | Optional, opt-in, cross-device progress | `engine/progression/CloudSync.ts` |
+
+**Dispatch map: 2 waves**
+```
+Wave 1: P5-1 + P5-2  (Night Shift + Band Unlock)
+  ↓
+Wave 2: P5-3 | P5-4 | P5-5 | P5-6  (4 features in parallel)
+```
+
+**Open decisions (resolve before dispatch):**
+1. Real-time vs compressed time — do calls happen at actual clock times, or compressed night-shift duration?
+2. Band unlock criteria — exact thresholds (calls survived? tapes found? sanity maintained?)
+3. Tape playback UX — full audio playback vs transcript + ambient sound
+4. IAP Infinite Signal scope — what exactly does the expansion unlock?
+5. Cloud provider — which sync backend (if cloud sync ships)?
 
 ---
 
@@ -231,16 +263,22 @@ CallManager
 
 **Duration:** Week 11-12
 
-**Deliverables:**
-- Performance optimization (frame rates, memory, audio latency)
-- Platform testing (web, iOS, Android, desktop)
-- Accessibility audit (screen reader, reduced motion, contrast)
-- EAS build configuration
-- App Store / Play Store submission
-- Error tracking (Sentry or similar)
-- Analytics (minimal, privacy-respecting)
-- Final CRT visual polish
-- Bug fixes from playtesting
+**Ship size:** Per feature
+
+**Task list — 10 tasks:**
+
+| Task | Name | Scope |
+|------|------|-------|
+| P6-1 | Audio Latency | Optimize audio engine for <50ms response, reduce buffer sizes |
+| P6-2 | Render Performance | Frame rate pass, memoization, virtual lists, reduce re-renders |
+| P6-3 | EAS Build Config | `eas.json`, build profiles, environment secrets |
+| P6-4 | Cross-Platform Smoke | Test web, iOS, Android, desktop — catch platform-specific issues |
+| P6-5 | Accessibility Audit | Screen reader, reduced motion, contrast, font scaling |
+| P6-6 | Error Tracking | Sentry integration, error boundaries, crash reporting |
+| P6-7 | Analytics | Minimal, privacy-respecting — session length, calls survived, bands unlocked |
+| P6-8 | CRT Visual Polish | Final scanline tuning, glow effects, phosphor decay |
+| P6-9 | Playtest Bug Fixes | Internal playtest → bug triage → fix pass |
+| P6-10 | Store Submission | App Store + Play Store assets, screenshots, descriptions, submission |
 
 **Key files to modify:**
 - `app.json` / `eas.json` — build config
@@ -265,6 +303,9 @@ CallManager
 | 10 | Zustand over Redux | Redux, MobX, Context | Lightweight, persistence built-in |
 | 11 | Expo Router | React Navigation | File-based, web-compatible, modern |
 | 12 | pnpm over npm | npm | npm v12 on node v24.18 has install bug |
+| 13 | Hybrid plan detail (Approach C) | Full detail all phases, bullet-only all phases | Full detail Phase 4, task breakdown Phase 5, bullet list Phase 6 — right depth per phase |
+| 14 | Ship size = per feature | Per file, per phase | One task = one shippable feature, crewmate owns it end-to-end |
+| 15 | Parallel dispatch where deps allow | Strict sequential | Waves of independent tasks dispatched in parallel, serialized only by dependency layers |
 
 ---
 
@@ -316,16 +357,18 @@ Tune radio → Find signal → Answer call → Survive consequences →
 
 ## Testing Strategy
 
-| Layer | Tool | Coverage |
-|-------|------|----------|
-| Unit (stores, libs) | Jest | 29 tests passing ✅ |
-| Integration | Jest + mock RN | Phase 3+ |
-| E2E | Detox (future) | Phase 6 |
-| Visual | Manual + screenshots | Phase 6 |
-| Audio | Manual listening | Phase 3+ |
-| Platform | Expo build + test | Phase 6 |
+| Layer | Tool | Coverage | Status |
+|-------|------|----------|--------|
+| Unit (stores, libs) | Jest | 29 tests | ✅ Passing |
+| Unit (per-task) | Jest + mock RN | Each Phase 4/5 task ships own tests | Phase 4+ |
+| Integration | Jest + mock RN | Call flow end-to-end, progression logic | Phase 4+ |
+| Component | — | Deferred (React 19 + RN + Jest incompatible) | Future |
+| E2E | Detox | User flows, call mechanics | Phase 6 |
+| Visual | Manual + screenshots | UI fidelity, CRT effects | Phase 6 |
+| Audio | Manual listening | Audio engine, call audio | Phase 3+ |
+| Platform | Expo build + test | Web, iOS, Android, desktop | Phase 6 |
 
-**Current:** 29 tests cover all stores (game, radio, settings) and libs (theme, storage). Component tests deferred — React 19 + RN + pnpm + Jest is incompatible without deprecated `react-test-renderer`.
+**Current:** 29 tests cover all stores (game, radio, settings) and libs (theme, storage). Component tests deferred — React 19 + RN + pnpm + Jest is incompatible without deprecated `react-test-renderer`. Per-task unit tests begin Phase 4, integration tests begin Phase 4.
 
 ---
 
@@ -387,10 +430,10 @@ Tune radio → Find signal → Answer call → Survive consequences →
 |-------|-------|--------|
 | Phase 1: Foundation | 1-2 | ✅ Complete |
 | Phase 2: Radio UI | 3-4 | ✅ Complete |
-| Phase 3: Audio Engine | 5-6 | 🔲 Next |
-| Phase 4: Call System | 7-8 | 🔲 Planned |
-| Phase 5: Progression | 9-10 | 🔲 Planned |
-| Phase 6: Polish & Release | 11-12 | 🔲 Planned |
+| Phase 3: Audio Engine | 5-6 | 🔲 In progress |
+| Phase 4: Call System | 7-8 | 🔲 Planned (9 tasks, 3 waves) |
+| Phase 5: Progression | 9-10 | 🔲 Planned (6 tasks, 2 waves) |
+| Phase 6: Polish & Release | 11-12 | 🔲 Planned (10 tasks) |
 
 **Total estimated time:** 12 weeks (3 months)
 
@@ -401,14 +444,15 @@ Tune radio → Find signal → Answer call → Survive consequences →
 1. Read `DESIGN.md` for architecture details
 2. Read `HANDOFF.md` for current state and gotchas
 3. Read `docs/plans/2026-07-18-phase-1-foundation.md` for task-level detail
-4. Start Phase 3: Audio Engine
+4. Phase 3 audio engine work is in progress (uncommitted in worker worktree)
+5. Phase 4 is ready for dispatch — 9 tasks across 3 waves
+6. Phase 5 has 5 open decisions to resolve before dispatch
 
-**First step for Phase 3:**
-```
-Create engine/audio/AudioEngine.ts — Web Audio API context singleton
-Create engine/audio/StaticSynth.ts — white/pink noise generator
-Write tests for both
-```
+**Dispatch strategy:**
+- Ship size = one task = one crewmate feature
+- Parallel dispatch in waves where dependencies allow
+- Wave 1 (P4-1) blocks Wave 2 (P4-2 through P4-6), which blocks Wave 3 (P4-7 through P4-9)
+- Resolve Phase 5 open decisions before dispatching Phase 5 tasks
 
 ---
 
