@@ -3,7 +3,7 @@
 // Lines play one at a time (2.5s auto-advance, tap to skip), then a countdown timer
 // for `call.waitSeconds`, then the call auto-completes. No player interaction.
 
-import { useCallback, useEffect, useRef, useState, type JSX } from 'react';
+import { useCallback, useEffect, useRef, useState, type JSX, memo } from 'react';
 import { Pressable, Text, View, StyleSheet } from 'react-native';
 import { colors, fonts, spacing } from '../../lib/theme';
 import type { CallData, CallOutcome } from '../../engine/calls/types';
@@ -18,7 +18,10 @@ const LINE_ADVANCE_MS = 2500;
 
 type Phase = 'lines' | 'dead-air';
 
-export function DeadAirCall({ call, onComplete }: DeadAirCallProps): JSX.Element {
+export const DeadAirCall = memo(function DeadAirCall({
+  call,
+  onComplete,
+}: DeadAirCallProps): JSX.Element {
   const lines = call.lines ?? [];
   const [phase, setPhase] = useState<Phase>('lines');
   const [lineIndex, setLineIndex] = useState(0);
@@ -101,7 +104,7 @@ export function DeadAirCall({ call, onComplete }: DeadAirCallProps): JSX.Element
       ) : null}
     </Pressable>
   );
-}
+});
 
 // Static noise — deterministic opacity cycle so it looks like an undulating void
 // without re-rendering. Rendered as a style on a single label.

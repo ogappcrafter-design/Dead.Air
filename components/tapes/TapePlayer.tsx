@@ -9,6 +9,7 @@
 // Layout matches the JustListenCall idiom: backdrop Pressable -> card ->
 // header / body / hint, plus a transport row with PLAY/STOP and CLOSE.
 
+import React, { memo } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { colors, fonts, spacing } from '../../lib/theme';
 import type { Band } from '../../lib/constants';
@@ -50,7 +51,7 @@ type ReadonlyRecord<K extends string, V> = {
  * transport (play/stop) against a TapePlayback instance and the band store
  * (for already-collected status); TapePlayer simply reflects what it is told.
  */
-export function TapePlayer({
+export const TapePlayer = memo(function TapePlayer({
   tapeName,
   transcript,
   band,
@@ -107,7 +108,7 @@ export function TapePlayer({
       </View>
     </Pressable>
   );
-}
+});
 
 const styles = StyleSheet.create({
   backdrop: {

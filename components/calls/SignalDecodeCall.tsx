@@ -2,7 +2,7 @@
 // Presentational React component for SIGNAL_DECODE call type.
 // Player taps symbol buttons to match the transmitted sequence.
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, memo, useCallback } from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { colors, fonts, spacing } from '../../lib/theme';
 import { SYM } from '../../data/calls';
@@ -16,7 +16,10 @@ interface SignalDecodeCallProps {
 
 type Phase = 'input' | 'success' | 'failure';
 
-export function SignalDecodeCall({ call, onComplete }: SignalDecodeCallProps) {
+export const SignalDecodeCall = memo(function SignalDecodeCall({
+  call,
+  onComplete,
+}: SignalDecodeCallProps) {
   const sequence = call.sequence ?? [];
   const [input, setInput] = useState<number[]>([]);
   const [phase, setPhase] = useState<Phase>('input');
@@ -59,12 +62,15 @@ export function SignalDecodeCall({ call, onComplete }: SignalDecodeCallProps) {
     return () => clearTimeout(timer);
   }, [phase, call, onComplete]);
 
-  const tapSymbol = (idx: number): void => {
-    if (phase !== 'input' || input.length >= sequence.length) {
-      return;
-    }
-    setInput((prev) => [...prev, idx]);
-  };
+  const tapSymbol = useCallback(
+    (idx: number): void => {
+      if (phase !== 'input' || input.length >= sequence.length) {
+        return;
+      }
+      setInput((prev) => [...prev, idx]);
+    },
+    [phase, input.length, sequence.length],
+  );
 
   const clearInput = (): void => {
     if (phase !== 'input') {
@@ -118,15 +124,14 @@ export function SignalDecodeCall({ call, onComplete }: SignalDecodeCallProps) {
       {phase === 'input' && (
         <View style={styles.symbolPad}>
           {SYM.map((glyph, idx) => (
-            <Pressable
+            <SymbolButton
               key={idx}
+              glyph={glyph}
+              index={idx}
               testID={`sym-${idx}`}
-              style={({ pressed }) => [styles.symButton, pressed && styles.symButtonPressed]}
-              onPress={() => tapSymbol(idx)}
+              onPress={tapSymbol}
               disabled={input.length >= sequence.length}
-            >
-              <Text style={styles.symGlyph}>{glyph}</Text>
-            </Pressable>
+            />
           ))}
         </View>
       )}
@@ -142,7 +147,34 @@ export function SignalDecodeCall({ call, onComplete }: SignalDecodeCallProps) {
       )}
     </View>
   );
+});
+
+interface SymbolButtonProps {
+  glyph: string;
+  index: number;
+  testID: string;
+  onPress: (idx: number) => void;
+  disabled: boolean;
 }
+
+const SymbolButton = memo(function SymbolButton({
+  glyph,
+  index,
+  testID,
+  onPress,
+  disabled,
+}: SymbolButtonProps) {
+  return (
+    <Pressable
+      testID={testID}
+      style={({ pressed }) => [styles.symButton, pressed && styles.symButtonPressed]}
+      onPress={() => onPress(index)}
+      disabled={disabled}
+    >
+      <Text style={styles.symGlyph}>{glyph}</Text>
+    </Pressable>
+  );
+});
 
 const styles = StyleSheet.create({
   container: {

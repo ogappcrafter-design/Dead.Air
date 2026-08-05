@@ -1,50 +1,64 @@
+import { useCallback, useMemo } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { colors, spacing } from '../../lib/theme';
 import { useRadioStore } from '../../store/useRadioStore';
 import { useGameStore } from '../../store/useGameStore';
-import { useSettingsStore } from '../../store/useSettingsStore';
 import { FrequencyDisplay } from './FrequencyDisplay';
 import { BandSelector } from './BandSelector';
 import { TuningDial } from './TuningDial';
 import { VolumeControl } from './VolumeControl';
 import { SignalStrength } from './SignalStrength';
 import { BANDS as BAND_DATA } from '../../data/bands';
+import { Band } from '../../lib/constants';
 
 export function RadioBody() {
-  const {
-    currentBand,
-    frequency,
-    volume,
-    isTuning,
-    signalStrength,
-    setFrequency,
-    setTuning,
-    setVolume,
-    setBand,
-  } = useRadioStore();
-  const { unlockedBands } = useGameStore();
-  const { sfxVolume, masterVolume, staticEnabled } = useSettingsStore();
+  // Narrow selective selectors — each subscription only fires when that slice changes.
+  const currentBand = useRadioStore((s) => s.currentBand);
+  const frequency = useRadioStore((s) => s.frequency);
+  const volume = useRadioStore((s) => s.volume);
+  const isTuning = useRadioStore((s) => s.isTuning);
+  const signalStrength = useRadioStore((s) => s.signalStrength);
+  const setFrequency = useRadioStore((s) => s.setFrequency);
+  const setTuning = useRadioStore((s) => s.setTuning);
+  const setVolume = useRadioStore((s) => s.setVolume);
+
+  const unlockedBands = useGameStore((s) => s.unlockedBands);
+
+  const setBand = useRadioStore((s) => s.setBand);
 
   const bandInfo = BAND_DATA[currentBand];
+  const minFreq = bandInfo.frequencyRange[0];
+  const maxFreq = bandInfo.frequencyRange[1];
 
-  const handleBandSelect = (band: typeof currentBand) => {
-    setBand(band);
-    const bandData = BAND_DATA[band];
-    setFrequency(bandData.frequencyRange[0]);
-  };
+  const handleBandSelect = useCallback(
+    (band: Band) => {
+      setBand(band);
+      const bandData = BAND_DATA[band];
+      setFrequency(bandData.frequencyRange[0]);
+    },
+    [setBand, setFrequency],
+  );
 
-  const handleVolumeChange = (vol: number) => {
-    setVolume(vol);
-  };
+  const handleVolumeChange = useCallback(
+    (vol: number) => {
+      setVolume(vol);
+    },
+    [setVolume],
+  );
 
-  const handleMuteToggle = () => {
+  const handleMuteToggle = useCallback(() => {
     setVolume(volume > 0 ? 0 : 0.5);
-  };
+  }, [volume, setVolume]);
+
+  const handleTuningStart = useCallback(() => setTuning(true), [setTuning]);
+  const handleTuningEnd = useCallback(() => setTuning(false), [setTuning]);
+
+  const bandName = useMemo(() => bandInfo.name, [bandInfo]);
 
   return (
     <View style={styles.container}>
       <View style={styles.radio}>
-        <FrequencyDisplay frequency={frequency} bandName={bandInfo.name} />
+        <FrequencyDisplay frequency={frequency} bandName={bandName} />
 
         <BandSelector
           currentBand={currentBand}
@@ -65,12 +79,12 @@ export function RadioBody() {
           <View style={styles.centerColumn}>
             <TuningDial
               frequency={frequency}
-              minFreq={bandInfo.frequencyRange[0]}
-              maxFreq={bandInfo.frequencyRange[1]}
+              minFreq={minFreq}
+              maxFreq={maxFreq}
               isTuning={isTuning}
               onFrequencyChange={setFrequency}
-              onTuningStart={() => setTuning(true)}
-              onTuningEnd={() => setTuning(false)}
+              onTuningStart={handleTuningStart}
+              onTuningEnd={handleTuningEnd}
             />
           </View>
 

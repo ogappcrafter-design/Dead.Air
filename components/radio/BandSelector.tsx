@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { colors, fonts, spacing } from '../../lib/theme';
 import { Band, BANDS } from '../../lib/constants';
@@ -9,7 +10,11 @@ interface BandSelectorProps {
   onBandSelect: (band: Band) => void;
 }
 
-export function BandSelector({ currentBand, unlockedBands, onBandSelect }: BandSelectorProps) {
+export const BandSelector = memo(function BandSelector({
+  currentBand,
+  unlockedBands,
+  onBandSelect,
+}: BandSelectorProps) {
   return (
     <View style={styles.container}>
       <Text style={styles.label}>BAND</Text>
@@ -47,7 +52,7 @@ export function BandSelector({ currentBand, unlockedBands, onBandSelect }: BandS
       </View>
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   container: {

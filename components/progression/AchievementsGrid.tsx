@@ -7,7 +7,7 @@
 //   items: Array<Achievement & { unlocked: boolean }> — from getAchievementStatus.
 //   columns?: number (default 2).
 
-import React from 'react';
+import React, { memo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { colors, fonts, spacing } from '../../lib/theme';
 import type { Achievement } from '../../engine/progression/Achievements';
@@ -19,7 +19,10 @@ interface AchievementsGridProps {
   columns?: number;
 }
 
-export function AchievementsGrid({ items, columns = 2 }: AchievementsGridProps) {
+export const AchievementsGrid = memo(function AchievementsGrid({
+  items,
+  columns = 2,
+}: AchievementsGridProps) {
   const unlockedCount = items.reduce((n, i) => (i.unlocked ? n + 1 : n), 0);
   const progressLabel = `${unlockedCount} / ${items.length} unlocked`;
   const gapPct = 4;
@@ -56,7 +59,7 @@ export function AchievementsGrid({ items, columns = 2 }: AchievementsGridProps) 
       </View>
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   container: {

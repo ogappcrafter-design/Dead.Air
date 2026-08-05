@@ -3,7 +3,7 @@
 // entitlement + purchase state and an onPurchase callback. Pure styling, no
 // direct store access, no testIDs beyond the documented ones.
 
-import React from 'react';
+import React, { memo } from 'react';
 import { View, Text, Pressable, StyleSheet, ActivityIndicator } from 'react-native';
 import { colors, fonts, spacing } from '../../lib/theme';
 
@@ -24,7 +24,7 @@ interface StoreCardProps {
   purchaseButtonTestID?: string;
 }
 
-export function StoreCard({
+export const StoreCard = memo(function StoreCard({
   title,
   description,
   price,
@@ -84,7 +84,7 @@ export function StoreCard({
       </View>
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   card: {

@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { colors, fonts, spacing } from '../../lib/theme';
 
@@ -6,7 +7,10 @@ interface SignalStrengthProps {
   isTuning: boolean;
 }
 
-export function SignalStrength({ strength, isTuning }: SignalStrengthProps) {
+export const SignalStrength = memo(function SignalStrength({
+  strength,
+  isTuning,
+}: SignalStrengthProps) {
   const bars = 5;
   const activeBars = Math.round(strength * bars);
 
@@ -35,7 +39,7 @@ export function SignalStrength({ strength, isTuning }: SignalStrengthProps) {
       </Text>
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   container: {

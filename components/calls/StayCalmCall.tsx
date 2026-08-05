@@ -3,7 +3,7 @@
 // The caller is escalating in panic. The player must do nothing (stay calm)
 // for `call.duration` seconds. Tapping the screen = flinching → caller panics.
 
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState, memo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { computeStayCalmOutcome } from '@/engine/calls/renderers/StayCalmHandler';
@@ -21,7 +21,10 @@ const FLINCH_DISPLAY_MS = 2000;
 const SURVIVE_DISPLAY_MS = 2000;
 const TICK_MS = 100;
 
-export default function StayCalmCall({ call, onComplete }: StayCalmCallProps): React.JSX.Element {
+const StayCalmCall = memo(function StayCalmCall({
+  call,
+  onComplete,
+}: StayCalmCallProps): React.JSX.Element {
   const duration = call.duration ?? 10;
   const lines = call.lines ?? [];
   const msPerLine = lines.length > 0 ? (duration * 1000) / lines.length : duration * 1000;
@@ -138,7 +141,7 @@ export default function StayCalmCall({ call, onComplete }: StayCalmCallProps): R
       </View>
     </Pressable>
   );
-}
+});
 
 const styles = StyleSheet.create({
   screen: {
@@ -235,3 +238,5 @@ const styles = StyleSheet.create({
     letterSpacing: 6,
   },
 });
+
+export default StayCalmCall;

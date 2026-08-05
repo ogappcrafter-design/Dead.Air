@@ -7,4 +7,5 @@ module.exports = {
     '^@/(.*)$': '<rootDir>/$1',
   },
   testMatch: ['**/__tests__/**/*.test.ts?(x)'],
+  setupFiles: ['@react-native/jest-preset/jest/setup'],
 };

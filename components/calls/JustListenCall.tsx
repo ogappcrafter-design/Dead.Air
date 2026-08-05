@@ -4,7 +4,7 @@
 // effects beyond timers. After the last line shows a brief "..." pause,
 // then reports the deterministic outcome via onComplete.
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, memo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { colors, fonts, spacing } from '../../lib/theme';
 import type { CallData, CallOutcome } from '../../engine/calls/types';
@@ -22,7 +22,10 @@ const FINAL_PAUSE_MS = 1000;
 
 type Phase = 'lines' | 'finalPause';
 
-export function JustListenCall({ call, onComplete }: JustListenCallProps) {
+export const JustListenCall = memo(function JustListenCall({
+  call,
+  onComplete,
+}: JustListenCallProps) {
   const lines = call.lines ?? [];
   const [index, setIndex] = useState(0);
   const [phase, setPhase] = useState<Phase>('lines');
@@ -97,7 +100,7 @@ export function JustListenCall({ call, onComplete }: JustListenCallProps) {
       </View>
     </Pressable>
   );
-}
+});
 
 const styles = StyleSheet.create({
   backdrop: {

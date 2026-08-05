@@ -3,7 +3,7 @@
 // Displays: in-game clock, phase label, calls remaining.
 // Pure presentational — no store access, no side effects.
 
-import React from 'react';
+import React, { memo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { colors, fonts, spacing } from '../../lib/theme';
 import type { ShiftState, ShiftPhase } from '../../engine/progression/NightShift';
@@ -46,7 +46,7 @@ const PHASE_COLORS: Record<ShiftPhase, string> = {
   'sign-off': colors.red,
 };
 
-export function ShiftStatus({ state }: ShiftStatusProps) {
+export const ShiftStatus = memo(function ShiftStatus({ state }: ShiftStatusProps) {
   const callsRemaining = state.scheduledCalls.length - state.nextCallIndex;
   const phaseColor = PHASE_COLORS[state.phase];
   const clock = formatClock(state.inGameMinutes);
@@ -63,7 +63,7 @@ export function ShiftStatus({ state }: ShiftStatusProps) {
       </View>
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   container: {

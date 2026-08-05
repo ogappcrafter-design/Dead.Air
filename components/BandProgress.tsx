@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { colors, fonts, spacing } from '../lib/theme';
 import type { Band } from '../lib/constants';
@@ -15,7 +15,11 @@ interface BandProgressProps {
   totalReceivedCalls: number;
 }
 
-export function BandProgress({ bands, unlockedBands, totalReceivedCalls }: BandProgressProps) {
+export const BandProgress = memo(function BandProgress({
+  bands,
+  unlockedBands,
+  totalReceivedCalls,
+}: BandProgressProps) {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>BANDS</Text>
@@ -40,7 +44,7 @@ export function BandProgress({ bands, unlockedBands, totalReceivedCalls }: BandP
       })}
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   container: {

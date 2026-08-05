@@ -2,11 +2,11 @@
 // Pure presentation for RIGHT_ANSWER call type. No store access —
 // parent owns lifecycle and feeds the outcome to CallManager via onComplete.
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, memo, useCallback } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { computeRightAnswerOutcome } from '@/engine/calls/renderers/RightAnswerHandler';
-import type { CallData, CallOutcome } from '@/engine/calls/types';
+import type { CallData, CallChoice, CallOutcome } from '@/engine/calls/types';
 import { colors, fonts, spacing } from '@/lib/theme';
 
 /** Props: parent renders <RightAnswerCall call={...} onComplete={...} />. */
@@ -32,7 +32,10 @@ type Phase = 'lines' | 'choices' | 'outcome';
  * Pure presentational: no store reads. Only reads `call` and reports via
  * `onComplete(computeRightAnswerOutcome(call, choiceIndex))`.
  */
-export function RightAnswerCall({ call, onComplete }: RightAnswerCallProps) {
+export const RightAnswerCall = memo(function RightAnswerCall({
+  call,
+  onComplete,
+}: RightAnswerCallProps) {
   const lines = call.lines ?? [];
   const choices = call.choices ?? [];
 
@@ -90,13 +93,16 @@ export function RightAnswerCall({ call, onComplete }: RightAnswerCallProps) {
     }
   };
 
-  const handleChoice = (index: number) => {
-    if (phase !== 'choices') {
-      return;
-    }
-    setSelectedChoice(index);
-    setPhase('outcome');
-  };
+  const handleChoice = useCallback(
+    (index: number) => {
+      if (phase !== 'choices') {
+        return;
+      }
+      setSelectedChoice(index);
+      setPhase('outcome');
+    },
+    [phase],
+  );
 
   return (
     <Pressable style={styles.container} onPress={handleSurfaceTap}>
@@ -122,13 +128,12 @@ export function RightAnswerCall({ call, onComplete }: RightAnswerCallProps) {
           {lines.length > 0 && <Text style={styles.line}>{lines[lines.length - 1] ?? ''}</Text>}
           <Text style={styles.prompt}>Choose your response:</Text>
           {choices.map((choice, index) => (
-            <Pressable
+            <ChoiceButton
               key={`${call.id}-choice-${index}`}
-              style={styles.choiceButton}
-              onPress={() => handleChoice(index)}
-            >
-              <Text style={styles.choiceText}>{choice.text}</Text>
-            </Pressable>
+              choice={choice}
+              index={index}
+              onSelect={handleChoice}
+            />
           ))}
         </View>
       )}
@@ -145,7 +150,21 @@ export function RightAnswerCall({ call, onComplete }: RightAnswerCallProps) {
       )}
     </Pressable>
   );
+});
+
+interface ChoiceButtonProps {
+  choice: CallChoice;
+  index: number;
+  onSelect: (index: number) => void;
 }
+
+const ChoiceButton = memo(function ChoiceButton({ choice, index, onSelect }: ChoiceButtonProps) {
+  return (
+    <Pressable style={styles.choiceButton} onPress={() => onSelect(index)}>
+      <Text style={styles.choiceText}>{choice.text}</Text>
+    </Pressable>
+  );
+});
 
 const styles = StyleSheet.create({
   container: {

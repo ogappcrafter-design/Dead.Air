@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { colors, fonts, spacing } from '../../lib/theme';
 
@@ -8,7 +9,12 @@ interface VolumeControlProps {
   onMuteToggle: () => void;
 }
 
-export function VolumeControl({ volume, onVolumeChange, muted, onMuteToggle }: VolumeControlProps) {
+export const VolumeControl = memo(function VolumeControl({
+  volume,
+  onVolumeChange,
+  muted,
+  onMuteToggle,
+}: VolumeControlProps) {
   const segments = 10;
   const activeSegments = Math.round(volume * segments);
 
@@ -47,7 +53,7 @@ export function VolumeControl({ volume, onVolumeChange, muted, onMuteToggle }: V
       </Pressable>
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   container: {

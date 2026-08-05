@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
@@ -13,7 +14,7 @@ interface TuningDialProps {
   onTuningEnd: () => void;
 }
 
-export function TuningDial({
+export const TuningDial = memo(function TuningDial({
   frequency,
   minFreq,
   maxFreq,
@@ -75,7 +76,7 @@ export function TuningDial({
       <Text style={styles.hint}>DRAG TO TUNE</Text>
     </View>
   );
-}
+});
 
 const DIAL_SIZE = 140;
 

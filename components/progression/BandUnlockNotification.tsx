@@ -3,7 +3,7 @@
 // Fades in when a band unlocks, fades out when it clears. Purely visual —
 // props: band: Band | null (null = hidden).
 
-import React, { useEffect } from 'react';
+import React, { memo, useEffect } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -26,7 +26,10 @@ const bandMetaByName = new Map<Band, { freq: string; color: string }>(
   BANDS.map((row) => [row.name as Band, { freq: row.freq, color: row.color }] as const),
 );
 
-export function BandUnlockNotification({ band, durationMs = 500 }: BandUnlockNotificationProps) {
+export const BandUnlockNotification = memo(function BandUnlockNotification({
+  band,
+  durationMs = 500,
+}: BandUnlockNotificationProps) {
   const opacity = useSharedValue(0);
 
   useEffect(() => {
@@ -55,7 +58,7 @@ export function BandUnlockNotification({ band, durationMs = 500 }: BandUnlockNot
       <Text style={styles.freq}>{meta?.freq ?? ''}</Text>
     </Animated.View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   container: {

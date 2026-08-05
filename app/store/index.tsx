@@ -10,6 +10,9 @@ import { colors, fonts, spacing } from '../../lib/theme';
 import { useStoreStore } from '../../store/useStoreStore';
 import { StoreCard } from '../../components/store/StoreCard';
 
+/** Stable noop — avoids creating a new function reference on every render. */
+const NOOP = () => {};
+
 export default function StoreScreen() {
   const router = useRouter();
   const hasInfiniteSignal = useStoreStore((s) => s.hasInfiniteSignal);
@@ -47,9 +50,7 @@ export default function StoreScreen() {
           description="18 sacred calls. 5 bands. Full horror. The complete base-game experience, free."
           price="FREE"
           state="owned"
-          onPurchase={() => {
-            // Already owned — noop.
-          }}
+          onPurchase={NOOP}
         />
 
         <StoreCard

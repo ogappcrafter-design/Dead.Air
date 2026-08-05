@@ -3,7 +3,7 @@
 // Pure view — no store access, no game logic. Props driven by SanityEffect.
 // data/calls.js untouched.
 
-import { useEffect, useMemo, useState, type JSX } from 'react';
+import { useEffect, useMemo, useState, type JSX, memo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { colors, fonts } from '../../lib/theme';
 import type { SanityEffect } from '../../engine/calls/SanityEffectConfig';
@@ -28,7 +28,9 @@ interface GlitchItem {
  *
  * Deterministic-ish flicker via 700ms interval so tests/re-renders stay predictable.
  */
-export function SanityOverlay({ effect }: SanityOverlayProps): JSX.Element | null {
+export const SanityOverlay = memo(function SanityOverlay({
+  effect,
+}: SanityOverlayProps): JSX.Element | null {
   const showVignette = effect.vignetteOpacity > 0;
   const showScanlines = effect.visualDistortion > 0.5;
   const glitchTexts = effect.hallucinationTexts;
@@ -110,7 +112,7 @@ export function SanityOverlay({ effect }: SanityOverlayProps): JSX.Element | nul
       ))}
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   root: {

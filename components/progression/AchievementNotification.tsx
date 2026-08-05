@@ -13,7 +13,7 @@
 //     back to null before the timeout fires (rapid double-unlock safe).
 //   - pointerEvents="none" so the toast never blocks active gameplay touches.
 
-import React, { useEffect } from 'react';
+import React, { memo, useEffect } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -38,7 +38,7 @@ interface AchievementNotificationProps {
 
 export const ACHIEVEMENT_DISPLAY_MS = 3000;
 
-export function AchievementNotification({
+export const AchievementNotification = memo(function AchievementNotification({
   achievement,
   onDismiss,
   displayMs = ACHIEVEMENT_DISPLAY_MS,
@@ -93,7 +93,7 @@ export function AchievementNotification({
       </View>
     </Animated.View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   container: {

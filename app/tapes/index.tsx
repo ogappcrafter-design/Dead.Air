@@ -10,7 +10,7 @@
 // Routing: back button uses expo-router's useRouter().back() to return to
 // the radio screen. Tapes screen is declared in app/_layout.tsx Stack.
 
-import { useMemo, useRef, useState } from 'react';
+import React, { memo, useCallback, useMemo, useRef, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ALL_TAPES, CALLS } from '../../data/calls';
@@ -43,6 +43,45 @@ const buildTranscript = (call: CallData): string[] => {
   return lines;
 };
 
+/** Memoized row component for the tape FlatList. */
+const TapeListRow = memo(function TapeListRow({
+  tapeName,
+  isCollected,
+  onPress,
+}: {
+  tapeName: string;
+  isCollected: boolean;
+  onPress: (tapeName: string) => void;
+}) {
+  if (isCollected) {
+    return (
+      <Pressable
+        style={styles.rowCollected}
+        onPress={() => onPress(tapeName)}
+        accessibilityRole="button"
+        accessibilityLabel={`Play ${tapeName}`}
+      >
+        <Text style={styles.tapeNameCollected} numberOfLines={1}>
+          {tapeName}
+        </Text>
+        <Text style={styles.rowStatus}>▸</Text>
+      </Pressable>
+    );
+  }
+  return (
+    <View style={styles.rowUncollected}>
+      <Text style={styles.tapeNameUncollected} numberOfLines={1}>
+        ???
+      </Text>
+    </View>
+  );
+});
+
+/** Module-level separator — stable reference across renders. */
+function TapeListSeparator() {
+  return <View style={styles.separator} />;
+}
+
 export default function TapesScreen() {
   const router = useRouter();
   const collectedTapes = useGameStore((s) => s.tapes);
@@ -55,13 +94,29 @@ export default function TapesScreen() {
 
   const collectedSet = useMemo(() => new Set(collectedTapes), [collectedTapes]);
 
-  const closePlayer = () => {
+  // Memoize transcript and band for the selected tape — avoids recomputing
+  // the call lookup + buildTranscript + band resolution on every render.
+  const selectedTranscript = useMemo(() => {
+    if (selectedTape === null) return [] as string[];
+    const call = findCallByTape(selectedTape, CALLS as unknown as CallData[]);
+    return call !== null ? buildTranscript(call) : [];
+  }, [selectedTape]);
+
+  const selectedBand = useMemo<Band>(() => {
+    if (selectedTape === null) return 'LIVING';
+    const call = findCallByTape(selectedTape, CALLS as unknown as CallData[]);
+    if (call === null) return 'LIVING';
+    const idx = call.band;
+    return idx >= 0 && idx < BAND_BY_INDEX.length ? BAND_BY_INDEX[idx]! : 'LIVING';
+  }, [selectedTape]);
+
+  const closePlayer = useCallback(() => {
     playbackRef.current.stop();
     setPlaybackState(playbackRef.current.getState());
     setSelectedTape(null);
-  };
+  }, []);
 
-  const handlePlayPress = () => {
+  const handlePlayPress = useCallback(() => {
     if (selectedTape === null) return;
     if (playbackState.isPlaying) {
       playbackRef.current.stop();
@@ -74,41 +129,26 @@ export default function TapesScreen() {
       playbackRef.current.play(selectedTape, band);
     }
     setPlaybackState(playbackRef.current.getState());
-  };
+  }, [selectedTape, playbackState.isPlaying]);
 
-  const handleTapePress = (tapeName: string) => {
+  const handleTapePress = useCallback((tapeName: string) => {
     // Tapping a collected tape opens the player and cues it; transport starts
     // idle (PLAY) — user engages via the transport toggle.
     setSelectedTape(tapeName);
     playbackRef.current.stop();
     setPlaybackState(playbackRef.current.getState());
-  };
+  }, []);
 
-  const renderItem = ({ item: tapeName }: { item: string }) => {
-    const isCollected = collectedSet.has(tapeName);
-    if (isCollected) {
-      return (
-        <Pressable
-          style={styles.rowCollected}
-          onPress={() => handleTapePress(tapeName)}
-          accessibilityRole="button"
-          accessibilityLabel={`Play ${tapeName}`}
-        >
-          <Text style={styles.tapeNameCollected} numberOfLines={1}>
-            {tapeName}
-          </Text>
-          <Text style={styles.rowStatus}>▸</Text>
-        </Pressable>
-      );
-    }
-    return (
-      <View style={styles.rowUncollected}>
-        <Text style={styles.tapeNameUncollected} numberOfLines={1}>
-          ???
-        </Text>
-      </View>
-    );
-  };
+  const renderItem = useCallback(
+    ({ item: tapeName }: { item: string }) => (
+      <TapeListRow
+        tapeName={tapeName}
+        isCollected={collectedSet.has(tapeName)}
+        onPress={handleTapePress}
+      />
+    ),
+    [collectedSet, handleTapePress],
+  );
 
   return (
     <View style={styles.container}>
@@ -134,21 +174,14 @@ export default function TapesScreen() {
         keyExtractor={(item, _i) => item}
         renderItem={renderItem}
         contentContainerStyle={styles.listContent}
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
+        ItemSeparatorComponent={TapeListSeparator}
       />
 
       {selectedTape !== null && (
         <TapePlayer
           tapeName={selectedTape}
-          transcript={buildTranscript(
-            findCallByTape(selectedTape, CALLS as unknown as CallData[]) ?? ({} as CallData),
-          )}
-          band={(() => {
-            const call = findCallByTape(selectedTape, CALLS as unknown as CallData[]);
-            if (call === null) return 'LIVING';
-            const idx = call.band;
-            return idx >= 0 && idx < BAND_BY_INDEX.length ? BAND_BY_INDEX[idx]! : 'LIVING';
-          })()}
+          transcript={selectedTranscript}
+          band={selectedBand}
           isPlaying={playbackState.isPlaying}
           onPlayPress={handlePlayPress}
           onClose={closePlayer}

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { callManager } from '@/engine/calls/callManagerInstance';
 import type { CallTypeRoute } from '@/engine/calls/CallManager';
 import type { ActiveCall, CallLifecycleState, CallOutcome } from '@/engine/calls/types';
@@ -26,7 +26,7 @@ export function ActiveCallDispatcher() {
 
   if (!route || !activeCall) return null;
 
-  const onComplete = (outcome: CallOutcome) => callManager.endCall(outcome);
+  const onComplete = useCallback((outcome: CallOutcome) => callManager.endCall(outcome), []);
 
   switch (route) {
     case 'JUST_LISTEN':

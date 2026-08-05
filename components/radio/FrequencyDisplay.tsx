@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { colors, fonts, spacing } from '../../lib/theme';
 
@@ -6,7 +7,10 @@ interface FrequencyDisplayProps {
   bandName: string;
 }
 
-export function FrequencyDisplay({ frequency, bandName }: FrequencyDisplayProps) {
+export const FrequencyDisplay = memo(function FrequencyDisplay({
+  frequency,
+  bandName,
+}: FrequencyDisplayProps) {
   const formatted = frequency.toFixed(1);
 
   return (
@@ -30,7 +34,7 @@ export function FrequencyDisplay({ frequency, bandName }: FrequencyDisplayProps)
       </View>
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   container: {

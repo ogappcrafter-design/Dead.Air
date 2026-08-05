@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { View, Text, StyleSheet, FlatList } from 'react-native';
 import { colors, fonts, spacing } from '../lib/theme';
 
@@ -7,7 +7,32 @@ interface TapeCollectionProps {
   totalCount: number;
 }
 
-export function TapeCollection({ tapes, totalCount }: TapeCollectionProps) {
+/** Memoized row component — avoids re-rendering existing rows when tapes array grows. */
+const TapeRow = memo(function TapeRow({ item }: { item: string }) {
+  return (
+    <View style={styles.row}>
+      <Text style={styles.bullet}>▸</Text>
+      <Text style={styles.label} numberOfLines={1}>
+        {item}
+      </Text>
+    </View>
+  );
+});
+
+/** Module-level separator — stable reference across renders. */
+function TapeSeparator() {
+  return <View style={styles.separator} />;
+}
+
+/** Module-level empty state — stable reference across renders. */
+function TapeEmptyState() {
+  return <Text style={styles.empty}>NO TAPES RECOVERED</Text>;
+}
+
+export const TapeCollection = memo(function TapeCollection({
+  tapes,
+  totalCount,
+}: TapeCollectionProps) {
   const collected = tapes.length;
 
   return (
@@ -21,20 +46,13 @@ export function TapeCollection({ tapes, totalCount }: TapeCollectionProps) {
       <FlatList
         data={tapes}
         keyExtractor={(item, index) => `tape-${index}-${item}`}
-        renderItem={({ item }) => (
-          <View style={styles.row}>
-            <Text style={styles.bullet}>▸</Text>
-            <Text style={styles.label} numberOfLines={1}>
-              {item}
-            </Text>
-          </View>
-        )}
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
-        ListEmptyComponent={() => <Text style={styles.empty}>NO TAPES RECOVERED</Text>}
+        renderItem={({ item }) => <TapeRow item={item} />}
+        ItemSeparatorComponent={TapeSeparator}
+        ListEmptyComponent={TapeEmptyState}
       />
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   container: {
