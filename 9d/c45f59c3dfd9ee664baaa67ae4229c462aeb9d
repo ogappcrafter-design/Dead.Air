@@ -1,0 +1,25 @@
+engine/calls/renderers/StayCalmHandler.ts
+  s_3496c71a877586::t_e850e1a5f0ef8d 31
+  s_3496c71a877586::t_c04b40666f7a7f 1-30,32-39
+__tests__/engine/calls/renderers/StayCalmHandler.test.ts
+  s_3496c71a877586::t_1f0f50b4a566cb 93,97-99
+  s_3496c71a877586::t_6315393e2755d3 1-92,94-96,100-108
+components/calls/StayCalmCall.tsx
+  s_3496c71a877586::t_485654f600d40d 1-235
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "9dc45f59c3dfd9ee664baaa67ae4229c462aeb9d",
+  "prompts": {},
+  "sessions": {
+    "s_3496c71a877586": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ses_02e2c4573ffe67j8qC6aGwX38o",
+        "model": "unknown"
+      },
+      "human_author": "Dagger <dagger@pixelated.love>"
+    }
+  }
+}
