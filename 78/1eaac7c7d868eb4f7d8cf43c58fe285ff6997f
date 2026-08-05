@@ -1,0 +1,114 @@
+components/radio/RadioBody.tsx
+  s_1291d967407c3f::t_66f824e2a4b004 26-27
+  s_1291d967407c3f::t_e30b5080fa83de 12
+  s_1291d967407c3f::t_5c23f80c493b8f 34
+  s_1291d967407c3f::t_e33fb69b086be5 1,15-25,30-31,33,35-40,42-47,49,51-56,61,82-83,86-87
+jest.config.js
+  s_1291d967407c3f::t_48eebf5e8e4711 10
+components/calls/ActiveCallDispatcher.tsx
+  s_1291d967407c3f::t_c751f9e57b1f39 28
+  s_1291d967407c3f::t_6576faf89e0d50 1-9,31,33,35,37,39
+components/radio/TuningDial.tsx
+  s_1291d967407c3f::t_590f5b843d27fc 79
+  s_1291d967407c3f::t_e5c1c42b4bf8a2 1,17
+__tests__/components/RenderMonitor.test.tsx
+  s_1291d967407c3f::t_64fd52d34a4958 1-25
+components/BandProgress.tsx
+  s_1291d967407c3f::t_99e901c255b09f 18-22,47
+  s_1291d967407c3f::t_be90451577733d 1
+components/tapes/TapePlayer.tsx
+  s_1291d967407c3f::t_8bdfd160165754 54
+  s_1291d967407c3f::t_38c6671781e4ed 12
+  s_1291d967407c3f::t_fcbe6636630bd1 111
+components/calls/DeadAirCall.tsx
+  s_1291d967407c3f::t_9ab82462b9a131 6
+  s_1291d967407c3f::t_ce319dbc7c361e 21-24,107
+components/radio/BandSelector.tsx
+  s_1291d967407c3f::t_bc5f1a2b283097 13-17,55
+  s_1291d967407c3f::t_14ac8eda2017a8 1
+components/calls/SignalDecodeCall.tsx
+  s_1291d967407c3f::t_f083ced809a2e9 150-155,158-176
+  s_1291d967407c3f::t_ed3cec54eeea81 5,46,58
+  s_1291d967407c3f::t_921e31a3a8529f 125,127-128,130,132
+  s_1291d967407c3f::t_1e2a470666ad69 19-22,148
+  s_1291d967407c3f::t_e8dad11757a726 65-73
+components/store/StoreCard.tsx
+  s_1291d967407c3f::t_c204dde9542ce5 6
+  s_1291d967407c3f::t_50ea7ea26bab3d 27
+  s_1291d967407c3f::t_e727a0a828cf57 87
+app/tapes/index.tsx
+  s_1291d967407c3f::t_16f9393539856f 13,46-84,97-113,117,119,132,134,140,142-151,177,183-184
+components/calls/StayCalmCall.tsx
+  s_1291d967407c3f::t_7880356e2fc3ce 6
+  s_1291d967407c3f::t_0e23a18cf9501a 24-27,144
+  s_1291d967407c3f::t_167b447baa902e 241-242
+components/progression/ShiftStatus.tsx
+  s_1291d967407c3f::t_b17dd4bc7a51c4 49
+  s_1291d967407c3f::t_94e9ea3d173198 66
+  s_1291d967407c3f::t_921206cafcd08e 6
+components/progression/BandUnlockNotification.tsx
+  s_1291d967407c3f::t_330faed7f64149 6
+  s_1291d967407c3f::t_a0d47315e4cb34 29-32,61
+components/TapeCollection.tsx
+  s_1291d967407c3f::t_f04e2433470a7b 1,10-35,49-51,55
+components/calls/SanityOverlay.tsx
+  s_1291d967407c3f::t_f3babf362430e8 6
+  s_1291d967407c3f::t_828b3c97266144 31-33,115
+types/global.d.ts
+  s_1291d967407c3f::t_50f016d880c435 1
+components/radio/FrequencyDisplay.tsx
+  s_1291d967407c3f::t_8df014e1c5ff42 1
+  s_1291d967407c3f::t_40cdc6ff412398 10-13,37
+components/calls/RightAnswerCall.tsx
+  s_1291d967407c3f::t_66959620134c27 96-105
+  s_1291d967407c3f::t_8bdd415d2321af 131,133-136
+  s_1291d967407c3f::t_de75989f0537b3 9
+  s_1291d967407c3f::t_ed861fae7ff325 35-38,153
+  s_1291d967407c3f::t_7d11d31cb5b490 5
+  s_1291d967407c3f::t_a77d08837469b1 155-158,161-168
+components/radio/VolumeControl.tsx
+  s_1291d967407c3f::t_d65e29a7cbeb3e 1
+  s_1291d967407c3f::t_b29891bca21016 12-17,56
+components/radio/SignalStrength.tsx
+  s_1291d967407c3f::t_51d9746e50b147 10-13,42
+  s_1291d967407c3f::t_d3a7d61d3f54ee 1
+components/calls/JustListenCall.tsx
+  s_1291d967407c3f::t_5ebcd5495491da 7
+  s_1291d967407c3f::t_2d72125175289e 25-28,103
+app/store/index.tsx
+  s_1291d967407c3f::t_fdaa5a8cbf0605 13-15
+  s_1291d967407c3f::t_26a567c1d80a86 53
+components/progression/AchievementsGrid.tsx
+  s_1291d967407c3f::t_3c0350d98fe520 10
+  s_1291d967407c3f::t_91fe82a0a0616c 22-25,62
+components/common/RenderMonitor.tsx
+  s_1291d967407c3f::t_a397a87672ee87 1-38
+__tests__/components/memoization.test.tsx
+  s_1291d967407c3f::t_c9bbad28cf9ade 84-86
+  s_1291d967407c3f::t_27ee05aa9be3cb 36
+  s_1291d967407c3f::t_6edd0d1be0a72a 129
+  s_1291d967407c3f::t_2aee5f2d1d2e70 132,135
+  s_1291d967407c3f::t_e78e1c4de10bcf 1-29
+  s_1291d967407c3f::t_df808098ff1cd1 30-35,37-47,50-83,87-128,130-131,133-134,136-138
+  s_1291d967407c3f::t_58af40cac64386 48-49
+components/progression/AchievementNotification.tsx
+  s_1291d967407c3f::t_d126b9eb25e187 96
+  s_1291d967407c3f::t_431145d9283655 16
+  s_1291d967407c3f::t_5a95a0895e843a 41
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "781eaac7c7d868eb4f7d8cf43c58fe285ff6997f",
+  "prompts": {},
+  "sessions": {
+    "s_1291d967407c3f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ses_02ce0474affeBeczb1I1UM0JGC",
+        "model": "unknown"
+      },
+      "human_author": "Dagger <dagger@pixelated.love>"
+    }
+  }
+}
