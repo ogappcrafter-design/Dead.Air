@@ -1,0 +1,49 @@
+app/settings/index.tsx
+  s_908e163ba4885d::t_4bf4e52c7d9c01 1,5,14-15
+  s_908e163ba4885d::t_30a8f900a44ccf 174-179
+  s_908e163ba4885d::t_ba9278cb643749 89-91
+  s_908e163ba4885d::t_478e1281489caf 59-72
+engine/calls/CallManager.ts
+  s_908e163ba4885d::t_7a4d0e833bc2c2 107,121
+  s_908e163ba4885d::t_04dd443ccb40a6 76-82
+  s_908e163ba4885d::t_c3b8683a953b6c 289-291
+lib/analytics/AnalyticsEngine.ts
+  s_908e163ba4885d::t_e7c9a06648cf03 1-142
+__tests__/lib/analytics/AnalyticsEngine.test.ts
+  s_908e163ba4885d::t_578f3775a5ac4a 1-141
+store/useGameStore.ts
+  s_908e163ba4885d::t_84dc6eaf6f0e37 6
+  s_908e163ba4885d::t_4a126ac4d9e782 75-81
+app/store/index.tsx
+  s_908e163ba4885d::t_c1fcaa1798d049 6,11,23-34
+  s_908e163ba4885d::t_1b403ee3aed8ce 74
+engine/calls/callManagerInstance.ts
+  s_908e163ba4885d::t_f60e58197b45ab 6,31-44,49-52,55-63,83-90
+__tests__/lib/analytics/AnalyticsReport.test.ts
+  s_908e163ba4885d::t_4d352541adeab8 1-183
+store/useAchievementStore.ts
+  s_908e163ba4885d::t_8cf83ba0f86006 15
+  s_908e163ba4885d::t_ca990228fab3fb 56-58
+store/useAnalyticsStore.ts
+  s_908e163ba4885d::t_7189130d6b24a2 1-66
+lib/analytics/AnalyticsReport.ts
+  s_908e163ba4885d::t_10a29a17fac2c5 1-89
+app/_layout.tsx
+  s_908e163ba4885d::t_0a0e1113605425 10,19-22
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "1d6d41b4abcbd4c7a3f8d9ab8e44ed6434e6d4ce",
+  "prompts": {},
+  "sessions": {
+    "s_908e163ba4885d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ses_02c359d78ffePrdJErk6cGodFy",
+        "model": "unknown"
+      },
+      "human_author": "Dagger <dagger@pixelated.love>"
+    }
+  }
+}
