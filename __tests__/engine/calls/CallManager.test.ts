@@ -34,6 +34,16 @@ const makeStores = (): CallManagerStoreAccess => ({
   unlockBand: jest.fn(),
   getReceivedCalls: jest.fn(() => []),
   getUnlockedBands: jest.fn(() => ['LIVING'] as Band[]),
+  markCallReceived: jest.fn(),
+  recordCallDuration: jest.fn(),
+  getPlayerStats: jest.fn(() => ({
+    callsReceived: 0,
+    bandsUnlocked: 1,
+    tapesCollected: 0,
+    sanityLowest: 100,
+    shiftsCompleted: 0,
+    longestCallSurvivedMs: 0,
+  })),
 });
 
 const makeRadio = (band: Band = 'LIVING'): CallManagerRadioAccess => ({

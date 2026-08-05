@@ -10,6 +10,10 @@ describe('useGameStore', () => {
       unlockedBands: ['LIVING'],
       isPlaying: false,
       currentCall: null,
+      receivedCalls: [],
+      sanityLowest: 100,
+      shiftsCompleted: 0,
+      longestCallSurvivedMs: 0,
     });
   });
 
@@ -19,6 +23,9 @@ describe('useGameStore', () => {
     expect(state.static).toBe(0);
     expect(state.tapes).toEqual([]);
     expect(state.unlockedBands).toEqual(['LIVING']);
+    expect(state.sanityLowest).toBe(100);
+    expect(state.shiftsCompleted).toBe(0);
+    expect(state.longestCallSurvivedMs).toBe(0);
   });
 
   it('decreases sanity', () => {
@@ -71,5 +78,42 @@ describe('useGameStore', () => {
     resetGame();
     expect(useGameStore.getState().sanity).toBe(100);
     expect(useGameStore.getState().tapes).toEqual([]);
+    expect(useGameStore.getState().sanityLowest).toBe(100);
+  });
+
+  it('tracks sanityLowest as cumulative minimum on decreaseSanity', () => {
+    const { decreaseSanity } = useGameStore.getState();
+    decreaseSanity(30);
+    expect(useGameStore.getState().sanity).toBe(70);
+    expect(useGameStore.getState().sanityLowest).toBe(70);
+    decreaseSanity(40);
+    expect(useGameStore.getState().sanity).toBe(30);
+    expect(useGameStore.getState().sanityLowest).toBe(30);
+  });
+
+  it('does not raise sanityLowest when sanity recovers', () => {
+    const { decreaseSanity, increaseSanity } = useGameStore.getState();
+    decreaseSanity(40);
+    expect(useGameStore.getState().sanityLowest).toBe(60);
+    increaseSanity(20);
+    expect(useGameStore.getState().sanity).toBe(80);
+    expect(useGameStore.getState().sanityLowest).toBe(60);
+  });
+
+  it('increments shiftsCompleted', () => {
+    const { incrementShiftsCompleted } = useGameStore.getState();
+    incrementShiftsCompleted();
+    incrementShiftsCompleted();
+    expect(useGameStore.getState().shiftsCompleted).toBe(2);
+  });
+
+  it('records longest call duration as running maximum', () => {
+    const { recordCallDuration } = useGameStore.getState();
+    recordCallDuration(5000);
+    expect(useGameStore.getState().longestCallSurvivedMs).toBe(5000);
+    recordCallDuration(3000);
+    expect(useGameStore.getState().longestCallSurvivedMs).toBe(5000);
+    recordCallDuration(10000);
+    expect(useGameStore.getState().longestCallSurvivedMs).toBe(10000);
   });
 });

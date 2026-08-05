@@ -13,6 +13,7 @@ import type {
   CallStateListener,
 } from './types';
 import { checkBandUnlock, type BandUnlockRow } from '../progression/BandUnlock';
+import type { PlayerStats } from '../progression/Achievements';
 
 /** Calls registry — in production imported from data/calls.js. Injectable for tests. */
 export type CallRegistry = ReadonlyMap<number, CallData>;
@@ -35,6 +36,12 @@ export interface CallManagerStoreAccess {
   getReceivedCalls(): number[];
   /** Bands the player has unlocked so far. */
   getUnlockedBands(): Band[];
+  /** Persist a received call id (deduped by store). */
+  markCallReceived(callId: number): void;
+  /** Record a completed call's duration; store keeps the running maximum. */
+  recordCallDuration(durationMs: number): void;
+  /** Snapshot of all stats the achievement engine evaluates. */
+  getPlayerStats(): PlayerStats;
 }
 
 /** Radio accessors — read current band for audio preset selection. */
@@ -62,6 +69,8 @@ export interface CallManagerConfig {
   audio?: CallManagerAudioAccess | null;
   /** BANDS rows from data/calls.js — drives received-call band unlock threshold checks. */
   bands: readonly BandUnlockRow[];
+  /** Invoked after endCall applies all stat changes so the achievement engine can check unlocks. */
+  onAchievementsCheck?(stats: PlayerStats): void;
 }
 
 /** Map call.type to handler route label. Wave 2 renderers register here. */
@@ -85,6 +94,7 @@ export class CallManager {
   private readonly stores: CallManagerStoreAccess;
   private readonly radio: CallManagerRadioAccess;
   private readonly bands: readonly BandUnlockRow[];
+  private readonly onAchievementsCheck?: (stats: PlayerStats) => void;
   private audio: CallManagerAudioAccess | null;
 
   private state: CallLifecycleState = 'idle';
@@ -97,6 +107,7 @@ export class CallManager {
     this.radio = config.radio;
     this.bands = config.bands;
     this.audio = config.audio ?? null;
+    this.onAchievementsCheck = config.onAchievementsCheck;
   }
 
   // --- Lifecycle ---
@@ -189,17 +200,13 @@ export class CallManager {
       this.stores.unlockBand(outcome.bandUnlocked);
     }
 
-    // Band unlock by received-call threshold. Count the just-completed
-    // call id toward the deduped received-calls total: if the store's
-    // received list does not yet include it, add 1 to the length (this
-    // count is local to the unlock check; the store records persistence
-    // through its own markCallReceived path, which is outside this
-    // module's store access contract).
+    // Band unlock by received-call threshold. The store persists the
+    // deduped received-call id list; the count used here reflects it.
+    this.stores.markCallReceived(call.id);
+
     const unlockedBands = this.stores.getUnlockedBands();
     const receivedCallIds = this.stores.getReceivedCalls();
-    const counted = receivedCallIds.includes(call.id)
-      ? receivedCallIds.length
-      : receivedCallIds.length + 1;
+    const counted = receivedCallIds.length;
     const unlock = checkBandUnlock(
       {
         callsReceived: counted,
@@ -212,11 +219,23 @@ export class CallManager {
       this.stores.unlockBand(unlock.band);
     }
 
+    // Record call duration for the Patient Listener achievement.
+    const duration = Date.now() - this.activeCall.startTime;
+    if (duration > 0) {
+      this.stores.recordCallDuration(duration);
+    }
+
     // Clear current call in store.
     this.stores.setCurrentCall(null);
 
     // Reset to idle for next call.
     this.transition('idle', null);
+
+    // Surface the new stats snapshot to the achievement engine so it can
+    // check + queue any freshly-unlocked milestones.
+    if (this.onAchievementsCheck !== undefined) {
+      this.onAchievementsCheck(this.stores.getPlayerStats());
+    }
   }
 
   /** Current active call (or null if idle/completed). */

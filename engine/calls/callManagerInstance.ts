@@ -2,6 +2,7 @@ import { initCallManager } from './CallManager';
 import { CALLS, BANDS as BANDS_DATA } from '@/data/calls';
 import { useGameStore } from '@/store/useGameStore';
 import { useRadioStore } from '@/store/useRadioStore';
+import { useAchievementStore } from '@/store/useAchievementStore';
 import type { Band } from '@/lib/constants';
 import type { CallData } from './types';
 
@@ -34,10 +35,24 @@ export const callManager = initCallManager({
     unlockBand: (band) => useGameStore.getState().unlockBand(band),
     getReceivedCalls: () => useGameStore.getState().receivedCalls,
     getUnlockedBands: () => useGameStore.getState().unlockedBands,
+    markCallReceived: (callId) => useGameStore.getState().markCallReceived(callId),
+    recordCallDuration: (ms) => useGameStore.getState().recordCallDuration(ms),
+    getPlayerStats: () => {
+      const s = useGameStore.getState();
+      return {
+        callsReceived: s.receivedCalls.length,
+        bandsUnlocked: s.unlockedBands.length,
+        tapesCollected: s.tapes.length,
+        sanityLowest: s.sanityLowest,
+        shiftsCompleted: s.shiftsCompleted,
+        longestCallSurvivedMs: s.longestCallSurvivedMs,
+      };
+    },
   },
   radio: {
     getCurrentBand: () => useRadioStore.getState().currentBand,
   },
   audio: null,
   bands,
+  onAchievementsCheck: (stats) => useAchievementStore.getState().checkAndUnlock(stats),
 });

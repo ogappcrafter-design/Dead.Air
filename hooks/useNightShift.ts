@@ -12,6 +12,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { getNightShift, type ShiftState } from '../engine/progression/NightShift';
 import { getCallManager } from '../engine/calls/CallManager';
+import { useGameStore } from '../store/useGameStore';
 
 export interface UseNightShiftResult {
   state: ShiftState;
@@ -115,6 +116,7 @@ export function useNightShift(): UseNightShiftResult {
     lastTimeRef.current = null;
     const finalState = shift.endShift();
     setState(finalState);
+    useGameStore.getState().incrementShiftsCompleted();
   }, []);
 
   // Cleanup on unmount: stop the loop.

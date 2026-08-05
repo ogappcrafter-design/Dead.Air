@@ -12,6 +12,12 @@ interface GameState {
   isPlaying: boolean;
   currentCall: string | null;
   receivedCalls: number[];
+  /** Cumulative lowest sanity ever reached (MAX_SANITY at fresh save). */
+  sanityLowest: number;
+  /** Number of completed night shifts. */
+  shiftsCompleted: number;
+  /** Longest single-call duration survived, in milliseconds. */
+  longestCallSurvivedMs: number;
 
   // Actions
   decreaseSanity: (amount: number) => void;
@@ -22,6 +28,8 @@ interface GameState {
   setPlaying: (playing: boolean) => void;
   setCurrentCall: (callId: string | null) => void;
   markCallReceived: (callId: number) => void;
+  incrementShiftsCompleted: () => void;
+  recordCallDuration: (durationMs: number) => void;
   resetGame: () => void;
 }
 
@@ -33,6 +41,9 @@ const initialState = {
   isPlaying: false,
   currentCall: null as string | null,
   receivedCalls: [] as number[],
+  sanityLowest: MAX_SANITY,
+  shiftsCompleted: 0,
+  longestCallSurvivedMs: 0,
 };
 
 export const useGameStore = create<GameState>()(
@@ -41,9 +52,13 @@ export const useGameStore = create<GameState>()(
       ...initialState,
 
       decreaseSanity: (amount) =>
-        set((state) => ({
-          sanity: Math.max(0, state.sanity - amount),
-        })),
+        set((state) => {
+          const sanity = Math.max(0, state.sanity - amount);
+          return {
+            sanity,
+            sanityLowest: Math.min(state.sanityLowest, sanity),
+          };
+        }),
 
       increaseSanity: (amount) =>
         set((state) => ({
@@ -76,6 +91,14 @@ export const useGameStore = create<GameState>()(
           receivedCalls: state.receivedCalls.includes(callId)
             ? state.receivedCalls
             : [...state.receivedCalls, callId],
+        })),
+
+      incrementShiftsCompleted: () =>
+        set((state) => ({ shiftsCompleted: state.shiftsCompleted + 1 })),
+
+      recordCallDuration: (durationMs) =>
+        set((state) => ({
+          longestCallSurvivedMs: Math.max(state.longestCallSurvivedMs, durationMs),
         })),
 
       resetGame: () => set(initialState),
