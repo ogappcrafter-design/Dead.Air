@@ -1,0 +1,26 @@
+engine/calls/renderers/SignalDecodeHandler.ts
+  s_e06719233c06de::t_281a644a26356b 1-50
+components/calls/SignalDecodeCall.tsx
+  s_e06719233c06de::t_df424ff64cc50f 1-4,6-18,20-75,77-265
+  s_e06719233c06de::t_35ef666f5aff31 5
+  s_e06719233c06de::t_9c6b2ab43c17a4 19
+  s_e06719233c06de::t_66e846f25e47a5 76
+__tests__/engine/calls/renderers/SignalDecodeHandler.test.ts
+  s_e06719233c06de::t_c70854d0fa5f4e 1-168
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "96eaf95393ef7e2254357b5ecfb91f00fa4d0683",
+  "prompts": {},
+  "sessions": {
+    "s_e06719233c06de": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ses_02e2cb3e7ffenL2DbrMIyy84wc",
+        "model": "unknown"
+      },
+      "human_author": "Dagger <dagger@pixelated.love>"
+    }
+  }
+}
