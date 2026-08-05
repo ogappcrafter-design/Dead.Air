@@ -3,6 +3,7 @@ import { CALLS, BANDS as BANDS_DATA } from '@/data/calls';
 import { useGameStore } from '@/store/useGameStore';
 import { useRadioStore } from '@/store/useRadioStore';
 import { useAchievementStore } from '@/store/useAchievementStore';
+import { useAnalyticsStore } from '@/store/useAnalyticsStore';
 import type { Band } from '@/lib/constants';
 import type { CallData } from './types';
 
@@ -27,15 +28,39 @@ const bands = (
 export const callManager = initCallManager({
   registry,
   stores: {
-    setCurrentCall: (id) => useGameStore.getState().setCurrentCall(id),
+    setCurrentCall: (id) => {
+      useGameStore.getState().setCurrentCall(id);
+      if (id !== null) {
+        const numId = Number(id);
+        const call = registry.get(numId);
+        const band = useRadioStore.getState().currentBand;
+        if (call !== undefined) {
+          useAnalyticsStore.getState().track('call_received', {
+            callType: call.type,
+            band,
+          });
+        }
+      }
+    },
     decreaseSanity: (n) => useGameStore.getState().decreaseSanity(n),
     increaseSanity: (n) => useGameStore.getState().increaseSanity(n),
     addStatic: (n) => useGameStore.getState().addStatic(n),
     addTape: (id) => useGameStore.getState().addTape(id),
-    unlockBand: (band) => useGameStore.getState().unlockBand(band),
+    unlockBand: (band) => {
+      useGameStore.getState().unlockBand(band);
+      useAnalyticsStore.getState().track('band_unlocked', { band });
+    },
     getReceivedCalls: () => useGameStore.getState().receivedCalls,
     getUnlockedBands: () => useGameStore.getState().unlockedBands,
-    markCallReceived: (callId) => useGameStore.getState().markCallReceived(callId),
+    markCallReceived: (callId) => {
+      useGameStore.getState().markCallReceived(callId);
+      const call = registry.get(callId);
+      if (call !== undefined) {
+        useAnalyticsStore.getState().track('call_survived', {
+          callType: call.type,
+        });
+      }
+    },
     recordCallDuration: (ms) => useGameStore.getState().recordCallDuration(ms),
     getPlayerStats: () => {
       const s = useGameStore.getState();
@@ -55,4 +80,12 @@ export const callManager = initCallManager({
   audio: null,
   bands,
   onAchievementsCheck: (stats) => useAchievementStore.getState().checkAndUnlock(stats),
+  onCallReset: (activeCall) => {
+    if (activeCall === null) {
+      return;
+    }
+    useAnalyticsStore.getState().track('call_failed', {
+      callType: activeCall.call.type,
+    });
+  },
 });

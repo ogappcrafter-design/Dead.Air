@@ -73,6 +73,13 @@ export interface CallManagerConfig {
   bands: readonly BandUnlockRow[];
   /** Invoked after endCall applies all stat changes so the achievement engine can check unlocks. */
   onAchievementsCheck?(stats: PlayerStats): void;
+  /**
+   * Invoked by reset() when an active call is aborted (no rewards applied).
+   * Receives the call that was active at reset time, or null when reset is
+   * called from idle (no-op). Analytics consumers use this to record
+   * `call_failed`. Not invoked by endCall — only by the abort path.
+   */
+  onCallReset?(activeCall: ActiveCall | null): void;
 }
 
 /** Map call.type to handler route label. Wave 2 renderers register here. */
@@ -97,6 +104,7 @@ export class CallManager {
   private readonly radio: CallManagerRadioAccess;
   private readonly bands: readonly BandUnlockRow[];
   private readonly onAchievementsCheck?: (stats: PlayerStats) => void;
+  private readonly onCallReset?: (activeCall: ActiveCall | null) => void;
   private audio: CallManagerAudioAccess | null;
 
   private state: CallLifecycleState = 'idle';
@@ -110,6 +118,7 @@ export class CallManager {
     this.bands = config.bands;
     this.audio = config.audio ?? null;
     this.onAchievementsCheck = config.onAchievementsCheck;
+    this.onCallReset = config.onCallReset;
   }
 
   // --- Lifecycle ---
@@ -277,6 +286,9 @@ export class CallManager {
    * Use endCall() for normal completion; reset() only for abort/teardown.
    */
   reset(): void {
+    if (this.onCallReset !== undefined) {
+      this.onCallReset(this.activeCall);
+    }
     if (this.activeCall !== null) {
       this.stores.setCurrentCall(null);
     }

@@ -3,6 +3,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Band, SAVE_KEY, MAX_SANITY, MAX_STATIC } from '../lib/constants';
+import { useAnalyticsStore } from './useAnalyticsStore';
 
 interface GameState {
   sanity: number;
@@ -71,9 +72,13 @@ export const useGameStore = create<GameState>()(
         })),
 
       addTape: (tapeId) =>
-        set((state) => ({
-          tapes: state.tapes.includes(tapeId) ? state.tapes : [...state.tapes, tapeId],
-        })),
+        set((state) => {
+          if (state.tapes.includes(tapeId)) {
+            return state;
+          }
+          useAnalyticsStore.getState().track('tape_collected', { tapeId });
+          return { tapes: [...state.tapes, tapeId] };
+        }),
 
       unlockBand: (band) =>
         set((state) => ({

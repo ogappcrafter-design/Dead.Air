@@ -7,6 +7,7 @@ import { ErrorBoundary } from '../components/shared/ErrorBoundary';
 import { colors } from '../lib/theme';
 import { initErrorTracking } from '../lib/errorTracking';
 import { useSettingsStore } from '../store/useSettingsStore';
+import { AnalyticsEngine } from '../lib/analytics/AnalyticsEngine';
 
 initErrorTracking();
 
@@ -15,6 +16,10 @@ export default function RootLayout() {
 
   useEffect(() => {
     initErrorTracking();
+    AnalyticsEngine.init();
+    return () => {
+      AnalyticsEngine.endSession();
+    };
   }, []);
 
   return (

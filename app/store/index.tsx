@@ -3,11 +3,12 @@
 // in Phase 5-4; real billing wired in a later phase. Persists hasInfiniteSignal
 // via useStoreStore (zustand + AsyncStorage).
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, Pressable, StyleSheet, ScrollView, SafeAreaView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { colors, fonts, spacing } from '../../lib/theme';
 import { useStoreStore } from '../../store/useStoreStore';
+import { useAnalyticsStore } from '../../store/useAnalyticsStore';
 import { StoreCard } from '../../components/store/StoreCard';
 
 /** Stable noop — avoids creating a new function reference on every render. */
@@ -19,6 +20,18 @@ export default function StoreScreen() {
   const purchasing = useStoreStore((s) => s.purchasing);
   const purchaseInfiniteSignal = useStoreStore((s) => s.purchaseInfiniteSignal);
   const restorePurchases = useStoreStore((s) => s.restorePurchases);
+  const track = useAnalyticsStore((s) => s.track);
+
+  useEffect(() => {
+    track('store_viewed');
+  }, [track]);
+
+  const handlePurchaseInfiniteSignal = async () => {
+    await purchaseInfiniteSignal();
+    if (useStoreStore.getState().hasInfiniteSignal) {
+      track('iap_completed', { productId: 'infinite_signal' });
+    }
+  };
 
   const infiniteSignalState = hasInfiniteSignal
     ? ('owned' as const)
@@ -58,7 +71,7 @@ export default function StoreScreen() {
           description="Endless procedural calls beyond the 18 sacred handshakes. New frequencies, new voices, forever."
           price="$4.99"
           state={infiniteSignalState}
-          onPurchase={purchaseInfiniteSignal}
+          onPurchase={handlePurchaseInfiniteSignal}
           purchaseButtonTestID="infinite-signal-purchase"
         />
 

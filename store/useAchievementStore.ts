@@ -12,6 +12,7 @@ import {
   type PlayerStats,
 } from '../engine/progression/Achievements';
 import { SAVE_KEY } from '../lib/constants';
+import { useAnalyticsStore } from './useAnalyticsStore';
 
 /**
  * Persistence stores only `unlocked` IDs — `recentUnlock` is ephemeral UI
@@ -52,6 +53,9 @@ export const useAchievementStore = create<AchievementState>()(
         // lastId is guaranteed defined (length>0) but TS can't see through arrays.
         const recent = lastId !== undefined ? (achievementById.get(lastId) ?? null) : null;
         set({ unlocked: nextUnlocked, recentUnlock: recent });
+        for (const id of newlyUnlocked) {
+          useAnalyticsStore.getState().track('achievement_unlocked', { achievementId: id });
+        }
       },
 
       clearRecentUnlock: () => set({ recentUnlock: null }),

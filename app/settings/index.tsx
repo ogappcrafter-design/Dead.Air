@@ -1,7 +1,8 @@
-import { View, Text, StyleSheet, Pressable, Switch } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Switch, ScrollView } from 'react-native';
 import { router } from 'expo-router';
 import { colors, fonts, spacing } from '../../lib/theme';
 import { useSettingsStore } from '../../store/useSettingsStore';
+import { useAnalyticsStore } from '../../store/useAnalyticsStore';
 
 const CRT_INTENSITY_STEP = 0.1;
 
@@ -10,6 +11,8 @@ export default function SettingsScreen() {
   const setCrtEnabled = useSettingsStore((s) => s.setCrtEnabled);
   const crtIntensity = useSettingsStore((s) => s.crtIntensity);
   const setCrtIntensity = useSettingsStore((s) => s.setCrtIntensity);
+  const analyticsEnabled = useAnalyticsStore((s) => s.enabled);
+  const setAnalyticsEnabled = useAnalyticsStore((s) => s.setEnabled);
 
   const lower = Math.max(0, Math.round((crtIntensity - CRT_INTENSITY_STEP) * 10) / 10);
   const raise = Math.min(1, Math.round((crtIntensity + CRT_INTENSITY_STEP) * 10) / 10);
@@ -53,6 +56,20 @@ export default function SettingsScreen() {
         </View>
       </View>
 
+      <View style={styles.card}>
+        <Text style={styles.sectionLabel}>ANALYTICS</Text>
+        <View style={styles.row}>
+          <Text style={styles.rowLabel}>LOCAL ONLY</Text>
+          <Switch
+            value={analyticsEnabled}
+            onValueChange={setAnalyticsEnabled}
+            trackColor={{ false: colors.border, true: colors.amber }}
+            thumbColor={analyticsEnabled ? colors.background : colors.textMuted}
+          />
+        </View>
+        <Text style={styles.note}>Opt-in. Events stay on device. No accounts, no network.</Text>
+      </View>
+
       <Pressable style={styles.link} onPress={() => router.push('/settings/achievements')}>
         <Text style={styles.linkText}>ACHIEVEMENTS →</Text>
       </Pressable>
@@ -68,6 +85,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
     gap: spacing.lg,
     padding: spacing.lg,
+  },
+  content: {
+    paddingBottom: spacing.xxl,
   },
   title: {
     fontFamily: fonts.display,
@@ -150,5 +170,11 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: colors.border,
     marginVertical: spacing.sm,
+  },
+  note: {
+    fontFamily: fonts.mono,
+    fontSize: 10,
+    color: colors.textMuted,
+    letterSpacing: 0.5,
   },
 });
