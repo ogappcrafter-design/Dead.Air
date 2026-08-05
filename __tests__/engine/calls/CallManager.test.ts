@@ -32,6 +32,8 @@ const makeStores = (): CallManagerStoreAccess => ({
   addStatic: jest.fn(),
   addTape: jest.fn(),
   unlockBand: jest.fn(),
+  getReceivedCalls: jest.fn(() => []),
+  getUnlockedBands: jest.fn(() => ['LIVING'] as Band[]),
 });
 
 const makeRadio = (band: Band = 'LIVING'): CallManagerRadioAccess => ({
@@ -45,6 +47,14 @@ const makeAudio = (): CallManagerAudioAccess => ({
   applyPresetForBand: jest.fn(),
 });
 
+const TEST_BANDS = [
+  { id: 0, name: 'LIVING', freq: '88.7 FM', color: '#FF8C00', unlockAt: 0 },
+  { id: 1, name: 'LIMINAL', freq: '102.3 FM', color: '#CCFF00', unlockAt: 4 },
+  { id: 2, name: 'LOST', freq: '117.8 AM', color: '#00FFD0', unlockAt: 8 },
+  { id: 3, name: 'CLASSIFIED', freq: '███.█ FM', color: '#FF3366', unlockAt: 12 },
+  { id: 4, name: '████████', freq: '???.?', color: '#FFFFFF', unlockAt: 15 },
+] as const;
+
 const makeConfig = (overrides: Partial<CallManagerConfig> = {}): CallManagerConfig => {
   const calls = [
     makeCall({ id: 1, band: 0, type: 'JUST_LISTEN' }),
@@ -56,6 +66,7 @@ const makeConfig = (overrides: Partial<CallManagerConfig> = {}): CallManagerConf
     stores: makeStores(),
     radio: makeRadio(),
     audio: makeAudio(),
+    bands: TEST_BANDS,
     ...overrides,
   };
 };

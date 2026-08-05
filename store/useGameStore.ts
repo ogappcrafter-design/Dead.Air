@@ -11,6 +11,7 @@ interface GameState {
   unlockedBands: Band[];
   isPlaying: boolean;
   currentCall: string | null;
+  receivedCalls: number[];
 
   // Actions
   decreaseSanity: (amount: number) => void;
@@ -20,6 +21,7 @@ interface GameState {
   unlockBand: (band: Band) => void;
   setPlaying: (playing: boolean) => void;
   setCurrentCall: (callId: string | null) => void;
+  markCallReceived: (callId: number) => void;
   resetGame: () => void;
 }
 
@@ -30,6 +32,7 @@ const initialState = {
   unlockedBands: ['LIVING'] as Band[],
   isPlaying: false,
   currentCall: null as string | null,
+  receivedCalls: [] as number[],
 };
 
 export const useGameStore = create<GameState>()(
@@ -67,6 +70,13 @@ export const useGameStore = create<GameState>()(
       setPlaying: (playing) => set({ isPlaying: playing }),
 
       setCurrentCall: (callId) => set({ currentCall: callId }),
+
+      markCallReceived: (callId) =>
+        set((state) => ({
+          receivedCalls: state.receivedCalls.includes(callId)
+            ? state.receivedCalls
+            : [...state.receivedCalls, callId],
+        })),
 
       resetGame: () => set(initialState),
     }),

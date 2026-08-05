@@ -12,6 +12,7 @@ import type {
   CallOutcome,
   CallStateListener,
 } from './types';
+import { getNextBandUnlock, type BandMetaRow } from './TapeProgression';
 
 /** Calls registry — in production imported from data/calls.js. Injectable for tests. */
 export type CallRegistry = ReadonlyMap<number, CallData>;
@@ -30,6 +31,10 @@ export interface CallManagerStoreAccess {
   addTape(tapeId: string): void;
   /** Unlock a band if not already unlocked. */
   unlockBand(band: Band): void;
+  /** Cross-cycle list of received call ids (persistent, dedupes on write). */
+  getReceivedCalls(): number[];
+  /** Bands the player has unlocked so far. */
+  getUnlockedBands(): Band[];
 }
 
 /** Radio accessors — read current band for audio preset selection. */
@@ -55,6 +60,8 @@ export interface CallManagerConfig {
   stores: CallManagerStoreAccess;
   radio: CallManagerRadioAccess;
   audio?: CallManagerAudioAccess | null;
+  /** BANDS rows from data/calls.js — drives received-call band unlock threshold checks. */
+  bands: readonly BandMetaRow[];
 }
 
 /** Map call.type to handler route label. Wave 2 renderers register here. */
@@ -77,6 +84,7 @@ export class CallManager {
   private readonly registry: CallRegistry;
   private readonly stores: CallManagerStoreAccess;
   private readonly radio: CallManagerRadioAccess;
+  private readonly bands: readonly BandMetaRow[];
   private audio: CallManagerAudioAccess | null;
 
   private state: CallLifecycleState = 'idle';
@@ -87,6 +95,7 @@ export class CallManager {
     this.registry = config.registry;
     this.stores = config.stores;
     this.radio = config.radio;
+    this.bands = config.bands;
     this.audio = config.audio ?? null;
   }
 
@@ -178,6 +187,19 @@ export class CallManager {
     // Band unlock.
     if (outcome.bandUnlocked !== undefined) {
       this.stores.unlockBand(outcome.bandUnlocked);
+    }
+
+    // Band unlock by received-call threshold. Record the just-completed
+    // call's id via markCallReceived so the band progression counts it
+    // before we read receivedCalls. Store-side dedupe handles repeats.
+    if (this.activeCall?.id !== undefined && this.activeCall?.id !== null) {
+      this.stores.markCallReceived(this.activeCall.id);
+    }
+    const unlockedBands = this.stores.getUnlockedBands();
+    const receivedCallIds = this.stores.getReceivedCalls();
+    const nextBand = getNextBandUnlock(unlockedBands, receivedCallIds, this.bands);
+    if (nextBand !== null) {
+      this.stores.unlockBand(nextBand);
     }
 
     // Clear current call in store.
