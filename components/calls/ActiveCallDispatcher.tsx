@@ -6,6 +6,7 @@ import { JustListenCall } from "@/components/calls/JustListenCall";
 import { RightAnswerCall } from "@/components/calls/RightAnswerCall";
 import { DeadAirCall } from "@/components/calls/DeadAirCall";
 import StayCalmCall from "@/components/calls/StayCalmCall";
+import { SignalDecodeCall } from "@/components/calls/SignalDecodeCall";
 
 export function ActiveCallDispatcher() {
   const [route, setRoute] = useState<CallTypeRoute | null>(null);
@@ -31,6 +32,8 @@ export function ActiveCallDispatcher() {
       return <DeadAirCall call={activeCall.call} onComplete={onComplete} />;
     case "STAY_CALM":
       return <StayCalmCall call={activeCall.call} onComplete={onComplete} />;
+    case "SIGNAL_DECODE":
+      return <SignalDecodeCall call={activeCall.call} onComplete={onComplete} />;
     default:
       return null;
   }
