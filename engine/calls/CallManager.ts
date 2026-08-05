@@ -22,6 +22,8 @@ export interface CallManagerStoreAccess {
   setCurrentCall(callId: string | null): void;
   /** Decrease sanity by amount (store clamps to 0..100). */
   decreaseSanity(amount: number): void;
+  /** Increase sanity by amount (store clamps to 0..MAX_SANITY). */
+  increaseSanity(amount: number): void;
   /** Add static (store clamps to 0..100). */
   addStatic(amount: number): void;
   /** Add tape by name if not already present. */
@@ -97,7 +99,7 @@ export class CallManager {
    * @returns true if call started, false if id invalid or busy.
    */
   startCall(callId: number): boolean {
-    if (this.state !== 'idle' && this.state !== 'completed') {
+    if (this.state !== 'idle') {
       return false;
     }
     const call = this.registry.get(callId);
@@ -137,6 +139,9 @@ export class CallManager {
     if (this.activeCall === null) {
       return;
     }
+    if (this.state !== 'active' && this.state !== 'resolving') {
+      return;
+    }
     const call = this.activeCall.call;
 
     // resolving → completed
@@ -155,9 +160,7 @@ export class CallManager {
       if (outcome.sanityDelta < 0) {
         this.stores.decreaseSanity(-outcome.sanityDelta);
       } else {
-        // Positive sanityDelta = increase. Store has no increaseSanity action;
-        // we model by negative decrease (decreaseSanity(-x) → +x).
-        this.stores.decreaseSanity(-outcome.sanityDelta);
+        this.stores.increaseSanity(outcome.sanityDelta);
       }
     }
 

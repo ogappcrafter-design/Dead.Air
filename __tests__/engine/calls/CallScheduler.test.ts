@@ -55,17 +55,21 @@ const makeConfig = (overrides: Partial<SchedulingConfig> = {}): SchedulingConfig
 describe('CallScheduler timing', () => {
   let scheduler: CallScheduler;
   const originalNow = Date.now;
+  const originalRandom = Math.random;
   let fakeNow = 0;
 
   beforeEach(() => {
     resetCallScheduler();
     fakeNow = 0;
     Date.now = jest.fn(() => fakeNow) as typeof Date.now;
+    // Default: min bound (random=0 → interval = min). Tests override for max.
+    Math.random = jest.fn(() => 0) as typeof Math.random;
     scheduler = new CallScheduler(makeRegistry());
   });
 
   afterEach(() => {
     Date.now = originalNow;
+    Math.random = originalRandom;
   });
 
   it('shouldTriggerCall: true on first call (no last trigger)', () => {
@@ -98,13 +102,43 @@ describe('CallScheduler timing', () => {
     expect(scheduler.shouldTriggerCall(fakeNow)).toBe(true);
   });
 
-  it('high frequency: 15s interval', () => {
+  it('high frequency: 15s interval (min bound)', () => {
     scheduler.configure(makeConfig({ frequency: 'high' }));
     expect(scheduler.shouldTriggerCall(15_000)).toBe(true);
     scheduler.markReceived(1);
     fakeNow = 14_999;
     expect(scheduler.shouldTriggerCall(fakeNow)).toBe(false);
     fakeNow = 15_000;
+    expect(scheduler.shouldTriggerCall(fakeNow)).toBe(true);
+  });
+
+  it('randomizes interval within band: low max=90s', () => {
+    Math.random = jest.fn(() => 1) as typeof Math.random;
+    scheduler.configure(makeConfig({ frequency: 'low' }));
+    scheduler.markReceived(1);
+    fakeNow = 89_999;
+    expect(scheduler.shouldTriggerCall(fakeNow)).toBe(false);
+    fakeNow = 90_000;
+    expect(scheduler.shouldTriggerCall(fakeNow)).toBe(true);
+  });
+
+  it('randomizes interval within band: medium max=45s', () => {
+    Math.random = jest.fn(() => 1) as typeof Math.random;
+    scheduler.configure(makeConfig({ frequency: 'medium' }));
+    scheduler.markReceived(1);
+    fakeNow = 44_999;
+    expect(scheduler.shouldTriggerCall(fakeNow)).toBe(false);
+    fakeNow = 45_000;
+    expect(scheduler.shouldTriggerCall(fakeNow)).toBe(true);
+  });
+
+  it('randomizes interval within band: high max=20s', () => {
+    Math.random = jest.fn(() => 1) as typeof Math.random;
+    scheduler.configure(makeConfig({ frequency: 'high' }));
+    scheduler.markReceived(1);
+    fakeNow = 19_999;
+    expect(scheduler.shouldTriggerCall(fakeNow)).toBe(false);
+    fakeNow = 20_000;
     expect(scheduler.shouldTriggerCall(fakeNow)).toBe(true);
   });
 

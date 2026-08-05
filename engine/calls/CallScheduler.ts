@@ -45,16 +45,15 @@ const bandIndex = (band: Band): number => {
 };
 
 /**
- * Per-frequency timing intervals (ms).
+ * Per-frequency timing bands [minMs, maxMs].
  * Per brief: low ~60-90s, medium ~30-45s, high ~15-20s.
- * We pick the lower bound as the minimum interval; the scheduler returns
- * true once `now - lastTriggerAt >= interval`. Radio tick can jitter the
- * trigger within a small window by passing the actual `now`.
+ * Each cycle picks a random deadline within the band so pacing
+ * varies call-to-call instead of always using the lower bound.
  */
-const FREQUENCY_INTERVALS_MS: Record<CallFrequency, number> = {
-  low: 60_000, // 60s minimum
-  medium: 30_000, // 30s minimum
-  high: 15_000, // 15s minimum
+const FREQUENCY_BANDS_MS: Record<CallFrequency, [number, number]> = {
+  low: [60_000, 90_000],
+  medium: [30_000, 45_000],
+  high: [15_000, 20_000],
 };
 
 /**
@@ -84,17 +83,30 @@ export class CallScheduler {
   private unlockedBands: Band[] = ['LIVING'];
   private received: Set<number> = new Set();
   private lastTriggerAt: number = Number.NEGATIVE_INFINITY;
+  /** Current randomized interval for the active frequency band. */
+  private currentIntervalMs: number;
 
   constructor(registry: SchedulerCallRegistry) {
     this.registry = registry;
+    this.currentIntervalMs = this.pickInterval();
+  }
+
+  /** Pick a random interval within the current frequency's [min, max] band. */
+  private pickInterval(): number {
+    const [min, max] = FREQUENCY_BANDS_MS[this.frequency];
+    return min + Math.random() * (max - min);
   }
 
   /** Update config from stores. Safe to call any time. */
   configure(config: SchedulingConfig): void {
+    const oldFrequency = this.frequency;
     this.frequency = config.frequency;
     this.currentBand = config.currentBand;
     this.unlockedBands = config.unlockedBands;
     this.received = new Set(config.receivedCallIds);
+    if (oldFrequency !== config.frequency) {
+      this.currentIntervalMs = this.pickInterval();
+    }
   }
 
   /**
@@ -104,8 +116,7 @@ export class CallScheduler {
    * @param now current timestamp in ms (e.g. Date.now())
    */
   shouldTriggerCall(now: number): boolean {
-    const interval = FREQUENCY_INTERVALS_MS[this.frequency];
-    return now - this.lastTriggerAt >= interval;
+    return now - this.lastTriggerAt >= this.currentIntervalMs;
   }
 
   /**
@@ -144,6 +155,7 @@ export class CallScheduler {
   markReceived(callId: number): void {
     this.received.add(callId);
     this.lastTriggerAt = Date.now();
+    this.currentIntervalMs = this.pickInterval();
   }
 
   /** Get a snapshot of received call IDs (for caller to persist). */
@@ -151,10 +163,11 @@ export class CallScheduler {
     return Array.from(this.received).sort((a, b) => a - b);
   }
 
-  /** Reset: clear received list + lastTrigger timestamp. */
+  /** Reset: clear received list + lastTrigger timestamp + re-randomize interval. */
   reset(): void {
     this.received = new Set();
     this.lastTriggerAt = Number.NEGATIVE_INFINITY;
+    this.currentIntervalMs = this.pickInterval();
   }
 
   /** Replace the call registry (e.g. if Infinite Signal appends AI calls). */

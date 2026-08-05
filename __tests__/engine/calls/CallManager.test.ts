@@ -28,6 +28,7 @@ const makeCall = (overrides: Partial<CallData> = {}): CallData => ({
 const makeStores = (): CallManagerStoreAccess => ({
   setCurrentCall: jest.fn(),
   decreaseSanity: jest.fn(),
+  increaseSanity: jest.fn(),
   addStatic: jest.fn(),
   addTape: jest.fn(),
   unlockBand: jest.fn(),
@@ -148,6 +149,36 @@ describe('CallManager lifecycle', () => {
     expect(stores.decreaseSanity).not.toHaveBeenCalled();
     expect(stores.addStatic).not.toHaveBeenCalled();
   });
+
+  it('startCall is blocked during completed notification (subscriber re-entry)', () => {
+    const cm = new CallManager(config);
+    cm.startCall(1);
+    let reentryStarted = false;
+    cm.subscribe((state) => {
+      if (state === 'completed') {
+        reentryStarted = cm.startCall(2);
+      }
+    });
+    cm.endCall({ sanityDelta: 0, staticReward: 0, staticMultiplier: 1 });
+    expect(reentryStarted).toBe(false);
+    expect(cm.getCallState()).toBe('idle');
+  });
+
+  it('endCall is blocked during completed notification (no double rewards)', () => {
+    const stores = makeStores();
+    const cm = new CallManager({ ...config, stores });
+    cm.startCall(1);
+    cm.subscribe((state) => {
+      if (state === 'completed') {
+        cm.endCall({ sanityDelta: -20, staticReward: 50, staticMultiplier: 2 });
+      }
+    });
+    cm.endCall({ sanityDelta: -10, staticReward: 5, staticMultiplier: 1 });
+    expect(stores.decreaseSanity).toHaveBeenCalledTimes(1);
+    expect(stores.decreaseSanity).toHaveBeenCalledWith(10);
+    expect(stores.addStatic).toHaveBeenCalledTimes(1);
+    expect(stores.addStatic).toHaveBeenCalledWith(5);
+  });
 });
 
 describe('CallManager outcome application', () => {
@@ -168,14 +199,14 @@ describe('CallManager outcome application', () => {
     expect(stores.decreaseSanity).toHaveBeenCalledWith(10);
   });
 
-  it('applies positive sanityDelta via decreaseSanity(-delta) (no increaseSanity action)', () => {
+  it('applies positive sanityDelta via increaseSanity (upper-clamped by store)', () => {
     const stores = makeStores();
     const cm = new CallManager({ ...config, stores });
     cm.startCall(1);
     const outcome: CallOutcome = { sanityDelta: 5, staticReward: 0, staticMultiplier: 1 };
     cm.endCall(outcome);
-    // +5 → decreaseSanity(-5) (store Math.max(0, x-y) → -5 increases)
-    expect(stores.decreaseSanity).toHaveBeenCalledWith(-5);
+    expect(stores.increaseSanity).toHaveBeenCalledWith(5);
+    expect(stores.decreaseSanity).not.toHaveBeenCalled();
   });
 
   it('applies static reward with multiplier, rounded, clamped >=0', () => {

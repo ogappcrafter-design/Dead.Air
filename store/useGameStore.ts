@@ -14,6 +14,7 @@ interface GameState {
 
   // Actions
   decreaseSanity: (amount: number) => void;
+  increaseSanity: (amount: number) => void;
   addStatic: (amount: number) => void;
   addTape: (tapeId: string) => void;
   unlockBand: (band: Band) => void;
@@ -39,6 +40,11 @@ export const useGameStore = create<GameState>()(
       decreaseSanity: (amount) =>
         set((state) => ({
           sanity: Math.max(0, state.sanity - amount),
+        })),
+
+      increaseSanity: (amount) =>
+        set((state) => ({
+          sanity: Math.min(MAX_SANITY, state.sanity + amount),
         })),
 
       addStatic: (amount) =>
