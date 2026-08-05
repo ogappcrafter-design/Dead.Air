@@ -3,6 +3,7 @@ import { callManager } from "@/engine/calls/callManagerInstance";
 import type { CallTypeRoute } from "@/engine/calls/CallManager";
 import type { ActiveCall, CallLifecycleState, CallOutcome } from "@/engine/calls/types";
 import { JustListenCall } from "@/components/calls/JustListenCall";
+import { RightAnswerCall } from "@/components/calls/RightAnswerCall";
 
 export function ActiveCallDispatcher() {
   const [route, setRoute] = useState<CallTypeRoute | null>(null);
@@ -22,6 +23,8 @@ export function ActiveCallDispatcher() {
   switch (route) {
     case "JUST_LISTEN":
       return <JustListenCall call={activeCall.call} onComplete={onComplete} />;
+    case "RIGHT_ANSWER":
+      return <RightAnswerCall call={activeCall.call} onComplete={onComplete} />;
     default:
       return null;
   }
