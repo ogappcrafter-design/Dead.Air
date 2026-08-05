@@ -1,61 +1,113 @@
 // components/shared/CRTView.tsx
-// Decorative wrapper applying a CRT-style overlay (scanlines + vignette) at a
-// configurable intensity. Used across screens to evoke the dead-air radio
-// aesthetic. Pure presentational — no behavior.
+// CRTView — root CRT visual effects container. Layered overlays render
+// scanlines, edge vignette, phosphor glow, and gentle flicker over children.
+// Pass-through View when intensity is 0 or when settings disable CRT effects.
+//
+// Overlays are pointerEvents='none' so touch events pass through to children.
+// All animation uses react-native-reanimated (no raw Animated API). The flick
+// loop is driven by a shared-value timing so it stays off the JS thread after
+// mount. Performance budget: a handful of empty Views + one Animated.View.
 
-import { type ReactNode } from 'react';
-import { View, StyleSheet } from 'react-native';
+import React, { type JSX, type ReactNode } from 'react';
+import { View, StyleSheet, ViewProps } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withRepeat,
+  withTiming,
+  cancelAnimation,
+  Easing,
+} from 'react-native-reanimated';
 import { colors } from '../../lib/theme';
+import { useSettingsStore } from '../../store/useSettingsStore';
+import { ScanlineOverlay, VignetteOverlay, PhosphorGlow } from './CRTEffects';
 
-interface CRTViewProps {
-  /** 0 disables the overlay; 0.0–1.0 scales scanline opacity. */
+export interface CRTViewProps extends ViewProps {
+  /** 0..1 — 0 disables effects entirely (pass-through View). */
   intensity?: number;
-  children: ReactNode;
+  children?: ReactNode;
+  style?: ViewProps['style'];
 }
 
+const FLICKER_PERIOD_MS = 2800;
+const FLICKER_MIN = 0.95;
+const FLICKER_MAX = 1.0;
+
 /**
- * CRTView renders a dim scanline + vignette overlay over its children when
- * `intensity` > 0. When intensity is 0, it renders children bare with no
- * overlay. The overlay layers use theme colors so they harmonize with the
- * rest of the UI.
+ * CRTView wraps children with layered CRT effects:
+ *   - ScanlineOverlay: alternating dark horizontal lines
+ *   - VignetteOverlay: edge darkening for screen curvature feel
+ *   - PhosphorGlow: subtle amber bloom over content
+ *   - Flicker: gentle opacity oscillation on the whole stack
+ *
+ * Pass-through when intensity===0 or useSettingsStore.crtEnabled===false.
  */
-export function CRTView({ intensity = 0, children }: CRTViewProps) {
-  if (intensity <= 0) {
-    return <>{children}</>;
+function CRTView({ intensity = 0, children, style, ...rest }: CRTViewProps): JSX.Element {
+  const crtEnabled = useSettingsStore((s) => s.crtEnabled);
+  const reducedMotion = useSettingsStore((s) => s.reducedMotion);
+  const active = intensity > 0 && crtEnabled;
+
+  const flicker = useSharedValue(1);
+  const flickerStyle = useAnimatedStyle(() => ({ opacity: flicker.value }));
+
+  React.useEffect(() => {
+    if (!active || reducedMotion) {
+      cancelAnimation(flicker);
+      flicker.value = 1;
+      return;
+    }
+    flicker.value = withRepeat(
+      withTiming(FLICKER_MAX, {
+        duration: FLICKER_PERIOD_MS / 2,
+        easing: Easing.inOut(Easing.sin),
+      }),
+      -1, // infinite
+      true, // reverse each cycle → min..max..min
+    );
+    return () => {
+      cancelAnimation(flicker);
+    };
+  }, [active, reducedMotion, flicker]);
+
+  if (!active) {
+    return (
+      <View style={style} {...rest}>
+        {children}
+      </View>
+    );
   }
 
   return (
-    <View style={styles.wrapper}>
-      {children}
-      <View style={[styles.scanlines, { opacity: intensity }]} pointerEvents="none" />
-      <View style={[styles.vignette, { opacity: intensity * 0.6 }]} pointerEvents="none" />
+    <View style={[styles.container, style]} {...rest}>
+      <View style={styles.layer}>{children}</View>
+
+      {/* Effect overlays — pointerEvents none so touches reach children. */}
+      <PhosphorGlow intensity={intensity} />
+      <ScanlineOverlay intensity={intensity} />
+      <VignetteOverlay intensity={intensity} />
+
+      {/* Flicker wraps the visual stack only; not touch targets underneath. */}
+      <Animated.View style={[styles.flicker, flickerStyle]} pointerEvents="none" />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  wrapper: {
+  container: {
     flex: 1,
-    position: 'relative',
+    backgroundColor: colors.background,
+    overflow: 'hidden',
   },
-  scanlines: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    // Translucent dark tint approximates scanline overlay without native
-    // repeating-gradient support.
-    backgroundColor: `${colors.background}40`,
+  layer: {
+    flex: 1,
   },
-  vignette: {
+  flicker: {
     position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: `${colors.background}80`,
+    inset: 0,
+    backgroundColor: colors.background,
+    opacity: 1,
   },
 });
 
 export default CRTView;
+export { CRTView };

@@ -15,6 +15,7 @@ interface SettingsState {
   // Display
   scanlineIntensity: number;
   crtEnabled: boolean;
+  crtIntensity: number;
   reducedMotion: boolean;
 
   // Gameplay
@@ -34,6 +35,7 @@ interface SettingsState {
   setStaticEnabled: (enabled: boolean) => void;
   setScanlineIntensity: (intensity: number) => void;
   setCrtEnabled: (enabled: boolean) => void;
+  setCrtIntensity: (intensity: number) => void;
   setReducedMotion: (reduced: boolean) => void;
   setAutoSave: (enabled: boolean) => void;
   setCallFrequency: (freq: 'low' | 'medium' | 'high') => void;
@@ -51,6 +53,7 @@ const initialState = {
   staticEnabled: true,
   scanlineIntensity: 0.1,
   crtEnabled: true,
+  crtIntensity: 0.3,
   reducedMotion: false,
   autoSave: true,
   callFrequency: 'medium' as const,
@@ -72,6 +75,7 @@ export const useSettingsStore = create<SettingsState>()(
       setScanlineIntensity: (intensity) =>
         set({ scanlineIntensity: Math.max(0, Math.min(1, intensity)) }),
       setCrtEnabled: (enabled) => set({ crtEnabled: enabled }),
+      setCrtIntensity: (intensity) => set({ crtIntensity: Math.max(0, Math.min(1, intensity)) }),
       setReducedMotion: (reduced) => set({ reducedMotion: reduced }),
       setAutoSave: (enabled) => set({ autoSave: enabled }),
       setCallFrequency: (freq) => set({ callFrequency: freq }),

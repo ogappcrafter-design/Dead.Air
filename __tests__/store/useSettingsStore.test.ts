@@ -11,6 +11,7 @@ describe('useSettingsStore', () => {
       staticEnabled: true,
       scanlineIntensity: 0.1,
       crtEnabled: true,
+      crtIntensity: 0.3,
       reducedMotion: false,
       autoSave: true,
       callFrequency: 'medium',
