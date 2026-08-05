@@ -1,0 +1,28 @@
+engine/progression/BandUnlock.ts
+  s_7e571f547a3e14::t_90540cc3546c84 1-129
+components/progression/BandUnlockNotification.tsx
+  s_7e571f547a3e14::t_50d86f77e5e5df 1-99
+__tests__/engine/progression/BandUnlock.test.ts
+  s_7e571f547a3e14::t_7e3d06b645bee4 1-181
+engine/calls/CallManager.ts
+  s_7e571f547a3e14::t_ae56614592f374 87
+  s_7e571f547a3e14::t_0f856e01ac9162 15
+  s_7e571f547a3e14::t_3baada62c2dd8f 192-197,200-212
+  s_7e571f547a3e14::t_2912ec189234e3 64
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "b35f96d88bbf1d5a9b5ddb276066632da5aa542e",
+  "prompts": {},
+  "sessions": {
+    "s_7e571f547a3e14": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ses_02d7b8501ffeoHvuj3XcSUxuf3",
+        "model": "unknown"
+      },
+      "human_author": "Dagger <dagger@pixelated.love>"
+    }
+  }
+}
