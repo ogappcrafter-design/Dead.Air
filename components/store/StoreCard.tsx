@@ -36,9 +36,13 @@ export const StoreCard = memo(function StoreCard({
   const isPurchasing = state === 'purchasing';
 
   return (
-    <View style={styles.card}>
+    <View
+      style={styles.card}
+      accessible
+      accessibilityLabel={`${title}, ${isOwned ? 'owned' : price}`}
+    >
       <View style={styles.header}>
-        <Text style={styles.title} numberOfLines={1}>
+        <Text style={styles.title} numberOfLines={1} accessibilityRole="header">
           {title}
         </Text>
         <Text style={[styles.price, isOwned && styles.priceOwned]} numberOfLines={1}>
@@ -52,7 +56,12 @@ export const StoreCard = memo(function StoreCard({
 
       <View style={styles.footer}>
         {isOwned ? (
-          <View style={styles.ownedBadge}>
+          <View
+            style={styles.ownedBadge}
+            accessible
+            accessibilityLabel="Owned"
+            accessibilityRole="text"
+          >
             <Text style={styles.ownedBadgeText} numberOfLines={1}>
               OWNED
             </Text>
@@ -67,6 +76,11 @@ export const StoreCard = memo(function StoreCard({
             ]}
             onPress={onPurchase}
             disabled={isPurchasing}
+            accessible
+            accessibilityRole="button"
+            accessibilityLabel={`Purchase ${title}`}
+            accessibilityHint={isPurchasing ? 'Processing purchase' : undefined}
+            accessibilityState={{ disabled: isPurchasing }}
           >
             {isPurchasing ? (
               <ActivityIndicator

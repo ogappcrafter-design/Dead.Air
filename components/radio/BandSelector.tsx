@@ -17,7 +17,9 @@ export const BandSelector = memo(function BandSelector({
 }: BandSelectorProps) {
   return (
     <View style={styles.container}>
-      <Text style={styles.label}>BAND</Text>
+      <Text style={styles.label} accessibilityRole="header">
+        BAND
+      </Text>
       <View style={styles.bands}>
         {BANDS.map((band) => {
           const isUnlocked = unlockedBands.includes(band);
@@ -34,6 +36,13 @@ export const BandSelector = memo(function BandSelector({
               ]}
               onPress={() => isUnlocked && onBandSelect(band)}
               disabled={!isUnlocked}
+              accessible
+              accessibilityRole="button"
+              accessibilityLabel={bandInfo.name}
+              accessibilityHint={
+                isActive ? 'Active band' : isUnlocked ? 'Switch frequency band' : 'Locked'
+              }
+              accessibilityState={{ selected: isActive, disabled: !isUnlocked }}
             >
               <Text
                 style={[
@@ -45,7 +54,11 @@ export const BandSelector = memo(function BandSelector({
               >
                 {bandInfo.name}
               </Text>
-              {!isUnlocked && <Text style={styles.lockIcon}>🔒</Text>}
+              {!isUnlocked && (
+                <Text style={styles.lockIcon} accessibilityLabel="Locked">
+                  🔒
+                </Text>
+              )}
             </Pressable>
           );
         })}

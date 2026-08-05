@@ -52,14 +52,22 @@ export const ShiftStatus = memo(function ShiftStatus({ state }: ShiftStatusProps
   const clock = formatClock(state.inGameMinutes);
 
   return (
-    <View style={styles.container}>
+    <View style={styles.container} accessible accessibilityLabel="Shift status">
       <View style={styles.row}>
         <Text style={styles.clock}>{clock}</Text>
-        <Text style={[styles.phase, { color: phaseColor }]}>{PHASE_LABELS[state.phase]}</Text>
+        <Text
+          style={[styles.phase, { color: phaseColor }]}
+          accessibilityLiveRegion="polite"
+          accessibilityLabel={`Phase: ${PHASE_LABELS[state.phase]}`}
+        >
+          {PHASE_LABELS[state.phase]}
+        </Text>
       </View>
       <View style={styles.metaRow}>
         <Text style={styles.metaLabel}>CALLS</Text>
-        <Text style={styles.metaValue}>{callsRemaining}</Text>
+        <Text style={styles.metaValue} accessibilityLiveRegion="polite">
+          {callsRemaining}
+        </Text>
       </View>
     </View>
   );

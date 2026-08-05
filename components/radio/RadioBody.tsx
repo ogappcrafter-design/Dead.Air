@@ -57,7 +57,7 @@ export function RadioBody() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.radio}>
+      <View style={styles.radio} accessible accessibilityLabel="Radio receiver">
         <FrequencyDisplay frequency={frequency} bandName={bandName} />
 
         <BandSelector

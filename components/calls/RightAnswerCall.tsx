@@ -105,14 +105,27 @@ export const RightAnswerCall = memo(function RightAnswerCall({
   );
 
   return (
-    <Pressable style={styles.container} onPress={handleSurfaceTap}>
+    <Pressable
+      style={styles.container}
+      onPress={handleSurfaceTap}
+      accessible
+      accessibilityRole="button"
+      accessibilityLabel={phase === 'lines' ? 'Skip caller line' : 'Call screen'}
+      accessibilityHint={phase === 'lines' ? 'Tap to advance to next line' : undefined}
+    >
       {phase === 'lines' && (
         <View>
           <View style={styles.header}>
-            <Text style={styles.callerName}>{call.callerName}</Text>
+            <Text style={styles.callerName} accessibilityRole="header">
+              {call.callerName}
+            </Text>
             <Text style={styles.callerId}>{call.callerId}</Text>
           </View>
-          {lines.length > 0 && <Text style={styles.line}>{lines[lineIndex] ?? ''}</Text>}
+          {lines.length > 0 && (
+            <Text style={styles.line} accessibilityLiveRegion="polite">
+              {lines[lineIndex] ?? ''}
+            </Text>
+          )}
           <Text style={styles.hint}>
             {lineIndex >= lines.length - 1 ? 'tap to continue' : 'tap to skip'}
           </Text>
@@ -122,7 +135,9 @@ export const RightAnswerCall = memo(function RightAnswerCall({
       {phase === 'choices' && (
         <View>
           <View style={styles.header}>
-            <Text style={styles.callerName}>{call.callerName}</Text>
+            <Text style={styles.callerName} accessibilityRole="header">
+              {call.callerName}
+            </Text>
             <Text style={styles.callerId}>{call.callerId}</Text>
           </View>
           {lines.length > 0 && <Text style={styles.line}>{lines[lines.length - 1] ?? ''}</Text>}
@@ -140,8 +155,12 @@ export const RightAnswerCall = memo(function RightAnswerCall({
 
       {phase === 'outcome' && selectedChoice !== null && (
         <View style={styles.outcomeContainer}>
-          <Text style={styles.callerName}>{call.callerName}</Text>
-          <Text style={styles.outcomeText}>{choices[selectedChoice]?.outcome ?? ''}</Text>
+          <Text style={styles.callerName} accessibilityRole="header">
+            {call.callerName}
+          </Text>
+          <Text style={styles.outcomeText} accessibilityLiveRegion="polite">
+            {choices[selectedChoice]?.outcome ?? ''}
+          </Text>
           <Text style={styles.selectedLabel}>
             You chose:&nbsp;
             <Text style={styles.selectedText}>{choices[selectedChoice]?.text ?? ''}</Text>
@@ -160,7 +179,14 @@ interface ChoiceButtonProps {
 
 const ChoiceButton = memo(function ChoiceButton({ choice, index, onSelect }: ChoiceButtonProps) {
   return (
-    <Pressable style={styles.choiceButton} onPress={() => onSelect(index)}>
+    <Pressable
+      style={styles.choiceButton}
+      onPress={() => onSelect(index)}
+      accessible
+      accessibilityRole="button"
+      accessibilityLabel={choice.text}
+      accessibilityHint="Choose this response"
+    >
       <Text style={styles.choiceText}>{choice.text}</Text>
     </Pressable>
   );

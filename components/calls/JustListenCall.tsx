@@ -73,10 +73,18 @@ export const JustListenCall = memo(function JustListenCall({
   const currentLine = lines[index];
 
   return (
-    <Pressable style={styles.backdrop} onPress={advance} disabled={phase === 'finalPause'}>
+    <Pressable
+      style={styles.backdrop}
+      onPress={advance}
+      disabled={phase === 'finalPause'}
+      accessible
+      accessibilityRole="button"
+      accessibilityLabel={phase === 'lines' ? 'Skip caller line' : 'Call completing'}
+      accessibilityHint="Tap to advance to next line"
+    >
       <View style={styles.card}>
         <View style={styles.header}>
-          <Text style={styles.callerName} numberOfLines={1}>
+          <Text style={styles.callerName} numberOfLines={1} accessibilityRole="header">
             {call.callerName}
           </Text>
           <Text style={styles.callerId} numberOfLines={1}>
@@ -86,7 +94,7 @@ export const JustListenCall = memo(function JustListenCall({
 
         <View style={styles.body}>
           {phase === 'lines' && currentLine !== undefined ? (
-            <Text style={styles.line} key={index}>
+            <Text style={styles.line} key={index} accessibilityLiveRegion="polite">
               {currentLine}
             </Text>
           ) : (

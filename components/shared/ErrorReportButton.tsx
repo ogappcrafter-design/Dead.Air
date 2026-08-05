@@ -22,7 +22,14 @@ export function ErrorReportButton() {
 
   if (!open) {
     return (
-      <TouchableOpacity style={styles.trigger} onPress={() => setOpen(true)}>
+      <TouchableOpacity
+        style={styles.trigger}
+        onPress={() => setOpen(true)}
+        accessible
+        accessibilityRole="button"
+        accessibilityLabel="Report a bug"
+        accessibilityHint="Open the bug report form"
+      >
         <Text style={styles.triggerText}>REPORT A BUG</Text>
       </TouchableOpacity>
     );
@@ -38,12 +45,26 @@ export function ErrorReportButton() {
         placeholder="What happened?"
         placeholderTextColor={colors.textMuted}
         multiline
+        accessible
+        accessibilityLabel="Bug description"
       />
       <View style={styles.actions}>
-        <TouchableOpacity style={styles.cancel} onPress={() => setOpen(false)}>
+        <TouchableOpacity
+          style={styles.cancel}
+          onPress={() => setOpen(false)}
+          accessible
+          accessibilityRole="button"
+          accessibilityLabel="Cancel bug report"
+        >
           <Text style={styles.cancelText}>CANCEL</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.submit} onPress={handleSubmit}>
+        <TouchableOpacity
+          style={styles.submit}
+          onPress={handleSubmit}
+          accessible
+          accessibilityRole="button"
+          accessibilityLabel="Send bug report"
+        >
           <Text style={styles.submitText}>SEND</Text>
         </TouchableOpacity>
       </View>

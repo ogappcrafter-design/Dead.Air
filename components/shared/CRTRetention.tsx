@@ -15,6 +15,7 @@ import Animated, {
   cancelAnimation,
 } from 'react-native-reanimated';
 import { colors } from '../../lib/theme';
+import { useSettingsStore } from '../../store/useSettingsStore';
 
 export interface CRTRetentionProps extends ViewProps {
   children?: ReactNode;
@@ -32,10 +33,14 @@ const TRAIL_MS = 200;
 function CRTRetention({ children, style, ...rest }: CRTRetentionProps): JSX.Element {
   const glow = useSharedValue(0);
   const firstRun = useRef(true);
+  const reducedMotion = useSettingsStore((s) => s.reducedMotion);
 
   useEffect(() => {
     if (firstRun.current) {
       firstRun.current = false;
+      return;
+    }
+    if (reducedMotion) {
       return;
     }
     glow.value = 0.5;
@@ -46,7 +51,7 @@ function CRTRetention({ children, style, ...rest }: CRTRetentionProps): JSX.Elem
     return () => {
       cancelAnimation(glow);
     };
-  }, [children, glow]);
+  }, [children, glow, reducedMotion]);
 
   const glowStyle = useAnimatedStyle(() => ({ opacity: glow.value }));
 

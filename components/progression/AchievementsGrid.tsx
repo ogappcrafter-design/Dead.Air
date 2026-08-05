@@ -41,6 +41,8 @@ export const AchievementsGrid = memo(function AchievementsGrid({
               { width: `${cellWidthPct}%` },
               idx % columns !== 0 ? { marginLeft: `${gapPct}%` } : null,
             ]}
+            accessible
+            accessibilityLabel={`${item.name}: ${item.unlocked ? 'unlocked' : 'locked'}. ${item.description}`}
           >
             <Text style={[styles.icon, item.unlocked ? null : styles.iconLocked]}>
               {item.unlocked ? item.icon : '?'}

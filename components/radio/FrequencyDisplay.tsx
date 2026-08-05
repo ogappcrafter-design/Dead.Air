@@ -14,10 +14,18 @@ export const FrequencyDisplay = memo(function FrequencyDisplay({
   const formatted = frequency.toFixed(1);
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.bandLabel}>{bandName}</Text>
+    <View
+      style={styles.container}
+      accessible
+      accessibilityLabel={`Frequency display: ${bandName}, ${formatted} MHz`}
+    >
+      <Text style={styles.bandLabel} accessibilityRole="header">
+        {bandName}
+      </Text>
       <View style={styles.display}>
-        <Text style={styles.freq}>{formatted}</Text>
+        <Text style={styles.freq} maxFontSizeMultiplier={1.2}>
+          {formatted}
+        </Text>
         <Text style={styles.unit}>MHz</Text>
       </View>
       <View style={styles.tickMarks}>

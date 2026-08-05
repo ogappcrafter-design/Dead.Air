@@ -36,10 +36,16 @@ export const TapeCollection = memo(function TapeCollection({
   const collected = tapes.length;
 
   return (
-    <View style={styles.container}>
+    <View
+      style={styles.container}
+      accessible
+      accessibilityLabel={`Tapes collected: ${collected} of ${totalCount}`}
+    >
       <View style={styles.header}>
-        <Text style={styles.title}>TAPES</Text>
-        <Text style={styles.count}>
+        <Text style={styles.title} accessibilityRole="header">
+          TAPES
+        </Text>
+        <Text style={styles.count} accessibilityLiveRegion="polite">
           {collected}/{totalCount}
         </Text>
       </View>

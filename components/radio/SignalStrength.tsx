@@ -15,8 +15,14 @@ export const SignalStrength = memo(function SignalStrength({
   const activeBars = Math.round(strength * bars);
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.label}>SIGNAL</Text>
+    <View
+      style={styles.container}
+      accessible
+      accessibilityLabel={`Signal strength: ${activeBars} of ${bars}`}
+    >
+      <Text style={styles.label} accessibilityRole="header">
+        SIGNAL
+      </Text>
       <View style={styles.bars}>
         {Array.from({ length: bars }, (_, i) => {
           const isActive = i < activeBars;
@@ -34,7 +40,10 @@ export const SignalStrength = memo(function SignalStrength({
           );
         })}
       </View>
-      <Text style={[styles.status, isTuning && styles.statusTuning]}>
+      <Text
+        style={[styles.status, isTuning && styles.statusTuning]}
+        accessibilityLiveRegion="polite"
+      >
         {isTuning ? 'TUNING' : strength > 0.7 ? 'STRONG' : strength > 0.3 ? 'WEAK' : 'NONE'}
       </Text>
     </View>

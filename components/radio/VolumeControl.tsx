@@ -28,12 +28,25 @@ export const VolumeControl = memo(function VolumeControl({
 
   return (
     <View style={styles.container}>
-      <Text style={styles.label}>VOLUME</Text>
+      <Text style={styles.label} accessibilityRole="header">
+        VOLUME
+      </Text>
       <View style={styles.controls}>
-        <Pressable style={styles.button} onPress={handleDecrease}>
+        <Pressable
+          style={styles.button}
+          onPress={handleDecrease}
+          accessible
+          accessibilityRole="button"
+          accessibilityLabel="Decrease volume"
+          accessibilityHint="Lowers radio volume by 10 percent"
+        >
           <Text style={styles.buttonText}>−</Text>
         </Pressable>
-        <View style={styles.barContainer}>
+        <View
+          style={styles.barContainer}
+          accessible
+          accessibilityLabel={`Volume ${Math.round(volume * 100)} percent`}
+        >
           {Array.from({ length: segments }, (_, idx) => (
             // eslint-disable-next-line react/no-array-index-key
             <View
@@ -42,12 +55,29 @@ export const VolumeControl = memo(function VolumeControl({
             />
           ))}
         </View>
-        <Pressable style={styles.button} onPress={handleIncrease}>
+        <Pressable
+          style={styles.button}
+          onPress={handleIncrease}
+          accessible
+          accessibilityRole="button"
+          accessibilityLabel="Increase volume"
+          accessibilityHint="Raises radio volume by 10 percent"
+        >
           <Text style={styles.buttonText}>+</Text>
         </Pressable>
       </View>
-      <Pressable style={styles.muteButton} onPress={onMuteToggle}>
-        <Text style={[styles.muteText, muted && styles.muteTextActive]}>
+      <Pressable
+        style={styles.muteButton}
+        onPress={onMuteToggle}
+        accessible
+        accessibilityRole="button"
+        accessibilityLabel={muted ? 'Unmute radio' : 'Mute radio'}
+        accessibilityHint={muted ? 'Tap to restore radio audio' : 'Tap to silence radio'}
+      >
+        <Text
+          style={[styles.muteText, muted && styles.muteTextActive]}
+          accessibilityLiveRegion="polite"
+        >
           {muted ? 'MUTED' : 'MUTE'}
         </Text>
       </Pressable>

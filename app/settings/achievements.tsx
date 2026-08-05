@@ -43,7 +43,9 @@ export default function AchievementsScreen() {
   return (
     <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>ACHIEVEMENTS</Text>
+        <Text style={styles.headerTitle} accessibilityRole="header">
+          ACHIEVEMENTS
+        </Text>
       </View>
       <AchievementsGrid items={items} />
     </ScrollView>

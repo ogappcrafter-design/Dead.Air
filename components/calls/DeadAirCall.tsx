@@ -77,17 +77,29 @@ export const DeadAirCall = memo(function DeadAirCall({
   const currentLine = lines[lineIndex];
 
   return (
-    <Pressable style={styles.screen} onPress={advanceLine} disabled={phase !== 'lines'}>
+    <Pressable
+      style={styles.screen}
+      onPress={advanceLine}
+      disabled={phase !== 'lines'}
+      accessible
+      accessibilityRole="button"
+      accessibilityLabel={phase === 'lines' ? 'Skip caller line' : 'Dead air countdown'}
+      accessibilityHint="Tap to advance to next line"
+    >
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.callerName}>{call.callerName}</Text>
+        <Text style={styles.callerName} accessibilityRole="header">
+          {call.callerName}
+        </Text>
         <Text style={styles.callerId}>{call.callerId}</Text>
       </View>
 
       {/* Body */}
       {phase === 'lines' && currentLine !== undefined ? (
         <View style={styles.lineBody}>
-          <Text style={styles.line}>{currentLine}</Text>
+          <Text style={styles.line} accessibilityLiveRegion="polite">
+            {currentLine}
+          </Text>
           <Text style={styles.hint}>tap to skip</Text>
         </View>
       ) : null}
@@ -96,7 +108,9 @@ export const DeadAirCall = memo(function DeadAirCall({
         <View style={styles.deadAirBody}>
           <Text style={staticNoiseStyle()}>...</Text>
           {remainingSeconds > 0 ? (
-            <Text style={styles.countdown}>{remainingSeconds}</Text>
+            <Text style={styles.countdown} accessibilityLiveRegion="polite">
+              {remainingSeconds}
+            </Text>
           ) : (
             <Text style={styles.countdown}>...</Text>
           )}

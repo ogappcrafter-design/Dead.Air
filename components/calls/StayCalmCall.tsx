@@ -106,12 +106,15 @@ const StayCalmCall = memo(function StayCalmCall({
       style={styles.screen}
       accessibilityLabel="Stay calm — do not tap"
       accessibilityRole="button"
+      accessibilityHint="Do not press; wait for the countdown to complete"
     >
       <View style={styles.content}>
         {phase === 'countdown' && (
           <>
             <View style={styles.header}>
-              <Text style={styles.callerName}>{call.callerName}</Text>
+              <Text style={styles.callerName} accessibilityRole="header">
+                {call.callerName}
+              </Text>
               <Text style={styles.callerId}>{call.callerId}</Text>
             </View>
 
@@ -122,7 +125,9 @@ const StayCalmCall = memo(function StayCalmCall({
 
             <View style={styles.lineBlock}>
               {lines.length > 0 ? (
-                <Text style={styles.line}>{lines[lineIndex] ?? ''}</Text>
+                <Text style={styles.line} accessibilityLiveRegion="polite">
+                  {lines[lineIndex] ?? ''}
+                </Text>
               ) : (
                 <Text style={styles.line}>...</Text>
               )}
@@ -136,8 +141,16 @@ const StayCalmCall = memo(function StayCalmCall({
           </>
         )}
 
-        {phase === 'flinched' && <Text style={styles.panic}>YOU FLINCHED</Text>}
-        {phase === 'survived' && <Text style={styles.calm}>...</Text>}
+        {phase === 'flinched' && (
+          <Text style={styles.panic} accessibilityLiveRegion="assertive">
+            YOU FLINCHED
+          </Text>
+        )}
+        {phase === 'survived' && (
+          <Text style={styles.calm} accessibilityLiveRegion="assertive">
+            ...
+          </Text>
+        )}
       </View>
     </Pressable>
   );

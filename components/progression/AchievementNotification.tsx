@@ -24,6 +24,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import type { Achievement } from '../../engine/progression/Achievements';
 import { colors, fonts, spacing } from '../../lib/theme';
+import { useSettingsStore } from '../../store/useSettingsStore';
 
 interface AchievementNotificationProps {
   /** Achievement to announce, or null to hide. */
@@ -46,6 +47,7 @@ export const AchievementNotification = memo(function AchievementNotification({
 }: AchievementNotificationProps) {
   const offsetY = useSharedValue(slideDistance);
   const opacity = useSharedValue(0);
+  const reducedMotion = useSettingsStore((s) => s.reducedMotion);
 
   useEffect(() => {
     if (achievement === null) {
@@ -55,9 +57,13 @@ export const AchievementNotification = memo(function AchievementNotification({
       return undefined;
     }
 
-    // Chain: fade in → hold → fade out on a single SharedValue so neither
-    // animation overwrites the other (the prior code assigned opacity twice
-    // and the second assignment clobbered the first).
+    if (reducedMotion) {
+      offsetY.value = 0;
+      opacity.value = 1;
+      const dismissTimer = setTimeout(onDismiss, displayMs);
+      return () => clearTimeout(dismissTimer);
+    }
+
     offsetY.value = withTiming(0, {
       duration: 300,
       easing: Easing.out(Easing.ease),
@@ -70,7 +76,7 @@ export const AchievementNotification = memo(function AchievementNotification({
     );
     const dismissTimer = setTimeout(onDismiss, 300 + displayMs + 400);
     return () => clearTimeout(dismissTimer);
-  }, [achievement, displayMs, slideDistance, offsetY, opacity, onDismiss]);
+  }, [achievement, displayMs, slideDistance, offsetY, opacity, onDismiss, reducedMotion]);
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: offsetY.value }],
@@ -82,7 +88,13 @@ export const AchievementNotification = memo(function AchievementNotification({
   }
 
   return (
-    <Animated.View style={[styles.container, animatedStyle]} pointerEvents="none">
+    <Animated.View
+      style={[styles.container, animatedStyle]}
+      pointerEvents="none"
+      accessible
+      accessibilityLabel={`Achievement unlocked: ${achievement.name}`}
+      accessibilityLiveRegion="assertive"
+    >
       <View style={styles.row}>
         <Text style={styles.icon}>{achievement.icon}</Text>
         <View style={styles.textCol}>

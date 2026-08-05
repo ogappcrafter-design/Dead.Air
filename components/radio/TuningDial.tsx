@@ -3,6 +3,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import { colors, fonts, spacing } from '../../lib/theme';
+import { useSettingsStore } from '../../store/useSettingsStore';
 
 interface TuningDialProps {
   frequency: number;
@@ -25,6 +26,9 @@ export const TuningDial = memo(function TuningDial({
 }: TuningDialProps) {
   const rotation = useSharedValue(0);
   const lastY = useSharedValue(0);
+  const reducedMotion = useSettingsStore((s) => s.reducedMotion);
+
+  const springConfig = { damping: 12, stiffness: 120 };
 
   const gesture = Gesture.Pan()
     .onStart(() => {
@@ -40,7 +44,9 @@ export const TuningDial = memo(function TuningDial({
       // Rotate dial based on frequency position
       const range = maxFreq - minFreq;
       const position = (newFreq - minFreq) / range;
-      rotation.value = withSpring(position * 270 - 135);
+      rotation.value = reducedMotion
+        ? position * 270 - 135
+        : withSpring(position * 270 - 135, springConfig);
     })
     .onEnd(() => {
       onTuningEnd();
@@ -56,9 +62,17 @@ export const TuningDial = memo(function TuningDial({
 
   return (
     <View style={styles.container}>
-      <Text style={styles.label}>TUNE</Text>
+      <Text style={styles.label} accessibilityRole="header">
+        TUNE
+      </Text>
       <GestureDetector gesture={gesture}>
-        <View style={styles.dialOuter}>
+        <View
+          style={styles.dialOuter}
+          accessible
+          accessibilityRole="adjustable"
+          accessibilityLabel={`Tune frequency, current ${frequency.toFixed(1)}`}
+          accessibilityHint="Drag vertically to change frequency"
+        >
           <Animated.View style={[styles.dialInner, animatedStyle]}>
             <View style={styles.needle} />
             <View style={styles.dotTop} />
@@ -73,7 +87,9 @@ export const TuningDial = memo(function TuningDial({
           </View>
         </View>
       </GestureDetector>
-      <Text style={styles.hint}>DRAG TO TUNE</Text>
+      <Text style={styles.hint} accessibilityRole="text">
+        DRAG TO TUNE
+      </Text>
     </View>
   );
 });

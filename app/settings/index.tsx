@@ -2,7 +2,7 @@ import { View, Text, StyleSheet, Pressable, Switch, ScrollView } from 'react-nat
 import { router } from 'expo-router';
 import { colors, fonts, spacing } from '../../lib/theme';
 import { useSettingsStore } from '../../store/useSettingsStore';
-import { useAnalyticsStore } from '../../store/useAnalyticsStore';
+import { ErrorReportButton } from '../../components/shared/ErrorReportButton';
 
 const CRT_INTENSITY_STEP = 0.1;
 
@@ -11,15 +11,17 @@ export default function SettingsScreen() {
   const setCrtEnabled = useSettingsStore((s) => s.setCrtEnabled);
   const crtIntensity = useSettingsStore((s) => s.crtIntensity);
   const setCrtIntensity = useSettingsStore((s) => s.setCrtIntensity);
-  const analyticsEnabled = useAnalyticsStore((s) => s.enabled);
-  const setAnalyticsEnabled = useAnalyticsStore((s) => s.setEnabled);
+  const reducedMotion = useSettingsStore((s) => s.reducedMotion);
+  const setReducedMotion = useSettingsStore((s) => s.setReducedMotion);
 
   const lower = Math.max(0, Math.round((crtIntensity - CRT_INTENSITY_STEP) * 10) / 10);
   const raise = Math.min(1, Math.round((crtIntensity + CRT_INTENSITY_STEP) * 10) / 10);
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.title}>SETTINGS</Text>
+      <Text style={styles.title} accessibilityRole="header">
+        SETTINGS
+      </Text>
 
       <View style={styles.card}>
         <Text style={styles.sectionLabel}>CRT</Text>
@@ -31,6 +33,10 @@ export default function SettingsScreen() {
             onValueChange={setCrtEnabled}
             trackColor={{ false: colors.border, true: colors.amber }}
             thumbColor={crtEnabled ? colors.background : colors.textMuted}
+            accessible
+            accessibilityRole="switch"
+            accessibilityLabel="CRT enabled"
+            accessibilityHint="Toggle CRT visual effects"
           />
         </View>
 
@@ -41,6 +47,10 @@ export default function SettingsScreen() {
               style={[styles.stepBtn, !crtEnabled && styles.stepDisabled]}
               onPress={() => setCrtIntensity(lower)}
               disabled={!crtEnabled}
+              accessible
+              accessibilityRole="button"
+              accessibilityLabel="Decrease CRT intensity"
+              accessibilityState={{ disabled: !crtEnabled }}
             >
               <Text style={styles.stepText}>-</Text>
             </Pressable>
@@ -49,6 +59,10 @@ export default function SettingsScreen() {
               style={[styles.stepBtn, !crtEnabled && styles.stepDisabled]}
               onPress={() => setCrtIntensity(raise)}
               disabled={!crtEnabled}
+              accessible
+              accessibilityRole="button"
+              accessibilityLabel="Increase CRT intensity"
+              accessibilityState={{ disabled: !crtEnabled }}
             >
               <Text style={styles.stepText}>+</Text>
             </Pressable>
@@ -57,20 +71,29 @@ export default function SettingsScreen() {
       </View>
 
       <View style={styles.card}>
-        <Text style={styles.sectionLabel}>ANALYTICS</Text>
+        <Text style={styles.sectionLabel}>ACCESSIBILITY</Text>
         <View style={styles.row}>
-          <Text style={styles.rowLabel}>LOCAL ONLY</Text>
+          <Text style={styles.rowLabel}>REDUCED MOTION</Text>
           <Switch
-            value={analyticsEnabled}
-            onValueChange={setAnalyticsEnabled}
+            value={reducedMotion}
+            onValueChange={setReducedMotion}
             trackColor={{ false: colors.border, true: colors.amber }}
-            thumbColor={analyticsEnabled ? colors.background : colors.textMuted}
+            thumbColor={reducedMotion ? colors.background : colors.textMuted}
+            accessible
+            accessibilityRole="switch"
+            accessibilityLabel="Reduced motion"
+            accessibilityHint="Disable nonessential animations and flicker"
           />
         </View>
-        <Text style={styles.note}>Opt-in. Events stay on device. No accounts, no network.</Text>
       </View>
 
-      <Pressable style={styles.link} onPress={() => router.push('/settings/achievements')}>
+      <Pressable
+        style={styles.link}
+        onPress={() => router.push('/settings/achievements')}
+        accessible
+        accessibilityRole="button"
+        accessibilityLabel="Open achievements"
+      >
         <Text style={styles.linkText}>ACHIEVEMENTS →</Text>
       </Pressable>
       <View style={styles.divider} />

@@ -111,12 +111,12 @@ export const SignalDecodeCall = memo(function SignalDecodeCall({
       <View style={styles.slotsRow}>{renderSymbolSlots()}</View>
 
       {phase === 'success' && (
-        <View style={styles.messageRow}>
+        <View style={styles.messageRow} accessibilityLiveRegion="polite">
           <Text style={styles.decodedMessage}>{call.decodedMessage ?? ''}</Text>
         </View>
       )}
       {phase === 'failure' && (
-        <View style={styles.messageRow}>
+        <View style={styles.messageRow} accessibilityLiveRegion="assertive">
           <Text style={styles.signalLost}>SIGNAL LOST</Text>
         </View>
       )}
@@ -141,6 +141,10 @@ export const SignalDecodeCall = memo(function SignalDecodeCall({
           testID="clear"
           style={({ pressed }) => [styles.clearButton, pressed && styles.clearButtonPressed]}
           onPress={clearInput}
+          accessible
+          accessibilityRole="button"
+          accessibilityLabel="Clear input"
+          accessibilityHint="Clear entered symbols"
         >
           <Text style={styles.clearLabel}>CLEAR</Text>
         </Pressable>
@@ -170,6 +174,10 @@ const SymbolButton = memo(function SymbolButton({
       style={({ pressed }) => [styles.symButton, pressed && styles.symButtonPressed]}
       onPress={() => onPress(index)}
       disabled={disabled}
+      accessible
+      accessibilityRole="button"
+      accessibilityLabel={`Symbol ${glyph}`}
+      accessibilityHint="Tap to enter this symbol"
     >
       <Text style={styles.symGlyph}>{glyph}</Text>
     </Pressable>

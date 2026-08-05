@@ -14,6 +14,7 @@ import Animated, {
 import { BANDS } from '../../data/calls';
 import type { Band } from '../../lib/constants';
 import { colors, fonts, spacing } from '../../lib/theme';
+import { useSettingsStore } from '../../store/useSettingsStore';
 
 interface BandUnlockNotificationProps {
   /** Band to announce, or null to hide. */
@@ -31,14 +32,19 @@ export const BandUnlockNotification = memo(function BandUnlockNotification({
   durationMs = 500,
 }: BandUnlockNotificationProps) {
   const opacity = useSharedValue(0);
+  const reducedMotion = useSettingsStore((s) => s.reducedMotion);
 
   useEffect(() => {
     if (band !== null) {
-      opacity.value = withTiming(1, { duration: durationMs, easing: Easing.out(Easing.ease) });
+      opacity.value = reducedMotion
+        ? 1
+        : withTiming(1, { duration: durationMs, easing: Easing.out(Easing.ease) });
     } else {
-      opacity.value = withTiming(0, { duration: durationMs, easing: Easing.in(Easing.ease) });
+      opacity.value = reducedMotion
+        ? 0
+        : withTiming(0, { duration: durationMs, easing: Easing.in(Easing.ease) });
     }
-  }, [band, durationMs, opacity]);
+  }, [band, durationMs, opacity, reducedMotion]);
 
   const animatedStyle = useAnimatedStyle(() => ({
     opacity: opacity.value,
@@ -51,7 +57,13 @@ export const BandUnlockNotification = memo(function BandUnlockNotification({
   const meta = bandMetaByName.get(band);
 
   return (
-    <Animated.View style={[styles.container, animatedStyle]} pointerEvents="none">
+    <Animated.View
+      style={[styles.container, animatedStyle]}
+      pointerEvents="none"
+      accessible
+      accessibilityLabel={`New band unlocked: ${band}`}
+      accessibilityLiveRegion="assertive"
+    >
       <View style={[styles.glyph, meta ? { backgroundColor: meta.color } : undefined]} />
       <Text style={styles.label}>NEW FREQUENCY UNLOCKED</Text>
       <Text style={styles.bandName}>{band}</Text>

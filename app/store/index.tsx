@@ -47,12 +47,16 @@ export default function StoreScreen() {
             testID="store-back-button"
             style={({ pressed }) => [styles.backButton, pressed && styles.backButtonPressed]}
             onPress={() => router.back()}
+            accessible
+            accessibilityRole="button"
+            accessibilityLabel="Back to radio"
+            accessibilityHint="Return to the radio screen"
           >
             <Text style={styles.backButtonText} numberOfLines={1}>
               ‹ RADIO
             </Text>
           </Pressable>
-          <Text style={styles.title} numberOfLines={1}>
+          <Text style={styles.title} numberOfLines={1} accessibilityRole="header">
             DEAD AIR RADIO
           </Text>
           <View style={styles.backButtonSpacer} />
@@ -79,6 +83,10 @@ export default function StoreScreen() {
           testID="restore-purchases"
           style={({ pressed }) => [styles.restoreLink, pressed && styles.restoreLinkPressed]}
           onPress={restorePurchases}
+          accessible
+          accessibilityRole="button"
+          accessibilityLabel="Restore purchases"
+          accessibilityHint="Re-sync previously purchased entitlements"
         >
           <Text style={styles.restoreText} numberOfLines={1}>
             Restore Purchases

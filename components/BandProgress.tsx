@@ -21,13 +21,20 @@ export const BandProgress = memo(function BandProgress({
   totalReceivedCalls,
 }: BandProgressProps) {
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>BANDS</Text>
+    <View style={styles.container} accessible accessibilityLabel="Band progress">
+      <Text style={styles.title} accessibilityRole="header">
+        BANDS
+      </Text>
       {bands.map((band) => {
         const isUnlocked = unlockedBands.includes(band.name);
         const progress = Math.min(1, totalReceivedCalls / Math.max(1, band.unlockAt));
         return (
-          <View key={`band-${band.id}`} style={styles.row}>
+          <View
+            key={`band-${band.id}`}
+            style={styles.row}
+            accessible
+            accessibilityLabel={`${band.name}, ${band.freq}, ${isUnlocked ? 'unlocked' : `unlocks at ${band.unlockAt} calls, ${Math.round(progress * 100)} percent`}`}
+          >
             <View style={[styles.dot, isUnlocked && { backgroundColor: band.color }]} />
             <Text style={[styles.name, !isUnlocked && styles.locked]} numberOfLines={1}>
               {band.name}

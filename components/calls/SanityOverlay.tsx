@@ -7,6 +7,7 @@ import { useEffect, useMemo, useState, type JSX, memo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { colors, fonts } from '../../lib/theme';
 import type { SanityEffect } from '../../engine/calls/SanityEffectConfig';
+import { useSettingsStore } from '../../store/useSettingsStore';
 
 interface SanityOverlayProps {
   effect: SanityEffect;
@@ -35,13 +36,18 @@ export const SanityOverlay = memo(function SanityOverlay({
   const showScanlines = effect.visualDistortion > 0.5;
   const glitchTexts = effect.hallucinationTexts;
 
+  // Respect reducedMotion: skip interval-driven flicker re-rolls so hallucinations
+  // appear static rather than animated when reduced motion is enabled.
+  const reducedMotion = useSettingsStore((s) => s.reducedMotion);
+
   // Re-roll glitch placements every 700ms so hallucinations drift, not snap.
   const [roll, setRoll] = useState(0);
   useEffect(() => {
+    if (reducedMotion) return;
     if (glitchTexts.length === 0) return;
     const id = setInterval(() => setRoll((r) => (r + 1) % 1000), 700);
     return () => clearInterval(id);
-  }, [glitchTexts.length]);
+  }, [glitchTexts.length, reducedMotion]);
 
   // Build glitch placements from current roll. Stable per roll.
   // Gate items by effect.glitchProbability — if probability is 0 the engine
