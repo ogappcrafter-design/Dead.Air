@@ -1,0 +1,31 @@
+app/settings/achievements.tsx
+  s_ceef5c160b8e4f::t_34c872ee947082 1-68
+__tests__/engine/progression/Achievements.test.ts
+  s_ceef5c160b8e4f::t_67fb3680bd686d 1-158
+store/useAchievementStore.ts
+  s_ceef5c160b8e4f::t_ea9ae3bbaa95d9 1-51,54-68
+  s_ceef5c160b8e4f::t_f5226caa375e82 52-53
+components/progression/AchievementNotification.tsx
+  s_ceef5c160b8e4f::t_8e9f3b5666e2e3 1-50,57,67,80-152
+  s_ceef5c160b8e4f::t_22d0145be07e8d 51-56,58-66,68-79
+engine/progression/Achievements.ts
+  s_ceef5c160b8e4f::t_80fd6bf9e1d201 1-160
+components/progression/AchievementsGrid.tsx
+  s_ceef5c160b8e4f::t_b986c7d072e68c 1-118
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "5cb15710e8e89f8a14ae8851efdc8635cf955dc2",
+  "prompts": {},
+  "sessions": {
+    "s_ceef5c160b8e4f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ses_02d4452daffewCI9EXBVHnTppQ",
+        "model": "unknown"
+      },
+      "human_author": "Dagger <dagger@pixelated.love>"
+    }
+  }
+}
