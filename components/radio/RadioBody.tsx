@@ -20,8 +20,9 @@ export function RadioBody() {
     setFrequency,
     setTuning,
     setVolume,
+    setBand,
   } = useRadioStore();
-  const { unlockedBands, setBand } = useGameStore();
+  const { unlockedBands } = useGameStore();
   const { sfxVolume, masterVolume, staticEnabled } = useSettingsStore();
 
   const bandInfo = BAND_DATA[currentBand];

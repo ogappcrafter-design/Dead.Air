@@ -40,7 +40,7 @@ export function SignalDecodeCall({ call, onComplete }: SignalDecodeCallProps) {
     if (phase !== 'success' || completedRef.current) {
       return;
     }
-        const timer = setTimeout(() => {
+    const timer = setTimeout(() => {
       completedRef.current = true;
       onComplete(computeSignalDecodeOutcome(call, true));
     }, 3000);
@@ -52,7 +52,7 @@ export function SignalDecodeCall({ call, onComplete }: SignalDecodeCallProps) {
     if (phase !== 'failure' || completedRef.current) {
       return;
     }
-        const timer = setTimeout(() => {
+    const timer = setTimeout(() => {
       completedRef.current = true;
       onComplete(computeSignalDecodeOutcome(call, false));
     }, 2000);
@@ -76,14 +76,16 @@ export function SignalDecodeCall({ call, onComplete }: SignalDecodeCallProps) {
   const renderSymbolSlots = () => {
     return sequence.map((_, i) => {
       const has = i < input.length;
-      let color = colors.textMuted;
-      if (has) {
-        color =
-          phase === 'failure' ? colors.red : phase === 'success' ? colors.green : colors.amber;
-      }
+      const color = !has
+        ? colors.textMuted
+        : phase === 'failure'
+          ? colors.red
+          : phase === 'success'
+            ? colors.green
+            : colors.amber;
       return (
         <View key={i} style={styles.slot}>
-          <Text style={[styles.slotGlyph, { color }]}>{has ? SYM[input[i]] : '·'}</Text>
+          <Text style={[styles.slotGlyph, { color }]}>{has ? SYM[input[i] ?? 0] : '·'}</Text>
         </View>
       );
     });

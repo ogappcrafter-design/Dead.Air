@@ -5,6 +5,7 @@ import { ActiveCallDispatcher } from '@/components/calls/ActiveCallDispatcher';
 import { AchievementNotification } from '@/components/progression/AchievementNotification';
 import { useAchievementStore } from '@/store/useAchievementStore';
 import CRTView from '../../components/shared/CRTView';
+import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 
 export default function RadioScreen() {
   const recentUnlock = useAchievementStore((s) => s.recentUnlock);
@@ -14,7 +15,9 @@ export default function RadioScreen() {
     <CRTView intensity={0.3}>
       <View style={styles.container}>
         <RadioBody />
-        <ActiveCallDispatcher />
+        <ErrorBoundary>
+          <ActiveCallDispatcher />
+        </ErrorBoundary>
         <AchievementNotification achievement={recentUnlock} onDismiss={clearRecentUnlock} />
       </View>
     </CRTView>
