@@ -9,14 +9,23 @@
     "scheme": "deadair",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.deadair.app"
+      "bundleIdentifier": "com.deadair.app",
+      "infoPlist": {
+        "NSMicrophoneUsageDescription": "Dead Air Radio uses the microphone for voice-processing call effects and future interactive radio features.",
+        "UIBackgroundModes": ["audio"]
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#000000"
       },
-      "package": "com.deadair.app"
+      "package": "com.deadair.app",
+      "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png",

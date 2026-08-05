@@ -1,28 +1,82 @@
 {
   "cli": {
     "version": ">= 5.0.0",
-    "appVersionSource": "remote"
+    "appVersionSource": "remote",
+    "prompt": "Configure EAS builds for development, preview, and production profiles."
   },
   "build": {
-    "production": {
-      "channel": "production",
-      "distribution": "store",
+    "development": {
+      "channel": "development",
+      "distribution": "internal",
+      "developmentClient": true,
+      "ios": {
+        "simulator": true,
+        "enterpriseProvisioning": "ad-hoc"
+      },
       "android": {
-        "buildType": "app-bundle"
+        "buildType": "apk",
+        "gradleCommand": ":app:assembleDebug"
+      },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://dev-api.deadair.example.com",
+        "EXPO_PUBLIC_SENTRY_DSN": "DEV_LOREM_IPSUM_DSN",
+        "EXPO_PUBLIC_ANALYTICS_KEY": "DEV_LOREM_IPSUM_KEY"
       }
     },
     "preview": {
       "channel": "preview",
       "distribution": "internal",
+      "ios": {
+        "simulator": false,
+        "enterpriseProvisioning": "ad-hoc"
+      },
       "android": {
         "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://staging-api.deadair.example.com",
+        "EXPO_PUBLIC_SENTRY_DSN": "STAGING_LOREM_IPSUM_DSN",
+        "EXPO_PUBLIC_ANALYTICS_KEY": "STAGING_LOREM_IPSUM_KEY"
       }
     },
-    "development": {
-      "channel": "development",
-      "distribution": "internal",
+    "production": {
+      "channel": "production",
+      "distribution": "store",
+      "autoIncrement": true,
+      "ios": {
+        "enterpriseProvisioning": "universal"
+      },
       "android": {
-        "buildType": "apk"
+        "buildType": "app-bundle"
+      },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://api.deadair.example.com",
+        "EXPO_PUBLIC_SENTRY_DSN": "PROD_LOREM_IPSUM_DSN",
+        "EXPO_PUBLIC_ANALYTICS_KEY": "PROD_LOREM_IPSUM_KEY"
+      }
+    }
+  },
+  "submit": {
+    "production": {
+      "ios": {
+        "appleId": "placeholder-apple-id@example.com",
+        "ascAppId": "1234567890",
+        "appleTeamId": "PLACEHOLDER_TEAM_ID"
+      },
+      "android": {
+        "serviceAccountKeyPath": "./.eas/credentials/play-service-account-key.json",
+        "track": "production"
+      }
+    },
+    "preview": {
+      "ios": {
+        "appleId": "placeholder-apple-id@example.com",
+        "ascAppId": "1234567890",
+        "appleTeamId": "PLACEHOLDER_TEAM_ID"
+      },
+      "android": {
+        "serviceAccountKeyPath": "./.eas/credentials/play-service-account-key.json",
+        "track": "internal"
       }
     }
   }
