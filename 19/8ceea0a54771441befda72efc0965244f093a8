@@ -1,0 +1,29 @@
+package.json
+  s_5161fa9fda3e65::t_ccd1ef9593840d 33
+__tests__/engine/calls/renderers/DeadAirHandler.test.ts
+  s_5161fa9fda3e65::t_d3094c227dae26 2-206
+  s_5161fa9fda3e65::t_d652b66fb49440 1
+package-lock.json
+  ai_agent 1-12685
+components/calls/DeadAirCall.tsx
+  s_5161fa9fda3e65::t_3b7c0e61c7fff2 6
+  s_5161fa9fda3e65::t_b84862c907ae33 1-5,7-173
+engine/calls/renderers/DeadAirHandler.ts
+  s_5161fa9fda3e65::t_f5118f0a3af175 1-39
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "198ceea0a54771441befda72efc0965244f093a8",
+  "prompts": {},
+  "sessions": {
+    "s_5161fa9fda3e65": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ses_02e2d7160ffe0WLuMv5juryFZm",
+        "model": "unknown"
+      },
+      "human_author": "Dagger <dagger@pixelated.love>"
+    }
+  }
+}
