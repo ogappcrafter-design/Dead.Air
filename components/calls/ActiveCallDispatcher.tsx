@@ -7,8 +7,12 @@ import { RightAnswerCall } from "@/components/calls/RightAnswerCall";
 import { DeadAirCall } from "@/components/calls/DeadAirCall";
 import StayCalmCall from "@/components/calls/StayCalmCall";
 import { SignalDecodeCall } from "@/components/calls/SignalDecodeCall";
+import { SanityOverlay } from './SanityOverlay';
+import { useSanityEffect } from '../../hooks/useSanityEffect';
 
 export function ActiveCallDispatcher() {
+  // Sanity effect drives visual overlay during active calls.
+  const sanityEffect = useSanityEffect(activeCall);
   const [route, setRoute] = useState<CallTypeRoute | null>(null);
   const [activeCall, setActiveCall] = useState<ActiveCall | null>(null);
 
