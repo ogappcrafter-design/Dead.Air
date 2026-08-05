@@ -1,0 +1,24 @@
+engine/calls/renderers/RightAnswerHandler.ts
+  s_a85e32197e77f6::t_02ed86a20e482f 1-55
+__tests__/engine/calls/renderers/RightAnswerHandler.test.ts
+  s_a85e32197e77f6::t_3528b799340c76 1-6,8-234
+  s_a85e32197e77f6::t_406320d424e3d7 7
+components/calls/RightAnswerCall.tsx
+  s_a85e32197e77f6::t_ece627e1909bff 1-226
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "b9b3e487a94066f4604daf083b4dc046ac399cff",
+  "prompts": {},
+  "sessions": {
+    "s_a85e32197e77f6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ses_02e2d19f8ffepWZ038b3ENO2u4",
+        "model": "unknown"
+      },
+      "human_author": "Dagger <dagger@pixelated.love>"
+    }
+  }
+}
