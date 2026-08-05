@@ -1,0 +1,32 @@
+engine/calls/CallManager.ts
+  s_942cd4ce93fd42::t_e903a2062b0c1e 63-64
+  s_942cd4ce93fd42::t_dbfd0f52eec229 291-309
+__tests__/engine/calls/CallManager.test.ts
+  s_942cd4ce93fd42::t_569380e14aa75b 56-59,61
+  s_942cd4ce93fd42::t_ca5e83af2c4450 419-446
+engine/audio/LatencyProfiler.ts
+  s_942cd4ce93fd42::t_16ae443280a7f8 61-68,71,81,86-88,91,94
+__tests__/engine/audio/VoiceProcessor.test.ts
+  s_942cd4ce93fd42::t_508ce3f02e10f8 191-192,198-204,206-207,212,218-223
+engine/audio/EffectsChain.ts
+  s_942cd4ce93fd42::t_6cf4ca0826ced9 25-30
+  s_942cd4ce93fd42::t_10f0c8473b802a 64-69,74,80,82
+engine/audio/VoiceProcessor.ts
+  s_942cd4ce93fd42::t_30cbefe6d15691 174,180-183
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "71019d3554d306c6773cfe265f43311dfbb5a474",
+  "prompts": {},
+  "sessions": {
+    "s_942cd4ce93fd42": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ses_02ce09137ffeNTCWz22uenOQWr",
+        "model": "unknown"
+      },
+      "human_author": "Dagger <dagger@pixelated.love>"
+    }
+  }
+}
