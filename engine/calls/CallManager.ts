@@ -1,0 +1,290 @@
+// engine/calls/CallManager.ts
+// Singleton managing call lifecycle: idle → incoming → active → resolving → completed.
+// Routes to call type handlers (Wave 2 renderers), reports outcomes to stores + audio.
+// Observer pattern lets UI react to state changes.
+
+import type { Band, CallType } from '../../lib/constants';
+import type { VoiceProcessor } from '../audio/VoiceProcessor';
+import type {
+  ActiveCall,
+  CallData,
+  CallLifecycleState,
+  CallOutcome,
+  CallStateListener,
+} from './types';
+
+/** Calls registry — in production imported from data/calls.js. Injectable for tests. */
+export type CallRegistry = ReadonlyMap<number, CallData>;
+
+/** Store accessors — decouples CallManager from Zustand singletons for testing. */
+export interface CallManagerStoreAccess {
+  /** Current call id (string) or null. Set by setCurrentCall. */
+  setCurrentCall(callId: string | null): void;
+  /** Decrease sanity by amount (store clamps to 0..100). */
+  decreaseSanity(amount: number): void;
+  /** Increase sanity by amount (store clamps to 0..MAX_SANITY). */
+  increaseSanity(amount: number): void;
+  /** Add static (store clamps to 0..100). */
+  addStatic(amount: number): void;
+  /** Add tape by name if not already present. */
+  addTape(tapeId: string): void;
+  /** Unlock a band if not already unlocked. */
+  unlockBand(band: Band): void;
+}
+
+/** Radio accessors — read current band for audio preset selection. */
+export interface CallManagerRadioAccess {
+  /** Current band the radio is tuned to. */
+  getCurrentBand(): Band;
+}
+
+/**
+ * Optional audio hook. CallManager applies the voice preset for the
+ * current band when a call starts. If voiceProcessor is null (e.g. in
+ * tests or before audio is initialized), audio is skipped.
+ */
+export interface CallManagerAudioAccess {
+  /** VoiceProcessor instance, or null if audio not ready. */
+  voiceProcessor: VoiceProcessor | null;
+  /** Apply preset for band. Defaults to voiceProcessor.applyPresetForBand. */
+  applyPresetForBand?(band: Band): void;
+}
+
+export interface CallManagerConfig {
+  registry: CallRegistry;
+  stores: CallManagerStoreAccess;
+  radio: CallManagerRadioAccess;
+  audio?: CallManagerAudioAccess | null;
+}
+
+/** Map call.type to handler route label. Wave 2 renderers register here. */
+export type CallTypeRoute =
+  'JUST_LISTEN' | 'DEAD_AIR' | 'RIGHT_ANSWER' | 'SIGNAL_DECODE' | 'STAY_CALM';
+
+const routeForType = (type: CallType): CallTypeRoute => type; // 1:1 today
+
+/**
+ * CallManager — singleton owning the call lifecycle state machine.
+ *
+ * Contract:
+ * - Exactly one call active at a time.
+ * - startCall(id): idle/incoming/active. Looks up call in registry.
+ * - endCall(outcome): resolving → completed → idle. Applies rewards.
+ * - Observer pattern: subscribers fire on every state transition.
+ * - reset(): force back to idle, clear active call (no rewards applied).
+ */
+export class CallManager {
+  private readonly registry: CallRegistry;
+  private readonly stores: CallManagerStoreAccess;
+  private readonly radio: CallManagerRadioAccess;
+  private audio: CallManagerAudioAccess | null;
+
+  private state: CallLifecycleState = 'idle';
+  private activeCall: ActiveCall | null = null;
+  private readonly listeners = new Set<CallStateListener>();
+
+  constructor(config: CallManagerConfig) {
+    this.registry = config.registry;
+    this.stores = config.stores;
+    this.radio = config.radio;
+    this.audio = config.audio ?? null;
+  }
+
+  // --- Lifecycle ---
+
+  /**
+   * Start a call by id. Transitions idle → incoming → active.
+   * If a call is already in progress, returns without starting a new one
+   * (caller must endCall or reset first).
+   * @returns true if call started, false if id invalid or busy.
+   */
+  startCall(callId: number): boolean {
+    if (this.state !== 'idle') {
+      return false;
+    }
+    const call = this.registry.get(callId);
+    if (call === undefined) {
+      return false;
+    }
+    this.transition('incoming', { call, state: 'incoming', startTime: 0 });
+    // Brief: startCall transitions idle → incoming → active in one call.
+    // The incoming state is a brief notification step; active follows immediately.
+    this.stores.setCurrentCall(String(call.id));
+    const startTime = Date.now();
+    this.transition('active', { call, state: 'active', startTime });
+
+    // Apply voice preset for current band (audio best-effort).
+    this.applyBandPreset();
+
+    return true;
+  }
+
+  /**
+   * Mark the active call as resolving (	renderer computing outcome).
+   * Renderers call this before reporting the final outcome.
+   */
+  setResolving(): void {
+    if (this.state !== 'active' || this.activeCall === null) {
+      return;
+    }
+    this.transition('resolving', { ...this.activeCall, state: 'resolving' });
+  }
+
+  /**
+   * End the active call with an outcome. Transitions → completed → idle.
+   * Applies sanity delta, static reward (with multiplier, clamped), tape unlock,
+   * band unlock check. Notifies subscribers on each transition.
+   */
+  endCall(outcome: CallOutcome): void {
+    if (this.activeCall === null) {
+      return;
+    }
+    if (this.state !== 'active' && this.state !== 'resolving') {
+      return;
+    }
+    const call = this.activeCall.call;
+
+    // resolving → completed
+    if (this.state === 'active') {
+      this.transition('resolving', { ...this.activeCall, state: 'resolving' });
+    }
+    this.transition('completed', {
+      call,
+      state: 'completed',
+      startTime: this.activeCall.startTime,
+    });
+
+    // Apply outcome to stores.
+    // Sanity: decreaseSanity takes positive amount; negative delta = increase.
+    if (outcome.sanityDelta !== 0) {
+      if (outcome.sanityDelta < 0) {
+        this.stores.decreaseSanity(-outcome.sanityDelta);
+      } else {
+        this.stores.increaseSanity(outcome.sanityDelta);
+      }
+    }
+
+    // Static reward with multiplier, clamped to [0, MAX_STATIC] by store.
+    const reward = Math.max(0, Math.round(outcome.staticReward * outcome.staticMultiplier));
+    if (reward > 0) {
+      this.stores.addStatic(reward);
+    }
+
+    // Tape unlock.
+    if (outcome.tapeUnlocked !== undefined && outcome.tapeUnlocked !== '') {
+      this.stores.addTape(outcome.tapeUnlocked);
+    }
+
+    // Band unlock.
+    if (outcome.bandUnlocked !== undefined) {
+      this.stores.unlockBand(outcome.bandUnlocked);
+    }
+
+    // Clear current call in store.
+    this.stores.setCurrentCall(null);
+
+    // Reset to idle for next call.
+    this.transition('idle', null);
+  }
+
+  /** Current active call (or null if idle/completed). */
+  getCurrentCall(): ActiveCall | null {
+    return this.activeCall;
+  }
+
+  /** Current lifecycle state. */
+  getCallState(): CallLifecycleState {
+    return this.state;
+  }
+
+  /** Get the route label for the active call's type (null if no active call). */
+  getActiveRoute(): CallTypeRoute | null {
+    return this.activeCall === null ? null : routeForType(this.activeCall.call.type);
+  }
+
+  // --- Observer pattern ---
+
+  /**
+   * Subscribe to state transitions. Listener fires immediately with current state.
+   * @returns unsubscribe function.
+   */
+  subscribe(listener: CallStateListener): () => void {
+    this.listeners.add(listener);
+    // Immediate notify with current state.
+    listener(this.state, this.activeCall);
+    return () => {
+      this.listeners.delete(listener);
+    };
+  }
+
+  // --- Reset ---
+
+  /**
+   * Force reset to idle. Does NOT apply rewards or notify completion.
+   * Use endCall() for normal completion; reset() only for abort/teardown.
+   */
+  reset(): void {
+    if (this.activeCall !== null) {
+      this.stores.setCurrentCall(null);
+    }
+    this.transition('idle', null);
+  }
+
+  /** Configure audio access after construction (e.g. once AudioEngine ready). */
+  setAudioAccess(audio: CallManagerAudioAccess | null): void {
+    this.audio = audio ?? null;
+    // Apply preset for current band if a call is active.
+    if (this.state === 'active' && this.activeCall !== null) {
+      this.applyBandPreset();
+    }
+  }
+
+  // --- Internal ---
+
+  private transition(newState: CallLifecycleState, call: ActiveCall | null): void {
+    this.state = newState;
+    this.activeCall = call;
+    this.notify();
+  }
+
+  private notify(): void {
+    for (const listener of this.listeners) {
+      listener(this.state, this.activeCall);
+    }
+  }
+
+  private applyBandPreset(): void {
+    if (this.audio === null || this.audio.voiceProcessor === null) {
+      return;
+    }
+    const band = this.radio.getCurrentBand();
+    if (this.audio.applyPresetForBand !== undefined) {
+      this.audio.applyPresetForBand(band);
+    } else {
+      this.audio.voiceProcessor.applyPresetForBand(band);
+    }
+  }
+}
+
+// --- Module-level singleton ---
+
+let callManagerInstance: CallManager | null = null;
+
+/** Get the singleton CallManager. Returns null if not yet initialized. */
+export const getCallManager = (): CallManager | null => callManagerInstance;
+
+/** Initialize the singleton CallManager. Idempotent — safe to call once at boot. */
+export const initCallManager = (config: CallManagerConfig): CallManager => {
+  if (callManagerInstance === null) {
+    callManagerInstance = new CallManager(config);
+  }
+  return callManagerInstance;
+};
+
+/** Test-only: clear singleton. Allows fresh per-test instantiation. */
+export const resetCallManager = (): void => {
+  if (callManagerInstance !== null) {
+    callManagerInstance.reset();
+    callManagerInstance = null;
+  }
+};
