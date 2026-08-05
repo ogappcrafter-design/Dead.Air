@@ -1,0 +1,29 @@
+engine/progression/TimeCompression.ts
+  s_150e773735c706::t_1af802fac7eeec 1-38
+components/progression/ShiftStatus.tsx
+  s_150e773735c706::t_8e9f45cca40bfe 1-111
+engine/progression/NightShiftConfig.ts
+  s_150e773735c706::t_4d57a18a2a776f 1-43
+engine/progression/NightShift.ts
+  s_150e773735c706::t_389ba9a23824ce 1-255
+__tests__/engine/progression/NightShift.test.ts
+  s_150e773735c706::t_f2d174552800bf 1-298
+hooks/useNightShift.ts
+  s_150e773735c706::t_743bb67bee4c28 1-133
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "455f2ed7358191993c48c059cb47d0da25c85bca",
+  "prompts": {},
+  "sessions": {
+    "s_150e773735c706": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ses_02d5836e2ffeKZfH5iA7ad1mI1",
+        "model": "unknown"
+      },
+      "human_author": "Dagger <dagger@pixelated.love>"
+    }
+  }
+}
