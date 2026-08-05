@@ -4,6 +4,7 @@ import {
   driveToCurve,
   DEFAULT_REVERB_DECAY,
   makeReverbBuffer,
+  clearReverbIRCache,
 } from '../../../engine/audio/EffectsChain';
 import { makeMockBridge } from '../../../__mocks__/engine/audio/mockBridge';
 import {
@@ -11,6 +12,7 @@ import {
   BridgeAudioContext,
   BridgeAudioNode,
 } from '../../../engine/audio/PlatformBridge';
+import { INTERACTIVE_CONFIG, BALANCED_CONFIG } from '../../../engine/audio/AudioPerformanceConfig';
 
 const mockCtx = (): BridgeAudioContext => ({
   sampleRate: 44100,
@@ -31,6 +33,7 @@ describe('EffectsChain', () => {
     ctx = mockCtx();
     sink = bridge.createMasterGain(ctx);
     jest.clearAllMocks();
+    clearReverbIRCache();
   });
 
   describe('pure-logic mappings', () => {
@@ -157,8 +160,96 @@ describe('EffectsChain', () => {
     it('disconnects all nodes', () => {
       const chain = new EffectsChain(bridge, ctx, sink);
       chain.dispose();
-      // No throw after dispose — but instance is unusable.
       expect(true).toBe(true);
+    });
+  });
+
+  describe('reverb IR caching', () => {
+    it('makeReverbBuffer without cache param always delegates to bridge', () => {
+      const spy = jest.spyOn(bridge, 'createReverbBuffer');
+      spy.mockClear();
+      makeReverbBuffer(bridge, ctx, 1.5, 2);
+      expect(spy).toHaveBeenCalledWith(ctx, 1.5, 2);
+    });
+
+    it('makeReverbBuffer with cacheIR=true caches after first call', () => {
+      const spy = jest.spyOn(bridge, 'createReverbBuffer');
+      spy.mockClear();
+      const reverbPerf = { irDurationSec: 1.5, decay: 2, cacheIR: true };
+      makeReverbBuffer(bridge, ctx, 1.5, 2, reverbPerf);
+      makeReverbBuffer(bridge, ctx, 1.5, 2, reverbPerf);
+      expect(spy).toHaveBeenCalledTimes(1);
+    });
+
+    it('different IR params get separate cache entries', () => {
+      const spy = jest.spyOn(bridge, 'createReverbBuffer');
+      spy.mockClear();
+      const reverbPerf = { irDurationSec: 1.5, decay: 2, cacheIR: true };
+      makeReverbBuffer(bridge, ctx, 1.5, 2, reverbPerf);
+      makeReverbBuffer(bridge, ctx, 2.5, 2, reverbPerf);
+      expect(spy).toHaveBeenCalledTimes(2);
+    });
+
+    it('clearReverbIRCache empties the cache', () => {
+      const spy = jest.spyOn(bridge, 'createReverbBuffer');
+      spy.mockClear();
+      const reverbPerf = { irDurationSec: 1.5, decay: 2, cacheIR: true };
+      makeReverbBuffer(bridge, ctx, 1.5, 2, reverbPerf);
+      clearReverbIRCache();
+      makeReverbBuffer(bridge, ctx, 1.5, 2, reverbPerf);
+      expect(spy).toHaveBeenCalledTimes(2);
+    });
+
+    it('native and web platforms have separate cache keys', () => {
+      const webBridge = makeMockBridge('web');
+      const nativeBridge = makeMockBridge('native');
+      const webSpy = jest.spyOn(webBridge, 'createReverbBuffer');
+      const nativeSpy = jest.spyOn(nativeBridge, 'createReverbBuffer');
+      webSpy.mockClear();
+      nativeSpy.mockClear();
+      const reverbPerf = { irDurationSec: 1.5, decay: 2, cacheIR: true };
+      makeReverbBuffer(webBridge, ctx, 1.5, 2, reverbPerf);
+      makeReverbBuffer(nativeBridge, ctx, 1.5, 2, reverbPerf);
+      expect(webSpy).toHaveBeenCalledTimes(1);
+      expect(nativeSpy).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('perf config integration', () => {
+    it('accepts INTERACTIVE_CONFIG for lighter processing', () => {
+      const chain = new EffectsChain(bridge, ctx, sink, {
+        bitcrush: INTERACTIVE_CONFIG.bitcrush,
+        reverb: INTERACTIVE_CONFIG.reverb,
+      });
+      expect(chain.getDrive()).toBe(0);
+      chain.dispose();
+    });
+
+    it('uses configured curve samples for drive curve', () => {
+      const chain = new EffectsChain(bridge, ctx, sink, {
+        bitcrush: { curveSamples: 512, distortionOversample: '2x', voiceOversample: 'none' },
+      });
+      chain.setDrive(0.5);
+      expect(chain.getDrive()).toBeCloseTo(0.5);
+      chain.dispose();
+    });
+
+    it('uses configured reverb IR duration', () => {
+      const spy = jest.spyOn(bridge, 'createReverbBuffer');
+      spy.mockClear();
+      const chain = new EffectsChain(bridge, ctx, sink, {
+        reverb: { irDurationSec: 1.0, decay: 2, cacheIR: false },
+      });
+      expect(spy).toHaveBeenCalledWith(ctx, 1.0, 2);
+      chain.dispose();
+    });
+
+    it('defaults to BALANCED_CONFIG values when perf is undefined', () => {
+      const spy = jest.spyOn(bridge, 'createReverbBuffer');
+      spy.mockClear();
+      const chain = new EffectsChain(bridge, ctx, sink);
+      expect(spy).toHaveBeenCalledWith(ctx, DEFAULT_REVERB_DECAY, 2);
+      chain.dispose();
     });
   });
 });

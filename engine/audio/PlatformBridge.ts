@@ -142,8 +142,15 @@ export const bandVoicePreset = (band: Band): VoicePreset => {
  * The engine holds exactly one bridge instance.
  */
 export interface PlatformBridge {
-  /** Lazy-create + return the underlying AudioContext-shaped handle. */
-  createContext(): Promise<BridgeAudioContext>;
+  /**
+   * Lazy-create + return the underlying AudioContext-shaped handle.
+   * Optional latency hint lets the bridge pick internal buffer sizes:
+   * - 'interactive' → smallest buffers, lowest latency (may glitch under load)
+   * - 'playback' → larger buffers, smoother output
+   * - 'balanced' → default; bridge decides
+   * Bridges that don't support hints ignore the arg.
+   */
+  createContext(latencyHint?: 'interactive' | 'playback' | 'balanced'): Promise<BridgeAudioContext>;
 
   /** Master gain node connected to destination. */
   createMasterGain(ctx: BridgeAudioContext): BridgeGainNode;

@@ -11,7 +11,25 @@ import {
   BridgeStereoPannerNode,
   BridgeGainNode,
   BridgeBiquadNode,
+  BridgeAudioBuffer,
 } from './PlatformBridge';
+import type { BitcrushPerfParams, ReverbPerfParams } from './AudioPerformanceConfig';
+
+/** Reverb IR cache key — matches params used to generate the buffer. */
+interface IRCacheKey {
+  readonly duration: number;
+  readonly decay: number;
+  readonly platform: 'web' | 'native';
+}
+
+/**
+ * Module-level reverb IR cache scoped per audio context (ctx-bound buffers
+ * cannot be reused across contexts with different identities or sample
+ * rates). Inner map keyed by `${platform}:${duration}:${decay}`.
+ */
+let reverbIRCache: WeakMap<BridgeAudioContext, Map<string, BridgeAudioBuffer>> = new WeakMap();
+
+const irCacheKey = (key: IRCacheKey): string => `${key.platform}:${key.duration}:${key.decay}`;
 
 /** Drive (0..1) → waveshaper curve shape. Heavier drive = harder clip. */
 export const driveToCurve = (drive: number, samples = 1024): Float32Array => {
@@ -27,16 +45,49 @@ export const driveToCurve = (drive: number, samples = 1024): Float32Array => {
 /** Default reverb decay (seconds). Longer = bigger space. */
 export const DEFAULT_REVERB_DECAY = 2.4;
 
-/** Build an IR-style noise buffer for algorithmic reverb. */
+/**
+ * Build an IR-style noise buffer for algorithmic reverb.
+ * Uses module-level cache when `reverbPerf.cacheIR` is true; skips cache otherwise.
+ * Always delegates to bridge.createReverbBuffer for the actual buffer generation,
+ * preserving the existing contract.
+ */
 export const makeReverbBuffer = (
   bridge: PlatformBridge,
   ctx: BridgeAudioContext,
   durationSec: number,
   decay: number,
-): import('./PlatformBridge').BridgeAudioBuffer => {
-  // Bridge generates the actual IR (platform-specific). We pass params.
+  reverbPerf?: ReverbPerfParams,
+): BridgeAudioBuffer => {
+  const useCache = reverbPerf?.cacheIR ?? false;
+  if (useCache) {
+    const key = irCacheKey({ duration: durationSec, decay, platform: bridge.platform });
+    let inner = reverbIRCache.get(ctx);
+    if (inner === undefined) {
+      inner = new Map<string, BridgeAudioBuffer>();
+      reverbIRCache.set(ctx, inner);
+    }
+    const cached = inner.get(key);
+    if (cached !== undefined) {
+      return cached;
+    }
+    const buf = bridge.createReverbBuffer(ctx, durationSec, decay);
+    inner.set(key, buf);
+    return buf;
+  }
   return bridge.createReverbBuffer(ctx, durationSec, decay);
 };
+
+/** Clear the reverb IR cache (test utility). Swaps to a fresh WeakMap. */
+export const clearReverbIRCache = (): void => {
+  reverbIRCache = new WeakMap<BridgeAudioContext, Map<string, BridgeAudioBuffer>>();
+};
+
+export interface EffectsChainPerfParams {
+  /** Bitcrush/perf config for distortion oversampling + curve samples. */
+  bitcrush?: BitcrushPerfParams;
+  /** Reverb perf config for IR duration + caching. */
+  reverb?: ReverbPerfParams;
+}
 
 /**
  * EffectsChain — fixed-order node graph for processing any input.
@@ -52,49 +103,55 @@ export class EffectsChain {
   private readonly bridge: PlatformBridge;
   private readonly ctx: BridgeAudioContext;
 
-  // Input shapes the signal first.
   private readonly preGain: BridgeGainNode;
   private readonly distortion: BridgeWaveShaperNode;
 
-  // Parallel wet/dry for reverb.
   private readonly reverbDry: BridgeGainNode;
   private readonly reverbWet: BridgeGainNode;
   private readonly convolver: BridgeConvolverNode;
 
-  // Spatial.
   private readonly panner: BridgeStereoPannerNode;
 
-  // Tone shaping pre-panner.
   private readonly tone: BridgeBiquadNode;
 
-  // Output gain (post-panner, pre-destination).
   private readonly output: BridgeGainNode;
 
   private drive = 0;
   private reverbMix = 0;
   private pan = 0;
+  private readonly curveSamples: number;
 
-  constructor(bridge: PlatformBridge, ctx: BridgeAudioContext, destination: BridgeAudioNode) {
+  constructor(
+    bridge: PlatformBridge,
+    ctx: BridgeAudioContext,
+    destination: BridgeAudioNode,
+    perf?: EffectsChainPerfParams,
+  ) {
     this.bridge = bridge;
     this.ctx = ctx;
+
+    const distortionOversample = perf?.bitcrush?.distortionOversample ?? '4x';
+    const curveSamples = perf?.bitcrush?.curveSamples ?? 1024;
+    this.curveSamples = curveSamples;
+    const reverbPerf = perf?.reverb;
+    const irDuration = reverbPerf?.irDurationSec ?? DEFAULT_REVERB_DECAY;
+    const irDecay = reverbPerf?.decay ?? 2;
 
     this.preGain = bridge.createMasterGain(ctx);
     this.preGain.setGain(1);
 
     this.distortion = bridge.createWaveShaper(ctx);
-    this.distortion.setCurve(driveToCurve(0));
-    this.distortion.setOversample('4x');
+    this.distortion.setCurve(driveToCurve(0, curveSamples));
+    this.distortion.setOversample(distortionOversample);
 
-    // Reverb dry path — bypasses convolver.
     this.reverbDry = bridge.createMasterGain(ctx);
     this.reverbDry.setGain(1);
 
-    // Reverb wet path — through convolver.
     this.reverbWet = bridge.createMasterGain(ctx);
     this.reverbWet.setGain(0);
 
     this.convolver = bridge.createConvolver(ctx);
-    this.convolver.setBuffer(makeReverbBuffer(bridge, ctx, DEFAULT_REVERB_DECAY, 2));
+    this.convolver.setBuffer(makeReverbBuffer(bridge, ctx, irDuration, irDecay, reverbPerf));
 
     this.tone = bridge.createBiquad(ctx, 'highshelf');
     this.tone.setFrequency(2000);
@@ -106,9 +163,6 @@ export class EffectsChain {
     this.output = bridge.createMasterGain(ctx);
     this.output.setGain(1);
 
-    // Wire graph:
-    // input(preGain) → distortion → tone → split [dry → panner] + [wet → convolver → panner]
-    // panner → output → destination
     bridge.connect(this.preGain, this.distortion);
     bridge.connect(this.distortion, this.tone);
     bridge.connect(this.tone, this.reverbDry);
@@ -129,7 +183,7 @@ export class EffectsChain {
   setDrive(value: number): void {
     const clamped = Math.max(0, Math.min(1, value));
     this.drive = clamped;
-    this.distortion.setCurve(driveToCurve(clamped));
+    this.distortion.setCurve(driveToCurve(clamped, this.curveSamples));
   }
 
   /** Set reverb wet/dry mix (0..1). 0 = dry, 1 = fully wet. */

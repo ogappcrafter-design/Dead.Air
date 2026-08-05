@@ -3,11 +3,19 @@
 // Lazily created; SSR-safe (no AudioContext access during SSR).
 
 import { PlatformBridge, BridgeAudioContext, BridgeGainNode } from './PlatformBridge';
+import { LatencyProfiler, type LatencyStats } from './LatencyProfiler';
+import {
+  BALANCED_CONFIG,
+  type AudioPerformanceConfig,
+  type LatencyHint,
+} from './AudioPerformanceConfig';
 
 export interface AudioEngineOptions {
   bridge: PlatformBridge;
   /** Initial master volume (0..1). Defaults to 0.7. */
   initialMasterVolume?: number;
+  /** Performance config — controls latency hints + processing params. */
+  perfConfig?: AudioPerformanceConfig;
 }
 
 export type AudioEngineState = 'uninitialized' | 'running' | 'suspended' | 'closed';
@@ -33,10 +41,29 @@ export class AudioEngine {
   private state: AudioEngineState = 'uninitialized';
   private masterVolume: number;
   private mutedVolume: number | null = null;
+  private readonly perfConfig: AudioPerformanceConfig;
+  private readonly latencyProfiler: LatencyProfiler;
 
   constructor(opts: AudioEngineOptions) {
     this.bridge = opts.bridge;
     this.masterVolume = opts.initialMasterVolume ?? DEFAULT_MASTER_VOLUME;
+    this.perfConfig = opts.perfConfig ?? BALANCED_CONFIG;
+    this.latencyProfiler = new LatencyProfiler();
+  }
+
+  /** Latency profiler — callers use this to measure call-to-output timing. */
+  getLatencyProfiler(): LatencyProfiler {
+    return this.latencyProfiler;
+  }
+
+  /** Active performance config. */
+  getPerfConfig(): AudioPerformanceConfig {
+    return this.perfConfig;
+  }
+
+  /** Current latency stats snapshot. */
+  getLatencyStats(): LatencyStats {
+    return this.latencyProfiler.getStats();
   }
 
   /** Current lifecycle state. */
@@ -67,7 +94,7 @@ export class AudioEngine {
       return;
     }
     try {
-      this.ctx = await this.bridge.createContext();
+      this.ctx = await this.bridge.createContext(this.perfConfig.latencyHint);
       this.masterGain = this.bridge.createMasterGain(this.ctx);
       this.bridge.connectToDestination(this.masterGain, this.ctx);
       this.masterGain.setGain(this.masterVolume);

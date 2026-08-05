@@ -148,4 +148,80 @@ describe('VoiceProcessor', () => {
       expect(true).toBe(true);
     });
   });
+
+  describe('preloadVoice', () => {
+    it('preloadVoice does not set current preset', () => {
+      const v = new VoiceProcessor(bridge, ctx, sink);
+      v.preloadVoice('LOST');
+      expect(v.getPreset()).toBeNull();
+      v.dispose();
+    });
+    it('hasPreloadedPreset returns true for preloaded preset', () => {
+      const v = new VoiceProcessor(bridge, ctx, sink);
+      v.preloadVoice('LIMINAL');
+      expect(v.hasPreloadedPreset('LIMINAL')).toBe(true);
+      expect(v.hasPreloadedPreset('LOST')).toBe(false);
+      v.dispose();
+    });
+    it('applyPreset after preload clears preloaded state', () => {
+      const v = new VoiceProcessor(bridge, ctx, sink);
+      v.preloadVoice('LIMINAL');
+      v.applyPreset('LIMINAL');
+      expect(v.hasPreloadedPreset('LIMINAL')).toBe(false);
+      expect(v.getPreset()).toBe('LIMINAL');
+      v.dispose();
+    });
+    it('applyPreset after preload with different preset clears preload', () => {
+      const v = new VoiceProcessor(bridge, ctx, sink);
+      v.preloadVoice('LIMINAL');
+      v.applyPreset('LOST');
+      expect(v.hasPreloadedPreset('LIMINAL')).toBe(false);
+      expect(v.getPreset()).toBe('LOST');
+      v.dispose();
+    });
+    it('preloadVoiceForBand maps band → preset', () => {
+      const v = new VoiceProcessor(bridge, ctx, sink);
+      v.preloadVoiceForBand('████████');
+      expect(v.hasPreloadedPreset('REDACTED')).toBe(true);
+      v.dispose();
+    });
+  });
+
+  describe('perf config', () => {
+    it('accepts curveSamples override and uses it on applyPreset', () => {
+      const shaperSpy = jest.spyOn(bridge, 'createWaveShaper');
+      const v = new VoiceProcessor(bridge, ctx, sink, {
+        curveSamples: 256,
+        distortionOversample: '2x',
+        voiceOversample: 'none',
+      });
+      const shaper = shaperSpy.mock.results[0]?.value;
+      const setCurveOps = (shaper?.ops ?? []).filter(
+        (o: { kind: string }) => o.kind === 'setCurve',
+      );
+      expect(setCurveOps.some((o: { args: unknown[] }) => (o.args[0] as number) === 256)).toBe(
+        true,
+      );
+      v.applyPreset('LOST');
+      const postApply = (shaper?.ops ?? []).filter((o: { kind: string }) => o.kind === 'setCurve');
+      expect(postApply.some((o: { args: unknown[] }) => (o.args[0] as number) === 256)).toBe(true);
+      expect(v.getPreset()).toBe('LOST');
+      v.dispose();
+    });
+    it('uses voiceOversample in constructor', () => {
+      const shaperSpy = jest.spyOn(bridge, 'createWaveShaper');
+      const v = new VoiceProcessor(bridge, ctx, sink, {
+        curveSamples: 512,
+        distortionOversample: '4x',
+        voiceOversample: '4x',
+      });
+      const shaper = shaperSpy.mock.results[0]?.value;
+      const oversampleOps = (shaper?.ops ?? []).filter(
+        (o: { kind: string }) => o.kind === 'setOversample',
+      );
+      expect(oversampleOps.length).toBeGreaterThan(0);
+      expect((oversampleOps[0] as { args: unknown[] }).args[0]).toBe('4x');
+      v.dispose();
+    });
+  });
 });

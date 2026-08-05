@@ -60,6 +60,8 @@ export interface CallManagerAudioAccess {
   voiceProcessor: VoiceProcessor | null;
   /** Apply preset for band. Defaults to voiceProcessor.applyPresetForBand. */
   applyPresetForBand?(band: Band): void;
+  /** Preload preset for band ahead of call start. Defaults to voiceProcessor.preloadVoiceForBand. */
+  preloadVoiceForBand?(band: Band): void;
 }
 
 export interface CallManagerConfig {
@@ -284,9 +286,27 @@ export class CallManager {
   /** Configure audio access after construction (e.g. once AudioEngine ready). */
   setAudioAccess(audio: CallManagerAudioAccess | null): void {
     this.audio = audio ?? null;
-    // Apply preset for current band if a call is active.
     if (this.state === 'active' && this.activeCall !== null) {
       this.applyBandPreset();
+    } else if (this.audio !== null) {
+      this.preloadBandPreset();
+    }
+  }
+
+  /**
+   * Preload the voice preset for the current radio band ahead of call start.
+   * Best-effort: no-op if audio not ready. Callers may invoke this before
+   * startCall to pre-bake the bitcrush curve and avoid allocation on the hot path.
+   */
+  preloadBandPreset(): void {
+    if (this.audio === null || this.audio.voiceProcessor === null) {
+      return;
+    }
+    const band = this.radio.getCurrentBand();
+    if (this.audio.preloadVoiceForBand !== undefined) {
+      this.audio.preloadVoiceForBand(band);
+    } else {
+      this.audio.voiceProcessor.preloadVoiceForBand(band);
     }
   }
 

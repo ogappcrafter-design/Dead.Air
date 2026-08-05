@@ -196,4 +196,53 @@ describe('AudioEngine', () => {
       expect(e.getBridge()).toBe(bridge);
     });
   });
+
+  describe('latency profiler', () => {
+    it('getLatencyProfiler returns a LatencyProfiler instance', () => {
+      const bridge = makeMockBridge();
+      const e = getOrCreateAudioEngine({ bridge });
+      expect(e.getLatencyProfiler()).toBeDefined();
+      expect(typeof e.getLatencyProfiler().startCall).toBe('function');
+    });
+    it('getLatencyStats returns stats snapshot', () => {
+      const bridge = makeMockBridge();
+      const e = getOrCreateAudioEngine({ bridge });
+      const stats = e.getLatencyStats();
+      expect(stats.count).toBe(0);
+    });
+    it('same profiler instance returned on repeated calls', () => {
+      const bridge = makeMockBridge();
+      const e = getOrCreateAudioEngine({ bridge });
+      const p1 = e.getLatencyProfiler();
+      const p2 = e.getLatencyProfiler();
+      expect(p1).toBe(p2);
+    });
+  });
+
+  describe('perf config', () => {
+    it('defaults to BALANCED_CONFIG when not provided', () => {
+      const bridge = makeMockBridge();
+      const e = getOrCreateAudioEngine({ bridge });
+      expect(e.getPerfConfig().latencyHint).toBe('balanced');
+    });
+    it('uses provided perfConfig when given', () => {
+      const bridge = makeMockBridge();
+      const { INTERACTIVE_CONFIG } = require('../../../engine/audio/AudioPerformanceConfig');
+      const e = getOrCreateAudioEngine({ bridge, perfConfig: INTERACTIVE_CONFIG });
+      expect(e.getPerfConfig().latencyHint).toBe('interactive');
+    });
+    it('passes latencyHint to bridge.createContext on init', async () => {
+      const bridge = makeMockBridge();
+      const { INTERACTIVE_CONFIG } = require('../../../engine/audio/AudioPerformanceConfig');
+      const e = getOrCreateAudioEngine({ bridge, perfConfig: INTERACTIVE_CONFIG });
+      await e.init();
+      expect(bridge.createContext).toHaveBeenCalledWith('interactive');
+    });
+    it('default balanced config passes balanced hint', async () => {
+      const bridge = makeMockBridge();
+      const e = getOrCreateAudioEngine({ bridge });
+      await e.init();
+      expect(bridge.createContext).toHaveBeenCalledWith('balanced');
+    });
+  });
 });

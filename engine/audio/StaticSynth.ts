@@ -10,6 +10,7 @@ import {
   BridgeAudioContext,
   StaticCharacter,
 } from './PlatformBridge';
+import type { StaticSynthPerfParams } from './AudioPerformanceConfig';
 
 /** Character → filter band-pass center frequency (Hz). Off-station ≈ harsher. */
 export const characterCenterFreq: Record<StaticCharacter, number> = {
@@ -68,14 +69,17 @@ export class StaticSynth {
   private character: StaticCharacter = 'white';
   private intensity = 0.5;
   private started = false;
+  private readonly shaperOversample: 'none' | '2x' | '4x';
 
   constructor(
     bridge: PlatformBridge,
     ctx: BridgeAudioContext,
     destination: import('./PlatformBridge').BridgeAudioNode,
+    perf?: StaticSynthPerfParams,
   ) {
     this.bridge = bridge;
     this.ctx = ctx;
+    this.shaperOversample = perf?.shaperOversample ?? '2x';
 
     this.bandPass = bridge.createBiquad(ctx, 'bandpass');
     this.bandPass.setQ(intensityToQ(this.intensity));
@@ -84,9 +88,8 @@ export class StaticSynth {
 
     this.shaper = bridge.createWaveShaper(ctx);
     this.shaper.setCurve(makeDriveCurve(intensityToDrive(this.intensity)));
-    this.shaper.setOversample('2x');
+    this.shaper.setOversample(this.shaperOversample);
 
-    // chain: source → bandPass → shaper → destination
     this.bandPass.connect(this.shaper);
     this.shaper.connect(destination);
   }

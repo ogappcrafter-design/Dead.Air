@@ -83,7 +83,10 @@ export const makeMockBridge = (platform: 'web' | 'native' = 'web'): PlatformBrid
 
   return {
     platform,
-    createContext: jest.fn(async (): Promise<BridgeAudioContext> => ctx),
+    createContext: jest.fn(
+      async (_latencyHint?: 'interactive' | 'playback' | 'balanced'): Promise<BridgeAudioContext> =>
+        ctx,
+    ),
     createMasterGain: jest.fn((_c: BridgeAudioContext): MockGain => {
       const n = makeNode('gain') as MockGain;
       n.lastGain = null;

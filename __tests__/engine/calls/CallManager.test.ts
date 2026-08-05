@@ -53,8 +53,12 @@ const makeRadio = (band: Band = 'LIVING'): CallManagerRadioAccess => ({
 const makeAudio = (): CallManagerAudioAccess => ({
   // Provide a stub VoiceProcessor so applyBandPreset's null-check passes.
   // The test asserts on audio.applyPresetForBand, not on the VP itself.
-  voiceProcessor: { applyPresetForBand: jest.fn() } as unknown as never,
+  voiceProcessor: {
+    applyPresetForBand: jest.fn(),
+    preloadVoiceForBand: jest.fn(),
+  } as unknown as never,
   applyPresetForBand: jest.fn(),
+  preloadVoiceForBand: jest.fn(),
 });
 
 const TEST_BANDS = [
@@ -411,6 +415,34 @@ describe('CallManager audio integration', () => {
     expect(audio.applyPresetForBand).not.toHaveBeenCalled();
     cm.setAudioAccess(audio);
     expect(audio.applyPresetForBand).toHaveBeenCalledWith('LIVING');
+  });
+
+  it('setAudioAccess preloads band preset when no call is active', () => {
+    const audio = makeAudio();
+    const cm = new CallManager({ ...config, audio: null });
+    cm.setAudioAccess(audio);
+    expect(audio.preloadVoiceForBand).toHaveBeenCalledWith('LIVING');
+    expect(audio.applyPresetForBand).not.toHaveBeenCalled();
+  });
+
+  it('preloadBandPreset delegates to audio.preloadVoiceForBand', () => {
+    const audio = makeAudio();
+    const cm = new CallManager({ ...config, audio });
+    cm.preloadBandPreset();
+    expect(audio.preloadVoiceForBand).toHaveBeenCalledWith('LIVING');
+  });
+
+  it('preloadBandPreset falls back to voiceProcessor.preloadVoiceForBand', () => {
+    const vp = { preloadVoiceForBand: jest.fn(), applyPresetForBand: jest.fn() } as unknown;
+    const audio: CallManagerAudioAccess = { voiceProcessor: vp as never };
+    const cm = new CallManager({ ...config, audio });
+    cm.preloadBandPreset();
+    expect(vp.preloadVoiceForBand).toHaveBeenCalledWith('LIVING');
+  });
+
+  it('preloadBandPreset is best-effort: no audio → no throw', () => {
+    const cm = new CallManager({ ...config, audio: null });
+    expect(() => cm.preloadBandPreset()).not.toThrow();
   });
 });
 

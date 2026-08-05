@@ -15,6 +15,7 @@ import {
 } from './PlatformBridge';
 import { Band } from '../../lib/constants';
 import { bandVoicePreset } from './PlatformBridge';
+import type { BitcrushPerfParams } from './AudioPerformanceConfig';
 
 /** Preset params per band. */
 export interface VoicePresetParams {
@@ -122,10 +123,20 @@ export class VoiceProcessor {
   private readonly output: BridgeGainNode;
 
   private preset: VoicePreset | null = null;
+  private readonly curveSamples: number;
+  private readonly voiceOversample: 'none' | '2x' | '4x';
+  private preloadedPreset: VoicePreset | null = null;
 
-  constructor(bridge: PlatformBridge, ctx: BridgeAudioContext, destination: BridgeAudioNode) {
+  constructor(
+    bridge: PlatformBridge,
+    ctx: BridgeAudioContext,
+    destination: BridgeAudioNode,
+    perf?: BitcrushPerfParams,
+  ) {
     this.bridge = bridge;
     this.ctx = ctx;
+    this.curveSamples = perf?.curveSamples ?? 1024;
+    this.voiceOversample = perf?.voiceOversample ?? '2x';
 
     this.eq = bridge.createBiquad(ctx, 'bandpass');
     this.eq.setFrequency(1800);
@@ -139,8 +150,8 @@ export class VoiceProcessor {
     this.compressor.setRelease(0.25);
 
     this.bitcrush = bridge.createWaveShaper(ctx);
-    this.bitcrush.setCurve(makeBitcrushCurve(0.05));
-    this.bitcrush.setOversample('2x');
+    this.bitcrush.setCurve(makeBitcrushCurve(0.05, this.curveSamples));
+    this.bitcrush.setOversample(this.voiceOversample);
 
     this.output = bridge.createMasterGain(ctx);
     this.output.setGain(0.85);
@@ -160,17 +171,45 @@ export class VoiceProcessor {
   applyPreset(preset: VoicePreset): void {
     const params = voicePresets[preset];
     this.preset = preset;
+    const hadPreload = this.preloadedPreset === preset;
+    this.preloadedPreset = null;
     this.eq.setFrequency(params.eqCenter);
     this.eq.setQ(params.eqQ);
     this.compressor.setThreshold(params.compThreshold);
     this.compressor.setRatio(params.compRatio);
-    this.bitcrush.setCurve(makeBitcrushCurve(params.bitcrush));
+    // Skip curve rebuild when a matching preload already set the bitcrush curve.
+    if (!hadPreload) {
+      this.bitcrush.setCurve(makeBitcrushCurve(params.bitcrush, this.curveSamples));
+    }
     this.output.setGain(params.outputGain);
+  }
+
+  /**
+   * Preload a voice preset ahead of the actual call start. Pre-bakes the
+   * bitcrush curve and stores it so that `applyPreset` becomes a cheap
+   * no-allocation swap on the hot path. If `applyPreset` is called with a
+   * different preset after preload, preload is discarded.
+   */
+  preloadVoice(preset: VoicePreset): void {
+    const params = voicePresets[preset];
+    const curve = makeBitcrushCurve(params.bitcrush, this.curveSamples);
+    this.bitcrush.setCurve(curve);
+    this.preloadedPreset = preset;
   }
 
   /** Apply preset for a given Band. */
   applyPresetForBand(band: Band): void {
     this.applyPreset(bandVoicePreset(band));
+  }
+
+  /** Preload preset for a given Band ahead of call start. */
+  preloadVoiceForBand(band: Band): void {
+    this.preloadVoice(bandVoicePreset(band));
+  }
+
+  /** True if a preset has been preloaded and matches the given preset. */
+  hasPreloadedPreset(preset: VoicePreset): boolean {
+    return this.preloadedPreset === preset;
   }
 
   /** Current preset (or null if none applied). */
