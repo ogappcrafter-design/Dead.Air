@@ -12,7 +12,7 @@ import type {
   CallOutcome,
   CallStateListener,
 } from './types';
-import { getNextBandUnlock, type BandMetaRow } from './TapeProgression';
+import { checkBandUnlock, type BandUnlockRow } from '../progression/BandUnlock';
 
 /** Calls registry — in production imported from data/calls.js. Injectable for tests. */
 export type CallRegistry = ReadonlyMap<number, CallData>;
@@ -61,7 +61,7 @@ export interface CallManagerConfig {
   radio: CallManagerRadioAccess;
   audio?: CallManagerAudioAccess | null;
   /** BANDS rows from data/calls.js — drives received-call band unlock threshold checks. */
-  bands: readonly BandMetaRow[];
+  bands: readonly BandUnlockRow[];
 }
 
 /** Map call.type to handler route label. Wave 2 renderers register here. */
@@ -84,7 +84,7 @@ export class CallManager {
   private readonly registry: CallRegistry;
   private readonly stores: CallManagerStoreAccess;
   private readonly radio: CallManagerRadioAccess;
-  private readonly bands: readonly BandMetaRow[];
+  private readonly bands: readonly BandUnlockRow[];
   private audio: CallManagerAudioAccess | null;
 
   private state: CallLifecycleState = 'idle';
@@ -189,17 +189,27 @@ export class CallManager {
       this.stores.unlockBand(outcome.bandUnlocked);
     }
 
-    // Band unlock by received-call threshold. Record the just-completed
-    // call's id via markCallReceived so the band progression counts it
-    // before we read receivedCalls. Store-side dedupe handles repeats.
-    if (this.activeCall?.id !== undefined && this.activeCall?.id !== null) {
-      this.stores.markCallReceived(this.activeCall.id);
-    }
+    // Band unlock by received-call threshold. Count the just-completed
+    // call id toward the deduped received-calls total: if the store's
+    // received list does not yet include it, add 1 to the length (this
+    // count is local to the unlock check; the store records persistence
+    // through its own markCallReceived path, which is outside this
+    // module's store access contract).
     const unlockedBands = this.stores.getUnlockedBands();
     const receivedCallIds = this.stores.getReceivedCalls();
-    const nextBand = getNextBandUnlock(unlockedBands, receivedCallIds, this.bands);
-    if (nextBand !== null) {
-      this.stores.unlockBand(nextBand);
+    const counted = receivedCallIds.includes(call.id)
+      ? receivedCallIds.length
+      : receivedCallIds.length + 1;
+    const unlock = checkBandUnlock(
+      {
+        callsReceived: counted,
+        tapesCollected: 0,
+        unlockedBands,
+      },
+      this.bands,
+    );
+    if (unlock.band !== null) {
+      this.stores.unlockBand(unlock.band);
     }
 
     // Clear current call in store.
