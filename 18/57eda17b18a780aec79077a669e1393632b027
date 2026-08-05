@@ -1,0 +1,49 @@
+components/progression/AchievementNotification.tsx
+  s_ceef5c160b8e4f::t_79bd8aa0e91775 22
+  s_ceef5c160b8e4f::t_60fb611b5604a1 58-60,66-69,71
+store/useGameStore.ts
+  s_ceef5c160b8e4f::t_a549dcab6590fa 15-20,31-32,44-46
+  s_ceef5c160b8e4f::t_b53afd24ea4384 55-61,96-101
+app/radio/index.tsx
+  s_ceef5c160b8e4f::t_ab4ad4022af284 1-7,10-12,18
+app/settings/achievements.tsx
+  s_ceef5c160b8e4f::t_2ba7fa2ce10f7d 24-26,32-34
+  s_ceef5c160b8e4f::t_a44f02eafddc99 15-18
+__tests__/store/useGameStore.test.ts
+  s_ceef5c160b8e4f::t_e9fbc8366c63fb 81-88,92-117
+  s_ceef5c160b8e4f::t_d3b3981446f523 89-91
+  s_ceef5c160b8e4f::t_71c2b406b771d5 13-16,26-28
+engine/calls/callManagerInstance.ts
+  s_ceef5c160b8e4f::t_99f03917ec2cf7 5,38-50,57
+app/settings/index.tsx
+  s_ceef5c160b8e4f::t_33b523f460bbaf 1-2,10-12,23,36-47
+__tests__/engine/calls/CallManager.test.ts
+  s_ceef5c160b8e4f::t_554aff2c9de01b 37-46
+engine/calls/CallManager.ts
+  s_ceef5c160b8e4f::t_02f9c8fb7fa93f 97,110
+  s_ceef5c160b8e4f::t_12805b743a641c 16
+  s_ceef5c160b8e4f::t_f573cbb4c925e2 39-44
+  s_ceef5c160b8e4f::t_262f4773d23fd5 72-73
+  s_ceef5c160b8e4f::t_b352cc7b1810ab 203-206,209,222-227,233-238
+components/progression/AchievementsGrid.tsx
+  s_ceef5c160b8e4f::t_7214f1bd30a662 25-26,34-41
+hooks/useNightShift.ts
+  s_ceef5c160b8e4f::t_0f26f121a05fa6 119
+  s_ceef5c160b8e4f::t_21704139c2ad74 15
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "1857eda17b18a780aec79077a669e1393632b027",
+  "prompts": {},
+  "sessions": {
+    "s_ceef5c160b8e4f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ses_02d4452daffewCI9EXBVHnTppQ",
+        "model": "unknown"
+      },
+      "human_author": "Dagger <dagger@pixelated.love>"
+    }
+  }
+}
