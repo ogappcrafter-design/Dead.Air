@@ -1,0 +1,21 @@
+autobots.toml
+  s_d84fd69cf3fb77::t_f367a144669ecb 11
+autobots-model-registry.json
+  s_d84fd69cf3fb77::t_2d5d915efef853 1-35
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "baccaba4f57808d6edfb10259d53115b56793ce3",
+  "prompts": {},
+  "sessions": {
+    "s_d84fd69cf3fb77": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ses_02a20e7edffeunURjI6mt19O9N",
+        "model": "unknown"
+      },
+      "human_author": "Dagger <dagger@pixelated.love>"
+    }
+  }
+}
