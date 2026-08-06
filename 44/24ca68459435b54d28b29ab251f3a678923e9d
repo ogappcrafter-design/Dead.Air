@@ -1,0 +1,58 @@
+engine/audio/TapeDroneSynth.ts
+  s_97f91c4c4108e3::t_387430909c5886 1-495
+package.json
+  s_97f91c4c4108e3::t_0c92b32565b1fe 12-13
+engine/audio/VoiceProcessor.ts
+  s_97f91c4c4108e3::t_0715e4c42125de 228-248
+  s_97f91c4c4108e3::t_385b2aaedac29b 19
+components/tapes/TapePlayer.tsx
+  s_97f91c4c4108e3::t_17289c59345c68 228-283,299-303
+  s_97f91c4c4108e3::t_d2865d4d7214b6 27,29-30,33-42
+  s_97f91c4c4108e3::t_f12b2286cfe17d 73,75-79,81-82,111-136,142-150,152
+  s_97f91c4c4108e3::t_0e16d6ed73f5e9 10-11
+app/tapes/index.tsx
+  s_97f91c4c4108e3::t_48bf5d55b17e63 123-137
+  s_97f91c4c4108e3::t_1ff3f0f49c1d93 7,10-12,17,21,27,57-68,109-110,115-119,138-144,147-148,163-178,180,195,197-221,223,227-229,234-239,241,243,250-252,254,256-261,264-300,347,349-353
+  s_97f91c4c4108e3::t_7803eb08ad336e 30-37
+  s_d98e2ee11eeff4::t_b87278382f89d2 146
+  s_d98e2ee11eeff4::t_837b7356d17185 179
+  s_0930bc604f43e1::t_4f0136792aa081 181-194,196
+engine/audio/WebAudioBridge.ts
+  s_0930bc604f43e1::t_0e6e02aa650e08 78,162-169,220-223,238-241,253-256,269-272,330-336,370-372,377-378,380-382,447-451,466-470,488-491
+  s_0930bc604f43e1::t_7d8e26a30b0138 136-138,140
+  s_0930bc604f43e1::t_f3c65dab0b63de 1-77,79-135,139,141-161,170-219,224-237,242-252,257-268,273-329,337-369,373-376,379,383-446,452-465,471-487,492-529
+pnpm-lock.yaml
+  ai_agent 20-25,2152-2170,6683-6694
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "4424ca68459435b54d28b29ab251f3a678923e9d",
+  "prompts": {},
+  "sessions": {
+    "s_0930bc604f43e1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ses_027350170ffeF2hKKRuifBUunp",
+        "model": "unknown"
+      },
+      "human_author": "Dagger <dagger@pixelated.love>"
+    },
+    "s_97f91c4c4108e3": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ses_02772d219ffeyVc94x3FsMW2yt",
+        "model": "unknown"
+      },
+      "human_author": "Dagger <dagger@pixelated.love>"
+    },
+    "s_d98e2ee11eeff4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ses_02726af4affeVak96uT2Soj6HW",
+        "model": "unknown"
+      },
+      "human_author": "Dagger <dagger@pixelated.love>"
+    }
+  }
+}
