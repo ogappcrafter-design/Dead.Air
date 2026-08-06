@@ -1,64 +1,110 @@
-// store/useStoreStore.ts
-// In-app purchase state for the Dead Air Radio store.
-// Phase 5-4: mock IAP only (no real billing). Persists hasInfiniteSignal only.
 import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { PURCHASES_KEY } from '../lib/constants';
+import { iapService, PRODUCT_IDS } from '../engine/iap/IAPService';
 
+// Store state interface
 interface StoreState {
-  // Owned entitlements
   hasInfiniteSignal: boolean;
-  // Purchasing UI state
-  purchasing: boolean;
-
-  // Actions
+  isLoading: boolean;
+  isInitialized: boolean;
+  error: string | null;
+  productPrice: string | null;
+  initialize: () => Promise<void>;
   purchaseInfiniteSignal: () => Promise<void>;
   restorePurchases: () => Promise<void>;
-  setPurchasing: (purchasing: boolean) => void;
+  dispose: () => void;
 }
 
-const initialState = {
+// Create store
+export const useStoreStore = create<StoreState>((set, get) => ({
   hasInfiniteSignal: false,
-  purchasing: false,
-};
+  isLoading: false,
+  isInitialized: false,
+  error: null,
+  productPrice: null,
 
-/**
- * Mock IAP latency in milliseconds. Real billing SDKs round-trip a network
- * request; we simulate the same delay so UI/purchase flow exercise the
- * purchasing/loading state rather than resolving synchronously.
- */
-const MOCK_IAP_LATENCY_MS = 1000;
+  initialize: async () => {
+    try {
+      set({ isLoading: true, error: null });
+      await iapService.initialize();
 
-export const useStoreStore = create<StoreState>()(
-  persist(
-    (set, get) => ({
-      ...initialState,
+      // Get product price
+      const productId = PRODUCT_IDS.INFINITE_SIGNAL;
+      const productInfo = productId ? iapService.getProductInfo(productId) : undefined;
+      const price = productInfo?.price || null;
 
-      purchaseInfiniteSignal: async () => {
-        // Already owned — no-op.
-        if (get().hasInfiniteSignal) {
-          return;
-        }
-        set({ purchasing: true });
-        await new Promise<void>((resolve) => setTimeout(resolve, MOCK_IAP_LATENCY_MS));
-        set({ hasInfiniteSignal: true, purchasing: false });
-      },
+      // Check for existing purchases
+      const hasInfiniteSignal = await iapService.hasInfiniteSignal();
 
-      restorePurchases: async () => {
-        // Mock restore: treat as a successful purchase check.
-        // Real billing SDKs would query the store for prior entitlements here.
-        await new Promise<void>((resolve) => setTimeout(resolve, MOCK_IAP_LATENCY_MS));
-        // Nothing to restore in mock mode — hasInfiniteSignal persists already.
-        set({ purchasing: false });
-      },
+      set({
+        isInitialized: true,
+        hasInfiniteSignal,
+        isLoading: false,
+        productPrice: price,
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Initialization failed';
+      set({
+        isLoading: false,
+        error: message,
+        isInitialized: false,
+      });
+      console.error('Store initialization failed:', error);
+    }
+  },
 
-      setPurchasing: (purchasing) => set({ purchasing }),
-    }),
-    {
-      name: PURCHASES_KEY,
-      storage: createJSONStorage(() => AsyncStorage),
-      partialize: (state) => ({ hasInfiniteSignal: state.hasInfiniteSignal }),
-    },
-  ),
-);
+  purchaseInfiniteSignal: async () => {
+    try {
+      set({ isLoading: true, error: null });
+      const result = await iapService.purchaseInfiniteSignal();
+
+      if (!result.success) {
+        set({ isLoading: false, error: result.error || 'Purchase failed' });
+        return;
+      }
+
+      // Reflect the completed purchase immediately so the UI exits the
+      // loading state and unlocks the feature — do not rely on a platform
+      // listener callback that may never fire.
+      const hasInfiniteSignal = await iapService.hasInfiniteSignal();
+      set({ hasInfiniteSignal, isLoading: false, error: null });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Purchase failed';
+      set({ isLoading: false, error: message });
+      console.error('Purchase error:', error);
+    }
+  },
+
+  restorePurchases: async () => {
+    try {
+      set({ isLoading: true, error: null });
+      const result = await iapService.restorePurchases();
+
+      if (result.success) {
+        // Refresh hasInfiniteSignal state
+        const hasInfiniteSignal = await iapService.hasInfiniteSignal();
+        set({
+          hasInfiniteSignal,
+          isLoading: false,
+          error: result.error || null,
+        });
+      } else {
+        set({ isLoading: false, error: result.error || 'Restore failed' });
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Restore failed';
+      set({ isLoading: false, error: message });
+      console.error('Restore error:', error);
+    }
+  },
+
+  dispose: () => {
+    iapService.dispose();
+    set({
+      isInitialized: false,
+      hasInfiniteSignal: false,
+      isLoading: false,
+      error: null,
+      productPrice: null,
+    });
+  },
+}));

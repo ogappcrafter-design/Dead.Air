@@ -10,7 +10,7 @@
 // Routing: back button uses expo-router's useRouter().back() to return to
 // the radio screen. Tapes screen is declared in app/_layout.tsx Stack.
 
-import React, { memo, useCallback, useMemo, useRef, useState } from 'react';
+import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ALL_TAPES, CALLS } from '../../data/calls';
@@ -21,6 +21,7 @@ import type { CallData } from '../../engine/calls/types';
 import { useGameStore } from '../../store/useGameStore';
 import { findCallByTape } from '../../engine/progression/TapeLookup';
 import { TapePlayback } from '../../engine/progression/TapePlayback';
+import { useTapeAudioPlayback } from '../../hooks/useTapeAudioPlayback';
 import TapePlayer from '../../components/tapes/TapePlayer';
 
 /** Band lookup from numeric index (CALLS[].band) to Band string literal. */
@@ -82,6 +83,21 @@ function TapeListSeparator() {
   return <View style={styles.separator} />;
 }
 
+/** Parse "4:32" to seconds. */
+const parseDuration = (d: string): number => {
+  const parts = d.split(':');
+  if (parts.length !== 2) return 30;
+  const min = parseInt(parts[0]!, 10) || 0;
+  const sec = parseInt(parts[1]!, 10) || 0;
+  return min * 60 + sec;
+};
+
+/** Tape durations (matches ALL_TAPES order) — from data/tapes.ts. */
+const TAPE_DURATIONS = [
+  '4:32','3:18','6:45','2:14','5:00','1:58','4:12','13:33','3:44','2:56',
+  '7:21','5:33','4:00','3:12','9:99',
+];
+
 export default function TapesScreen() {
   const router = useRouter();
   const collectedTapes = useGameStore((s) => s.tapes);
@@ -91,6 +107,19 @@ export default function TapesScreen() {
   const playbackRef = useRef<TapePlayback>(new TapePlayback());
   const [playbackState, setPlaybackState] = useState(playbackRef.current.getState());
   const [selectedTape, setSelectedTape] = useState<string | null>(null);
+
+  // Simulated audio playback (progress + auto-stop). Replace with real
+  // PlatformBridge synthesis when implementations land (Phase 4).
+  const tapeIndex = selectedTape !== null ? ALL_TAPES.indexOf(selectedTape) : -1;
+  const durationSec = tapeIndex >= 0 ? parseDuration(TAPE_DURATIONS[tapeIndex] ?? '30') : 30;
+  const audio = useTapeAudioPlayback(durationSec, onComplete);
+
+  // Stop audio when navigating away (back button).
+  useEffect(() => {
+    return () => {
+      audio.stop();
+    };
+  }, [audio]);
 
   const collectedSet = useMemo(() => new Set(collectedTapes), [collectedTapes]);
 
@@ -111,14 +140,16 @@ export default function TapesScreen() {
   }, [selectedTape]);
 
   const closePlayer = useCallback(() => {
+    audio.stop();
     playbackRef.current.stop();
     setPlaybackState(playbackRef.current.getState());
     setSelectedTape(null);
-  }, []);
+  }, [audio]);
 
   const handlePlayPress = useCallback(() => {
     if (selectedTape === null) return;
     if (playbackState.isPlaying) {
+      audio.stop();
       playbackRef.current.stop();
     } else {
       const call = findCallByTape(selectedTape, CALLS as unknown as CallData[]);
@@ -126,18 +157,20 @@ export default function TapesScreen() {
         call !== null && call.band >= 0 && call.band < BAND_BY_INDEX.length
           ? BAND_BY_INDEX[call.band]!
           : 'LIVING';
+      audio.play();
       playbackRef.current.play(selectedTape, band);
     }
     setPlaybackState(playbackRef.current.getState());
-  }, [selectedTape, playbackState.isPlaying]);
+  }, [audio, selectedTape, playbackState.isPlaying]);
 
   const handleTapePress = useCallback((tapeName: string) => {
     // Tapping a collected tape opens the player and cues it; transport starts
     // idle (PLAY) — user engages via the transport toggle.
+    audio.stop();
     setSelectedTape(tapeName);
     playbackRef.current.stop();
     setPlaybackState(playbackRef.current.getState());
-  }, []);
+  }, [audio]);
 
   const renderItem = useCallback(
     ({ item: tapeName }: { item: string }) => (
@@ -183,6 +216,7 @@ export default function TapesScreen() {
           transcript={selectedTranscript}
           band={selectedBand}
           isPlaying={playbackState.isPlaying}
+          progress={audio.progress}
           onPlayPress={handlePlayPress}
           onClose={closePlayer}
         />

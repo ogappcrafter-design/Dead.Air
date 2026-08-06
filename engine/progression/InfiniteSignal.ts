@@ -3,10 +3,13 @@
 // of store modules — fully testable. The store state shape is passed in as
 // a plain object so tests can construct fixtures without wiring Zustand.
 //
-// Phase 5-4 scope: returns the base-game sacred calls only. Phase 6 will
-// generate procedural calls when hasExpansion is true (see TODO below).
+// Phase 6: Procedural call generation when hasExpansion is true.
+// Infinite Signal owners get the 18 sacred calls PLUS procedurally
+// generated calls (5 per band = 25 additional). Non-owners get only
+// the 18 sacred calls.
 
 import type { CallData } from '../calls/types';
+import { ProceduralCallGenerator } from '../calls/ProceduralCallGenerator';
 
 /**
  * Minimal subset of the store this module needs. The full useStoreStore
@@ -50,8 +53,10 @@ export const getCallPool = (
   sacredCalls: ReadonlyArray<CallData>,
   hasExpansion: boolean,
 ): CallData[] => {
-  // Phase 5-4: base game only.
-  // TODO(phase-6): if (hasExpansion) append procedural generation here.
-  void hasExpansion; // expansion not yet used — see Phase 6 TODO above.
+  if (hasExpansion) {
+    const generator = new ProceduralCallGenerator();
+    const proceduralCalls = generator.generateCalls(5);
+    return [...sacredCalls, ...proceduralCalls];
+  }
   return [...sacredCalls];
 };

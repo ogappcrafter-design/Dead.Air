@@ -17,7 +17,7 @@ const NOOP = () => {};
 export default function StoreScreen() {
   const router = useRouter();
   const hasInfiniteSignal = useStoreStore((s) => s.hasInfiniteSignal);
-  const purchasing = useStoreStore((s) => s.purchasing);
+  const isLoading = useStoreStore((s) => s.isLoading);
   const purchaseInfiniteSignal = useStoreStore((s) => s.purchaseInfiniteSignal);
   const restorePurchases = useStoreStore((s) => s.restorePurchases);
   const track = useAnalyticsStore((s) => s.track);
@@ -35,7 +35,7 @@ export default function StoreScreen() {
 
   const infiniteSignalState = hasInfiniteSignal
     ? ('owned' as const)
-    : purchasing
+    : isLoading
       ? ('purchasing' as const)
       : ('available' as const);
 

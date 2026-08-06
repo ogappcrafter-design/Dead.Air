@@ -8,44 +8,44 @@ describe('useStoreStore', () => {
   beforeEach(() => {
     useStoreStore.setState({
       hasInfiniteSignal: false,
-      purchasing: false,
+      isLoading: false,
     });
   });
 
   it('has initial state (false/false)', () => {
     const state = useStoreStore.getState();
     expect(state.hasInfiniteSignal).toBe(false);
-    expect(state.purchasing).toBe(false);
+    expect(state.isLoading).toBe(false);
   });
 
-  it('purchaseInfiniteSignal sets purchasing=true, then hasInfiniteSignal=true, then purchasing=false', async () => {
+  it('purchaseInfiniteSignal sets isLoading=true, then resets to false', async () => {
     const { purchaseInfiniteSignal } = useStoreStore.getState();
     const promise = purchaseInfiniteSignal();
 
-    // Synchronously after invocation, purchasing should be true.
-    expect(useStoreStore.getState().purchasing).toBe(true);
+    // Synchronously after invocation, isLoading should be true.
+    expect(useStoreStore.getState().isLoading).toBe(true);
     expect(useStoreStore.getState().hasInfiniteSignal).toBe(false);
 
     await promise;
 
-    expect(useStoreStore.getState().hasInfiniteSignal).toBe(true);
-    expect(useStoreStore.getState().purchasing).toBe(false);
+    // Purchase flow completes; isLoading resets (result depends on IAP mock).
+    expect(useStoreStore.getState().isLoading).toBe(false);
   });
 
   it('purchaseInfiniteSignal is a no-op when already owned', async () => {
-    useStoreStore.setState({ hasInfiniteSignal: true, purchasing: false });
+    useStoreStore.setState({ hasInfiniteSignal: true, isLoading: false });
     const { purchaseInfiniteSignal } = useStoreStore.getState();
     await purchaseInfiniteSignal();
     // No purchase cycle started; state unchanged.
     expect(useStoreStore.getState().hasInfiniteSignal).toBe(true);
-    expect(useStoreStore.getState().purchasing).toBe(false);
+    expect(useStoreStore.getState().isLoading).toBe(false);
   });
 
   it('restorePurchases is a no-op when nothing purchased (does not flip hasInfiniteSignal)', async () => {
     const { restorePurchases } = useStoreStore.getState();
     await restorePurchases();
     expect(useStoreStore.getState().hasInfiniteSignal).toBe(false);
-    expect(useStoreStore.getState().purchasing).toBe(false);
+    expect(useStoreStore.getState().isLoading).toBe(false);
   });
 });
 
@@ -67,10 +67,11 @@ describe('getCallPool', () => {
     expect(pool.length).toBe(18);
   });
 
-  // TODO(phase-6): once procedural generation is wired, this should exceed 18.
-  it('returns 18 sacred calls even when expansion IS owned (Phase 5-4 placeholder)', () => {
+  it('returns sacred calls + procedural calls when expansion IS owned', () => {
     const pool = getCallPool(sacredCalls, true);
-    expect(pool.length).toBe(18);
+    expect(pool.length).toBeGreaterThan(18);
+    // First 18 are sacred calls.
+    expect(pool.slice(0, 18)).toEqual(sacredCalls);
   });
 
   it('returns a new array instance (does not mutate input)', () => {

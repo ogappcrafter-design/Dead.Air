@@ -23,6 +23,8 @@ export interface TapePlayerProps {
   band: Band;
   /** Whether the transport is currently engaged (PLAY). */
   isPlaying: boolean;
+  /** Playback progress 0..1 — drives the progress bar. */
+  progress: number;
   /** Tap handler for the PLAY / STOP transport toggle. */
   onPlayPress: () => void;
   /** Tap handler for the CLOSE button — also fires on backdrop tap. */
@@ -56,6 +58,7 @@ export const TapePlayer = memo(function TapePlayer({
   transcript,
   band,
   isPlaying,
+  progress,
   onPlayPress,
   onClose,
 }: TapePlayerProps) {
@@ -88,6 +91,11 @@ export const TapePlayer = memo(function TapePlayer({
         </ScrollView>
 
         <View style={styles.transportRow}>
+          <View style={styles.progressContainer}>
+            <View style={styles.progressTrack}>
+              <View style={[styles.progressFill, { width: `${Math.round(progress * 100)}%` }]} />
+            </View>
+          </View>
           <Pressable
             style={styles.transportButton}
             onPress={onPlayPress}
@@ -178,6 +186,22 @@ const styles = StyleSheet.create({
     paddingTop: spacing.md,
     borderTopWidth: 1,
     borderTopColor: colors.border,
+  },
+  progressContainer: {
+    flex: 1,
+    marginRight: spacing.md,
+    justifyContent: 'center',
+  },
+  progressTrack: {
+    height: 4,
+    backgroundColor: colors.border,
+    borderRadius: 2,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: colors.amber,
+    borderRadius: 2,
   },
   transportButton: {
     paddingHorizontal: spacing.md,

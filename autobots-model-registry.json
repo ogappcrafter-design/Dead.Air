@@ -1,0 +1,31 @@
+{
+  "Optimus": [
+    "nvidia/nemotron-3-super-120b-a12b",
+    "mistralai/mistral-medium-3.5-128b"
+  ],
+  "UltraMagnus": [
+    "mistralai/mistral-medium-3.5-128b"
+  ],
+  "RedAlert": [
+    "mistralai/mistral-medium-3.5-128b"
+  ],
+  "Ratchet": [
+    "mistralai/mistral-medium-3.5-128b"
+  ],
+  "Jazz": [
+    "mistralai/mistral-medium-3.5-128b"
+  ],
+  "Perceptor": [
+    "nvidia/nemotron-3-super-120b-a12b",
+    "mistralai/mistral-medium-3.5-128b"
+  ],
+  "Bumblebee": [
+    "mistralai/mistral-medium-3.5-128b"
+  ],
+  "Ironhide": [
+    "mistralai/mistral-medium-3.5-128b"
+  ],
+  "Wheeljack": [
+    "mistralai/mistral-medium-3.5-128b"
+  ]
+}
