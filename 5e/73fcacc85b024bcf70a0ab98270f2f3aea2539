@@ -1,0 +1,19 @@
+src/types/index.ts
+  s_d84fd69cf3fb77::t_32dc2f2f374940 1-54
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "5e73fcacc85b024bcf70a0ab98270f2f3aea2539",
+  "prompts": {},
+  "sessions": {
+    "s_d84fd69cf3fb77": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ses_02a20e7edffeunURjI6mt19O9N",
+        "model": "unknown"
+      },
+      "human_author": "Dagger <dagger@pixelated.love>"
+    }
+  }
+}
