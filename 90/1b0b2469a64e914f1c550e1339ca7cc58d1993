@@ -1,0 +1,22 @@
+autobots.toml
+  s_d84fd69cf3fb77::t_5070e1f9885eef 11
+  s_d84fd69cf3fb77::t_d352fbc274af1c 4
+context/progress-tracker.md
+  s_d84fd69cf3fb77::t_e0f46d0a6ad17a 14
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "901b0b2469a64e914f1c550e1339ca7cc58d1993",
+  "prompts": {},
+  "sessions": {
+    "s_d84fd69cf3fb77": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ses_02a20e7edffeunURjI6mt19O9N",
+        "model": "unknown"
+      },
+      "human_author": "Dagger <dagger@pixelated.love>"
+    }
+  }
+}
