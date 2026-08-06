@@ -24,9 +24,12 @@ export function ActiveCallDispatcher() {
     });
   }, []);
 
-  if (!route || !activeCall) return null;
-
+  // Hooks must be called unconditionally and before any early return;
+  // declaring onComplete here keeps the hook order stable across renders
+  // where route/activeCall flip between null and a real call.
   const onComplete = useCallback((outcome: CallOutcome) => callManager.endCall(outcome), []);
+
+  if (!route || !activeCall) return null;
 
   switch (route) {
     case 'JUST_LISTEN':

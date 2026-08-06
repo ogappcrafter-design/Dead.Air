@@ -2,9 +2,13 @@ import { View, Text, StyleSheet, Pressable, Switch, ScrollView } from 'react-nat
 import { router } from 'expo-router';
 import { colors, fonts, spacing } from '../../lib/theme';
 import { useSettingsStore } from '../../store/useSettingsStore';
+import { useAnalyticsStore } from '../../store/useAnalyticsStore';
 import { ErrorReportButton } from '../../components/shared/ErrorReportButton';
 
 const CRT_INTENSITY_STEP = 0.1;
+const VOLUME_STEP = 0.1;
+
+const fmtVolume = (vol: number): string => vol.toFixed(1);
 
 export default function SettingsScreen() {
   const crtEnabled = useSettingsStore((s) => s.crtEnabled);
@@ -14,8 +18,23 @@ export default function SettingsScreen() {
   const reducedMotion = useSettingsStore((s) => s.reducedMotion);
   const setReducedMotion = useSettingsStore((s) => s.setReducedMotion);
 
+  const masterVolume = useSettingsStore((s) => s.masterVolume);
+  const setMasterVolume = useSettingsStore((s) => s.setMasterVolume);
+  const sfxVolume = useSettingsStore((s) => s.sfxVolume);
+  const setSfxVolume = useSettingsStore((s) => s.setSfxVolume);
+  const staticEnabled = useSettingsStore((s) => s.staticEnabled);
+  const setStaticEnabled = useSettingsStore((s) => s.setStaticEnabled);
+
+  const analyticsEnabled = useAnalyticsStore((s) => s.enabled);
+  const setAnalyticsEnabled = useAnalyticsStore((s) => s.setEnabled);
+
   const lower = Math.max(0, Math.round((crtIntensity - CRT_INTENSITY_STEP) * 10) / 10);
   const raise = Math.min(1, Math.round((crtIntensity + CRT_INTENSITY_STEP) * 10) / 10);
+
+  const masterLower = Math.max(0, Math.round((masterVolume - VOLUME_STEP) * 10) / 10);
+  const masterRaise = Math.min(1, Math.round((masterVolume + VOLUME_STEP) * 10) / 10);
+  const sfxLower = Math.max(0, Math.round((sfxVolume - VOLUME_STEP) * 10) / 10);
+  const sfxRaise = Math.min(1, Math.round((sfxVolume + VOLUME_STEP) * 10) / 10);
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
@@ -44,6 +63,7 @@ export default function SettingsScreen() {
           <Text style={styles.rowLabel}>INTENSITY</Text>
           <View style={styles.stepper}>
             <Pressable
+              testID="crt-intensity-down"
               style={[styles.stepBtn, !crtEnabled && styles.stepDisabled]}
               onPress={() => setCrtIntensity(lower)}
               disabled={!crtEnabled}
@@ -56,6 +76,7 @@ export default function SettingsScreen() {
             </Pressable>
             <Text style={styles.stepValue}>{crtIntensity.toFixed(1)}</Text>
             <Pressable
+              testID="crt-intensity-up"
               style={[styles.stepBtn, !crtEnabled && styles.stepDisabled]}
               onPress={() => setCrtIntensity(raise)}
               disabled={!crtEnabled}
@@ -71,10 +92,84 @@ export default function SettingsScreen() {
       </View>
 
       <View style={styles.card}>
+        <Text style={styles.sectionLabel}>AUDIO</Text>
+
+        <View style={styles.row}>
+          <Text style={styles.rowLabel}>MASTER VOLUME</Text>
+          <View style={styles.stepper}>
+            <Pressable
+              testID="master-volume-down"
+              style={styles.stepBtn}
+              onPress={() => setMasterVolume(masterLower)}
+              accessible
+              accessibilityRole="button"
+              accessibilityLabel="Decrease master volume"
+            >
+              <Text style={styles.stepText}>-</Text>
+            </Pressable>
+            <Text style={styles.stepValue}>{fmtVolume(masterVolume)}</Text>
+            <Pressable
+              testID="master-volume-up"
+              style={styles.stepBtn}
+              onPress={() => setMasterVolume(masterRaise)}
+              accessible
+              accessibilityRole="button"
+              accessibilityLabel="Increase master volume"
+            >
+              <Text style={styles.stepText}>+</Text>
+            </Pressable>
+          </View>
+        </View>
+
+        <View style={styles.row}>
+          <Text style={styles.rowLabel}>SFX VOLUME</Text>
+          <View style={styles.stepper}>
+            <Pressable
+              testID="sfx-volume-down"
+              style={styles.stepBtn}
+              onPress={() => setSfxVolume(sfxLower)}
+              accessible
+              accessibilityRole="button"
+              accessibilityLabel="Decrease SFX volume"
+            >
+              <Text style={styles.stepText}>-</Text>
+            </Pressable>
+            <Text style={styles.stepValue}>{fmtVolume(sfxVolume)}</Text>
+            <Pressable
+              testID="sfx-volume-up"
+              style={styles.stepBtn}
+              onPress={() => setSfxVolume(sfxRaise)}
+              accessible
+              accessibilityRole="button"
+              accessibilityLabel="Increase SFX volume"
+            >
+              <Text style={styles.stepText}>+</Text>
+            </Pressable>
+          </View>
+        </View>
+
+        <View style={styles.row}>
+          <Text style={styles.rowLabel}>STATIC</Text>
+          <Switch
+            testID="static-enabled-switch"
+            value={staticEnabled}
+            onValueChange={setStaticEnabled}
+            trackColor={{ false: colors.border, true: colors.amber }}
+            thumbColor={staticEnabled ? colors.background : colors.textMuted}
+            accessible
+            accessibilityRole="switch"
+            accessibilityLabel="Static noise enabled"
+            accessibilityHint="Toggle inter-band static noise"
+          />
+        </View>
+      </View>
+
+      <View style={styles.card}>
         <Text style={styles.sectionLabel}>ACCESSIBILITY</Text>
         <View style={styles.row}>
           <Text style={styles.rowLabel}>REDUCED MOTION</Text>
           <Switch
+            testID="reduced-motion-switch"
             value={reducedMotion}
             onValueChange={setReducedMotion}
             trackColor={{ false: colors.border, true: colors.amber }}
@@ -87,7 +182,26 @@ export default function SettingsScreen() {
         </View>
       </View>
 
+      <View style={styles.card}>
+        <Text style={styles.sectionLabel}>ANALYTICS</Text>
+        <View style={styles.row}>
+          <Text style={styles.rowLabel}>USAGE DATA</Text>
+          <Switch
+            testID="analytics-enabled-switch"
+            value={analyticsEnabled}
+            onValueChange={setAnalyticsEnabled}
+            trackColor={{ false: colors.border, true: colors.amber }}
+            thumbColor={analyticsEnabled ? colors.background : colors.textMuted}
+            accessible
+            accessibilityRole="switch"
+            accessibilityLabel="Analytics enabled"
+            accessibilityHint="Opt in to local, non-identifying usage tracking"
+          />
+        </View>
+      </View>
+
       <Pressable
+        testID="settings-achievements-link"
         style={styles.link}
         onPress={() => router.push('/settings/achievements')}
         accessible
