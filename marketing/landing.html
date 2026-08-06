@@ -1,0 +1,668 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Dead Air Radio — a paranormal late-night radio horror game. Tune in. Answer calls. Stay sane."
+    />
+    <meta name="theme-color" content="#030303" />
+    <meta property="og:title" content="Dead Air Radio" />
+    <meta
+      property="og:description"
+      content="Something is trying to reach you. The signal is forming. Tune in. Answer calls. Stay sane."
+    />
+    <meta property="og:type" content="website" />
+    <title>Dead Air Radio — Tune in. Answer calls. Stay sane.</title>
+    <style>
+      /* ===== Theme tokens ===== */
+      :root {
+        --bg: #030303;
+        --bg-elevated: #0a0a0a;
+        --surface: #1a1a1a;
+        --border: #2a2a2a;
+        --amber: #ff8c00;
+        --green: #39ff14;
+        --red: #ff3131;
+        --dim-green: #1a5c0a;
+        --text: #e0e0e0;
+        --text-muted: #666666;
+        --mono: 'Courier New', Courier, monospace;
+      }
+
+      /* ===== CRT scanline overlay ===== */
+      body::before {
+        content: '';
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        z-index: 100;
+        background: repeating-linear-gradient(
+          0deg,
+          rgba(0, 0, 0, 0) 0px,
+          rgba(0, 0, 0, 0) 1px,
+          rgba(0, 0, 0, 0.18) 2px,
+          rgba(0, 0, 0, 0.18) 3px
+        );
+        mix-blend-mode: multiply;
+      }
+
+      body::after {
+        content: '';
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        z-index: 101;
+        background: radial-gradient(ellipse at center, transparent 60%, rgba(0, 0, 0, 0.6) 100%);
+      }
+
+      /* ===== Foundations ===== */
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family: var(--mono);
+        line-height: 1.6;
+        -webkit-font-smoothing: none;
+        text-rendering: optimizeLegibility;
+        overflow-x: hidden;
+      }
+
+      body {
+        min-height: 100vh;
+      }
+
+      main {
+        max-width: 880px;
+        margin: 0 auto;
+        padding: 32px 20px 80px;
+        position: relative;
+        z-index: 1;
+      }
+
+      /* ===== Typography ===== */
+      h1,
+      h2,
+      h3,
+      h4 {
+        font-family: var(--mono);
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        margin: 0 0 0.5em;
+      }
+
+      h1 {
+        font-size: clamp(2rem, 8vw, 4rem);
+        line-height: 1.1;
+        color: var(--text);
+        text-shadow: 0 0 8px rgba(255, 140, 0, 0.35);
+      }
+
+      h2 {
+        font-size: clamp(1.25rem, 4vw, 1.75rem);
+        color: var(--amber);
+        margin-top: 2.5em;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        border-bottom: 1px solid var(--border);
+        padding-bottom: 0.4em;
+      }
+
+      h3 {
+        font-size: 1.1rem;
+        color: var(--green);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        margin-top: 1.5em;
+      }
+
+      p {
+        margin: 0 0 1em;
+      }
+
+      a {
+        color: var(--amber);
+        text-decoration: none;
+        border-bottom: 1px dotted var(--amber);
+        transition:
+          color 0.2s,
+          border-color 0.2s;
+      }
+      a:hover,
+      a:focus {
+        color: var(--green);
+        border-bottom-color: var(--green);
+      }
+
+      small {
+        color: var(--text-muted);
+        font-size: 0.85em;
+      }
+
+      /* ===== Hero ===== */
+      .hero {
+        text-align: center;
+        padding: 80px 0 48px;
+      }
+      .hero__eyebrow {
+        color: var(--text-muted);
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.3em;
+        margin-bottom: 1.5em;
+      }
+      .hero__glyph {
+        font-size: 3.5rem;
+        color: var(--amber);
+        text-shadow: 0 0 12px rgba(255, 140, 0, 0.6);
+        margin: 0 0 0.5em;
+        animation: flicker 4s infinite alternate;
+      }
+      .hero__tagline {
+        font-size: 1.1rem;
+        color: var(--green);
+        letter-spacing: 0.05em;
+      }
+      .hero__sub {
+        color: var(--text-muted);
+        font-size: 0.95rem;
+        max-width: 480px;
+        margin: 1.5em auto 0;
+      }
+
+      @keyframes flicker {
+        0%,
+        92%,
+        96%,
+        100% {
+          opacity: 1;
+        }
+        93%,
+        97% {
+          opacity: 0.65;
+        }
+      }
+
+      /* ===== Scar dividers ===== */
+      .scar {
+        height: 1px;
+        background: linear-gradient(
+          to right,
+          transparent 0%,
+          var(--border) 20%,
+          var(--amber) 50%,
+          var(--border) 80%,
+          transparent 100%
+        );
+        opacity: 0.6;
+        margin: 2.5em 0;
+      }
+
+      /* ===== Feature grid ===== */
+      .features {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+        gap: 16px;
+        margin-top: 1.5em;
+      }
+      .feature {
+        background: var(--bg-elevated);
+        border: 1px solid var(--border);
+        padding: 18px 18px 20px;
+        border-radius: 2px;
+        border-left: 3px solid var(--amber);
+        transition:
+          border-left-color 0.2s,
+          transform 0.2s;
+      }
+      .feature:hover {
+        border-left-color: var(--green);
+        transform: translateY(-1px);
+      }
+      .feature__icon {
+        font-size: 1.4rem;
+        color: var(--amber);
+        margin-bottom: 0.5em;
+        display: block;
+      }
+      .feature__title {
+        font-family: var(--mono);
+        font-weight: 700;
+        color: var(--text);
+        font-size: 1rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 0.4em;
+      }
+      .feature__desc {
+        color: var(--text-muted);
+        font-size: 0.9rem;
+        line-height: 1.55;
+      }
+
+      /* ===== Screenshot placeholders ===== */
+      .shots {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
+        gap: 12px;
+        margin-top: 1.5em;
+      }
+      .shot-placeholder {
+        aspect-ratio: 9 / 18;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: var(--text-muted);
+        font-size: 0.8rem;
+        text-align: center;
+        padding: 12px;
+        border-radius: 2px;
+        position: relative;
+        overflow: hidden;
+        transition: border-color 0.2s;
+      }
+      .shot-placeholder:hover {
+        border-color: var(--amber);
+      }
+      .shot-placeholder__id {
+        font-size: 0.7rem;
+        color: var(--amber);
+        letter-spacing: 0.2em;
+        margin-bottom: 6px;
+      }
+      .shot-placeholder__label {
+        text-transform: lowercase;
+      }
+      .shot-placeholder::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 18px;
+        background: repeating-linear-gradient(
+          0deg,
+          rgba(0, 0, 0, 0) 0px,
+          rgba(0, 0, 0, 0) 1px,
+          rgba(0, 0, 0, 0.25) 2px,
+          rgba(0, 0, 0, 0.25) 3px
+        );
+      }
+
+      /* ===== Store badges ===== */
+      .stores {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 2em;
+        justify-content: center;
+      }
+      .store-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        color: var(--text);
+        padding: 12px 20px;
+        border-radius: 4px;
+        font-family: var(--mono);
+        text-decoration: none;
+        border-bottom: 1px solid var(--border);
+        transition:
+          background 0.2s,
+          border-color 0.2s,
+          color 0.2s;
+      }
+      .store-badge:hover {
+        background: var(--bg-elevated);
+        border-color: var(--amber);
+        color: var(--amber);
+      }
+      .store-badge__icon {
+        font-size: 1.5rem;
+      }
+      .store-badge__meta {
+        display: flex;
+        flex-direction: column;
+        line-height: 1.2;
+      }
+      .store-badge__small {
+        font-size: 0.65rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+      .store-badge__small--alt {
+        color: var(--text);
+      }
+
+      /* ===== Spec table ===== */
+      .specs {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 1em;
+        font-size: 0.9rem;
+      }
+      .specs th,
+      .specs td {
+        text-align: left;
+        padding: 10px 12px;
+        border-bottom: 1px solid var(--border);
+      }
+      .specs th {
+        color: var(--text-muted);
+        font-weight: 400;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        font-size: 0.75rem;
+      }
+      .specs td {
+        color: var(--text);
+      }
+      .specs tr:last-child td {
+        border-bottom: none;
+      }
+
+      /* ===== Footer ===== */
+      .foot {
+        margin-top: 4em;
+        padding-top: 1.5em;
+        border-top: 1px solid var(--border);
+        color: var(--text-muted);
+        font-size: 0.85rem;
+        text-align: center;
+      }
+      .foot a {
+        color: var(--text-muted);
+        border-bottom: 1px dotted var(--text-muted);
+      }
+      .foot a:hover {
+        color: var(--amber);
+        border-bottom-color: var(--amber);
+      }
+
+      /* ===== Band frequency list ===== */
+      .bands {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 1em;
+        padding: 0;
+        list-style: none;
+      }
+      .bands li {
+        font-size: 0.85rem;
+        color: var(--text);
+        border: 1px solid var(--border);
+        padding: 6px 12px;
+        background: var(--bg-elevated);
+        letter-spacing: 0.08em;
+      }
+      .bands li:nth-child(odd) {
+        color: var(--green);
+      }
+      .bands li:nth-child(even) {
+        color: var(--amber);
+      }
+
+      /* ===== Skip link ===== */
+      .skip-link {
+        position: absolute;
+        left: -9999px;
+        top: 1rem;
+        z-index: 102;
+        background: var(--amber);
+        color: var(--bg);
+        padding: 8px 16px;
+        border-radius: 2px;
+        font-family: var(--mono);
+      }
+      .skip-link:focus {
+        left: 1rem;
+      }
+
+      /* ===== Mobile tweaks ===== */
+      @media (max-width: 480px) {
+        main {
+          padding: 16px 14px 60px;
+        }
+        .hero {
+          padding: 48px 0 32px;
+        }
+        .feature {
+          padding: 14px;
+        }
+        .stores {
+          flex-direction: column;
+          align-items: stretch;
+        }
+        .store-badge {
+          justify-content: flex-start;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .hero__glyph {
+          animation: none;
+        }
+        * {
+          transition: none !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <main id="main">
+      <!-- ===== Hero ===== -->
+      <header class="hero">
+        <div class="hero__eyebrow">paranormal late-night radio</div>
+        <div class="hero__glyph" aria-hidden="true">📻</div>
+        <h1>DEAD&nbsp;AIR&nbsp;RADIO</h1>
+        <p class="hero__tagline">Tune in. Answer calls. Stay sane.</p>
+        <p class="hero__sub">
+          Something is trying to reach you. The signal is forming. Every transmission is synthesized
+          live — the dead, the classified, the ones stuck in loops. And something older than radio
+          itself.
+        </p>
+      </header>
+
+      <div class="scar" role="presentation"></div>
+
+      <!-- ===== Store badges ===== -->
+      <nav aria-label="Store links">
+        <div class="stores">
+          <a class="store-badge" href="#" aria-label="Download on the App Store">
+            <span class="store-badge__icon" aria-hidden="true"></span>
+            <span class="store-badge__meta">
+              <span class="store-badge__small">Download on the</span>
+              <span class="store-badge__small store-badge__small--alt">App Store</span>
+            </span>
+          </a>
+          <a class="store-badge" href="#" aria-label="Get it on Google Play">
+            <span class="store-badge__icon" aria-hidden="true">▶</span>
+            <span class="store-badge__meta">
+              <span class="store-badge__small">Get it on</span>
+              <span class="store-badge__small store-badge__small--alt">Google Play</span>
+            </span>
+          </a>
+        </div>
+      </nav>
+
+      <!-- ===== Features ===== -->
+      <section aria-labelledby="features-heading">
+        <h2 id="features-heading">The Signal</h2>
+        <ul class="features" style="list-style: none; padding: 0">
+          <li class="feature">
+            <span class="feature__icon" aria-hidden="true">📻</span>
+            <div class="feature__title">Radio Tuning</div>
+            <p class="feature__desc">
+              Dial through 5 unlockable frequency bands. Living. Liminal. Lost. Classified. And the
+              one we don't name. Static responds to every choice.
+            </p>
+          </li>
+
+          <li class="feature">
+            <span class="feature__icon" aria-hidden="true">📞</span>
+            <div class="feature__title">Real-Time Calls</div>
+            <p class="feature__desc">
+              18 hand-crafted transmissions across 5 call types — Just Listen, Dead Air, Right
+              Answer, Signal Decode, Stay Calm. Nothing repeats the same way twice.
+            </p>
+          </li>
+
+          <li class="feature">
+            <span class="feature__icon" aria-hidden="true">📼</span>
+            <div class="feature__title">Tape Collection</div>
+            <p class="feature__desc">
+              A 15-tape archive to collect across a full playthrough. Every tape is a memory worth
+              keeping — and some are worth forgetting.
+            </p>
+          </li>
+
+          <li class="feature">
+            <span class="feature__icon" aria-hidden="true">🌀</span>
+            <div class="feature__title">Sanity Effects</div>
+            <p class="feature__desc">
+              A real-time sanity system. The dial drifts. The signal degrades. No two sessions tune
+              in to the same radio. Your choices carry weight.
+            </p>
+          </li>
+
+          <li class="feature">
+            <span class="feature__icon" aria-hidden="true">♾️</span>
+            <div class="feature__title">Infinite Signal</div>
+            <p class="feature__desc">
+              Optional IAP ($3.99). Endless AI-generated calls, never the same twice. Keeps the
+              frequency open after the base game ends.
+            </p>
+          </li>
+        </ul>
+      </section>
+
+      <div class="scar" role="presentation"></div>
+
+      <!-- ===== Frequency bands ===== -->
+      <section aria-labelledby="bands-heading">
+        <h2 id="bands-heading">Frequency Bands</h2>
+        <ul class="bands" aria-label="Unlockable frequency bands">
+          <li>88.7 FM — LIVING</li>
+          <li>102.3 FM — LIMINAL</li>
+          <li>117.8 AM — LOST</li>
+          <li>███.█ FM — CLASSIFIED</li>
+          <li>???.? — ████████</li>
+        </ul>
+      </section>
+
+      <!-- ===== Screenshots ===== -->
+      <section aria-labelledby="shots-heading">
+        <h2 id="shots-heading">Screenshots</h2>
+        <p><small>Captures from the current build. Six core shots, both storefronts.</small></p>
+        <div class="shots" aria-label="Screenshot placeholders">
+          <div class="shot-placeholder" aria-label="Radio tuning screenshot">
+            <span class="shot-placeholder__id">01</span>
+            <span class="shot-placeholder__label">radio tuning</span>
+          </div>
+          <div class="shot-placeholder" aria-label="Active call screenshot">
+            <span class="shot-placeholder__id">02</span>
+            <span class="shot-placeholder__label">active call</span>
+          </div>
+          <div class="shot-placeholder" aria-label="Tape collection screenshot">
+            <span class="shot-placeholder__id">03</span>
+            <span class="shot-placeholder__label">tape collection</span>
+          </div>
+          <div class="shot-placeholder" aria-label="Band selector screenshot">
+            <span class="shot-placeholder__id">04</span>
+            <span class="shot-placeholder__label">band selector</span>
+          </div>
+          <div class="shot-placeholder" aria-label="Store screenshot">
+            <span class="shot-placeholder__id">05</span>
+            <span class="shot-placeholder__label">store</span>
+          </div>
+          <div class="shot-placeholder" aria-label="Settings screenshot">
+            <span class="shot-placeholder__id">06</span>
+            <span class="shot-placeholder__label">settings</span>
+          </div>
+        </div>
+        <p>
+          <small
+            >Replace these placeholders with PNG captures from
+            <code>marketing/capture-screenshots.sh</code> (1290×2796 iPhone, 1080×1920
+            Android).</small
+          >
+        </p>
+      </section>
+
+      <div class="scar" role="presentation"></div>
+
+      <!-- ===== Specs table ===== -->
+      <section aria-labelledby="specs-heading">
+        <h2 id="specs-heading">Specs</h2>
+        <table class="specs" aria-label="App specifications">
+          <tbody>
+            <tr>
+              <th scope="row">App</th>
+              <td>Dead Air / Dead Air Radio</td>
+            </tr>
+            <tr>
+              <th scope="row">Version</th>
+              <td>1.0.0</td>
+            </tr>
+            <tr>
+              <th scope="row">Bundle ID</th>
+              <td>com.deadair.app</td>
+            </tr>
+            <tr>
+              <th scope="row">Platform</th>
+              <td>iOS · Android (React Native · Expo)</td>
+            </tr>
+            <tr>
+              <th scope="row">Price</th>
+              <td>Free to play</td>
+            </tr>
+            <tr>
+              <th scope="row">IAP</th>
+              <td>Infinite Signal — $3.99 (procedural AI calls)</td>
+            </tr>
+            <tr>
+              <th scope="row">Modes</th>
+              <td>18 hand-crafted transmissions + AI-generated Infinite Signal</td>
+            </tr>
+            <tr>
+              <th scope="row">Ads</th>
+              <td>No ads. No energy timers.</td>
+            </tr>
+            <tr>
+              <th scope="row">Rating</th>
+              <td>Teen / 12+ (horror/fear themes)</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- ===== Footer ===== -->
+      <footer class="foot">
+        <p>
+          <a href="../docs/store/app-privacy.md">Privacy Policy</a>
+          &nbsp;·&nbsp;
+          <a href="https://github.com/daggerstuff/deadair">Source</a>
+          &nbsp;·&nbsp;
+          <span>© Dead Air Radio. All rights reserved.</span>
+        </p>
+        <p><small>The frequency is open. Something is already waiting.</small></p>
+      </footer>
+    </main>
+  </body>
+</html>
