@@ -1,7 +1,7 @@
 // app/store/index.tsx
-// Store screen — base game + Infinite Signal IAP. Mock purchase flow only
-// in Phase 5-4; real billing wired in a later phase. Persists hasInfiniteSignal
-// via useStoreStore (zustand + AsyncStorage).
+// Store screen — base game + Infinite Signal IAP.
+// Real billing via expo-in-app-purchases (lib/iap.ts). Entitlements persist
+// in useStoreStore (zustand + AsyncStorage).
 
 import React, { useEffect } from 'react';
 import { View, Text, Pressable, StyleSheet, ScrollView, SafeAreaView } from 'react-native';
@@ -10,6 +10,7 @@ import { colors, fonts, spacing } from '../../lib/theme';
 import { useStoreStore } from '../../store/useStoreStore';
 import { useAnalyticsStore } from '../../store/useAnalyticsStore';
 import { StoreCard } from '../../components/store/StoreCard';
+import { purchaseProduct, restorePurchases, PRODUCT_IDS } from '../../lib/iap';
 
 /** Stable noop — avoids creating a new function reference on every render. */
 const NOOP = () => {};
@@ -17,25 +18,47 @@ const NOOP = () => {};
 export default function StoreScreen() {
   const router = useRouter();
   const hasInfiniteSignal = useStoreStore((s) => s.hasInfiniteSignal);
-  const isLoading = useStoreStore((s) => s.isLoading);
-  const purchaseInfiniteSignal = useStoreStore((s) => s.purchaseInfiniteSignal);
-  const restorePurchases = useStoreStore((s) => s.restorePurchases);
+  const hasBase = useStoreStore((s) => s.hasBase);
+  const purchasing = useStoreStore((s) => s.purchasing);
+  const lastError = useStoreStore((s) => s.lastError);
+  const lastMessage = useStoreStore((s) => s.lastMessage);
   const track = useAnalyticsStore((s) => s.track);
 
   useEffect(() => {
     track('store_viewed');
   }, [track]);
 
+  const handlePurchaseBase = async () => {
+    track('iap_started', { productId: 'base' });
+    const result = await purchaseProduct(PRODUCT_IDS.BASE);
+    if (result?.responseCode === 0 && useStoreStore.getState().hasBase) {
+      track('iap_completed', { productId: 'base' });
+    }
+  };
+
   const handlePurchaseInfiniteSignal = async () => {
-    await purchaseInfiniteSignal();
-    if (useStoreStore.getState().hasInfiniteSignal) {
+    track('iap_started', { productId: 'infinite_signal' });
+    const result = await purchaseProduct(PRODUCT_IDS.INFINITE_SIGNAL);
+    if (result?.responseCode === 0 && useStoreStore.getState().hasInfiniteSignal) {
       track('iap_completed', { productId: 'infinite_signal' });
     }
   };
 
+  const handleRestore = async () => {
+    track('iap_restore_started');
+    await restorePurchases();
+    track('iap_restore_completed');
+  };
+
+  const baseState = hasBase
+    ? ('owned' as const)
+    : purchasing
+      ? ('purchasing' as const)
+      : ('available' as const);
+
   const infiniteSignalState = hasInfiniteSignal
     ? ('owned' as const)
-    : isLoading
+    : purchasing
       ? ('purchasing' as const)
       : ('available' as const);
 
@@ -62,18 +85,30 @@ export default function StoreScreen() {
           <View style={styles.backButtonSpacer} />
         </View>
 
+        {(lastError || lastMessage) && (
+          <View style={styles.statusBanner}>
+            <Text
+              style={[styles.statusText, lastError ? styles.textError : styles.textInfo]}
+              numberOfLines={3}
+            >
+              {lastError?.message ?? lastMessage}
+            </Text>
+          </View>
+        )}
+
         <StoreCard
           title="BASE GAME"
-          description="18 sacred calls. 5 bands. Full horror. The complete base-game experience, free."
-          price="FREE"
-          state="owned"
-          onPurchase={NOOP}
+          description="18 sacred calls. 5 bands. Full horror. The complete base-game experience."
+          price="$0.99"
+          state={baseState}
+          onPurchase={handlePurchaseBase}
+          purchaseButtonTestID="base-purchase"
         />
 
         <StoreCard
           title="INFINITE SIGNAL"
           description="Endless procedural calls beyond the 18 sacred handshakes. New frequencies, new voices, forever."
-          price="$4.99"
+          price="$3.99"
           state={infiniteSignalState}
           onPurchase={handlePurchaseInfiniteSignal}
           purchaseButtonTestID="infinite-signal-purchase"
@@ -82,7 +117,7 @@ export default function StoreScreen() {
         <Pressable
           testID="restore-purchases"
           style={({ pressed }) => [styles.restoreLink, pressed && styles.restoreLinkPressed]}
-          onPress={restorePurchases}
+          onPress={handleRestore}
           accessible
           accessibilityRole="button"
           accessibilityLabel="Restore purchases"
@@ -94,8 +129,8 @@ export default function StoreScreen() {
         </Pressable>
 
         <Text style={styles.disclaimer} numberOfLines={3}>
-          Mock store. Real billing arrives in a later phase. Entitlement persists locally across
-          reinstalls.
+          Purchases are tied to your App Store or Google Play account and can be restored on any
+          device.
         </Text>
       </ScrollView>
     </SafeAreaView>
@@ -146,6 +181,26 @@ const styles = StyleSheet.create({
     letterSpacing: 4,
     textAlign: 'center',
     minWidth: 0,
+  },
+  statusBanner: {
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 4,
+    padding: spacing.sm,
+    marginBottom: spacing.md,
+  },
+  statusText: {
+    fontFamily: fonts.mono,
+    fontSize: 11,
+    letterSpacing: 1,
+    textAlign: 'center',
+  },
+  textError: {
+    color: colors.red,
+  },
+  textInfo: {
+    color: colors.green,
   },
   restoreLink: {
     alignSelf: 'center',

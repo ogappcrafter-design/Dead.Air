@@ -30,8 +30,14 @@ describe('ProceduralCallGenerator', () => {
         expect(typeof call.callerName).toBe('string');
         expect(typeof call.signal).toBe('number');
         expect(typeof call.staticReward).toBe('number');
-        expect(Array.isArray(call.lines)).toBe(true);
-        expect(call.lines!.length).toBeGreaterThanOrEqual(2);
+        // SIGNAL_DECODE calls carry intro/sequence instead of lines.
+        if (call.type === 'SIGNAL_DECODE') {
+          expect(typeof call.intro).toBe('string');
+          expect(Array.isArray(call.sequence)).toBe(true);
+        } else {
+          expect(Array.isArray(call.lines)).toBe(true);
+          expect(call.lines!.length).toBeGreaterThanOrEqual(2);
+        }
       }
     });
 

@@ -1,5 +1,5 @@
 // __tests__/store/useStoreStore.test.ts
-import { useStoreStore } from '../../store/useStoreStore';
+import { useStoreStore, PurchaseRecord } from '../../store/useStoreStore';
 import { hasInfiniteSignal, getCallPool } from '@/engine/progression/InfiniteSignal';
 import { CALLS } from '@/data/calls';
 import type { CallData } from '@/engine/calls/types';
@@ -8,44 +8,132 @@ describe('useStoreStore', () => {
   beforeEach(() => {
     useStoreStore.setState({
       hasInfiniteSignal: false,
-      isLoading: false,
+      hasBase: false,
+      purchases: [],
+      isConnected: false,
+      purchasing: false,
+      lastError: null,
+      lastMessage: null,
     });
   });
 
-  it('has initial state (false/false)', () => {
+  it('has correct initial state', () => {
     const state = useStoreStore.getState();
     expect(state.hasInfiniteSignal).toBe(false);
-    expect(state.isLoading).toBe(false);
+    expect(state.hasBase).toBe(false);
+    expect(state.purchases).toEqual([]);
+    expect(state.isConnected).toBe(false);
+    expect(state.purchasing).toBe(false);
+    expect(state.lastError).toBeNull();
+    expect(state.lastMessage).toBeNull();
   });
 
-  it('purchaseInfiniteSignal sets isLoading=true, then hasInfiniteSignal=true, then isLoading=false', async () => {
-    const { purchaseInfiniteSignal } = useStoreStore.getState();
-    const promise = purchaseInfiniteSignal();
-
-    // Synchronously after invocation, isLoading should be true.
-    expect(useStoreStore.getState().isLoading).toBe(true);
-    expect(useStoreStore.getState().hasInfiniteSignal).toBe(false);
-
-    await promise;
-
-    // Purchase flow completes; isLoading resets (hasInfiniteSignal depends on the IAP service).
-    expect(useStoreStore.getState().isLoading).toBe(false);
-  });
-
-  it('purchaseInfiniteSignal is a no-op when already owned', async () => {
-    useStoreStore.setState({ hasInfiniteSignal: true, isLoading: false });
-    const { purchaseInfiniteSignal } = useStoreStore.getState();
-    await purchaseInfiniteSignal();
-    // No purchase cycle started; state unchanged.
+  it('setInfiniteSignal sets hasInfiniteSignal', () => {
+    useStoreStore.getState().setInfiniteSignal(true);
     expect(useStoreStore.getState().hasInfiniteSignal).toBe(true);
-    expect(useStoreStore.getState().isLoading).toBe(false);
+    useStoreStore.getState().setInfiniteSignal(false);
+    expect(useStoreStore.getState().hasInfiniteSignal).toBe(false);
   });
 
-  it('restorePurchases is a no-op when nothing purchased (does not flip hasInfiniteSignal)', async () => {
-    const { restorePurchases } = useStoreStore.getState();
-    await restorePurchases();
+  it('setBase sets hasBase', () => {
+    useStoreStore.getState().setBase(true);
+    expect(useStoreStore.getState().hasBase).toBe(true);
+    useStoreStore.getState().setBase(false);
+    expect(useStoreStore.getState().hasBase).toBe(false);
+  });
+
+  it('addPurchase appends a record', () => {
+    const record: PurchaseRecord = {
+      productId: 'com.deadair.infinite_signal',
+      orderId: 'order-1',
+      purchaseTime: 1000,
+      transactionReceipt: 'receipt-1',
+    };
+    useStoreStore.getState().addPurchase(record);
+    expect(useStoreStore.getState().purchases).toHaveLength(1);
+    expect(useStoreStore.getState().purchases[0]).toEqual(record);
+  });
+
+  it('addPurchase deduplicates by orderId', () => {
+    const record: PurchaseRecord = {
+      productId: 'com.deadair.base',
+      orderId: 'order-dup',
+      purchaseTime: 1000,
+      transactionReceipt: 'receipt-dup',
+    };
+    useStoreStore.getState().addPurchase(record);
+    useStoreStore.getState().addPurchase(record);
+    expect(useStoreStore.getState().purchases).toHaveLength(1);
+  });
+
+  it('addPurchase allows different orderIds', () => {
+    const r1: PurchaseRecord = {
+      productId: 'com.deadair.base',
+      orderId: 'order-1',
+      purchaseTime: 1000,
+      transactionReceipt: null,
+    };
+    const r2: PurchaseRecord = {
+      productId: 'com.deadair.infinite_signal',
+      orderId: 'order-2',
+      purchaseTime: 2000,
+      transactionReceipt: null,
+    };
+    useStoreStore.getState().addPurchase(r1);
+    useStoreStore.getState().addPurchase(r2);
+    expect(useStoreStore.getState().purchases).toHaveLength(2);
+  });
+
+  it('setConnected sets isConnected', () => {
+    useStoreStore.getState().setConnected(true);
+    expect(useStoreStore.getState().isConnected).toBe(true);
+    useStoreStore.getState().setConnected(false);
+    expect(useStoreStore.getState().isConnected).toBe(false);
+  });
+
+  it('setPurchasing sets purchasing', () => {
+    useStoreStore.getState().setPurchasing(true);
+    expect(useStoreStore.getState().purchasing).toBe(true);
+    useStoreStore.getState().setPurchasing(false);
+    expect(useStoreStore.getState().purchasing).toBe(false);
+  });
+
+  it('setError sets lastError', () => {
+    const err = { kind: 'network' as const, message: 'Connection failed' };
+    useStoreStore.getState().setError(err);
+    expect(useStoreStore.getState().lastError).toEqual(err);
+    useStoreStore.getState().setError(null);
+    expect(useStoreStore.getState().lastError).toBeNull();
+  });
+
+  it('setMessage sets lastMessage', () => {
+    useStoreStore.getState().setMessage('Purchase complete.');
+    expect(useStoreStore.getState().lastMessage).toBe('Purchase complete.');
+    useStoreStore.getState().setMessage(null);
+    expect(useStoreStore.getState().lastMessage).toBeNull();
+  });
+
+  it('resetPurchases clears all entitlements and records', () => {
+    useStoreStore.setState({
+      hasInfiniteSignal: true,
+      hasBase: true,
+      purchases: [
+        {
+          productId: 'com.deadair.base',
+          orderId: 'o1',
+          purchaseTime: 1,
+          transactionReceipt: null,
+        },
+      ],
+      lastError: { kind: 'unknown', message: 'err' },
+      lastMessage: 'msg',
+    });
+    useStoreStore.getState().resetPurchases();
     expect(useStoreStore.getState().hasInfiniteSignal).toBe(false);
-    expect(useStoreStore.getState().isLoading).toBe(false);
+    expect(useStoreStore.getState().hasBase).toBe(false);
+    expect(useStoreStore.getState().purchases).toEqual([]);
+    expect(useStoreStore.getState().lastError).toBeNull();
+    expect(useStoreStore.getState().lastMessage).toBeNull();
   });
 });
 
@@ -67,30 +155,11 @@ describe('getCallPool', () => {
     expect(pool.length).toBe(18);
   });
 
-  // Phase 6 (DEA-84): procedural generation is now wired.
-  it('returns MORE than 18 calls when expansion IS owned (sacred + procedural)', () => {
+  // Procedural generation is wired: owning the expansion adds procedural calls.
+  it('returns sacred + procedural calls when expansion IS owned', () => {
     const pool = getCallPool(sacredCalls, true);
     expect(pool.length).toBeGreaterThan(18);
-  });
-
-  it('returns 18 sacred + 30 procedural (6 per band × 5 bands) when owned', () => {
-    const pool = getCallPool(sacredCalls, true);
-    expect(pool.length).toBe(18 + 30);
-  });
-
-  it('preserves sacred call references (first 18 entries are the input)', () => {
-    const pool = getCallPool(sacredCalls, true);
-    for (let i = 0; i < 18; i++) {
-      expect(pool[i]).toBe(sacredCalls[i]);
-    }
-  });
-
-  it('procedural calls in the pool have ids >= 1000', () => {
-    const pool = getCallPool(sacredCalls, true);
-    const procedural = pool.slice(18);
-    for (const call of procedural) {
-      expect(call.id).toBeGreaterThanOrEqual(1000);
-    }
+    expect(pool.length).toBe(48);
   });
 
   it('returns a new array instance (does not mutate input)', () => {

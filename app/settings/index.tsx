@@ -1,11 +1,11 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Pressable, Switch, ScrollView, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Switch, ScrollView } from 'react-native';
 import { router } from 'expo-router';
 import { colors, fonts, spacing } from '../../lib/theme';
 import { useSettingsStore } from '../../store/useSettingsStore';
 import { useAnalyticsStore } from '../../store/useAnalyticsStore';
-import { ErrorReportButton } from '../../components/shared/ErrorReportButton';
 import { useStoreStore } from '../../store/useStoreStore';
+import { ErrorReportButton } from '../../components/shared/ErrorReportButton';
+import { restorePurchases } from '../../lib/iap';
 
 const CRT_INTENSITY_STEP = 0.1;
 const VOLUME_STEP = 0.1;
@@ -13,65 +13,6 @@ const VOLUME_STEP = 0.1;
 const fmtVolume = (vol: number): string => vol.toFixed(1);
 
 export default function SettingsScreen() {
-  const {
-    hasInfiniteSignal,
-    isLoading,
-    isInitialized,
-    error,
-    productPrice,
-    initialize,
-    purchaseInfiniteSignal,
-    restorePurchases,
-    dispose,
-  } = useStoreStore();
-
-  const [isInitializing, setIsInitializing] = useState(true);
-
-  // Initialize IAP service on mount
-  useEffect(() => {
-    initialize().finally(() => setIsInitializing(false));
-
-    return () => {
-      dispose();
-    };
-  }, [initialize, dispose]);
-
-  // Show error alert if there's an error
-  useEffect(() => {
-    if (error) {
-      Alert.alert('Error', error);
-    }
-  }, [error]);
-
-  // Handle purchase
-  const handlePurchase = async () => {
-    if (!isInitialized) {
-      Alert.alert('Error', 'IAP service not initialized');
-      return;
-    }
-
-    try {
-      await purchaseInfiniteSignal();
-    } catch (err) {
-      Alert.alert('Error', 'Purchase failed. Please try again.');
-    }
-  };
-
-  // Handle restore
-  const handleRestore = async () => {
-    if (!isInitialized) {
-      Alert.alert('Error', 'IAP service not initialized');
-      return;
-    }
-
-    try {
-      await restorePurchases();
-      Alert.alert('Success', 'Purchases restored successfully');
-    } catch (err) {
-      Alert.alert('Error', 'Restore failed. Please try again.');
-    }
-  };
-
   const crtEnabled = useSettingsStore((s) => s.crtEnabled);
   const setCrtEnabled = useSettingsStore((s) => s.setCrtEnabled);
   const crtIntensity = useSettingsStore((s) => s.crtIntensity);
@@ -89,6 +30,12 @@ export default function SettingsScreen() {
   const analyticsEnabled = useAnalyticsStore((s) => s.enabled);
   const setAnalyticsEnabled = useAnalyticsStore((s) => s.setEnabled);
 
+  const isConnected = useStoreStore((s) => s.isConnected);
+  const hasBase = useStoreStore((s) => s.hasBase);
+  const hasInfiniteSignal = useStoreStore((s) => s.hasInfiniteSignal);
+  const lastError = useStoreStore((s) => s.lastError);
+  const lastMessage = useStoreStore((s) => s.lastMessage);
+
   const lower = Math.max(0, Math.round((crtIntensity - CRT_INTENSITY_STEP) * 10) / 10);
   const raise = Math.min(1, Math.round((crtIntensity + CRT_INTENSITY_STEP) * 10) / 10);
 
@@ -97,65 +44,11 @@ export default function SettingsScreen() {
   const sfxLower = Math.max(0, Math.round((sfxVolume - VOLUME_STEP) * 10) / 10);
   const sfxRaise = Math.min(1, Math.round((sfxVolume + VOLUME_STEP) * 10) / 10);
 
-  if (isInitializing) {
-    return (
-      <View style={styles.container}>
-        <ActivityIndicator size="large" color={colors.amber} />
-        <Text style={styles.loadingText}>Initializing...</Text>
-      </View>
-    );
-  }
-
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <Text style={styles.title} accessibilityRole="header">
         SETTINGS
       </Text>
-
-      <View style={styles.card}>
-        <Text style={styles.sectionLabel}>INFINITE SIGNAL</Text>
-        <Text style={styles.description}>
-          Unlock the full call pool with procedural generation.
-        </Text>
-
-        {hasInfiniteSignal ? (
-          <View style={styles.ownedContainer}>
-            <Text style={styles.ownedText}>✓ Owned</Text>
-          </View>
-        ) : (
-          <>
-            <Pressable
-              testID="iap-purchase-button"
-              style={styles.purchaseButton}
-              onPress={handlePurchase}
-              disabled={isLoading || !isInitialized}
-              accessible
-              accessibilityRole="button"
-              accessibilityLabel="Purchase Infinite Signal"
-            >
-              {isLoading ? (
-                <ActivityIndicator color="#000" />
-              ) : (
-                <Text style={styles.purchaseButtonText}>
-                  Purchase - {productPrice || '$3.99'}
-                </Text>
-              )}
-            </Pressable>
-
-            <Pressable
-              testID="iap-restore-button"
-              style={styles.restoreButton}
-              onPress={handleRestore}
-              disabled={isLoading || !isInitialized}
-              accessible
-              accessibilityRole="button"
-              accessibilityLabel="Restore purchases"
-            >
-              <Text style={styles.restoreButtonText}>Restore Purchases</Text>
-            </Pressable>
-          </>
-        )}
-      </View>
 
       <View style={styles.card}>
         <Text style={styles.sectionLabel}>CRT</Text>
@@ -315,6 +208,58 @@ export default function SettingsScreen() {
         </View>
       </View>
 
+      <View style={styles.card}>
+        <Text style={styles.sectionLabel}>STORE</Text>
+
+        <View style={styles.row}>
+          <Text style={styles.rowLabel}>CONNECTION</Text>
+          <Text style={[styles.statusValue, isConnected ? styles.textGreen : styles.textRed]}>
+            {isConnected ? 'CONNECTED' : 'OFFLINE'}
+          </Text>
+        </View>
+
+        <View style={styles.row}>
+          <Text style={styles.rowLabel}>BASE GAME</Text>
+          <Text style={[styles.statusValue, hasBase ? styles.textGreen : styles.textMuted]}>
+            {hasBase ? 'OWNED' : 'NOT OWNED'}
+          </Text>
+        </View>
+
+        <View style={styles.row}>
+          <Text style={styles.rowLabel}>INFINITE SIGNAL</Text>
+          <Text
+            style={[styles.statusValue, hasInfiniteSignal ? styles.textGreen : styles.textMuted]}
+          >
+            {hasInfiniteSignal ? 'OWNED' : 'NOT OWNED'}
+          </Text>
+        </View>
+
+        {(lastError || lastMessage) && (
+          <Text
+            style={[styles.iapMessage, lastError ? styles.textError : styles.textInfo]}
+            numberOfLines={3}
+          >
+            {lastError?.message ?? lastMessage}
+          </Text>
+        )}
+
+        <Pressable
+          testID="settings-restore-purchases"
+          style={({ pressed }) => [styles.restoreBtn, pressed && styles.restoreBtnPressed]}
+          onPress={() => {
+            void restorePurchases();
+          }}
+          accessible
+          accessibilityRole="button"
+          accessibilityLabel="Restore purchases"
+          accessibilityHint="Re-sync previously purchased entitlements from the store"
+        >
+          <Text style={styles.restoreBtnText} numberOfLines={1}>
+            RESTORE PURCHASES
+          </Text>
+        </Pressable>
+      </View>
+
       <Pressable
         testID="settings-achievements-link"
         style={styles.link}
@@ -364,12 +309,6 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     letterSpacing: 3,
   },
-  description: {
-    fontFamily: fonts.mono,
-    fontSize: 12,
-    color: colors.text,
-    letterSpacing: 1,
-  },
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -410,50 +349,6 @@ const styles = StyleSheet.create({
     minWidth: 32,
     textAlign: 'center',
   },
-  purchaseButton: {
-    backgroundColor: colors.amber,
-    padding: 14,
-    borderRadius: 4,
-    alignItems: 'center',
-  },
-  purchaseButtonText: {
-    color: colors.background,
-    fontFamily: fonts.mono,
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  restoreButton: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: 12,
-    borderRadius: 4,
-    alignItems: 'center',
-  },
-  restoreButtonText: {
-    color: colors.text,
-    fontFamily: fonts.mono,
-    fontSize: 12,
-  },
-  ownedContainer: {
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.amber,
-    padding: 14,
-    borderRadius: 4,
-    alignItems: 'center',
-  },
-  ownedText: {
-    color: colors.amber,
-    fontFamily: fonts.mono,
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  loadingText: {
-    color: colors.textMuted,
-    marginTop: 10,
-    fontFamily: fonts.mono,
-    fontSize: 14,
-  },
   link: {
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.lg,
@@ -478,5 +373,48 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: colors.textMuted,
     letterSpacing: 0.5,
+  },
+  statusValue: {
+    fontFamily: fonts.mono,
+    fontSize: 11,
+    letterSpacing: 2,
+  },
+  textGreen: {
+    color: colors.green,
+  },
+  textRed: {
+    color: colors.red,
+  },
+  textMuted: {
+    color: colors.textMuted,
+  },
+  textError: {
+    color: colors.red,
+  },
+  textInfo: {
+    color: colors.green,
+  },
+  iapMessage: {
+    fontFamily: fonts.mono,
+    fontSize: 10,
+    letterSpacing: 0.5,
+  },
+  restoreBtn: {
+    alignSelf: 'center',
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 4,
+    marginTop: spacing.xs,
+  },
+  restoreBtnPressed: {
+    opacity: 0.6,
+  },
+  restoreBtnText: {
+    fontFamily: fonts.mono,
+    fontSize: 12,
+    color: colors.amber,
+    letterSpacing: 2,
   },
 });

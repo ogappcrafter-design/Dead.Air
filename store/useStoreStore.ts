@@ -1,110 +1,103 @@
-import { create } from 'zustand';
-import { iapService, PRODUCT_IDS } from '../engine/iap/IAPService';
+// store/useStoreStore.ts
+// Authoritative in-app purchase state for Dead Air Radio.
+// Zustand + persist + AsyncStorage. Persists entitlements + purchase records.
+// IAP orchestration lives in lib/iap.ts; this store is the state holder.
 
-// Store state interface
-interface StoreState {
-  hasInfiniteSignal: boolean;
-  isLoading: boolean;
-  isInitialized: boolean;
-  error: string | null;
-  productPrice: string | null;
-  initialize: () => Promise<void>;
-  purchaseInfiniteSignal: () => Promise<void>;
-  restorePurchases: () => Promise<void>;
-  dispose: () => void;
+import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { PURCHASES_KEY } from '../lib/constants';
+
+export interface PurchaseRecord {
+  productId: string;
+  orderId: string;
+  purchaseTime: number;
+  transactionReceipt: string | null;
 }
 
-// Create store
-export const useStoreStore = create<StoreState>((set, get) => ({
-  hasInfiniteSignal: false,
-  isLoading: false,
-  isInitialized: false,
-  error: null,
-  productPrice: null,
+export type IAPErrorKind =
+  'network' | 'declined' | 'already_owned' | 'interrupted' | 'service_unavailable' | 'unknown';
 
-  initialize: async () => {
-    try {
-      set({ isLoading: true, error: null });
-      await iapService.initialize();
+export interface IAPErrorState {
+  kind: IAPErrorKind;
+  message: string;
+}
 
-      // Get product price
-      const productId = PRODUCT_IDS.INFINITE_SIGNAL;
-      const productInfo = productId ? iapService.getProductInfo(productId) : undefined;
-      const price = productInfo?.price || null;
+interface StoreState {
+  // Owned entitlements
+  hasInfiniteSignal: boolean;
+  hasBase: boolean;
+  // Purchase records (audit trail, dedup by orderId)
+  purchases: PurchaseRecord[];
+  // Connection state
+  isConnected: boolean;
+  // Purchasing UI state
+  purchasing: boolean;
+  // Non-blocking error state
+  lastError: IAPErrorState | null;
+  // Info message (e.g. "Nothing to restore", "Already owned")
+  lastMessage: string | null;
 
-      // Check for existing purchases
-      const hasInfiniteSignal = await iapService.hasInfiniteSignal();
+  // Actions
+  setInfiniteSignal: (owned: boolean) => void;
+  setBase: (owned: boolean) => void;
+  addPurchase: (record: PurchaseRecord) => void;
+  setConnected: (connected: boolean) => void;
+  setPurchasing: (purchasing: boolean) => void;
+  setError: (error: IAPErrorState | null) => void;
+  setMessage: (message: string | null) => void;
+  resetPurchases: () => void;
+}
 
-      set({
-        isInitialized: true,
-        hasInfiniteSignal,
-        isLoading: false,
-        productPrice: price,
-      });
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Initialization failed';
-      set({
-        isLoading: false,
-        error: message,
-        isInitialized: false,
-      });
-      console.error('Store initialization failed:', error);
-    }
-  },
-
-  purchaseInfiniteSignal: async () => {
-    try {
-      set({ isLoading: true, error: null });
-      const result = await iapService.purchaseInfiniteSignal();
-
-      if (!result.success) {
-        set({ isLoading: false, error: result.error || 'Purchase failed' });
-        return;
-      }
-
-      // Reflect the completed purchase immediately so the UI exits the
-      // loading state and unlocks the feature — do not rely on a platform
-      // listener callback that may never fire.
-      const hasInfiniteSignal = await iapService.hasInfiniteSignal();
-      set({ hasInfiniteSignal, isLoading: false, error: null });
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Purchase failed';
-      set({ isLoading: false, error: message });
-      console.error('Purchase error:', error);
-    }
-  },
-
-  restorePurchases: async () => {
-    try {
-      set({ isLoading: true, error: null });
-      const result = await iapService.restorePurchases();
-
-      if (result.success) {
-        // Refresh hasInfiniteSignal state
-        const hasInfiniteSignal = await iapService.hasInfiniteSignal();
-        set({
-          hasInfiniteSignal,
-          isLoading: false,
-          error: result.error || null,
-        });
-      } else {
-        set({ isLoading: false, error: result.error || 'Restore failed' });
-      }
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Restore failed';
-      set({ isLoading: false, error: message });
-      console.error('Restore error:', error);
-    }
-  },
-
-  dispose: () => {
-    iapService.dispose();
-    set({
-      isInitialized: false,
+export const useStoreStore = create<StoreState>()(
+  persist(
+    (set, get) => ({
       hasInfiniteSignal: false,
-      isLoading: false,
-      error: null,
-      productPrice: null,
-    });
-  },
-}));
+      hasBase: false,
+      purchases: [],
+      isConnected: false,
+      purchasing: false,
+      lastError: null,
+      lastMessage: null,
+
+      setInfiniteSignal: (owned) => set({ hasInfiniteSignal: owned }),
+
+      setBase: (owned) => set({ hasBase: owned }),
+
+      addPurchase: (record) => {
+        const existing = get().purchases;
+        // Dedup by orderId — restore can replay the same purchase.
+        if (existing.some((p) => p.orderId === record.orderId)) {
+          return;
+        }
+        set({ purchases: [...existing, record] });
+      },
+
+      setConnected: (connected) => set({ isConnected: connected }),
+
+      setPurchasing: (purchasing) => set({ purchasing }),
+
+      setError: (error) => set({ lastError: error }),
+
+      setMessage: (message) => set({ lastMessage: message }),
+
+      resetPurchases: () =>
+        set({
+          hasInfiniteSignal: false,
+          hasBase: false,
+          purchases: [],
+          lastError: null,
+          lastMessage: null,
+        }),
+    }),
+    {
+      name: PURCHASES_KEY,
+      storage: createJSONStorage(() => AsyncStorage),
+      partialize: (state) => ({
+        hasInfiniteSignal: state.hasInfiniteSignal,
+        hasBase: state.hasBase,
+        purchases: state.purchases,
+      }),
+    },
+  ),
+);

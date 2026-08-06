@@ -14,7 +14,10 @@ export type AnalyticsEventName =
   | 'tape_collected'
   | 'achievement_unlocked'
   | 'store_viewed'
-  | 'iap_completed';
+  | 'iap_started'
+  | 'iap_completed'
+  | 'iap_restore_started'
+  | 'iap_restore_completed';
 
 export interface AnalyticsEvent {
   event: AnalyticsEventName;

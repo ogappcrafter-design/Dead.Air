@@ -8,6 +8,7 @@ import { colors } from '../lib/theme';
 import { initErrorTracking } from '../lib/errorTracking';
 import { useSettingsStore } from '../store/useSettingsStore';
 import { AnalyticsEngine } from '../lib/analytics/AnalyticsEngine';
+import { initIAP } from '../lib/iap';
 
 initErrorTracking();
 
@@ -17,6 +18,7 @@ export default function RootLayout() {
   useEffect(() => {
     initErrorTracking();
     AnalyticsEngine.init();
+    initIAP().catch(() => {});
     return () => {
       AnalyticsEngine.endSession();
     };
