@@ -1,0 +1,27 @@
+context/progress-tracker.md
+  s_d84fd69cf3fb77::t_aa8799de63c6cf 10
+context/roadmap.md
+  s_d84fd69cf3fb77::t_248183c750a19b 42
+  s_d84fd69cf3fb77::t_c4b471a5f936a2 35
+  s_d84fd69cf3fb77::t_557ed162cd7049 55
+context/ui-components.md
+  s_d84fd69cf3fb77::t_d7867eef199cca 17
+context/project-briefing.md
+  s_d84fd69cf3fb77::t_a52a3cefc332e2 5
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "7609f54d4c32bae1c9492b28c55c3b4596a80116",
+  "prompts": {},
+  "sessions": {
+    "s_d84fd69cf3fb77": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ses_02a20e7edffeunURjI6mt19O9N",
+        "model": "unknown"
+      },
+      "human_author": "Dagger <dagger@pixelated.love>"
+    }
+  }
+}
