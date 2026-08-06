@@ -1,0 +1,30 @@
+engine/audio/platform/web/WebPlatformBridge.ts
+  s_0357cec53dcb9d::t_74cee8fa6e5d8b 1-47,53-57,59-66,69-70,72-74,76-341,344-347,349-367,369-374,376-380,382-386,388-392,394-402,404-412,414-421,423-440,442-455
+  s_0357cec53dcb9d::t_8d3206e1d2530e 48-52,58,67-68,71,75,342-343,348,368,375,381,387,393,403,413,422,441
+engine/audio/TapeAudioSynthesizer.ts
+  s_0357cec53dcb9d::t_552271195eaeb6 1-211
+hooks/useTapeAudioPlayback.ts
+  s_0357cec53dcb9d::t_65004f43c93b17 2-3,6-9,18-31,36,40-41,43,45,47,59-62,66-85,90-100,104,106,108-110,114-127,129-156,162-164
+engine/progression/InfiniteSignal.ts
+  s_0357cec53dcb9d::t_418322b88fad1f 40-41,45
+.autobots-state/task-registry.json
+  ai_agent 47,49-50,52
+context/progress-tracker.md
+  ai_agent 18
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "33833d21c2b199b95e7d7753da1f58119b43fd8a",
+  "prompts": {},
+  "sessions": {
+    "s_0357cec53dcb9d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ses_0286083b5ffebvsFApz3kzxhds",
+        "model": "unknown"
+      },
+      "human_author": "Dagger <dagger@pixelated.love>"
+    }
+  }
+}
