@@ -1,0 +1,53 @@
+__tests__/engine/audio/VoiceProcessor.test.ts
+  s_942cd4ce93fd42::t_9b6f3fcd791eff 151-212
+engine/audio/PlatformBridge.ts
+  s_942cd4ce93fd42::t_16f1d01c735337 145-153
+engine/audio/StaticSynth.ts
+  s_942cd4ce93fd42::t_2a3b3cf4d73722 13
+  s_942cd4ce93fd42::t_79d98dd3b4c838 72,78,82,91
+__tests__/engine/audio/LatencyProfiler.test.ts
+  s_942cd4ce93fd42::t_b9797a2d65f3b4 1-171
+__tests__/engine/audio/EffectsChain.test.ts
+  s_942cd4ce93fd42::t_3f877a190d51bc 166-252
+  s_942cd4ce93fd42::t_90ede1410f68a0 7,15
+  s_942cd4ce93fd42::t_ce73a0dd177b14 36
+engine/audio/LatencyProfiler.ts
+  s_942cd4ce93fd42::t_1c49de320bf80f 1-153
+engine/audio/AudioPerformanceConfig.ts
+  s_942cd4ce93fd42::t_4d22f5b695e8c5 1-133
+__tests__/engine/audio/AudioEngine.test.ts
+  s_942cd4ce93fd42::t_a5cf96c9165a01 199-247
+engine/audio/VoiceProcessor.ts
+  s_942cd4ce93fd42::t_1ee5947f6e1e20 18
+  s_942cd4ce93fd42::t_1d44d6aaee8e6a 126-135,138-139,153-154
+  s_942cd4ce93fd42::t_ade4efbc322159 174,179,183-195,201-208
+engine/audio/EffectsChain.ts
+  s_942cd4ce93fd42::t_9b2ae0bb9e7f45 113,126
+  s_942cd4ce93fd42::t_295b9f0a42702c 177
+  s_942cd4ce93fd42::t_06043164a13818 44-49,55-67,71-73
+  s_942cd4ce93fd42::t_d21905dab5968c 136
+  s_942cd4ce93fd42::t_f6fb8c250fcf6f 14,16-28
+  s_942cd4ce93fd42::t_ea58b2bac2f3ac 76-82,115-120,124-125,127-130,135,145
+engine/audio/AudioEngine.ts
+  s_942cd4ce93fd42::t_4b047a991f55d9 44-45,50-66
+  s_942cd4ce93fd42::t_1e3d2d7120a2ae 97
+  s_942cd4ce93fd42::t_177b6c8e12944d 6-11,17-18
+__mocks__/engine/audio/mockBridge.ts
+  s_942cd4ce93fd42::t_4a2effb0d3e9c9 86-89
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "a3a7b7322a28b2ba937b4a72ba10dfbdba6adbc0",
+  "prompts": {},
+  "sessions": {
+    "s_942cd4ce93fd42": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ses_02ce09137ffeNTCWz22uenOQWr",
+        "model": "unknown"
+      },
+      "human_author": "Dagger <dagger@pixelated.love>"
+    }
+  }
+}

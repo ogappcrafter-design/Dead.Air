@@ -1,0 +1,30 @@
+components/tapes/TapePlayer.tsx
+  s_d84fd69cf3fb77::t_95587511260eb1 190-205
+  s_d84fd69cf3fb77::t_959f3275f5d96c 26-27
+  s_d84fd69cf3fb77::t_27be1de980679c 94-98
+  s_d84fd69cf3fb77::t_82d0c7570a0670 61
+app/tapes/index.tsx
+  s_d84fd69cf3fb77::t_31d5bbd3389612 219
+  s_d84fd69cf3fb77::t_94a5a2c04aa461 13,24
+  s_d84fd69cf3fb77::t_869bfbc1030573 169,173
+  s_d84fd69cf3fb77::t_c3d653f4a54637 143,147,152,160,164
+  s_d84fd69cf3fb77::t_bdb235c27e5535 86-100,111-122
+hooks/useTapeAudioPlayback.ts
+  s_d84fd69cf3fb77::t_f80b8e37165b82 1-80
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "6f62378df9c5807cd5d64736a6f66da808bcf95d",
+  "prompts": {},
+  "sessions": {
+    "s_d84fd69cf3fb77": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ses_02a20e7edffeunURjI6mt19O9N",
+        "model": "unknown"
+      },
+      "human_author": "Dagger <dagger@pixelated.love>"
+    }
+  }
+}

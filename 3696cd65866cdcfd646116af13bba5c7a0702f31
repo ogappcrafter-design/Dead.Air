@@ -1,0 +1,21 @@
+__tests__/components/shared/CRTView.test.tsx
+  s_4b7b5e264262c7::t_2ba2124946a0b6 24-25,31-32,37-38,41-42,51-52,55-56,64-65
+  s_4b7b5e264262c7::t_b3aec5677d7e72 1-20
+  s_4b7b5e264262c7::t_d1884a49872f91 21-23,26-30,33-36,39-40,43-50,53-54,57-63
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "3696cd65866cdcfd646116af13bba5c7a0702f31",
+  "prompts": {},
+  "sessions": {
+    "s_4b7b5e264262c7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ses_02fe359f4ffeY40Dw1g4xMkEsK",
+        "model": "unknown"
+      },
+      "human_author": "Dagger <dagger@pixelated.love>"
+    }
+  }
+}

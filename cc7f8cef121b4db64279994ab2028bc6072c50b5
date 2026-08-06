@@ -1,0 +1,40 @@
+engine/calls/CallManager.ts
+  s_a6fd6227e24cac::t_3994f84348c473 15
+  s_a6fd6227e24cac::t_3a04dd21c12fb7 87,98
+  s_a6fd6227e24cac::t_c9eaf1e5659f11 192-202
+  s_a6fd6227e24cac::t_53ac428a374ab2 34-37
+  s_a6fd6227e24cac::t_6dd86999b6a890 63-64
+components/TapeCollection.tsx
+  s_a6fd6227e24cac::t_c7e52048798f90 1-95
+__tests__/engine/calls/CallManager.test.ts
+  s_a6fd6227e24cac::t_9d3c4b3a2d6c8b 50-57,69
+  s_a6fd6227e24cac::t_30afa0e1b0a87e 35-36
+components/BandProgress.tsx
+  s_a6fd6227e24cac::t_0f74a5d2313932 1-103
+engine/calls/callManagerInstance.ts
+  s_a6fd6227e24cac::t_36ddb72fe010d6 6,10-18
+  s_a6fd6227e24cac::t_69c7529fd590dc 1-5,8,19-24,35-36,42
+__tests__/engine/calls/TapeProgression.test.ts
+  s_a6fd6227e24cac::t_509404c54ae50d 1-163
+engine/calls/TapeProgression.ts
+  s_a6fd6227e24cac::t_e24f1e279eb5c0 1-80
+store/useGameStore.ts
+  s_a6fd6227e24cac::t_7a15bdabb5c105 14,24,35
+  s_a6fd6227e24cac::t_0128cfb8104b12 74-80
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "cc7f8cef121b4db64279994ab2028bc6072c50b5",
+  "prompts": {},
+  "sessions": {
+    "s_a6fd6227e24cac": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ses_02de37626ffeAPazb79J8cP4LF",
+        "model": "unknown"
+      },
+      "human_author": "Dagger <dagger@pixelated.love>"
+    }
+  }
+}

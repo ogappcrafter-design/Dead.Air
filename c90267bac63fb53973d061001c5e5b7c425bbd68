@@ -1,0 +1,27 @@
+docs/store/app-privacy.md
+  s_540866fcc6e121::t_9a329e3b140738 1-106
+docs/store/release-checklist.md
+  s_540866fcc6e121::t_5c510eb97a84ec 113
+  s_540866fcc6e121::t_99d9c0115362a1 1-112,114-161,163-196
+  s_540866fcc6e121::t_7e13552a699380 162
+docs/store/screenshots.md
+  s_540866fcc6e121::t_77964421f3a269 1-95
+docs/store/review-notes.md
+  s_540866fcc6e121::t_1518fd6aa76283 1-110
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "c90267bac63fb53973d061001c5e5b7c425bbd68",
+  "prompts": {},
+  "sessions": {
+    "s_540866fcc6e121": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ses_02b8b2679ffeBrYnTlUC7z0g5f",
+        "model": "unknown"
+      },
+      "human_author": "Dagger <dagger@pixelated.love>"
+    }
+  }
+}

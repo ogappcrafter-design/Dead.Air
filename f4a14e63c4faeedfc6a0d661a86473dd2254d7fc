@@ -1,0 +1,29 @@
+eas.json
+  s_75645f1d20f2a8::t_ae7d9811657c78 14
+  s_75645f1d20f2a8::t_6a2f3aff4bc35b 31
+.gitignore
+  s_75645f1d20f2a8::t_17ad57e6860288 15
+docs/build.md
+  s_75645f1d20f2a8::t_6382788886a4bb 7,9-10,12,21-25,116
+  s_75645f1d20f2a8::t_d9373d7dcc25d2 17
+package.json
+  s_75645f1d20f2a8::t_c2977145fb1c9c 53
+app.json
+  s_75645f1d20f2a8::t_a6a9e213f9322a 22
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "f4a14e63c4faeedfc6a0d661a86473dd2254d7fc",
+  "prompts": {},
+  "sessions": {
+    "s_75645f1d20f2a8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ses_02cdfd6d9ffe5ZlY6SDOwqb7rs",
+        "model": "unknown"
+      },
+      "human_author": "Dagger <dagger@pixelated.love>"
+    }
+  }
+}

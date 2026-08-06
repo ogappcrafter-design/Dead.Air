@@ -1,0 +1,29 @@
+engine/iap/IAPService.ts
+  s_d84fd69cf3fb77::t_cbb255596f1fae 89
+  s_d84fd69cf3fb77::t_4d77850a2ad151 135-136
+  s_d84fd69cf3fb77::t_f2f29313de5719 162-181
+  s_d84fd69cf3fb77::t_fd04fefbde5f3e 198,206-207
+  s_d84fd69cf3fb77::t_d3340417b10ffc 290-292
+  s_d84fd69cf3fb77::t_bec2612a6e03d4 215,217
+  s_d84fd69cf3fb77::t_c18edd76c4dccd 111
+  s_d84fd69cf3fb77::t_e735a6f13971ab 187
+  s_d84fd69cf3fb77::t_d793bfe1535768 65,67
+store/useStoreStore.ts
+  s_d84fd69cf3fb77::t_6414c315747118 31-32
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "7398f4ce3aa493a151ce72c46833618ec120fd7e",
+  "prompts": {},
+  "sessions": {
+    "s_d84fd69cf3fb77": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ses_02a20e7edffeunURjI6mt19O9N",
+        "model": "unknown"
+      },
+      "human_author": "Dagger <dagger@pixelated.love>"
+    }
+  }
+}

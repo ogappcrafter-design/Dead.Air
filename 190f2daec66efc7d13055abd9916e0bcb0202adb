@@ -1,0 +1,39 @@
+app/settings/index.tsx
+  s_5ee3cce0bef280::t_dd3803d634e307 1,4-6,9-16,20-55,69-70,77,79-89,91,93-133
+store/useSettingsStore.ts
+  s_5ee3cce0bef280::t_19fc9ae89f5535 18
+  s_5ee3cce0bef280::t_743c1c6f22bc73 56
+  s_5ee3cce0bef280::t_201e4ca269e51c 78
+  s_5ee3cce0bef280::t_dca8674f769c35 38
+jest.config.js
+  s_5ee3cce0bef280::t_87c2366710b83d 10
+jest.setup.js
+  s_5ee3cce0bef280::t_87f0ef2ec8db84 2,9
+  s_5ee3cce0bef280::t_3012ddfa3c5869 3-8,10-17
+  s_5ee3cce0bef280::t_c1e530fedb055c 1,18
+__tests__/store/useSettingsStore.test.ts
+  s_5ee3cce0bef280::t_78c38d7a3c7dac 14
+components/shared/CRTEffects.tsx
+  s_5ee3cce0bef280::t_da628570a4d502 18-20,29-35
+  s_5ee3cce0bef280::t_dfac722b5287c6 1-17,21-28,36-90
+components/shared/CRTRetention.tsx
+  s_5ee3cce0bef280::t_9bb8a81636957d 1-74
+components/shared/CRTView.tsx
+  s_5ee3cce0bef280::t_3a8c04b791e768 1-113
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "190f2daec66efc7d13055abd9916e0bcb0202adb",
+  "prompts": {},
+  "sessions": {
+    "s_5ee3cce0bef280": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ses_02cdf3eb3ffe3skNK7fcoRqkw1",
+        "model": "unknown"
+      },
+      "human_author": "Dagger <dagger@pixelated.love>"
+    }
+  }
+}

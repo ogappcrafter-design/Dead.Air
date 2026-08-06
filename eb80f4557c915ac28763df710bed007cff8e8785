@@ -1,0 +1,21 @@
+components/calls/SanityOverlay.tsx
+  s_ab43074e426af5::t_ae7556c90c580d 33-35,40,43,46,48,53-65,78-84,135-139
+components/calls/ActiveCallDispatcher.tsx
+  s_ab43074e426af5::t_ae7556c90c580d 1-12,17,30-52
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "eb80f4557c915ac28763df710bed007cff8e8785",
+  "prompts": {},
+  "sessions": {
+    "s_ab43074e426af5": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ses_02dad7e4fffedAMRtsNp0RT312",
+        "model": "unknown"
+      },
+      "human_author": "Dagger <dagger@pixelated.love>"
+    }
+  }
+}

@@ -1,0 +1,25 @@
+engine/calls/CallVariationEngine.ts
+  s_593e7075a4ea63::t_bf4cce49ad2151 1-49
+engine/calls/VariationConfig.ts
+  s_593e7075a4ea63::t_f89a68dc3dc84c 1-20
+engine/calls/CallScheduler.ts
+  s_593e7075a4ea63::t_71acf7522ec50e 173-181
+__tests__/engine/calls/CallVariationEngine.test.ts
+  s_593e7075a4ea63::t_352651741c5493 1-149
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "15aa5cc4aaff5008e400d46b45971d8eec612d88",
+  "prompts": {},
+  "sessions": {
+    "s_593e7075a4ea63": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ses_02de3b225ffeWdm6eYqVn9TZmC",
+        "model": "unknown"
+      },
+      "human_author": "Dagger <dagger@pixelated.love>"
+    }
+  }
+}

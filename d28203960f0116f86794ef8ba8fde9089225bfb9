@@ -1,0 +1,34 @@
+docs/platform-matrix.md
+  s_57d418e7fef6e1::t_550790a08ab783 1-142
+__tests__/platform/smoke.test.ts
+  s_57d418e7fef6e1::t_d49119a1b2f3b8 1-14,44-58,67-273
+  s_57d418e7fef6e1::t_1f597f36efe8dc 15-43,59-66
+lib/platform/PlatformDetector.ts
+  s_57d418e7fef6e1::t_ed155a9a8f0bfe 1-90,96,111-220
+  s_57d418e7fef6e1::t_c7087dee1c2c05 91-95,97
+  s_57d418e7fef6e1::t_bc9a38ed0a80c4 98-110
+scripts/smoke-test.sh
+  s_57d418e7fef6e1::t_c0f8b57f92a75a 86-94
+  s_57d418e7fef6e1::t_dd61f8816ded43 1-85,95-149
+lib/platform/PlatformSmokeTest.ts
+  s_57d418e7fef6e1::t_bd12f11c35d4c7 221,225
+  s_57d418e7fef6e1::t_3a1ecd0344decc 50
+  s_57d418e7fef6e1::t_5c9c70a09b42bc 1-49,51-99,101-220,222-224,226
+  s_57d418e7fef6e1::t_9f386db49634d8 100
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "d28203960f0116f86794ef8ba8fde9089225bfb9",
+  "prompts": {},
+  "sessions": {
+    "s_57d418e7fef6e1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ses_02c357ba3ffehXrbE1i6wrc5Uh",
+        "model": "unknown"
+      },
+      "human_author": "Dagger <dagger@pixelated.love>"
+    }
+  }
+}

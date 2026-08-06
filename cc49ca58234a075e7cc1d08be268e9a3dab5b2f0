@@ -1,0 +1,31 @@
+app/settings/index.tsx
+  s_e8d8c87e6f6fa4::t_d3c5493426dbca 5,9-11,21-30,34-38,66,79,94-166,172,185-202,204
+app/radio/index.tsx
+  s_e8d8c87e6f6fa4::t_cce9504bb92358 1-3,12,24-61,69-94
+docs/playtest-bugs.md
+  s_e8d8c87e6f6fa4::t_6e76b51efa5c43 1-57
+__tests__/components/RadioScreen.test.tsx
+  s_e8d8c87e6f6fa4::t_6c2ca4930acdf6 1-63
+__tests__/components/SettingsScreen.test.tsx
+  s_e8d8c87e6f6fa4::t_0f9073656a61f1 1-167
+components/calls/ActiveCallDispatcher.tsx
+  s_e8d8c87e6f6fa4::t_e764987e71f497 27-29,32
+__tests__/components/ActiveCallDispatcher.test.tsx
+  s_e8d8c87e6f6fa4::t_66838deeae30a8 1-91
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "cc49ca58234a075e7cc1d08be268e9a3dab5b2f0",
+  "prompts": {},
+  "sessions": {
+    "s_e8d8c87e6f6fa4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ses_02b8b3d37ffeBWAeYYDBLcYayO",
+        "model": "unknown"
+      },
+      "human_author": "Dagger <dagger@pixelated.love>"
+    }
+  }
+}
