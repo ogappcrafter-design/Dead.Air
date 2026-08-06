@@ -1,249 +1,338 @@
-# 📻 DEAD AIR RADIO
+<div align="center">
 
-> *Something is trying to reach you. The signal is forming.*
+```
+ ╔═══════════════════════════════════════════════════════════════╗
+ ║                                                               ║
+ ║          ░██████╗░██╗░░░░░░██╗████████╗░█████╗░██╗            ║
+ ║          ██╔════╝░██║░░░░░░██║╚══██╔══╝██╔══██╗██║            ║
+ ║          ██║░░╚██╗██║░░██╔╝██║░░░██║░░██║░░██║██║            ║
+ ║          ██║░░╚██║██║░░╚██═╝██║░░░██║░░██║░░██║██║            ║
+ ║          ╚██████╔╝██████╗░░░╚██████╔╝░╚█████╔╝██████╗           ║
+ ║          ░╚═════╝░╚═════╝░░░░╚═════╝░░░╚════╝░╚═════╝           ║
+ ║                                                               ║
+ ║                   ░░ A I R ░░                                 ║
+ ║                                                               ║
+ ║         Something is trying to reach you.                     ║
+ ║         The signal is forming.                                ║
+ ║                                                               ║
+ ╚═══════════════════════════════════════════════════════════════╝
+```
 
-A paranormal late-night radio game for Android. You are the DJ. The calls are real.
+### A paranormal late-night radio game. You are the DJ. The calls are real.
+
+[![Expo SDK 56](https://img.shields.io/badge/Expo_SDK-56-black?logo=expo&logoColor=white)](https://expo.dev)
+[![React Native](https://img.shields.io/badge/React_Native-0.85-black?logo=react&logoColor=61DAFB)](https://reactnative.dev)
+[![TypeScript](https://img.shields.io/badge/TypeScript-6.0-blue?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
+[![Zustand](https://img.shields.io/badge/Zustand-5.0-orange)](https://github.com/pmndrs/zustand)
+[![License](https://img.shields.io/badge/License-All_Rights_Reserved-red)](./LICENSE)
+
+[📖 About](#-about) ·
+[🎮 Features](#-features) ·
+[🚀 Quick Start](#-quick-start) ·
+[📡 Frequency Bands](#-frequency-bands) ·
+[📞 Call Types](#-call-types) ·
+[🏗️ Architecture](#-architecture) ·
+[🛠️ Development](#-development) ·
+[🤝 Contributing](#-contributing)
 
 ---
 
-## Overview
+<!-- screenshots -->
 
-**Dead Air Radio** is an atmospheric horror mobile game built in React (via Expo/React Native Web). Players operate a late-night radio station that receives transmissions from the dead, classified sources, time loops, and things with no name.
+<img src="assets/icon.png" width="120" align="right" alt="Dead Air app icon" />
+
+</div>
+
+## 📻 About
+
+**Dead Air** is an atmospheric horror game about the people — and things — that call in after midnight.
+
+You operate a late-night radio station. The dead call in. Classified sources break through. Time loops repeat. And something older than radio itself is trying to reach you.
 
 Answer the call. Or don't. Either way, something heard you.
 
----
-
-## Features
-
-- **18 hand-crafted transmissions** across 5 unlockable frequency bands
-- **5 call types:** Just Listen, Dead Air, Right Answer, Signal Decode, Stay Calm
-- **Sanity + Static economy** — your choices have weight
-- **15-tape archive** to collect across a full playthrough
-- **Infinite Signal mode** — AI-generated calls via Claude API once the base game is complete
-- **Persistent save system** — picks up exactly where you left off
-- **Two-tier IAP:** base game ($0.99) and Infinite Signal expansion ($3.99)
-- Fully mobile-optimized, CRT scanline aesthetic, no ads
+> Ambient psychological horror — quiet dread, not jump scares. No combat. No timers. Just the signal.
 
 ---
 
-## Frequency Bands
+## 🎮 Features
 
-| Band | Freq | Unlocks At |
+| | Feature | Description |
 |---|---|---|
-| LIVING | 88.7 FM | Start |
-| LIMINAL | 102.3 FM | 4 calls |
-| LOST | 117.8 AM | 8 calls |
-| CLASSIFIED | ███.█ FM | 12 calls |
-| ████████ | ???.? | 15 calls |
+| 📡 | **18 hand-crafted transmissions** | Five unlockable frequency bands, each with its own escalating dread |
+| 📞 | **5 call types** | Just Listen · Dead Air · Right Answer · Signal Decode · Stay Calm |
+| 🧠 | **Sanity + Static economy** | Every choice shifts your sanity and earns static — your choices have weight |
+| 🎵 | **Real-time audio synthesis** | Web Audio API engine: static synth → distortion → reverb → spatial processing |
+| 📼 | **15 collectible tapes** | Archive every transmission. Rarity tiers from `common` to `legendary` |
+| 🏆 | **10 achievements** | Track milestones from First Contact to Frequency Walker |
+| 🌙 | **Night Shift system** | 4-hour in-game sessions compressed to ~20 minutes real-time |
+| ♾️ | **Infinite Signal mode** | AI-generated calls — endless, never the same twice *(planned)* |
+| 💾 | **Persistent saves** | Pick up exactly where you left off, every single time |
+| 📱 | **Cross-platform** | iOS · Android · Web PWA — single codebase |
+| 🖥️ | **CRT aesthetic** | Amber and green on near-black, scanlines, glow text |
 
 ---
 
-## Tech Stack
+## 🚀 Quick Start
+
+### Prerequisites
+
+- **Node.js** 24+
+- **pnpm** (preferred) or npm
+- [Expo CLI](https://docs.expo.dev/get-started/installation/) (`npm i -g expo-cli`)
+- For iOS: macOS with Xcode & CocoaPods
+- For Android: Android Studio with SDK
+
+### Install & Run
+
+```bash
+# clone
+git clone https://github.com/daggerstuff/deadair.git
+cd deadair
+
+# install dependencies
+pnpm install
+
+# start the dev server
+pnpm start
+
+# run on a specific platform
+pnpm run android    # Android emulator or device
+pnpm run ios        # iOS simulator or device
+pnpm run web        # browser
+```
+
+That's it. The Expo dev server launches and you're tuning in.
+
+---
+
+## 📡 Frequency Bands
+
+Tune the dial. Each band is darker than the last.
+
+| Band | Frequency | Unlocks At | Vibe |
+|---|---|---|---|
+| **LIVING** | 88.7 FM | Start | Eerily normal callers. Mundane conversations that reveal something deeply wrong in the last line. |
+| **LIMINAL** | 102.3 FM | Survive 3 night shifts | Whispers, reversed audio, time distortion. Something listens. |
+| **LOST** | 117.8 AM | Collect 5 tapes | Children singing, dial-up tones, impossible distances. |
+| **CLASSIFIED** | ███.█ FM | Complete "The Signal" call | Numbers stations, emergency alerts, distorted orders. They know you're listening. |
+| **████████** | ???.? | Find all 15 tapes | `[DATA EXPUNGED]` |
+
+---
+
+## 📞 Call Types
+
+Every transmission is a different kind of encounter.
+
+| Type | Mechanic |
+|---|---|
+| **Just Listen** | Stay on the line. Don't touch anything. Let it finish. |
+| **Dead Air** | The silence between stations. Something fills it. |
+| **Right Answer** | They ask a question. Your answer determines what happens next. |
+| **Signal Decode** | Break the code. Read between the frequencies. |
+| **Stay Calm** | Your sanity is draining. Keep it together. |
+
+---
+
+## 🏗️ Architecture
+
+<div align="center">
+
+```
+deadair/
+├── app/                        # Expo Router screens
+│   ├── radio/                  #   Main radio interface
+│   ├── tapes/                  #   Tape collection archive
+│   ├── store/                  #   In-app store
+│   └── settings/               #   Settings & achievements
+├── components/                 # Reusable UI
+│   ├── radio/                  #   Physical radio: dial, display, signal
+│   ├── calls/                  #   Call type renderers & overlays
+│   ├── tapes/                  #   Tape player & collection
+│   ├── progression/            #   Achievements, band unlocks, shift status
+│   ├── store/                  #   Store cards
+│   └── shared/                 #   CRT effects, error boundaries
+├── engine/                     # Framework-agnostic game logic
+│   ├── audio/                  #   Web Audio API: synth, effects, latency
+│   ├── calls/                  #   Call manager, scheduler, variation engine
+│   └── progression/           #   Bands, tapes, achievements, night shift
+├── store/                      # Zustand state stores
+│   ├── useGameStore.ts         #   Sanity, static, tapes, bands
+│   ├── useRadioStore.ts        #   Frequency, signal strength
+│   ├── useSettingsStore.ts     #   Volume, CRT effects toggles
+│   ├── useStoreStore.ts        #   IAP entitlements
+│   ├── useAchievementStore.ts  #   Unlocked achievements
+│   └── useAnalyticsStore.ts    #   Event tracking
+├── data/                       # Game content
+│   ├── bands.ts                #   5 frequency bands
+│   ├── calls.js                #   18 hand-written transmissions
+│   └── tapes.ts                #   15 collectible tapes
+├── hooks/                      # React hooks
+├── lib/                        # Platform, theme, storage, analytics
+├── assets/                     # Icons, splash screen
+└── ...
+```
+
+</div>
+
+### Key Systems
+
+<details>
+<summary><b>🔊 Audio Engine</b></summary>
+<br>
+
+A singleton `AudioEngine` owns the Web Audio API graph lifecycle — lazily created, SSR-safe, platform-bridged.
+
+```
+StaticSynth → Distortion → Reverb → Spatial → Master Gain → Output
+```
+
+- **Real-time synthesis** — infinite variation, no pre-recorded loops
+- **Latency profiling** — adaptive performance config per platform
+- **Platform bridge** — Web Audio API (web) / expo-av (native)
+- **Graceful degradation** — enters `closed` state if audio unavailable
+
+</details>
+
+<details>
+<summary><b>🌙 Night Shift Engine</b></summary>
+<br>
+
+A shift is a 4-hour in-game block compressed to ~20 minutes real-time. Calls are pre-computed at shift start and triggered at scheduled in-game minutes.
+
+- Framework-agnostic — pure DI, no store imports, no React
+- Driven by `useNightShift` hook via `tick(deltaMs)` on each animation frame
+- Phases: `off-air` → `on-air` → `break` → `sign-off`
+- Fully testable in isolation
+
+</details>
+
+<details>
+<summary><b>🧠 Sanity & Static Economy</b></summary>
+<br>
+
+Two resources that define your playthrough:
+
+| Resource | Range | Effect |
+|---|---|---|
+| **Sanity** | 100 → 0 | Drops with disturbing calls. At 0, something happens. |
+| **Static** | 0 → 100 | Earned by answering calls. Currency for progression. |
+
+Every call type has configurable `sanityDelta` and `staticReward` values. Some calls restore sanity. Some drain it. The choice is always yours — and always costs something.
+
+</details>
+
+<details>
+<summary><b>💾 Save System</b></summary>
+<br>
+
+Zustand + AsyncStorage with automatic persistence:
+
+```typescript
+// State persists to AsyncStorage under "dead_air_save_v1"
+persist(
+  (set) => ({ sanity: 100, static: 0, tapes: [], unlockedBands: ['LIVING'], ... }),
+  { name: 'dead_air_save_v1', storage: createJSONStorage(() => AsyncStorage) }
+)
+```
+
+Saves automatically after every completed call. Loads before the first screen renders. Players resume exactly where they left off — mid-shift, mid-call, mid-dread.
+
+</details>
+
+---
+
+## 🛠️ Tech Stack
+
+<div align="center">
+
+[![React](https://img.shields.io/badge/React-19.2-61DAFB?logo=react&logoColor=white)](https://react.dev)
+[![React Native](https://img.shields.io/badge/React_Native-0.85-61DAFB?logo=react&logoColor=white)](https://reactnative.dev)
+[![Expo](https://img.shields.io/badge/Expo-56-000020?logo=expo&logoColor=white)](https://expo.dev)
+[![TypeScript](https://img.shields.io/badge/TypeScript-6.0-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
+[![Zustand](https://img.shields.io/badge/Zustand-5.0-FF6B35?logo=zustand&logoColor=white)](https://github.com/pmndrs/zustand)
+[![Web Audio API](https://img.shields.io/badge/Web_Audio-API-FF8C00)](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API)
+[![Sentry](https://img.shields.io/badge/Sentry-7.11-362D59?logo=sentry&logoColor=white)](https://sentry.io)
+[![Jest](https://img.shields.io/badge/Jest-29.7-C21325?logo=jest&logoColor=white)](https://jestjs.io)
+
+</div>
 
 | Layer | Technology |
 |---|---|
-| Frontend | React (Expo / React Native Web) |
-| AI (Infinite Mode) | Anthropic Claude API (`claude-sonnet-4-20250514`) |
-| Billing | Google Play Billing Library v6 |
-| Save / Storage | `window.storage` (persistent key-value) |
-| Hosting / Backend | Google Cloud Run (optional, for API key proxy) |
-| Distribution | Google Play Store |
+| Framework | React 19 + React Native 0.85 |
+| Build/Dev | Expo SDK 56 · Expo Router · Metro |
+| Language | TypeScript 6.0 |
+| State | Zustand 5.0 + AsyncStorage persistence |
+| Audio | Web Audio API (custom engine) |
+| Testing | Jest + React Native Testing Library |
+| Error Tracking | Sentry |
+| Builds | EAS (Expo Application Services) |
 
 ---
 
-## Google Cloud Project Setup
+## 💻 Development
 
-### 1. Create Your Project
+### Commands
 
 ```bash
-gcloud projects create dead-air-radio --name="Dead Air Radio"
-gcloud config set project dead-air-radio
+pnpm start              # Expo dev server
+pnpm run android        # Android emulator/device
+pnpm run ios            # iOS simulator/device
+pnpm run web            # Web browser
+pnpm test               # Run tests
+pnpm test:watch         # Watch mode
+pnpm test:coverage      # Coverage report
+pnpm run eas-build      # Production build (all platforms)
 ```
 
-### 2. Enable Required APIs
+### Project Conventions
 
-```bash
-gcloud services enable \
-  run.googleapis.com \
-  cloudbuild.googleapis.com \
-  secretmanager.googleapis.com
-```
-
-### 3. Store Your Anthropic API Key Securely
-
-```bash
-echo -n "YOUR_ANTHROPIC_API_KEY" | \
-  gcloud secrets create anthropic-api-key --data-file=-
-```
-
-### 4. Deploy API Proxy to Cloud Run (Recommended)
-
-Create a lightweight proxy so your API key never ships in the client bundle:
-
-```bash
-# /proxy/index.js — minimal Express proxy
-const express = require('express');
-const app = express();
-app.use(express.json());
-
-app.post('/v1/messages', async (req, res) => {
-  const response = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': process.env.ANTHROPIC_API_KEY,
-      'anthropic-version': '2023-06-01'
-    },
-    body: JSON.stringify(req.body)
-  });
-  const data = await response.json();
-  res.json(data);
-});
-
-app.listen(8080);
-```
-
-```bash
-gcloud run deploy dead-air-proxy \
-  --source ./proxy \
-  --region us-central1 \
-  --allow-unauthenticated \
-  --set-secrets ANTHROPIC_API_KEY=anthropic-api-key:latest
-```
-
-Then update the fetch URL in `DeadAirRadio.jsx`:
-```js
-// Change this line in generateAICall():
-const response = await fetch("https://YOUR-CLOUD-RUN-URL/v1/messages", {
-```
+- **Pure engine logic** — everything in `engine/` is framework-agnostic with dependency injection. No React, no store imports, no I/O. Fully testable.
+- **Zustand stores** — one store per domain. Persistence via `createJSONStorage`.
+- **File-based routing** — Expo Router, screens in `app/`.
+- **CRT theme** — centralized in `lib/theme.ts`. Amber, green, red on near-black.
 
 ---
 
-## Google Play Store Setup
+## 🤝 Contributing
 
-### In-App Products (Billing)
+This is a creative project with a specific vision. Contributions are welcome for:
 
-Set up two one-time purchase products in the **Google Play Console → Monetize → Products → In-app products**:
+- 🐛 Bug fixes
+- ⚡ Performance improvements
+- 🎨 UI/UX polish
+- 📱 Platform-specific fixes
+- 🧪 Test coverage
 
-| Product ID | Title | Price |
-|---|---|---|
-| `dead_air_base` | Dead Air Radio | $0.99 |
-| `dead_air_infinite` | Infinite Signal | $3.99 |
+### How to Contribute
 
-### Connecting Google Play Billing
+1. Fork the repo
+2. Create a branch: `git checkout -b fix/whatever`
+3. Make your changes
+4. Run tests: `pnpm test`
+5. Submit a PR
 
-The in-app store UI is fully built. To wire it to real Google Play Billing, replace the `buy()` simulation in the `Store` component with your `react-native-purchases` or `@react-native-google-play/billing` integration:
-
-```js
-// Replace the simulated buy() in Store component:
-import Purchases from 'react-native-purchases';
-
-const buy = async (product) => {
-  try {
-    const productId = product === 'base' ? 'dead_air_base' : 'dead_air_infinite';
-    await Purchases.purchaseProduct(productId);
-    onPurchase(product);
-  } catch (e) {
-    if (!e.userCancelled) console.error(e);
-  }
-};
-
-// And restore purchases:
-const restore = async () => {
-  await Purchases.restorePurchases();
-  onPurchase('restore');
-};
-```
+Please don't modify the 18 hand-written transmissions — they're sacred.
 
 ---
 
-## Local Development
+## ⚠️ Content Warnings
 
-```bash
-# Install dependencies
-npm install
-
-# Run in browser (dev)
-npx expo start --web
-
-# Build for Android
-npx expo build:android
-# or with EAS:
-eas build --platform android
-```
+This game contains themes of grief, death, loss, the supernatural, and psychological horror. Some transmissions are based on emotionally real scenarios. Player discretion is advised.
 
 ---
 
-## Environment Variables
+## 📄 License
 
-```env
-ANTHROPIC_API_KEY=your_key_here          # Only needed if NOT using Cloud Run proxy
-CLOUD_RUN_PROXY_URL=https://your-url     # Your deployed proxy endpoint
-```
-
----
-
-## Save System
-
-Game state saves automatically after every completed call via `window.storage` (persistent key-value):
-
-- `dead_air_save_v1` — sanity, static balance, completed calls, tapes, gen count
-- `dead_air_purchases_v1` — IAP unlock state
-
-On boot, save data loads before the first screen renders. Players resume exactly where they left off.
-
----
-
-## Project Structure
-
-```
-/
-├── DeadAirRadio.jsx       # Full game (single-component build)
-├── proxy/
-│   └── index.js           # Cloud Run API key proxy
-├── assets/
-│   └── icon.png           # App icon (1024x1024)
-├── app.json               # Expo config
-├── google-services.json   # Firebase/Play config (add yours)
-└── README.md
-```
-
----
-
-## Play Store Listing Copy
-
-**Short description (80 chars):**
-> A paranormal radio game. Answer the calls. Something is listening.
-
-**Full description:**
-> You are a late-night DJ. The calls are not normal.
->
-> DEAD AIR RADIO is an atmospheric horror game about the people — and things — that call in after midnight. The dead. The classified. The ones stuck in loops. And something older than radio itself.
->
-> Answer every call. Collect every tape. And whatever you do — don't hang up.
->
-> ◈ 18 hand-crafted transmissions
-> ◉ 5 unlockable frequency bands
-> ◇ Sanity system that responds to every choice
-> ◎ 15 collectible archive tapes
-> ◊ Infinite Signal mode — AI-generated calls, endless, never the same twice
->
-> No ads. No energy timers. Just the signal.
-
----
-
-## Content Warnings
-
-This game contains themes of grief, death, loss, the supernatural, and psychological horror. Some transmissions are based on emotionally real scenarios.
-
----
-
-## License
-
-All original content © Dead Air Radio. All rights reserved.  
+All original content © Dead Air. All rights reserved.  
 Not for redistribution without permission.
 
 ---
 
+<div align="center">
+
 *The frequency is open. Something is already waiting.*
+
+` ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ `
+
+</div>
