@@ -3,13 +3,14 @@
 // of store modules — fully testable. The store state shape is passed in as
 // a plain object so tests can construct fixtures without wiring Zustand.
 //
-// Phase 6: Procedural call generation when hasExpansion is true.
-// Infinite Signal owners get the 18 sacred calls PLUS procedurally
-// generated calls (5 per band = 25 additional). Non-owners get only
-// the 18 sacred calls.
+// Phase 6 (DEA-84): procedural call generation is now wired. When
+// `hasExpansion` is true, `getCallPool` appends procedurally generated
+// calls from all five band fragment libraries to the 18 sacred calls.
 
 import type { CallData } from '../calls/types';
 import { ProceduralCallGenerator } from '../calls/ProceduralCallGenerator';
+import { ALL_FRAGMENTS } from '../../data/fragments';
+import type { FragmentLibrary, BandVariation } from '../../data/fragments/types';
 
 /**
  * Minimal subset of the store this module needs. The full useStoreStore
@@ -35,28 +36,59 @@ export const hasInfiniteSignal = (store: InfiniteSignalStore): boolean => {
 };
 
 /**
+ * Default number of procedural calls generated per band when Infinite
+ * Signal is owned. 5 bands × 6 calls = 30 procedural calls appended to
+ * the 18 sacred calls, giving a pool of 48.
+ *
+ * Tests can override this via the `proceduralCountPerBand` param.
+ */
+export const DEFAULT_PROCEDURAL_COUNT_PER_BAND = 6;
+
+/**
  * Get the call pool available to the radio.
  *
- * Phase 5-4: returns `sacredCalls` unchanged — Infinite Signal only unlocks
- * *additional* procedural calls; it never restricts the base game.
+ * Phase 6 (DEA-84): when `hasExpansion` is true, procedurally generated
+ * calls are appended to the 18 sacred calls. Non-owners receive only
+ * the sacred 18.
  *
- * TODO(phase-6): when `hasExpansion` is true, append procedurally generated
- * calls (new band entries, generated callerId/callerName/signal, varied
- * types) to the returned array. Until then, callers receive the 18 sacred
- * calls regardless of ownsInfiniteSignal.
+ * The procedural calls use ids >= 1000 (see ProceduralCallGenerator
+ * PROCEDURAL_ID_BASE) so they never collide with sacred call ids 0..17
+ * in the CallManager registry.
  *
  * @param sacredCalls  The 18 hand-authored calls from data/calls.js (CALLS).
  * @param hasExpansion  True when Infinite Signal is owned.
- * @returns the call pool to draw from (base game + future expansion).
+ * @param options       Optional overrides for test injection:
+ *                      - fragments: fragment libraries (defaults to ALL_FRAGMENTS)
+ *                      - variations: band variations (defaults to BAND_VARIATIONS)
+ *                      - proceduralCountPerBand: calls per band (default 6)
+ * @returns the call pool to draw from (base game + expansion).
  */
 export const getCallPool = (
   sacredCalls: ReadonlyArray<CallData>,
   hasExpansion: boolean,
+  options?: {
+    fragments?: ReadonlyArray<FragmentLibrary>;
+    variations?: ReadonlyArray<BandVariation>;
+    proceduralCountPerBand?: number;
+  },
 ): CallData[] => {
-  if (hasExpansion) {
-    const generator = new ProceduralCallGenerator();
-    const proceduralCalls = generator.generateCalls(5);
-    return [...sacredCalls, ...proceduralCalls];
+  // Non-owners: base game only. Always return a fresh array (never the
+  // input reference) so callers can safely mutate the result.
+  if (!hasExpansion) {
+    return [...sacredCalls];
   }
-  return [...sacredCalls];
+
+  // Owners: sacred calls + procedural expansion.
+  const fragments = options?.fragments ?? ALL_FRAGMENTS;
+  const proceduralCountPerBand =
+    options?.proceduralCountPerBand ?? DEFAULT_PROCEDURAL_COUNT_PER_BAND;
+
+  const generator =
+    options?.variations !== undefined
+      ? new ProceduralCallGenerator(fragments, options.variations)
+      : new ProceduralCallGenerator(fragments);
+
+  const procedural = generator.generateAcrossBands(proceduralCountPerBand);
+
+  return [...sacredCalls, ...procedural];
 };

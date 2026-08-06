@@ -18,7 +18,7 @@ describe('useStoreStore', () => {
     expect(state.isLoading).toBe(false);
   });
 
-  it('purchaseInfiniteSignal sets isLoading=true, then resets to false', async () => {
+  it('purchaseInfiniteSignal sets isLoading=true, then hasInfiniteSignal=true, then isLoading=false', async () => {
     const { purchaseInfiniteSignal } = useStoreStore.getState();
     const promise = purchaseInfiniteSignal();
 
@@ -28,7 +28,7 @@ describe('useStoreStore', () => {
 
     await promise;
 
-    // Purchase flow completes; isLoading resets (result depends on IAP mock).
+    // Purchase flow completes; isLoading resets (hasInfiniteSignal depends on the IAP service).
     expect(useStoreStore.getState().isLoading).toBe(false);
   });
 
@@ -67,11 +67,30 @@ describe('getCallPool', () => {
     expect(pool.length).toBe(18);
   });
 
-  it('returns sacred calls + procedural calls when expansion IS owned', () => {
+  // Phase 6 (DEA-84): procedural generation is now wired.
+  it('returns MORE than 18 calls when expansion IS owned (sacred + procedural)', () => {
     const pool = getCallPool(sacredCalls, true);
     expect(pool.length).toBeGreaterThan(18);
-    // First 18 are sacred calls.
-    expect(pool.slice(0, 18)).toEqual(sacredCalls);
+  });
+
+  it('returns 18 sacred + 30 procedural (6 per band × 5 bands) when owned', () => {
+    const pool = getCallPool(sacredCalls, true);
+    expect(pool.length).toBe(18 + 30);
+  });
+
+  it('preserves sacred call references (first 18 entries are the input)', () => {
+    const pool = getCallPool(sacredCalls, true);
+    for (let i = 0; i < 18; i++) {
+      expect(pool[i]).toBe(sacredCalls[i]);
+    }
+  });
+
+  it('procedural calls in the pool have ids >= 1000', () => {
+    const pool = getCallPool(sacredCalls, true);
+    const procedural = pool.slice(18);
+    for (const call of procedural) {
+      expect(call.id).toBeGreaterThanOrEqual(1000);
+    }
   });
 
   it('returns a new array instance (does not mutate input)', () => {

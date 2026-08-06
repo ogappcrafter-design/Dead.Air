@@ -1,195 +1,419 @@
 // engine/calls/ProceduralCallGenerator.ts
-// Generates procedural calls for Infinite Signal IAP owners.
-// Produces CallData objects matching data/calls.js structure.
+// Procedural call generator for the Infinite Signal IAP.
+//
+// Assembles CallData objects from band fragment libraries. Each generated
+// call has:
+//   - A unique callerId (counter-prefixed, never collides with the
+//     sacred 18's id range 0..17).
+//   - Procedural lines assembled from openings + middles + closings.
+//   - Randomized staticReward / sanityDelta / signal per BandVariation.
+//   - Valid choices from response options (for RIGHT_ANSWER calls).
+//
+// Pure: no I/O, no store imports, no singletons. State is a monotonic
+// counter for callerId uniqueness. Fully testable in isolation.
+//
+// Id range: generated calls use ids >= 1000 to avoid collision with the
+// sacred 18 (ids 0..17). The CallManager registry is keyed by id, so
+// collisions would silently overwrite sacred calls — this guard makes
+// that impossible.
 
-import type { Band, CallType } from '../../lib/constants';
-import type { CallData } from './types';
-import { LIVING_FRAGMENTS } from '../../data/fragments/LIVING';
-import { LIMINAL_FRAGMENTS } from '../../data/fragments/LIMINAL';
-import { LOST_FRAGMENTS } from '../../data/fragments/LOST';
-import { CLASSIFIED_FRAGMENTS } from '../../data/fragments/CLASSIFIED';
-import { VOID_FRAGMENTS } from '../../data/fragments/████████';
+import type { CallData, CallChoice } from './types';
+import type { CallType } from '../../lib/constants';
+import type { FragmentLibrary, ResponseOption, BandVariation } from '../../data/fragments/types';
+import { BAND_VARIATIONS, getBandVariation } from '../../data/fragments/variations';
 
-// Fragment library shape
-interface FragmentLibrary {
-  opening: string[];
-  middle: string[];
-  closing: string[];
-  response: string[];
-}
+/** Starting id for generated calls. Sacred 18 use ids 0..17. */
+export const PROCEDURAL_ID_BASE = 1000;
 
-// Map band names to fragment libraries
-const BAND_FRAGMENTS: Map<Band, FragmentLibrary> = new Map([
-  ['LIVING', LIVING_FRAGMENTS],
-  ['LIMINAL', LIMINAL_FRAGMENTS],
-  ['LOST', LOST_FRAGMENTS],
-  ['CLASSIFIED', CLASSIFIED_FRAGMENTS],
-  ['████████', VOID_FRAGMENTS],
-]);
+/** Minimum number of lines a generated call must have (opening + closing). */
+const MIN_LINES = 2;
 
-// Map band names to numeric indices (matching lib/constants.ts BANDS order)
-const BAND_INDEX: Record<Band, number> = {
-  LIVING: 0,
-  LIMINAL: 1,
-  LOST: 2,
-  CLASSIFIED: 3,
-  '████████': 4,
-};
+/** Maximum number of middle lines to sample per call. */
+const MAX_MIDDLE_LINES = 3;
 
-// Band-specific config for call generation
-const BAND_CONFIGS: Record<Band, {
-  sanityDelta: { min: number; max: number };
-  staticReward: { min: number; max: number };
-  callType: CallType;
-  weight: number;
-}> = {
-  LIVING: { sanityDelta: { min: -2, max: 3 }, staticReward: { min: 1, max: 5 }, callType: 'JUST_LISTEN', weight: 0.3 },
-  LIMINAL: { sanityDelta: { min: -3, max: 2 }, staticReward: { min: 2, max: 6 }, callType: 'JUST_LISTEN', weight: 0.25 },
-  LOST: { sanityDelta: { min: -4, max: 1 }, staticReward: { min: 3, max: 7 }, callType: 'DEAD_AIR', weight: 0.2 },
-  CLASSIFIED: { sanityDelta: { min: -5, max: 0 }, staticReward: { min: 4, max: 8 }, callType: 'SIGNAL_DECODE', weight: 0.15 },
-  '████████': { sanityDelta: { min: -5, max: -1 }, staticReward: { min: 5, max: 10 }, callType: 'STAY_CALM', weight: 0.1 },
-};
+/** Minimum number of choices for a RIGHT_ANSWER call. */
+const MIN_CHOICES = 2;
 
-// Procedural call IDs start at 1000 to distinguish from sacred calls (0-17)
-let proceduralIdCounter = 1000;
+/** Maximum number of choices for a RIGHT_ANSWER call. */
+const MAX_CHOICES = 4;
 
-// Caller name fragments
-const CALLER_NAME_PREFIXES = ['VOID', 'DEAD', 'STATIC', 'GHOST', 'ECHO', 'NULL', 'LOST', 'FADE', 'ZERO', 'WIRE'];
-const CALLER_NAME_SUFFIXES = ['CALLER', 'SIGNAL', 'BROADCAST', 'OPERATOR', 'VOICE', 'CHANNEL', 'FREQUENCY', 'STATION'];
+/** Synthetic tape name prefix for procedurally-generated tape unlocks. */
+const PROCEDURAL_TAPE_PREFIX = 'Procedural Tape';
 
+/**
+ * ProceduralCallGenerator — assembles infinite CallData from fragment libraries.
+ *
+ * Construction:
+ *   - `new ProceduralCallGenerator(fragments)` — uses ALL band fragment
+ *     libraries. Validates that every library has non-empty arrays.
+ *   - The generator holds a monotonic id counter; each `generate()` call
+ *     advances it, guaranteeing unique ids across the lifetime of the
+ *     instance.
+ *
+ * Usage:
+ *   - `generate(band)`: returns a single CallData for the given band index.
+ *   - `generateBatch(band, count)`: returns `count` calls for the band.
+ *   - `generateAcrossBands(countPerBand)`: returns calls spread across
+ *     all bands (countPerBand per band, 5 bands total).
+ *   - `reset()`: resets the id counter (test-only).
+ *
+ * Determinism: tests can seed Math.random externally (jest.spyOn or
+ * a mock) to assert exact outputs. The generator never reads the
+ * filesystem or store state.
+ */
 export class ProceduralCallGenerator {
-  private usedCallerIds: Set<string> = new Set();
+  private readonly fragments: ReadonlyArray<FragmentLibrary>;
+  private readonly variations: ReadonlyArray<BandVariation>;
+  private readonly fragmentsByBand: Map<number, FragmentLibrary>;
+  private readonly variationsByBand: Map<number, BandVariation>;
+  private nextId: number;
 
-  /**
-   * Generates a random caller ID string.
-   */
-  private generateCallerId(): string {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    let id = '';
-    for (let i = 0; i < 8; i++) {
-      id += chars[Math.floor(Math.random() * chars.length)];
-    }
-    return id;
+  constructor(
+    fragments: ReadonlyArray<FragmentLibrary>,
+    variations: ReadonlyArray<BandVariation> = BAND_VARIATIONS,
+  ) {
+    this.validateFragments(fragments);
+    this.validateVariations(variations, fragments);
+    this.fragments = fragments;
+    this.variations = variations;
+    this.fragmentsByBand = new Map(this.fragments.map((lib) => [lib.band, lib]));
+    this.variationsByBand = new Map(this.variations.map((v) => [v.band, v]));
+    this.nextId = PROCEDURAL_ID_BASE;
   }
 
   /**
-   * Generates a random caller name.
+   * Generate a single procedural CallData for the given band index.
+   *
+   * @param band  Band index 0..4. Throws if out of range for the
+   *              fragment libraries passed at construction.
+   * @returns A valid CallData with a unique procedural id.
    */
-  private generateCallerName(): string {
-    const prefix = CALLER_NAME_PREFIXES[Math.floor(Math.random() * CALLER_NAME_PREFIXES.length)];
-    const suffix = CALLER_NAME_SUFFIXES[Math.floor(Math.random() * CALLER_NAME_SUFFIXES.length)];
-    return `${prefix}_${suffix}`;
-  }
-
-  /**
-   * Gets a random fragment from the specified band and type.
-   */
-  private getRandomFragment(band: Band, type: keyof FragmentLibrary): string {
-    const fragments = BAND_FRAGMENTS.get(band);
-    if (!fragments) {
-      throw new Error(`Invalid band: ${band}`);
-    }
-    const arr = fragments[type];
-    if (!arr || arr.length === 0) {
-      throw new Error(`No ${type} fragments for band ${band}`);
-    }
-    const fragment = arr[Math.floor(Math.random() * arr.length)];
-    if (!fragment) {
-      throw new Error(`Failed to select fragment for ${band}.${type}`);
-    }
-    return fragment;
-  }
-
-  /**
-   * Generates a unique procedural call for the specified band.
-   */
-  generateCall(band: Band): CallData {
-    if (!BAND_FRAGMENTS.has(band)) {
-      throw new Error(`Invalid band: ${band}. Valid bands: ${Array.from(BAND_FRAGMENTS.keys()).join(', ')}`);
-    }
-
-    const config = BAND_CONFIGS[band];
-
-    // Generate unique caller ID (retry on collision, max 10 attempts)
-    let callerId: string;
-    let attempts = 0;
-    do {
-      callerId = this.generateCallerId();
-      attempts++;
-      if (attempts >= 10) {
-        this.usedCallerIds.clear();
-        attempts = 0;
-      }
-    } while (this.usedCallerIds.has(callerId));
-    this.usedCallerIds.add(callerId);
-
-    // Prevent memory bloat
-    if (this.usedCallerIds.size > 1000) {
-      const keep = Array.from(this.usedCallerIds).slice(-500);
-      this.usedCallerIds = new Set(keep);
-    }
-
-    // Random sanity delta within band range
-    const sanityDelta = Math.floor(Math.random() * (config.sanityDelta.max - config.sanityDelta.min + 1)) + config.sanityDelta.min;
-    const staticReward = Math.floor(Math.random() * (config.staticReward.max - config.staticReward.min + 1)) + config.staticReward.min;
-    const signal = Math.floor(Math.random() * 6); // 0-5
-    const callerName = this.generateCallerName();
-
-    // Assemble call from fragments
-    const opening = this.getRandomFragment(band, 'opening');
-    const middle = this.getRandomFragment(band, 'middle');
-    const closing = this.getRandomFragment(band, 'closing');
+  generate(band: number): CallData {
+    const library = this.getLibrary(band);
+    const variation = this.getVariation(band);
+    const callType = this.pickCallType(library);
+    const id = this.nextId++;
 
     const call: CallData = {
-      id: proceduralIdCounter++,
-      band: BAND_INDEX[band],
-      callerId,
-      callerName,
-      signal,
-      type: config.callType,
-      staticReward,
-      lines: [opening, middle, closing],
-      sanityDelta,
+      id,
+      band,
+      callerId: this.generateCallerId(library),
+      callerName: this.generateCallerName(library),
+      signal: this.randomInt(variation.signalRange[0], variation.signalRange[1]),
+      type: callType,
+      staticReward: this.randomInt(variation.staticRewardRange[0], variation.staticRewardRange[1]),
     };
 
-    // STAY_CALM calls need duration + sanityPenalty
-    if (config.callType === 'STAY_CALM') {
-      call.duration = Math.floor(Math.random() * 10) + 5; // 5-15 seconds
-      call.sanityPenalty = -Math.abs(sanityDelta);
+    // Type-specific fields.
+    if (callType === 'JUST_LISTEN' || callType === 'DEAD_AIR') {
+      call.lines = this.assembleLines(library);
+      call.sanityDelta = this.randomInt(
+        variation.sanityDeltaRange[0],
+        variation.sanityDeltaRange[1],
+      );
+      if (callType === 'DEAD_AIR') {
+        call.waitSeconds = this.randomInt(6, 15);
+      }
+    } else if (callType === 'RIGHT_ANSWER') {
+      call.lines = this.assembleLines(library);
+      call.choices = this.assembleChoices(library.responses, variation);
+    } else if (callType === 'STAY_CALM') {
+      call.lines = this.assembleLines(library);
+      call.duration = this.randomInt(8, 16);
+      call.sanityPenalty = this.randomInt(15, 25);
+      call.sanityDelta = this.randomInt(
+        variation.sanityDeltaRange[0],
+        variation.sanityDeltaRange[1],
+      );
+    } else if (callType === 'SIGNAL_DECODE') {
+      call.intro = this.pick(library.openings);
+      call.sequence = this.generateSequence();
+      call.decodedMessage = this.generateDecodedMessage(library);
+    } else {
+      // Exhaustive: CallType is a finite union; this is unreachable.
+      const _exhaustive: never = callType;
+      return _exhaustive;
     }
 
     return call;
   }
 
   /**
-   * Generates multiple unique calls across all bands.
-   * @param count Number of calls per band (default 5)
-   * @returns Array of CallData objects
+   * Generate `count` procedural calls for the given band.
+   * Each call has a unique id.
    */
-  generateCalls(countPerBand: number = 5): CallData[] {
+  generateBatch(band: number, count: number): CallData[] {
     const calls: CallData[] = [];
-    const bands = Array.from(BAND_FRAGMENTS.keys());
-
-    for (const band of bands) {
-      for (let i = 0; i < countPerBand; i++) {
-        let attempts = 0;
-        let call: CallData;
-        do {
-          call = this.generateCall(band);
-          attempts++;
-          if (attempts >= 10) break;
-        } while (calls.some(c => c.callerId === call.callerId));
-        calls.push(call);
-      }
+    for (let i = 0; i < count; i++) {
+      calls.push(this.generate(band));
     }
-
     return calls;
   }
 
   /**
-   * Clears the used caller IDs cache.
+   * Generate calls spread across all bands.
+   * @param countPerBand  Number of calls to generate per band.
+   * @returns An array of CallData with `countPerBand * fragments.length` entries.
    */
-  clearCache(): void {
-    this.usedCallerIds.clear();
+  generateAcrossBands(countPerBand: number): CallData[] {
+    const calls: CallData[] = [];
+    for (const band of this.fragmentsByBand.keys()) {
+      for (let i = 0; i < countPerBand; i++) {
+        calls.push(this.generate(band));
+      }
+    }
+    return calls;
+  }
+
+  /** Reset the id counter (test-only). */
+  reset(): void {
+    this.nextId = PROCEDURAL_ID_BASE;
+  }
+
+  // --- Internal helpers ---
+
+  /** Validate that every fragment library has non-empty arrays. */
+  private validateFragments(fragments: ReadonlyArray<FragmentLibrary>): void {
+    if (fragments.length === 0) {
+      throw new Error('ProceduralCallGenerator requires at least one fragment library');
+    }
+    for (const lib of fragments) {
+      if (lib.openings.length === 0) {
+        throw new Error(`Band ${lib.bandName}: openings must be non-empty`);
+      }
+      if (lib.middles.length === 0) {
+        throw new Error(`Band ${lib.bandName}: middles must be non-empty`);
+      }
+      if (lib.closings.length === 0) {
+        throw new Error(`Band ${lib.bandName}: closings must be non-empty`);
+      }
+      if (lib.callTypes.length === 0) {
+        throw new Error(`Band ${lib.bandName}: callTypes must be non-empty`);
+      }
+      if (lib.callerIdPrefixes.length === 0) {
+        throw new Error(`Band ${lib.bandName}: callerIdPrefixes must be non-empty`);
+      }
+      if (lib.callerNamePrefixes.length === 0) {
+        throw new Error(`Band ${lib.bandName}: callerNamePrefixes must be non-empty`);
+      }
+      // RIGHT_ANSWER calls need at least MIN_CHOICES responses.
+      if (lib.callTypes.includes('RIGHT_ANSWER') && lib.responses.length < MIN_CHOICES) {
+        throw new Error(
+          `Band ${lib.bandName}: RIGHT_ANSWER requires at least ${MIN_CHOICES} responses`,
+        );
+      }
+    }
+  }
+
+  /** Validate that every fragment library has a matching BandVariation. */
+  private validateVariations(
+    variations: ReadonlyArray<BandVariation>,
+    fragments: ReadonlyArray<FragmentLibrary>,
+  ): void {
+    for (const lib of fragments) {
+      const variation = variations.find((v) => v.band === lib.band);
+      if (variation === undefined) {
+        throw new Error(`No BandVariation for band ${lib.band} (${lib.bandName})`);
+      }
+    }
+  }
+
+  /** Get the fragment library for a band index. */
+  private getLibrary(band: number): FragmentLibrary {
+    const library = this.fragmentsByBand.get(band);
+    if (library === undefined) {
+      throw new Error(`No fragment library for band index ${band}`);
+    }
+    return library;
+  }
+
+  /** Get the BandVariation for a band index. */
+  private getVariation(band: number): BandVariation {
+    const variation = this.variationsByBand.get(band);
+    if (variation === undefined) {
+      // Fall back to the exported getter which throws a clear error.
+      return getBandVariation(band);
+    }
+    return variation;
+  }
+
+  /** Pick a random element from a non-empty array. */
+  private pick<T>(arr: ReadonlyArray<T>): T {
+    const index = Math.floor(Math.random() * arr.length);
+    const item = arr[index];
+    if (item === undefined) {
+      // Unreachable: validated non-empty at construction.
+      throw new Error('pick() on empty array');
+    }
+    return item;
+  }
+
+  /** Pick a random call type from the library's supported types. */
+  private pickCallType(library: FragmentLibrary): CallType {
+    return this.pick(library.callTypes);
+  }
+
+  /** Random integer in [min, max] inclusive. */
+  private randomInt(min: number, max: number): number {
+    if (max < min) {
+      // Defensive: ranges are calibrated in variations.ts, but guard
+      // against accidental inversion.
+      return min;
+    }
+    return Math.floor(min + Math.random() * (max - min + 1));
+  }
+
+  /**
+   * Assemble procedural lines: 1 opening + 1-3 middles + 1 closing.
+   * Lines are sampled without replacement per slot (openings, middles,
+   * closings are independent pools) so a single call never repeats the
+   * same fragment, but the same fragment can appear across calls.
+   */
+  private assembleLines(library: FragmentLibrary): string[] {
+    const opening = this.pick(library.openings);
+    const middleCount = this.randomInt(1, MAX_MIDDLE_LINES);
+    const middles: string[] = [];
+    const available = [...library.middles];
+    for (let i = 0; i < middleCount && available.length > 0; i++) {
+      const idx = Math.floor(Math.random() * available.length);
+      const line = available.splice(idx, 1)[0];
+      if (line !== undefined) {
+        middles.push(line);
+      }
+    }
+    const closing = this.pick(library.closings);
+    const lines = [opening, ...middles, closing];
+    if (lines.length < MIN_LINES) {
+      // Defensive: should be unreachable given non-empty validated pools.
+      throw new Error('Generated call has too few lines');
+    }
+    return lines;
+  }
+
+  /**
+   * Assemble choices for a RIGHT_ANSWER call.
+   * Samples 2-4 responses from the library. Each response gets a
+   * randomized tapeChance roll; if it succeeds, the choice unlocks
+   * a synthetic procedural tape.
+   *
+   * staticMult is derived from the response's outcome length — longer
+   * outcomes feel weightier, so they reward more static. Range 1..3.
+   */
+  private assembleChoices(
+    responses: ReadonlyArray<ResponseOption>,
+    variation: BandVariation,
+  ): CallChoice[] {
+    const choiceCount = Math.min(MAX_CHOICES, Math.max(MIN_CHOICES, responses.length));
+    const available = [...responses];
+    const choices: CallChoice[] = [];
+    for (let i = 0; i < choiceCount && available.length > 0; i++) {
+      const idx = Math.floor(Math.random() * available.length);
+      const response = available.splice(idx, 1)[0];
+      if (response === undefined) {
+        continue;
+      }
+      const choice = this.responseToChoice(response, variation);
+      choices.push(choice);
+    }
+    if (choices.length < MIN_CHOICES) {
+      throw new Error('Generated RIGHT_ANSWER call has too few choices');
+    }
+    return choices;
+  }
+
+  /**
+   * Convert a ResponseOption to a CallChoice.
+   * - sanityDelta: from the response, or randomized within variation range.
+   * - staticMult: 1..3, weighted by outcome length.
+   * - tape: rolled against tapeChance; synthetic tape name assigned.
+   */
+  private responseToChoice(response: ResponseOption, variation: BandVariation): CallChoice {
+    const sanityDelta =
+      response.sanityDelta ??
+      this.randomInt(variation.sanityDeltaRange[0], variation.sanityDeltaRange[1]);
+    // staticMult: explicit fragment value, or derived from outcome length.
+    // Clamped to [1, 3] to match the sacred 18's economy.
+    const derivedMult =
+      response.staticMult ?? Math.max(1, Math.min(3, Math.ceil(response.outcome.length / 80)));
+    const staticMult = Math.max(1, Math.min(3, derivedMult));
+
+    const choice: CallChoice = {
+      text: response.text,
+      outcome: response.outcome,
+      sanityDelta,
+      staticMult,
+    };
+
+    const tapeChance = response.tapeChance ?? 0;
+    if (tapeChance > 0 && Math.random() < tapeChance) {
+      choice.tape = true;
+      choice.tapeName = `${PROCEDURAL_TAPE_PREFIX} #${this.nextId}`;
+    }
+
+    return choice;
+  }
+
+  /** Generate a callerId from the library's prefix pool + a counter suffix. */
+  private generateCallerId(library: FragmentLibrary): string {
+    const prefix = this.pick(library.callerIdPrefixes);
+    // Replace #### placeholders with random digits for realism.
+    const resolved = prefix.replace(/####/g, () => String(this.randomInt(0, 9)));
+    return `${resolved}-${this.nextId}`;
+  }
+
+  /** Generate a callerName from the library's name prefix pool. */
+  private generateCallerName(library: FragmentLibrary): string {
+    const prefix = this.pick(library.callerNamePrefixes);
+    return `${prefix} ${this.nextId}`;
+  }
+
+  /** Generate a SIGNAL_DECODE sequence (3-6 elements, values 0-2). */
+  private generateSequence(): number[] {
+    const length = this.randomInt(3, 6);
+    const sequence: number[] = [];
+    for (let i = 0; i < length; i++) {
+      sequence.push(this.randomInt(0, 2));
+    }
+    return sequence;
+  }
+
+  /** Generate a SIGNAL_DECODE decoded message from the library's openings. */
+  private generateDecodedMessage(library: FragmentLibrary): string {
+    const opening = this.pick(library.openings);
+    // Strip quotes and punctuation to make it feel like a decoded signal.
+    return opening
+      .replace(/[""".]/g, '')
+      .toUpperCase()
+      .slice(0, 60);
   }
 }
+
+// --- Module-level singleton ---
+
+let generatorInstance: ProceduralCallGenerator | null = null;
+
+/**
+ * Get the singleton ProceduralCallGenerator. Returns null if not yet
+ * initialized. Callers should use `getProceduralCallGenerator()` rather
+ * than constructing directly when wiring into the live app.
+ */
+export const getProceduralCallGenerator = (): ProceduralCallGenerator | null => generatorInstance;
+
+/**
+ * Initialize the singleton generator from the live fragment libraries.
+ * Idempotent — safe to call once at boot.
+ */
+export const initProceduralCallGenerator = (
+  fragments: ReadonlyArray<FragmentLibrary>,
+  variations?: ReadonlyArray<BandVariation>,
+): ProceduralCallGenerator => {
+  if (generatorInstance === null) {
+    generatorInstance = new ProceduralCallGenerator(fragments, variations);
+  }
+  return generatorInstance;
+};
+
+/** Test-only: clear the singleton. */
+export const resetProceduralCallGenerator = (): void => {
+  generatorInstance = null;
+};

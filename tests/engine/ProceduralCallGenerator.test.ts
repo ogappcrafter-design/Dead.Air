@@ -1,114 +1,85 @@
-import { ProceduralCallGenerator } from '../../engine/calls/ProceduralCallGenerator';
-import type { Band } from '../../lib/constants';
-import { BANDS } from '../../lib/constants';
+// tests/engine/ProceduralCallGenerator.test.ts
+// PR API tests for the procedural call generator (DEA-84).
+// Covers band-keyed lookup so a reordered fragment library array cannot
+// produce band-1 dialogue with band-0 rewards.
+
+import {
+  ProceduralCallGenerator,
+  PROCEDURAL_ID_BASE,
+} from '@/engine/calls/ProceduralCallGenerator';
+import { ALL_FRAGMENTS, BAND_VARIATIONS } from '@/data/fragments';
+import type { FragmentLibrary } from '@/data/fragments';
+
+const BAND_COUNT = ALL_FRAGMENTS.length;
 
 describe('ProceduralCallGenerator', () => {
   let generator: ProceduralCallGenerator;
 
   beforeEach(() => {
-    generator = new ProceduralCallGenerator();
+    generator = new ProceduralCallGenerator(ALL_FRAGMENTS);
   });
 
-  describe('generateCall', () => {
-    it('generates calls for all valid bands', () => {
-      for (const band of BANDS) {
-        const call = generator.generateCall(band);
+  describe('generate', () => {
+    it('generates valid CallData for every band index', () => {
+      for (let band = 0; band < BAND_COUNT; band++) {
+        const call = generator.generate(band);
         expect(call).toBeDefined();
-        expect(call.callerId).toBeDefined();
-        expect(call.lines).toBeDefined();
-        expect(call.lines!.length).toBe(3);
+        expect(call.band).toBe(band);
+        expect(call.id).toBeGreaterThanOrEqual(PROCEDURAL_ID_BASE);
+        expect(typeof call.callerId).toBe('string');
+        expect(typeof call.callerName).toBe('string');
+        expect(typeof call.signal).toBe('number');
+        expect(typeof call.staticReward).toBe('number');
+        expect(Array.isArray(call.lines)).toBe(true);
+        expect(call.lines!.length).toBeGreaterThanOrEqual(2);
       }
     });
 
-    it('throws for invalid band', () => {
-      expect(() => generator.generateCall('INVALID' as Band)).toThrow('Invalid band');
+    it('throws for an out-of-range band index', () => {
+      expect(() => generator.generate(BAND_COUNT)).toThrow(/No fragment library/);
+      expect(() => generator.generate(-1)).toThrow(/No fragment library/);
     });
 
-    it('generates valid CallData with all required fields', () => {
-      const call = generator.generateCall('LIVING');
-      expect(typeof call.id).toBe('number');
-      expect(call.id).toBeGreaterThanOrEqual(1000);
-      expect(typeof call.band).toBe('number');
-      expect(call.band).toBe(0);
-      expect(typeof call.callerId).toBe('string');
-      expect(call.callerId.length).toBe(8);
-      expect(typeof call.callerName).toBe('string');
-      expect(typeof call.signal).toBe('number');
-      expect(call.signal).toBeGreaterThanOrEqual(0);
-      expect(call.signal).toBeLessThanOrEqual(5);
-      expect(typeof call.type).toBe('string');
-      expect(typeof call.staticReward).toBe('number');
-    });
-
-    it('generates non-empty lines', () => {
-      const call = generator.generateCall('LOST');
-      for (const line of call.lines!) {
-        expect(typeof line).toBe('string');
-        expect(line.length).toBeGreaterThan(0);
+    it('generates unique ids across calls', () => {
+      const ids = new Set<number>();
+      for (let i = 0; i < 50; i++) {
+        const call = generator.generate(0);
+        expect(ids.has(call.id)).toBe(false);
+        ids.add(call.id);
       }
     });
+  });
 
-    it('generates unique caller IDs', () => {
-      const ids = new Set<string>();
-      for (let i = 0; i < 100; i++) {
-        const call = generator.generateCall('LIVING');
-        expect(ids.has(call.callerId)).toBe(false);
-        ids.add(call.callerId);
+  describe('band-keyed lookup (reordered fragments)', () => {
+    it('keeps dialogue and rewards aligned when fragments are reordered', () => {
+      const reordered = [...ALL_FRAGMENTS].reverse() as FragmentLibrary[];
+      expect(reordered.map((lib) => lib.band)).toEqual([
+        BAND_COUNT - 1,
+        BAND_COUNT - 2,
+        BAND_COUNT - 3,
+        BAND_COUNT - 4,
+        0,
+      ]);
+      const gen = new ProceduralCallGenerator(reordered);
+      for (let band = 0; band < BAND_COUNT; band++) {
+        const call = gen.generate(band);
+        const variation = BAND_VARIATIONS.find((v) => v.band === band);
+        expect(variation).toBeDefined();
+        // Rewards must come from the requested band's variation, not array position.
+        expect(call.staticReward).toBeGreaterThanOrEqual(variation!.staticRewardRange[0]);
+        expect(call.staticReward).toBeLessThanOrEqual(variation!.staticRewardRange[1]);
+        expect(call.signal).toBeGreaterThanOrEqual(variation!.signalRange[0]);
+        expect(call.signal).toBeLessThanOrEqual(variation!.signalRange[1]);
       }
     });
-
-    it('assigns band index correctly', () => {
-      expect(generator.generateCall('LIVING').band).toBe(0);
-      expect(generator.generateCall('LIMINAL').band).toBe(1);
-      expect(generator.generateCall('LOST').band).toBe(2);
-      expect(generator.generateCall('CLASSIFIED').band).toBe(3);
-      expect(generator.generateCall('████████').band).toBe(4);
-    });
   });
 
-  describe('generateCalls', () => {
-    it('generates calls across all bands', () => {
-      const calls = generator.generateCalls(2);
-      expect(calls.length).toBe(10);
-      const bands = new Set(calls.map(c => c.band));
-      expect(bands.size).toBe(5);
-    });
-
-    it('generates unique caller IDs across all calls', () => {
-      const calls = generator.generateCalls(5);
-      const ids = new Set(calls.map(c => c.callerId));
-      expect(ids.size).toBe(calls.length);
-    });
-
-    it('default count generates 5 per band (25 total)', () => {
-      const calls = generator.generateCalls();
-      expect(calls.length).toBe(25);
-    });
-  });
-
-  describe('clearCache', () => {
-    it('clears used caller IDs', () => {
-      generator.generateCall('LIVING');
-      generator.generateCall('LIVING');
-      generator.clearCache();
-      // Should not throw after clear
-      expect(() => generator.generateCall('LIVING')).not.toThrow();
-    });
-  });
-
-  describe('Fragment libraries', () => {
-    it('all fragment libraries have required structure', () => {
-      const { LIVING_FRAGMENTS } = require('../../data/fragments/LIVING');
-      expect(LIVING_FRAGMENTS.opening.length).toBeGreaterThan(0);
-      expect(LIVING_FRAGMENTS.middle.length).toBeGreaterThan(0);
-      expect(LIVING_FRAGMENTS.closing.length).toBeGreaterThan(0);
-      expect(LIVING_FRAGMENTS.response.length).toBeGreaterThan(0);
-    });
-
-    it('████████ fragment file exists and exports VOID_FRAGMENTS', () => {
-      const { VOID_FRAGMENTS } = require('../../data/fragments/████████');
-      expect(VOID_FRAGMENTS.opening.length).toBeGreaterThan(0);
-      expect(VOID_FRAGMENTS.response.length).toBeGreaterThan(0);
+  describe('generateAcrossBands', () => {
+    it('generates countPerBand calls for every band', () => {
+      const calls = generator.generateAcrossBands(2);
+      expect(calls.length).toBe(2 * BAND_COUNT);
+      const bands = new Set(calls.map((c) => c.band));
+      expect(bands.size).toBe(BAND_COUNT);
     });
   });
 });
