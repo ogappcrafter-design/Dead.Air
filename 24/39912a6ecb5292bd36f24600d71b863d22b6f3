@@ -1,0 +1,22 @@
+docs/store/app-store-listing.md
+  s_540866fcc6e121::t_053d8c06fe5fcc 1-4,6-141
+  s_540866fcc6e121::t_d6320788f44fb4 5
+docs/store/play-store-listing.md
+  s_540866fcc6e121::t_57ff4acc10a50d 1-173
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "2439912a6ecb5292bd36f24600d71b863d22b6f3",
+  "prompts": {},
+  "sessions": {
+    "s_540866fcc6e121": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ses_02b8b2679ffeBrYnTlUC7z0g5f",
+        "model": "unknown"
+      },
+      "human_author": "Dagger <dagger@pixelated.love>"
+    }
+  }
+}
