@@ -1,0 +1,74 @@
+name: Feature Request
+description: Suggest a new transmission, call type, or game mechanic for Dead Air Radio
+title: '[FEATURE] '
+labels: ['enhancement']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the idea!
+        - Search [existing requests](../../issues?q=is%3Aissue+label%3Aenhancement) first.
+        - For content-related suggestions (new tapes / calls / bands), be aware of the game's tone and lore.
+
+  - type: input
+    id: title
+    attributes:
+      label: Feature title
+      description: One-line summary.
+      placeholder: "Add a 'Ghost Frequencies' band that unlocks past ████████"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Category
+      description: |
+        New call type  = a new gameplay mode (e.g. a 6th alongside Just Listen / Dead Air / Right Answer / Signal Decode / Stay Calm).
+        New tape        = a new recording to collect in the 15-tape archive.
+        UI/UX           = interface, navigation, accessibility, settings.
+        Progression     = difficulty, unlocks, endings, save schema.
+        Audio           = ambient / SFX / music / voiceover.
+        Other           = anything else.
+      options:
+        - New call type
+        - New tape
+        - UI/UX
+        - Progression
+        - Audio
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem statement
+      description: What's missing, broken, or unsatisfying in the game right now?
+      placeholder: "Once all 15 tapes are collected, there's nothing left to chase in the base game."
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: Describe what you'd like to see. Sketches, sample copy, and mockups welcome.
+      placeholder: |
+        A 'Lost Frequencies' expansion band that unlocks after tape 15,
+        offering 5 more thematic calls with a new sanity twist: each call
+        drops sanity by 5 instead of 1.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Other ways you thought about solving the same problem, and why this one wins.
+      placeholder: |
+        - Increase base-game tape count to 20 → dilutes the existing arc.
+        - Add a sequel app → too much overhead for a single band.
+        - This request → keeps the base game tight as-is and gates the new content behind IAP.
+    validations:
+      required: false

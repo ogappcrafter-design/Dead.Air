@@ -1,0 +1,128 @@
+name: Bug Report
+description: Report a crash, freeze, or gameplay bug in Dead Air Radio
+title: '[BUG] '
+labels: ['bug']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file a bug!
+        - Search [existing issues](../../issues?q=is%3Aissue+label%3Abug) before opening a new one.
+        - For **P0 crash-on-launch** bugs, set Severity = P0 to page on-call.
+
+  - type: input
+    id: title
+    attributes:
+      label: Bug title
+      description: One-line summary of the bug.
+      placeholder: 'Radio screen freezes after ending a Signal Decode call'
+    validations:
+      required: true
+
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      description: Where did the bug happen?
+      options:
+        - iOS
+        - Android
+        - Web
+    validations:
+      required: true
+
+  - type: input
+    id: app-version
+    attributes:
+      label: App version
+      description: Settings → About, or the version printed at the end of the launch screen.
+      placeholder: '1.0.0'
+    validations:
+      required: true
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      description: |
+        P0 = game-breaking (crash on launch, app unusable).
+        P1 = major (crash / freeze mid-gameplay, no workaround).
+        P2 = minor (caught error, game continues).
+        P3 = cosmetic (visual typo, audio glitch, no functional impact).
+      options:
+        - P0 — Game-breaking
+        - P1 — Major
+        - P2 — Minor
+        - P3 — Cosmetic
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Numbered steps. Be specific (frequency band, call type, dial position).
+      placeholder: |
+        1. Launch the app
+        2. Tune to LIMINAL (102.3 FM)
+        3. Accept a Right Answer call
+        4. Answer with the second option
+        5. App crashes during the static burst
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What you thought should happen.
+      placeholder: 'Call should end, tape should add to archive, sanity drops by 1.'
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: What actually happened.
+      placeholder: 'App froze on the static burst screen and the audio looped forever.'
+    validations:
+      required: true
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots
+      description: Drag in screenshots or screen recordings. Optional but very useful.
+    validations:
+      required: false
+
+  - type: input
+    id: sentry-event-id
+    attributes:
+      label: Sentry event ID
+      description: |
+        Optional. Find it in Settings → About → "Last error report"
+        or by emailing the Sentry event URL.
+        Format: a long hex string, e.g. `3a2c1b9e...`.
+      placeholder: 'abc123def456...'
+    validations:
+      required: false
+
+  - type: input
+    id: device
+    attributes:
+      label: Device
+      description: Model name. "Pixel 8", "iPhone 13 mini", "Desktop Chrome".
+      placeholder: 'Pixel 8'
+    validations:
+      required: true
+
+  - type: input
+    id: os-version
+    attributes:
+      label: OS version
+      description: OS version the device is running.
+      placeholder: 'Android 14, iOS 17.4, macOS 14.5 + Chrome 124'
+    validations:
+      required: true
