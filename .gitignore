@@ -14,3 +14,9 @@ web-build/
 .env.local
 .DS_Store
 .omo/
+.agents/
+.claude/
+HANDOFF.md
+GRAND_PLAN.md
+__mocks__/
+__tests__/

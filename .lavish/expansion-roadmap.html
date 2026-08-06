@@ -1,0 +1,485 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dead Air Radio — Expansion Roadmap</title>
+<style>
+:root {
+  --bg: #030303;
+  --bg-card: #0a0a0a;
+  --amber: #FF8C00;
+  --green: #39FF14;
+  --red: #FF3131;
+  --white: #FFFFFF;
+  --gray: #666;
+  --gray-light: #999;
+  --border: #1a1a1a;
+  --mono: 'Courier New', Courier, monospace;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--gray-light);
+  font-family: var(--mono);
+  line-height: 1.5;
+  padding: 2rem 1rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+h1 { color: var(--amber); font-size: 1.8rem; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 0.5rem; }
+.subtitle { color: var(--gray); font-size: 0.85rem; margin-bottom: 2rem; }
+h2 { color: var(--green); font-size: 1.1rem; text-transform: uppercase; letter-spacing: 1px; margin: 2rem 0 1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; }
+h3 { color: var(--amber); font-size: 0.95rem; margin-bottom: 0.5rem; }
+.section { margin-bottom: 2rem; }
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  padding: 1.2rem;
+  margin-bottom: 1rem;
+  border-radius: 2px;
+}
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 0.6rem;
+}
+.card-title { color: var(--amber); font-size: 0.95rem; font-weight: bold; }
+.card-impact {
+  font-size: 0.7rem;
+  padding: 2px 8px;
+  border-radius: 2px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.impact-high { background: rgba(255,49,49,0.15); color: var(--red); border: 1px solid rgba(255,49,49,0.3); }
+.impact-med { background: rgba(255,140,0,0.15); color: var(--amber); border: 1px solid rgba(255,140,0,0.3); }
+.impact-low { background: rgba(57,255,20,0.1); color: var(--green); border: 1px solid rgba(57,255,20,0.2); }
+.card-body { font-size: 0.82rem; color: var(--gray-light); }
+.card-body strong { color: var(--white); }
+.tag {
+  display: inline-block;
+  font-size: 0.65rem;
+  padding: 1px 6px;
+  margin-right: 4px;
+  margin-top: 6px;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  color: var(--gray);
+}
+.tag-revenue { color: var(--green); border-color: rgba(57,255,20,0.3); }
+.tag-content { color: var(--amber); border-color: rgba(255,140,0,0.3); }
+.tag-tech { color: #6CF; border-color: rgba(108,200,255,0.3); }
+.tag-social { color: #C6F; border-color: rgba(198,102,255,0.3); }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 1rem; }
+.summary-box {
+  background: var(--bg-card);
+  border: 1px solid var(--amber);
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  border-radius: 2px;
+}
+.summary-box h2 { color: var(--amber); border: none; margin-top: 0; }
+.stat-row { display: flex; gap: 2rem; flex-wrap: wrap; margin: 1rem 0; }
+.stat { text-align: center; }
+.stat-num { font-size: 1.8rem; color: var(--amber); display: block; }
+.stat-label { font-size: 0.7rem; color: var(--gray); text-transform: uppercase; }
+.gap-warning {
+  border-left: 3px solid var(--red);
+  padding-left: 1rem;
+  margin: 0.8rem 0;
+  font-size: 0.8rem;
+  color: var(--red);
+}
+.opportunity-list { list-style: none; padding: 0; }
+.opportunity-list li {
+  padding: 0.4rem 0;
+  padding-left: 1.2rem;
+  position: relative;
+  font-size: 0.82rem;
+}
+.opportunity-list li::before {
+  content: "▸";
+  position: absolute;
+  left: 0;
+  color: var(--amber);
+}
+.phase-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(90deg, rgba(255,140,0,0.05), transparent);
+  border-left: 3px solid var(--amber);
+  padding: 0.8rem 1rem;
+  margin-bottom: 1.5rem;
+}
+.phase-banner h2 { border: none; margin: 0; }
+.phase-est { color: var(--gray); font-size: 0.75rem; }
+</style>
+</head>
+<body>
+
+<h1>◈ Dead Air Radio — Expansion Roadmap ◈</h1>
+<div class="subtitle">Tune in. Answer calls. Stay sane. Then go deeper.</div>
+
+<div class="summary-box">
+<h2>Current State</h2>
+<div class="stat-row">
+<div class="stat"><span class="stat-num">18</span><span class="stat-label">Hand-crafted calls</span></div>
+<div class="stat"><span class="stat-num">5</span><span class="stat-label">Call types</span></div>
+<div class="stat"><span class="stat-num">5</span><span class="stat-label">Frequency bands</span></div>
+<div class="stat"><span class="stat-num">15</span><span class="stat-label">Collectible tapes</span></div>
+<div class="stat"><span class="stat-num">10</span><span class="stat-label">Achievements</span></div>
+<div class="stat"><span class="stat-num">2</span><span class="stat-label">IAP products</span></div>
+<div class="stat"><span class="stat-num">617</span><span class="stat-label">Tests passing</span></div>
+</div>
+<div class="gap-warning">
+<strong>Critical gap:</strong> Infinite Signal IAP ($3.99) is sold but does nothing — <code>getCallPool()</code> returns the same 18 calls regardless of ownership. The TODO in <code>InfiniteSignal.ts</code> line 54 says it all.
+</div>
+</div>
+
+<!-- PHASE 1: REVENUE-CRITICAL -->
+<div class="phase-banner">
+<h2>▶ Phase 1: Revenue-Critical Fixes</h2>
+<span class="phase-est">~2 weeks · 3 tasks</span>
+</div>
+<div class="grid">
+
+<div class="card">
+<div class="card-header">
+<span class="card-title">Procedural Call Engine</span>
+<span class="card-impact impact-high">REVENUE</span>
+</div>
+<div class="card-body">
+<strong>The IAP that doesn't work yet.</strong> <code>InfiniteSignal.ts</code> has a TODO where procedural generation should be. Build a <code>ProceduralCallGenerator</code> that creates calls from templates + variation rules per band. Each generated call gets a unique <code>callerId</code>, procedural <code>lines</code> from fragment libraries, and randomized <code>sanityDelta</code>/<code>staticReward</code> within band-appropriate ranges.
+<br><span class="tag tag-revenue">IAP Fulfillment</span><span class="tag tag-tech">Engine</span><span class="tag tag-content">Content</span>
+</div>
+</div>
+
+<div class="card">
+<div class="card-header">
+<span class="card-title">Tape Audio Playback</span>
+<span class="card-impact impact-high">CORE LOOP</span>
+</div>
+<div class="card-body">
+<strong>15 tapes, zero playback.</strong> <code>TapePlayback.ts</code> exists but tapes are metadata-only. Add synthesized audio per tape (ambient drones, voice fragments, static textures) using the existing <code>VoiceProcessor</code>. Each tape should sound distinct by band and rarity. This completes the core collect → listen loop.
+<br><span class="tag tag-content">Audio</span><span class="tag tag-tech">Engine</span>
+</div>
+</div>
+
+<div class="card">
+<div class="card-header">
+<span class="card-title">IAP Store Hardening</span>
+<span class="card-impact impact-med">REVENUE</span>
+</div>
+<div class="card-body">
+<strong>2 products, no real purchase flow.</strong> <code>useStoreStore</code> has <code>hasInfiniteSignal</code> flag but no actual StoreKit / Play Billing integration. Wire real IAP via <code>expo-in-app-purchases</code>, handle purchase receipts, restore purchases, and validate the entitlement server-side (or locally for v1).
+<br><span class="tag tag-revenue">IAP</span><span class="tag tag-tech">Integration</span>
+</div>
+</div>
+
+</div>
+
+<!-- PHASE 2: CONTENT DEPTH -->
+<div class="phase-banner">
+<h2>▶ Phase 2: Content Depth</h2>
+<span class="phase-est">~3 weeks · 4 tasks</span>
+</div>
+<div class="grid">
+
+<div class="card">
+<div class="card-header">
+<span class="card-title">New Call Types</span>
+<span class="card-impact impact-high">ENGAGEMENT</span>
+</div>
+<div class="card-body">
+<strong>Only 5 types. Room for 5+ more:</strong>
+<ul class="opportunity-list">
+<li><strong>CONVERSATION</strong> — two-way dialogue, player taps responses from options</li>
+<li><strong>PUZZLE</strong> — multi-step decode with escalating complexity</li>
+<li><strong>TIMING</strong> — rhythm-based, respond at exact moments</li>
+<li><strong>MULTI_CALLER</strong> — two voices on one call, choose who to engage</li>
+<li><strong>RECORDING</strong> — play back found footage, then respond</li>
+</ul>
+Each needs a handler in <code>engine/calls/renderers/</code> + component in <code>components/calls/</code>.
+<br><span class="tag tag-content">Gameplay</span><span class="tag tag-tech">Engine</span>
+</div>
+</div>
+
+<div class="card">
+<div class="card-header">
+<span class="card-title">Meta-Narrative Arc</span>
+<span class="card-impact impact-high">RETENTION</span>
+</div>
+<div class="card-body">
+<strong>The whistleblower (#14) reveals a 47-station network. The Origin (#15) from 1923 knows your name. These are story seeds.</strong> Build a hidden narrative layer: calls unlock in a specific order, choices in RIGHT_ANSWER calls affect which future calls appear, and collecting all 15 tapes triggers a meta-ending. The "relay point" concept from call #14 could mean the player is part of something larger.
+<br><span class="tag tag-content">Story</span><span class="tag tag-content">Narrative</span>
+</div>
+</div>
+
+<div class="card">
+<div class="card-header">
+<span class="card-title">Player Choice Persistence</span>
+<span class="card-impact impact-med">REPLAYABILITY</span>
+</div>
+<div class="card-body">
+<strong>Choices don't matter beyond the call.</strong> RIGHT_ANSWER outcomes affect sanity/static/tapes but not future calls. Add a <code>ChoiceHistory</code> store: track key decisions, have callers reference past choices ("You said you'd help. Did you mean it?"), and unlock branching call paths. Could enable multiple endings.
+<br><span class="tag tag-content">Story</span><span class="tag tag-tech">Engine</span>
+</div>
+</div>
+
+<div class="card">
+<div class="card-header">
+<span class="card-title">New Bands &amp; Call Content</span>
+<span class="card-impact impact-med">CONTENT</span>
+</div>
+<div class="card-body">
+<strong>5 bands, 18 calls — content is finite.</strong> Add:
+<ul class="opportunity-list">
+<li><strong>WEATHER</strong> band — environmental horror, storms, nature</li>
+<li><strong>PIRATE</strong> band — rogue broadcasters, underground signals</li>
+<li><strong>HISTORICAL</strong> band — broadcasts from different eras</li>
+<li>Expand each existing band from 3-4 calls to 8-10</li>
+<li>Seasonal/event calls tied to real calendar dates</li>
+</ul>
+<br><span class="tag tag-content">Content</span>
+</div>
+</div>
+
+</div>
+
+<!-- PHASE 3: ENGAGEMENT -->
+<div class="phase-banner">
+<h2>▶ Phase 3: Engagement &amp; Retention</h2>
+<span class="phase-est">~3 weeks · 4 tasks</span>
+</div>
+<div class="grid">
+
+<div class="card">
+<div class="card-header">
+<span class="card-title">Daily Mystery Call</span>
+<span class="card-impact impact-high">RETENTION</span>
+</div>
+<div class="card-body">
+<strong>No reason to open the app daily.</strong> Add a daily call that's unique per calendar day (seeded RNG). Available for 24h only. Some daily calls are exclusive — can't be received any other way. Creates FOMO and a daily habit. Track "daily streak" as an achievement.
+<br><span class="tag tag-social">Engagement</span><span class="tag tag-content">Content</span>
+</div>
+</div>
+
+<div class="card">
+<div class="card-header">
+<span class="card-title">Player Identity &amp; DJ Persona</span>
+<span class="card-impact impact-med">IMMERSION</span>
+</div>
+<div class="card-body">
+<strong>Origin call (#15) says your name — but you never enter it.</strong> Add player name entry on first launch. Use it in select calls (Origin, "You Called Us", meta-narrative). Let players choose a DJ call sign and station name. The radio body could display the station name. Deepens personal investment.
+<br><span class="tag tag-content">Immersion</span><span class="tag tag-tech">Feature</span>
+</div>
+</div>
+
+<div class="card">
+<div class="card-header">
+<span class="card-title">Onboarding &amp; Tutorial</span>
+<span class="card-impact impact-med">CONVERSION</span>
+</div>
+<div class="card-body">
+<strong>Splash just says "tap to begin."</strong> No tutorial, no explanation. New players land on radio with no context. Add a 3-call tutorial sequence: first call explains tuning, second explains answering, third explains choices. Use LIVING band calls with gentle sanity impact. After tutorial, real game begins.
+<br><span class="tag tag-tech">Feature</span><span class="tag tag-content">UX</span>
+</div>
+</div>
+
+<div class="card">
+<div class="card-header">
+<span class="card-title">Difficulty System</span>
+<span class="card-impact impact-low">DEPTH</span>
+</div>
+<div class="card-body">
+<strong>Store has <code>difficulty</code> setting, unclear if it does anything.</strong> Implement 3 modes:
+<ul class="opportunity-list">
+<li><strong>NIGHT OWL</strong> (easy) — slower sanity drain, more static tolerance</li>
+<li><strong>INSOMNIAC</strong> (normal) — current balance</li>
+<li><strong>NO REST</strong> (hard) — faster calls, harsher sanity, permadeath</li>
+</ul>
+Difficulty affects <code>CallScheduler</code> timing + <code>SanityEffectEngine</code> thresholds.
+<br><span class="tag tag-tech">Feature</span><span class="tag tag-content">Gameplay</span>
+</div>
+</div>
+
+</div>
+
+<!-- PHASE 4: SOCIAL & MONETIZATION -->
+<div class="phase-banner">
+<h2>▶ Phase 4: Social &amp; Monetization</h2>
+<span class="phase-est">~4 weeks · 4 tasks</span>
+</div>
+<div class="grid">
+
+<div class="card">
+<div class="card-header">
+<span class="card-title">Share &amp; Community</span>
+<span class="card-impact impact-med">GROWTH</span>
+</div>
+<div class="card-body">
+<strong>Zero social features. No sharing, no community.</strong> Add:
+<ul class="opportunity-list">
+<li>Share a call transcript (text image, no audio for privacy)</li>
+<li>Anonymous leaderboard — longest call, most tapes, shifts survived</li>
+<li>"Call of the Day" community vote on best generated calls</li>
+<li>Friend code system — see what bands friends unlocked</li>
+</ul>
+Keep it opt-in, no required accounts, no chat.
+<br><span class="tag tag-social">Social</span><span class="tag tag-tech">Feature</span>
+</div>
+</div>
+
+<div class="card">
+<div class="card-header">
+<span class="card-title">Premium Tape Packs</span>
+<span class="card-impact impact-med">REVENUE</span>
+</div>
+<div class="card-body">
+<strong>Only 2 IAP products. Room for themed DLC.</strong> Sell premium tape packs:
+<ul class="opportunity-list">
+<li><strong>Holiday Tapes</strong> — seasonal horror (Halloween, Winter)</li>
+<li><strong>Numbers Station Pack</strong> — classified band expansion</li>
+<li><strong>Voices From Beyond</strong> — LOST band expansion</li>
+<li>Each pack: 5 new tapes + 3 new calls + unique audio</li>
+</ul>
+$1.99 per pack. Non-consumable, restore purchases.
+<br><span class="tag tag-revenue">IAP</span><span class="tag tag-content">Content</span>
+</div>
+</div>
+
+<div class="card">
+<div class="card-header">
+<span class="card-title">Cosmetic Radio Skins</span>
+<span class="card-impact impact-low">REVENUE</span>
+</div>
+<div class="card-body">
+<strong>One radio look. CRT aesthetic is great but static.</strong> Sell alternate radio skins:
+<ul class="opportunity-list">
+<li>Vintage wooden cabinet radio</li>
+<li>Military field radio (green CRT)</li>
+<li>Space-age transistor (amber→blue)</li>
+<li>Digital modern (scanlines → pixel grid)</li>
+</ul>
+Pure visual reskin of <code>RadioBody.tsx</code>. $0.99 each.
+<br><span class="tag tag-revenue">Cosmetic</span><span class="tag tag-tech">UI</span>
+</div>
+</div>
+
+<div class="card">
+<div class="card-header">
+<span class="card-title">Atmospheric DLC</span>
+<span class="card-impact impact-low">REVENUE</span>
+</div>
+<div class="card-body">
+<strong>Room ambience is static.</strong> Sell environmental audio packs:
+<ul class="opportunity-list">
+<li><strong>Rain Night</strong> — rain ambience layer + storm call events</li>
+<li><strong>Winter Static</strong> — wind + ice crackle + cold-themed calls</li>
+<li><strong>Deep Space</strong> — cosmic drone + sci-fi calls</li>
+</ul>
+Each modifies <code>audio/</code> ambient layer + adds 3-5 themed calls.
+<br><span class="tag tag-revenue">DLC</span><span class="tag tag-content">Audio</span>
+</div>
+</div>
+
+</div>
+
+<!-- PHASE 5: POLISH & SCALE -->
+<div class="phase-banner">
+<h2>▶ Phase 5: Polish &amp; Scale</h2>
+<span class="phase-est">~2 weeks · 3 tasks</span>
+</div>
+<div class="grid">
+
+<div class="card">
+<div class="card-header">
+<span class="card-title">Environmental Audio System</span>
+<span class="card-impact impact-med">IMMERSION</span>
+</div>
+<div class="card-body">
+<strong>No weather, no room tone, no environmental variation.</strong> Add a layered ambient system: base room tone + weather (random per shift) + sanity-driven distortion. Low sanity = room tone shifts, whispers bleed in, CRT warps harder. Weather affects signal quality (rain = more static). Creates organic variety per session.
+<br><span class="tag tag-tech">Audio</span><span class="tag tag-content">Atmosphere</span>
+</div>
+</div>
+
+<div class="card">
+<div class="card-header">
+<span class="card-title">New Game+ &amp; Endless Mode</span>
+<span class="card-impact impact-med">REPLAYABILITY</span>
+</div>
+<div class="card-body">
+<strong>Once 15 tapes collected, game is done. No replay hook.</strong> Add:
+<ul class="opportunity-list">
+<li><strong>New Game+</strong> — restart with all bands unlocked, harder calls, new tape variants</li>
+<li><strong>Endless Night</strong> — no tape goal, just survive. Calls get progressively stranger</li>
+<li><strong>Tape Mastery</strong> — re-listen to tapes to unlock hidden content layers</li>
+</ul>
+<br><span class="tag tag-content">Gameplay</span><span class="tag tag-tech">Feature</span>
+</div>
+</div>
+
+<div class="card">
+<div class="card-header">
+<span class="card-title">Performance &amp; Audio Latency</span>
+<span class="card-impact impact-low">TECHNICAL</span>
+</div>
+<div class="card-body">
+<strong>617 tests pass, tsc clean, but no real-device audio testing.</strong> Profile audio latency on actual devices. Ensure VoiceProcessor doesn't block the JS thread. Optimize CRT effects for 60fps on low-end Android. Add a performance settings toggle (scanline density, particle effects).
+<br><span class="tag tag-tech">Performance</span>
+</div>
+</div>
+
+</div>
+
+<!-- SUMMARY -->
+<div class="summary-box">
+<h2>Priority Matrix</h2>
+<div class="grid" style="margin-top: 1rem;">
+<div class="card" style="border-color: var(--red);">
+<div class="card-header"><span class="card-title" style="color: var(--red);">DO FIRST</span></div>
+<div class="card-body">
+<ul class="opportunity-list">
+<li>Procedural Call Engine (IAP doesn't work)</li>
+<li>Tape Audio Playback (core loop incomplete)</li>
+<li>IAP Store Hardening (no real purchases)</li>
+</ul>
+</div>
+</div>
+<div class="card" style="border-color: var(--amber);">
+<div class="card-header"><span class="card-title" style="color: var(--amber);">DO NEXT</span></div>
+<div class="card-body">
+<ul class="opportunity-list">
+<li>New Call Types (doubles gameplay variety)</li>
+<li>Meta-Narrative Arc (retention hook)</li>
+<li>Daily Mystery Call (habit loop)</li>
+<li>Player Identity (Origin call payoff)</li>
+</ul>
+</div>
+</div>
+<div class="card" style="border-color: var(--green);">
+<div class="card-header"><span class="card-title" style="color: var(--green);">DO LATER</span></div>
+<div class="card-body">
+<ul class="opportunity-list">
+<li>Social features (share, leaderboard)</li>
+<li>Premium tape packs (DLC revenue)</li>
+<li>Cosmetic skins (easy wins)</li>
+<li>Environmental audio (polish)</li>
+<li>New Game+ (endgame content)</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+
+<div style="text-align: center; margin-top: 3rem; color: var(--gray); font-size: 0.75rem;">
+◇ 18 tasks across 5 phases ◈ ~14 weeks estimated ◈ 27 PRs shipped, 617 tests green ◇<br>
+"The signal is forming. Tune in. Answer. Don't hang up."
+</div>
+
+</body>
+</html>
