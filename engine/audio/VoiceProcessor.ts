@@ -16,6 +16,7 @@ import {
 import { Band } from '../../lib/constants';
 import { bandVoicePreset } from './PlatformBridge';
 import type { BitcrushPerfParams } from './AudioPerformanceConfig';
+import { TapeDroneSynth, buildTapeProfile, type TapeAudioProfile } from './TapeDroneSynth';
 
 /** Preset params per band. */
 export interface VoicePresetParams {
@@ -223,5 +224,26 @@ export class VoiceProcessor {
     this.compressor.disconnect();
     this.bitcrush.disconnect();
     this.output.disconnect();
+  }
+
+  /**
+   * Create a TapeDroneSynth wired to the same destination as this voice path.
+   * The synth owns its own gain stage; this method only shares the bridge + ctx.
+   * Caller is responsible for calling `dispose()` on the returned synth.
+   *
+   * Convenience entry point for the tape player: keeps all audio graph
+   * construction inside the audio engine module rather than the UI.
+   */
+  createTapeDroneSynth(): TapeDroneSynth {
+    return new TapeDroneSynth(this.bridge, this.ctx, this.output);
+  }
+
+  /**
+   * Build a tape audio profile from band + tape id. Thin wrapper around
+   * `buildTapeProfile` from TapeDroneSynth — colocated here so callers can
+   * go from VoiceProcessor → synth + profile without importing two modules.
+   */
+  buildTapeProfile(band: Band, tapeId: string): TapeAudioProfile {
+    return buildTapeProfile(band, tapeId);
   }
 }

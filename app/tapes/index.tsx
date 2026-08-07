@@ -4,8 +4,12 @@
 //
 // State wiring:
 //   - useGameStore.tapes: collected tape names (post-dedup, persisted)
+//   - useSettingsStore.masterVolume: persisted user volume preference
 //   - local useState: selectedTape (drives overlay) + playback (TapePlayback
 //     instance, stable across renders via useRef) + playbackState snapshot
+//   - TapeDroneSynth (DEA-77): ambient drone audio per tape, lifecycle
+//     owned by this screen — starts on PLAY, stops on PAUSE/STOP/CLOSE,
+//     and is disposed on unmount (audio stops on navigation away).
 //
 // Routing: back button uses expo-router's useRouter().back() to return to
 // the radio screen. Tapes screen is declared in app/_layout.tsx Stack.
@@ -14,21 +18,27 @@ import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from '
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ALL_TAPES, CALLS } from '../../data/calls';
+import { TAPES } from '../../data/tapes';
 import { colors, fonts, spacing } from '../../lib/theme';
 import { BANDS } from '../../lib/constants';
 import type { Band } from '../../lib/constants';
 import type { CallData } from '../../engine/calls/types';
 import { useGameStore } from '../../store/useGameStore';
+import { useSettingsStore } from '../../store/useSettingsStore';
 import { findCallByTape } from '../../engine/progression/TapeLookup';
 import { TapePlayback } from '../../engine/progression/TapePlayback';
-import { useTapeAudioPlayback } from '../../hooks/useTapeAudioPlayback';
+import {
+  TapeDroneSynth,
+  buildTapeProfile,
+  type TapeAudioProfile,
+} from '../../engine/audio/TapeDroneSynth';
+import { getAudioEngine, getOrCreateAudioEngine } from '../../engine/audio/AudioEngine';
+import { VoiceProcessor } from '../../engine/audio/VoiceProcessor';
+import { createWebAudioBridge } from '../../engine/audio/WebAudioBridge';
 import TapePlayer from '../../components/tapes/TapePlayer';
 
-/** Band lookup from numeric index (CALLS[].band) to Band string literal. */
 const BAND_BY_INDEX: readonly Band[] = BANDS;
 
-/** Build transcript lines for a tape's originating call. Handles all call
- *  shapes: plain lines, SIGNAL_DECODE intro+decodedMessage, and empty. */
 const buildTranscript = (call: CallData): string[] => {
   const lines: string[] = [];
   if (call.intro !== undefined) {
@@ -44,7 +54,18 @@ const buildTranscript = (call: CallData): string[] => {
   return lines;
 };
 
-/** Memoized row component for the tape FlatList. */
+const parseDuration = (duration: string): number => {
+  const [m, s] = duration.split(':').map(Number);
+  return (m || 0) * 60 + (s || 0);
+};
+
+const formatTime = (seconds: number): string => {
+  const total = Math.max(0, Math.floor(seconds));
+  const m = Math.floor(total / 60);
+  const s = total % 60;
+  return `${m}:${s.toString().padStart(2, '0')}`;
+};
+
 const TapeListRow = memo(function TapeListRow({
   tapeName,
   isCollected,
@@ -78,53 +99,53 @@ const TapeListRow = memo(function TapeListRow({
   );
 });
 
-/** Module-level separator — stable reference across renders. */
 function TapeListSeparator() {
   return <View style={styles.separator} />;
 }
 
-/** Parse "4:32" to seconds. */
-const parseDuration = (d: string): number => {
-  const parts = d.split(':');
-  if (parts.length !== 2) return 30;
-  const min = parseInt(parts[0]!, 10) || 0;
-  const sec = parseInt(parts[1]!, 10) || 0;
-  return min * 60 + sec;
-};
-
-/** Tape durations (matches ALL_TAPES order) — from data/tapes.ts. */
-const TAPE_DURATIONS = [
-  '4:32','3:18','6:45','2:14','5:00','1:58','4:12','13:33','3:44','2:56',
-  '7:21','5:33','4:00','3:12','9:99',
-];
-
 export default function TapesScreen() {
   const router = useRouter();
   const collectedTapes = useGameStore((s) => s.tapes);
+  const masterVolume = useSettingsStore((s) => s.masterVolume);
+  const setMasterVolume = useSettingsStore((s) => s.setMasterVolume);
 
-  // Stable TapePlayback instance. useRef avoids re-instantiating on every
-  // render; the snapshot below triggers re-renders when state changes.
   const playbackRef = useRef<TapePlayback>(new TapePlayback());
   const [playbackState, setPlaybackState] = useState(playbackRef.current.getState());
   const [selectedTape, setSelectedTape] = useState<string | null>(null);
+  const [progress, setProgress] = useState(0);
+  const [position, setPosition] = useState(0);
 
-  // Simulated audio playback (progress + auto-stop). Replace with real
-  // PlatformBridge synthesis when implementations land (Phase 4).
-  const tapeIndex = selectedTape !== null ? ALL_TAPES.indexOf(selectedTape) : -1;
-  const durationSec = tapeIndex >= 0 ? parseDuration(TAPE_DURATIONS[tapeIndex] ?? '30') : 30;
-  const audio = useTapeAudioPlayback(durationSec, onComplete);
-
-  // Stop audio when navigating away (back button).
-  useEffect(() => {
-    return () => {
-      audio.stop();
-    };
-  }, [audio]);
+  const droneRef = useRef<TapeDroneSynth | null>(null);
+  const tickRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const collectedSet = useMemo(() => new Set(collectedTapes), [collectedTapes]);
 
-  // Memoize transcript and band for the selected tape — avoids recomputing
-  // the call lookup + buildTranscript + band resolution on every render.
+  const ensureAudioEngine = useCallback(() => {
+    let engine = getAudioEngine();
+    if (engine === null) {
+      try {
+        engine = getOrCreateAudioEngine({ bridge: createWebAudioBridge() });
+      } catch {
+        return null;
+      }
+    }
+    if (!engine.isReady()) {
+      void engine.init();
+    }
+    return engine;
+  }, []);
+
+  const selectedTapeIndex = useMemo(() => {
+    if (selectedTape === null) return -1;
+    return ALL_TAPES.indexOf(selectedTape);
+  }, [selectedTape]);
+
+  const selectedDurationSec = useMemo(() => {
+    if (selectedTapeIndex < 0 || selectedTapeIndex >= TAPES.length) return 0;
+    const tape = TAPES[selectedTapeIndex]!;
+    return parseDuration(tape.duration);
+  }, [selectedTapeIndex]);
+
   const selectedTranscript = useMemo(() => {
     if (selectedTape === null) return [] as string[];
     const call = findCallByTape(selectedTape, CALLS as unknown as CallData[]);
@@ -139,38 +160,144 @@ export default function TapesScreen() {
     return idx >= 0 && idx < BAND_BY_INDEX.length ? BAND_BY_INDEX[idx]! : 'LIVING';
   }, [selectedTape]);
 
+  const stopDrone = useCallback(() => {
+    if (tickRef.current !== null) {
+      clearInterval(tickRef.current);
+      tickRef.current = null;
+    }
+    if (droneRef.current !== null) {
+      droneRef.current.stop();
+      droneRef.current.dispose();
+      droneRef.current = null;
+    }
+  }, []);
+
+  const startDrone = useCallback(
+    (tapeName: string, band: Band) => {
+      stopDrone();
+      const idx = ALL_TAPES.indexOf(tapeName);
+      const tapeId = idx >= 0 && idx < TAPES.length ? TAPES[idx]!.id : `tape-${idx + 1}`;
+      const profile = buildTapeProfile(band, tapeId);
+
+      const engine = ensureAudioEngine();
+      if (engine === null) return;
+
+      const ctx = engine.getContext();
+      const destination = engine.getMasterGain();
+      if (ctx === null || destination === null) return;
+
+      const bridge = createWebAudioBridge();
+      const voice = new VoiceProcessor(bridge, ctx, destination);
+      const synth = voice.createTapeDroneSynth();
+      synth.setVolume(masterVolume);
+      synth.start(profile);
+      droneRef.current = synth;
+    },
+    [masterVolume, stopDrone, ensureAudioEngine],
+  );
+
+  const startTick = useCallback(() => {
+    if (tickRef.current !== null) clearInterval(tickRef.current);
+    tickRef.current = setInterval(() => {
+      setPosition((p) => {
+        const next = p + 0.5;
+        if (selectedDurationSec > 0 && next >= selectedDurationSec) {
+          setProgress(1);
+          // Auto-stop at end.
+          stopDrone();
+          playbackRef.current.stop();
+          setPlaybackState(playbackRef.current.getState());
+          if (tickRef.current !== null) {
+            clearInterval(tickRef.current);
+            tickRef.current = null;
+          }
+          return 0;
+        }
+        setProgress(selectedDurationSec > 0 ? next / selectedDurationSec : 0);
+        return next;
+      });
+    }, 500);
+  }, [selectedDurationSec, stopDrone]);
+
   const closePlayer = useCallback(() => {
-    audio.stop();
+    stopDrone();
     playbackRef.current.stop();
     setPlaybackState(playbackRef.current.getState());
     setSelectedTape(null);
-  }, [audio]);
+    setProgress(0);
+    setPosition(0);
+  }, [stopDrone]);
 
   const handlePlayPress = useCallback(() => {
     if (selectedTape === null) return;
     if (playbackState.isPlaying) {
-      audio.stop();
+      // PAUSE: stop drone + tick, keep tape selected.
+      stopDrone();
+      if (tickRef.current !== null) {
+        clearInterval(tickRef.current);
+        tickRef.current = null;
+      }
       playbackRef.current.stop();
+      setPlaybackState(playbackRef.current.getState());
     } else {
+      // PLAY: start drone + tick.
       const call = findCallByTape(selectedTape, CALLS as unknown as CallData[]);
       const band: Band =
         call !== null && call.band >= 0 && call.band < BAND_BY_INDEX.length
           ? BAND_BY_INDEX[call.band]!
           : 'LIVING';
-      audio.play();
       playbackRef.current.play(selectedTape, band);
+      setPlaybackState(playbackRef.current.getState());
+      startDrone(selectedTape, band);
+      startTick();
     }
-    setPlaybackState(playbackRef.current.getState());
-  }, [audio, selectedTape, playbackState.isPlaying]);
+  }, [selectedTape, playbackState.isPlaying, startDrone, startTick, stopDrone]);
 
-  const handleTapePress = useCallback((tapeName: string) => {
-    // Tapping a collected tape opens the player and cues it; transport starts
-    // idle (PLAY) — user engages via the transport toggle.
-    audio.stop();
-    setSelectedTape(tapeName);
+  const handleStopPress = useCallback(() => {
+    stopDrone();
+    if (tickRef.current !== null) {
+      clearInterval(tickRef.current);
+      tickRef.current = null;
+    }
     playbackRef.current.stop();
     setPlaybackState(playbackRef.current.getState());
-  }, [audio]);
+    setProgress(0);
+    setPosition(0);
+  }, [stopDrone]);
+
+  const handleVolumeChange = useCallback(
+    (vol: number) => {
+      setMasterVolume(vol);
+      if (droneRef.current !== null) {
+        droneRef.current.setVolume(vol);
+      }
+    },
+    [setMasterVolume],
+  );
+
+  const handleTapePress = useCallback(
+    (tapeName: string) => {
+      setSelectedTape(tapeName);
+      stopDrone();
+      playbackRef.current.stop();
+      setPlaybackState(playbackRef.current.getState());
+      setProgress(0);
+      setPosition(0);
+    },
+    [stopDrone],
+  );
+
+  // Stop audio when navigating away / unmounting.
+  useEffect(() => {
+    const onUnmount = () => {
+      stopDrone();
+      if (tickRef.current !== null) {
+        clearInterval(tickRef.current);
+        tickRef.current = null;
+      }
+    };
+    return onUnmount;
+  }, [stopDrone]);
 
   const renderItem = useCallback(
     ({ item: tapeName }: { item: string }) => (
@@ -216,9 +343,14 @@ export default function TapesScreen() {
           transcript={selectedTranscript}
           band={selectedBand}
           isPlaying={playbackState.isPlaying}
-          progress={audio.progress}
           onPlayPress={handlePlayPress}
+          onStopPress={handleStopPress}
           onClose={closePlayer}
+          progress={progress}
+          positionLabel={formatTime(position)}
+          durationLabel={formatTime(selectedDurationSec)}
+          volume={masterVolume}
+          onVolumeChange={handleVolumeChange}
         />
       )}
     </View>

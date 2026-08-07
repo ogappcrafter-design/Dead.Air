@@ -7,7 +7,8 @@
 // owns the TapePlayback state machine and resolves which transcript to pass.
 //
 // Layout matches the JustListenCall idiom: backdrop Pressable -> card ->
-// header / body / hint, plus a transport row with PLAY/STOP and CLOSE.
+// header / body / hint, plus a transport row with PLAY/PAUSE/STOP/CLOSE,
+// a playback progress bar, and a master-volume slider (DEA-75).
 
 import React, { memo } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -23,12 +24,22 @@ export interface TapePlayerProps {
   band: Band;
   /** Whether the transport is currently engaged (PLAY). */
   isPlaying: boolean;
-  /** Playback progress 0..1 — drives the progress bar. */
-  progress: number;
-  /** Tap handler for the PLAY / STOP transport toggle. */
+  /** Tap handler for the PLAY / PAUSE transport toggle. */
   onPlayPress: () => void;
+  /** Tap handler for the STOP button — halts playback + resets position. */
+  onStopPress: () => void;
   /** Tap handler for the CLOSE button — also fires on backdrop tap. */
   onClose: () => void;
+  /** Playback progress fraction 0..1 (0 = start, 1 = end). */
+  progress: number;
+  /** Current playback position label (e.g. "1:23"). */
+  positionLabel: string;
+  /** Total tape duration label (e.g. "4:32"). */
+  durationLabel: string;
+  /** Master volume 0..1. */
+  volume: number;
+  /** Volume change handler — called when user adjusts the slider. */
+  onVolumeChange: (vol: number) => void;
 }
 
 /** Band display labels (short uppercase strings for the ambient indicator). */
@@ -58,10 +69,17 @@ export const TapePlayer = memo(function TapePlayer({
   transcript,
   band,
   isPlaying,
-  progress,
   onPlayPress,
+  onStopPress,
   onClose,
+  progress,
+  positionLabel,
+  durationLabel,
+  volume,
+  onVolumeChange,
 }: TapePlayerProps) {
+  const progressPct = Math.max(0, Math.min(100, progress * 100));
+
   return (
     <Pressable style={styles.backdrop} onPress={onClose}>
       <View style={styles.card}>
@@ -90,19 +108,48 @@ export const TapePlayer = memo(function TapePlayer({
           )}
         </ScrollView>
 
-        <View style={styles.transportRow}>
-          <View style={styles.progressContainer}>
-            <View style={styles.progressTrack}>
-              <View style={[styles.progressFill, { width: `${Math.round(progress * 100)}%` }]} />
-            </View>
+        <View style={styles.progressRow}>
+          <Text style={styles.timeLabel}>{positionLabel}</Text>
+          <View style={styles.progressTrack}>
+            <View style={[styles.progressFill, { width: `${progressPct}%` }]} />
           </View>
+          <Text style={styles.timeLabel}>{durationLabel}</Text>
+        </View>
+
+        <View style={styles.volumeRow}>
+          <Text style={styles.volumeLabel}>VOL</Text>
+          <View style={styles.volumeTrack}>
+            <View style={[styles.volumeFill, { width: `${volume * 100}%` }]} />
+          </View>
+          <Pressable
+            style={styles.volumeTouch}
+            onPress={(e) => {
+              const { locationX } = e.nativeEvent;
+              const trackWidth = 200;
+              const ratio = Math.max(0, Math.min(1, locationX / trackWidth));
+              onVolumeChange(ratio);
+            }}
+            accessibilityRole="adjustable"
+            accessibilityLabel="Master volume"
+          />
+        </View>
+
+        <View style={styles.transportRow}>
           <Pressable
             style={styles.transportButton}
             onPress={onPlayPress}
             accessibilityRole="button"
-            accessibilityLabel={isPlaying ? 'Stop tape' : 'Play tape'}
+            accessibilityLabel={isPlaying ? 'Pause tape' : 'Play tape'}
           >
-            <Text style={styles.transportLabel}>{isPlaying ? 'STOP' : 'PLAY'}</Text>
+            <Text style={styles.transportLabel}>{isPlaying ? 'PAUSE' : 'PLAY'}</Text>
+          </Pressable>
+          <Pressable
+            style={styles.stopButton}
+            onPress={onStopPress}
+            accessibilityRole="button"
+            accessibilityLabel="Stop tape"
+          >
+            <Text style={styles.transportLabel}>STOP</Text>
           </Pressable>
           <Pressable
             style={styles.closeButton}
@@ -178,6 +225,62 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     paddingVertical: spacing.xl,
   },
+  progressRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: spacing.md,
+    marginBottom: spacing.sm,
+  },
+  timeLabel: {
+    fontFamily: fonts.mono,
+    fontSize: 10,
+    color: colors.textMuted,
+    letterSpacing: 1,
+  },
+  progressTrack: {
+    flex: 1,
+    height: 4,
+    marginHorizontal: spacing.sm,
+    backgroundColor: colors.surfaceLight,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: colors.amber,
+  },
+  volumeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: spacing.sm,
+    height: 24,
+  },
+  volumeLabel: {
+    fontFamily: fonts.mono,
+    fontSize: 10,
+    color: colors.textMuted,
+    letterSpacing: 1,
+    width: 28,
+  },
+  volumeTrack: {
+    flex: 1,
+    height: 4,
+    marginRight: 28,
+    backgroundColor: colors.surfaceLight,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  volumeFill: {
+    height: '100%',
+    backgroundColor: colors.dimGreen,
+  },
+  volumeTouch: {
+    position: 'absolute',
+    left: 32,
+    right: 32,
+    top: 0,
+    bottom: 0,
+  },
   transportRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -187,27 +290,17 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: colors.border,
   },
-  progressContainer: {
-    flex: 1,
-    marginRight: spacing.md,
-    justifyContent: 'center',
-  },
-  progressTrack: {
-    height: 4,
-    backgroundColor: colors.border,
-    borderRadius: 2,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: '100%',
-    backgroundColor: colors.amber,
-    borderRadius: 2,
-  },
   transportButton: {
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderWidth: 1,
     borderColor: colors.amber,
+  },
+  stopButton: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderWidth: 1,
+    borderColor: colors.textMuted,
   },
   transportLabel: {
     fontFamily: fonts.mono,
