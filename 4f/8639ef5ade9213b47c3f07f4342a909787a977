@@ -1,0 +1,24 @@
+store/useGameStore.ts
+  s_b4c07fd0b75cf7::t_1f84de5d50b1d8 109,223
+engine/calls/callManagerInstance.ts
+  s_b4c07fd0b75cf7::t_8f6fb51746ede0 200,211-215
+  s_b4c07fd0b75cf7::t_265fe0fb3e001e 13
+app/settings/achievements.tsx
+  s_b4c07fd0b75cf7::t_ca7ef7aa9867a7 13,30-33,35-37,47-52
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "4f8639ef5ade9213b47c3f07f4342a909787a977",
+  "prompts": {},
+  "sessions": {
+    "s_b4c07fd0b75cf7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ses_01c5d617cffeR4PpEaqEe6ymNF",
+        "model": "unknown"
+      },
+      "human_author": "Dagger <dagger@pixelated.love>"
+    }
+  }
+}
