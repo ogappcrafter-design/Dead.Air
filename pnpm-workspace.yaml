@@ -1,5 +1,5 @@
 allowBuilds:
-  '@sentry/cli': set this to true or false
+  '@sentry/cli': true
   dtrace-provider: set this to true or false
   msgpackr-extract: true
 minimumReleaseAgeExclude:

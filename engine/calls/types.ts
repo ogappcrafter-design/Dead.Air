@@ -98,6 +98,14 @@ export interface CallOutcome {
   tapeUnlocked?: string;
   /** Band if this call unlocked a new band. */
   bandUnlocked?: Band;
+  /** DEA-69: Choice to persist in ChoiceHistory. Set by RIGHT_ANSWER
+   *  and other choice-bearing call types. When present, CallManager
+   *  calls stores.recordChoice() with these values. */
+  recordedChoice?: {
+    callId: number;
+    choiceKey: string;
+    value: string | number;
+  };
 }
 
 /** A call in progress, bundled with its lifecycle state. */

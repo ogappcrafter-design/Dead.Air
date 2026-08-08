@@ -11,6 +11,7 @@ import type { CallData } from '../calls/types';
 import { ProceduralCallGenerator } from '../calls/ProceduralCallGenerator';
 import { ALL_FRAGMENTS } from '../../data/fragments';
 import type { FragmentLibrary, BandVariation } from '../../data/fragments/types';
+import type { ChoiceHistorySnapshot } from '../../store/choiceHistoryStore';
 import { getActiveSeason, generateSeasonalCalls } from './SeasonalCallInjector';
 
 /**
@@ -72,6 +73,7 @@ export const getCallPool = (
     variations?: ReadonlyArray<BandVariation>;
     proceduralCountPerBand?: number;
     now?: Date;
+    choiceHistory?: ChoiceHistorySnapshot;
   },
 ): CallData[] => {
   if (!hasExpansion) {
@@ -87,8 +89,16 @@ export const getCallPool = (
       ? new ProceduralCallGenerator(fragments, options.variations)
       : new ProceduralCallGenerator(fragments);
 
-  const procedural = generator.generateAcrossBands(proceduralCountPerBand);
+  const procedural = generator.generateAcrossBands(proceduralCountPerBand, {
+    choiceHistory: options?.choiceHistory,
+  });
   const seasonal = generateSeasonalCalls(getActiveSeason(options?.now));
 
-  return [...sacredCalls, ...procedural, ...seasonal];
+  // DEA-61: exclude gated calls whose prerequisite choice hasn't been
+  // recorded yet. No-op when CHOICE_GATES is empty.
+  const pool = [...sacredCalls, ...procedural, ...seasonal];
+  if (options?.choiceHistory) {
+    return generator.filterGatedCalls(pool, options.choiceHistory);
+  }
+  return pool;
 };

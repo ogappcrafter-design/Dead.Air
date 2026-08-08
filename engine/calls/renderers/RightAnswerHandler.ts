@@ -46,6 +46,11 @@ export function computeRightAnswerOutcome(call: CallData, choiceIndex: number): 
     staticMultiplier: choice.staticMult,
     tapeUnlocked,
     bandUnlocked: undefined,
+    recordedChoice: {
+      callId: call.id,
+      choiceKey: `RIGHT_ANSWER:${call.id}:${choiceIndex}`,
+      value: choice.text,
+    },
   };
 }
 

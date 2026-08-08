@@ -4,6 +4,7 @@ import { useGameStore } from '@/store/useGameStore';
 import { useRadioStore } from '@/store/useRadioStore';
 import { useAchievementStore } from '@/store/useAchievementStore';
 import { useAnalyticsStore } from '@/store/useAnalyticsStore';
+import { useChoiceHistoryStore } from '@/store/choiceHistoryStore';
 import type { Band } from '@/lib/constants';
 import type { CallData } from './types';
 
@@ -62,6 +63,8 @@ export const callManager = initCallManager({
       }
     },
     recordCallDuration: (ms) => useGameStore.getState().recordCallDuration(ms),
+    recordChoice: (callId, choiceKey, value) =>
+      useChoiceHistoryStore.getState().recordChoice(callId, choiceKey, value),
     getPlayerStats: () => {
       const s = useGameStore.getState();
       return {

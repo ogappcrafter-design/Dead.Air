@@ -21,6 +21,8 @@ import type { CallData, CallChoice } from './types';
 import type { CallType } from '../../lib/constants';
 import type { FragmentLibrary, ResponseOption, BandVariation } from '../../data/fragments/types';
 import { BAND_VARIATIONS, getBandVariation } from '../../data/fragments/variations';
+import type { ChoiceHistorySnapshot } from '../../store/choiceHistoryStore';
+import { CHOICE_GATES, type ChoiceGate } from '../../data/choiceGates';
 
 /** Starting id for generated calls. Sacred 18 use ids 0..17. */
 export const PROCEDURAL_ID_BASE = 1000;
@@ -86,10 +88,23 @@ export class ProceduralCallGenerator {
    *
    * @param band  Band index 0..4. Throws if out of range for the
    *              fragment libraries passed at construction.
+   * @param options.choiceHistory  Optional ChoiceHistory snapshot. When
+   *              provided, responses with `requiresChoiceKey` are filtered
+   *              to only those whose prerequisites are met, and gated call
+   *              ids from CHOICE_GATES are excluded from the id space.
    * @returns A valid CallData with a unique procedural id.
    */
-  generate(band: number): CallData {
-    const library = this.getLibrary(band);
+  generate(band: number, options?: { choiceHistory?: ChoiceHistorySnapshot }): CallData {
+    let library = this.getLibrary(band);
+    // DEA-56: When choiceHistory is provided, select from branches whose
+    // prerequisites are met. Falls back to the default library when no
+    // branched libraries are available.
+    if (options?.choiceHistory) {
+      const branches = this.getAvailableBranches(options.choiceHistory, band);
+      if (branches.length > 0) {
+        library = this.pick(branches);
+      }
+    }
     const variation = this.getVariation(band);
     const callType = this.pickCallType(library);
     const id = this.nextId++;
@@ -116,7 +131,10 @@ export class ProceduralCallGenerator {
       }
     } else if (callType === 'RIGHT_ANSWER') {
       call.lines = this.assembleLines(library);
-      call.choices = this.assembleChoices(library.responses, variation);
+      const responses = options?.choiceHistory
+        ? this.filterResponses(library.responses, options.choiceHistory)
+        : library.responses;
+      call.choices = this.assembleChoices(responses, variation);
     } else if (callType === 'STAY_CALM') {
       call.lines = this.assembleLines(library);
       call.duration = this.randomInt(8, 16);
@@ -198,10 +216,14 @@ export class ProceduralCallGenerator {
    * Generate `count` procedural calls for the given band.
    * Each call has a unique id.
    */
-  generateBatch(band: number, count: number): CallData[] {
+  generateBatch(
+    band: number,
+    count: number,
+    options?: { choiceHistory?: ChoiceHistorySnapshot },
+  ): CallData[] {
     const calls: CallData[] = [];
     for (let i = 0; i < count; i++) {
-      calls.push(this.generate(band));
+      calls.push(this.generate(band, options));
     }
     return calls;
   }
@@ -211,11 +233,14 @@ export class ProceduralCallGenerator {
    * @param countPerBand  Number of calls to generate per band.
    * @returns An array of CallData with `countPerBand * fragments.length` entries.
    */
-  generateAcrossBands(countPerBand: number): CallData[] {
+  generateAcrossBands(
+    countPerBand: number,
+    options?: { choiceHistory?: ChoiceHistorySnapshot },
+  ): CallData[] {
     const calls: CallData[] = [];
     for (const band of this.fragmentsByBand.keys()) {
       for (let i = 0; i < countPerBand; i++) {
-        calls.push(this.generate(band));
+        calls.push(this.generate(band, options));
       }
     }
     return calls;
@@ -226,7 +251,92 @@ export class ProceduralCallGenerator {
     this.nextId = PROCEDURAL_ID_BASE;
   }
 
+  /**
+   * DEA-56 / DEA-69: Return the fragment libraries available for a band
+   * after filtering by ChoiceHistory. Libraries with `requiresChoiceKey`
+   * are included only when the player has recorded that choice. When
+   * multiple libraries share the same `branchId`, only those whose
+   * prerequisites are met are returned; if none match, the unbranched
+   * library (no `requiresChoiceKey`) is used as fallback.
+   */
+  getAvailableBranches(choiceHistory: ChoiceHistorySnapshot, band: number): FragmentLibrary[] {
+    const candidates = this.fragments.filter((lib) => lib.band === band);
+    if (candidates.length === 0) return [];
+
+    const hasKey = (lib: FragmentLibrary): boolean =>
+      lib.requiresChoiceKey === undefined || choiceHistory.hasChoice(lib.requiresChoiceKey);
+
+    const available = candidates.filter(hasKey);
+    if (available.length === 0) {
+      // Fall back to libraries without prerequisites.
+      return candidates.filter((lib) => lib.requiresChoiceKey === undefined);
+    }
+    return available;
+  }
+
+  /**
+   * DEA-61 / DEA-69: Return the set of procedural call ids unlocked by
+   * the player's ChoiceHistory via CHOICE_GATES. Used by the scheduler to
+   * include gated calls in the generation pool.
+   */
+  getGatedCallIds(choiceHistory: ChoiceHistorySnapshot): number[] {
+    const unlocked: number[] = [];
+    for (const gate of CHOICE_GATES) {
+      if (!choiceHistory.hasChoice(gate.choiceKey)) continue;
+      if (gate.choiceValue !== undefined) {
+        const record = choiceHistory.getChoice(gate.choiceKey);
+        if (record === undefined || record.value !== gate.choiceValue) continue;
+      }
+      unlocked.push(gate.unlocksCallId);
+    }
+    return unlocked;
+  }
+
+  /**
+   * DEA-61 / DEA-69: Return every call id referenced by CHOICE_GATES,
+   * regardless of unlock status. Callers subtract the unlocked set from
+   * this to determine which gated calls remain locked.
+   */
+  getAllGatedCallIds(): number[] {
+    return CHOICE_GATES.map((g) => g.unlocksCallId);
+  }
+
+  /**
+   * DEA-61 / DEA-69: Filter a call pool so that gated call ids appear only
+   * when their prerequisite choice has been recorded. Calls not referenced
+   * by any gate pass through unchanged.
+   */
+  filterGatedCalls<T extends { id: number }>(
+    calls: ReadonlyArray<T>,
+    choiceHistory: ChoiceHistorySnapshot,
+  ): T[] {
+    const allGated = new Set(this.getAllGatedCallIds());
+    if (allGated.size === 0) return [...calls];
+    const unlocked = new Set(this.getGatedCallIds(choiceHistory));
+    return calls.filter((c) => !allGated.has(c.id) || unlocked.has(c.id));
+  }
+
   // --- Internal helpers ---
+
+  /**
+   * DEA-57 / DEA-69: Filter response options by ChoiceHistory. Responses
+   * with `requiresChoiceKey` are included only when the player has
+   * recorded that choice. Responses without prerequisites always pass.
+   * Returns the full pool if no history is provided.
+   */
+  private filterResponses(
+    responses: ReadonlyArray<ResponseOption>,
+    choiceHistory: ChoiceHistorySnapshot,
+  ): ReadonlyArray<ResponseOption> {
+    const filtered = responses.filter(
+      (r) => r.requiresChoiceKey === undefined || choiceHistory.hasChoice(r.requiresChoiceKey),
+    );
+    // Ensure we never drop below MIN_CHOICES — fall back to the full pool.
+    if (filtered.length < MIN_CHOICES) {
+      return responses;
+    }
+    return filtered;
+  }
 
   /** Validate that every fragment library has non-empty arrays. */
   private validateFragments(fragments: ReadonlyArray<FragmentLibrary>): void {

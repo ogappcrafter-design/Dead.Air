@@ -29,6 +29,18 @@ export interface ResponseOption {
   staticMult?: number;
   /** 0..1 probability of unlocking a tape. 0 (or omitted) = never. */
   tapeChance?: number;
+  /**
+   * DEA-57 / DEA-69: If set, this response only appears when the player
+   * has previously recorded a choice with this exact key in ChoiceHistory.
+   * Allows dialogue to reference past decisions (filter-based insertion).
+   */
+  requiresChoiceKey?: string;
+  /**
+   * DEA-56 / DEA-69: Branch identifier. Response options sharing a branchId
+   * belong to the same narrative branch. The generator uses this with
+   * ChoiceHistory to select which branches are available.
+   */
+  branchId?: string;
 }
 
 /**
@@ -83,6 +95,19 @@ export interface FragmentLibrary {
   callerIdPrefixes: string[];
   /** Caller name prefix pool (e.g. 'THE', 'AGENT', 'CALLER'). */
   callerNamePrefixes: string[];
+  /**
+   * DEA-57 / DEA-69: If set, this entire fragment library (and all its
+   * calls) only appears when the player has previously recorded a choice
+   * with this exact key. Allows band-level gating based on history.
+   */
+  requiresChoiceKey?: string;
+  /**
+   * DEA-56 / DEA-69: Branch identifier for this library. Libraries sharing
+   * a branchId are alternate variants of the same band. The generator's
+   * getAvailableBranches() uses this with ChoiceHistory to select which
+   * variant to use for a band.
+   */
+  branchId?: string;
 
   // --- New call type fragment arrays (DEA-71) ---
   // All optional. Existing band files work unchanged; bands that include

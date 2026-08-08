@@ -42,6 +42,8 @@ export interface CallManagerStoreAccess {
   recordCallDuration(durationMs: number): void;
   /** Snapshot of all stats the achievement engine evaluates. */
   getPlayerStats(): PlayerStats;
+  /** DEA-69: Record a player choice in ChoiceHistory (RIGHT_ANSWER, etc.). */
+  recordChoice(callId: number, choiceKey: string, value: string | number): void;
 }
 
 /** Radio accessors — read current band for audio preset selection. */
@@ -218,6 +220,15 @@ export class CallManager {
     // Band unlock.
     if (outcome.bandUnlocked !== undefined) {
       this.stores.unlockBand(outcome.bandUnlocked);
+    }
+
+    // Record player choice for persistence (DEA-69).
+    if (outcome.recordedChoice !== undefined) {
+      this.stores.recordChoice(
+        outcome.recordedChoice.callId,
+        outcome.recordedChoice.choiceKey,
+        outcome.recordedChoice.value,
+      );
     }
 
     // Band unlock by received-call threshold. The store persists the
