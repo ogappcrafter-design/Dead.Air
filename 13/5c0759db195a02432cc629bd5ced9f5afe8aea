@@ -1,0 +1,40 @@
+app/store/index.tsx
+  s_cdf1f977bdec0c::t_e5925b65614e10 49-59
+  s_cdf1f977bdec0c::t_73f6f41aceabbf 130-141,143-149
+  s_cdf1f977bdec0c::t_f93e8fcd64eea1 24
+  s_cdf1f977bdec0c::t_6ea05bf67ae5ae 14
+  s_cdf1f977bdec0c::t_c8e4aa05522854 142
+engine/calls/CallManager.ts
+  s_cdf1f977bdec0c::t_6b82979bcd7fef 140
+  s_cdf1f977bdec0c::t_14e541fe6d19db 87-88
+  s_cdf1f977bdec0c::t_11ce0fd65b66f0 124
+  s_cdf1f977bdec0c::t_2539ec94744e21 159-164
+hooks/useAmbientAudioBridge.ts
+  s_cdf1f977bdec0c::t_ba7aa4314ab1b7 1-52
+app/tapes/index.tsx
+  s_cdf1f977bdec0c::t_405bd565ae78f7 39
+  s_cdf1f977bdec0c::t_5701a94d2f15fb 122-124
+engine/calls/callManagerInstance.ts
+  s_cdf1f977bdec0c::t_02bde9289aec1a 13,16
+  s_cdf1f977bdec0c::t_72f7eb97f947d4 43-44,46,51-54,56,58
+  s_cdf1f977bdec0c::t_310c05bba35e1a 14
+  s_cdf1f977bdec0c::t_9ffb1afb0d9632 45,47-50,55,57
+  s_cdf1f977bdec0c::t_9d2fb8901fefef 15
+  s_cdf1f977bdec0c::t_b32c7c48cebc1d 164-166
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "135c0759db195a02432cc629bd5ced9f5afe8aea",
+  "prompts": {},
+  "sessions": {
+    "s_cdf1f977bdec0c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ses_01da0fc7affeFCUugRjzlHsD3V",
+        "model": "unknown"
+      },
+      "human_author": "Dagger <dagger@pixelated.love>"
+    }
+  }
+}
