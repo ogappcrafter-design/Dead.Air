@@ -1,0 +1,67 @@
+components/tapes/TapePlayer.tsx
+  s_0dcbd47568ba71::t_b4d75f211a42ea 52-54
+data/fragments/weather.ts
+  s_0dcbd47568ba71::t_c7830d27ef1ce1 9,11
+  s_0dcbd47568ba71::t_fea622f7ee3043 30-31,36,41,87-88,94-115
+  s_0dcbd47568ba71::t_faf6d9ff0ac2f1 1-8,10,12-29,32-35,37-40,42-86,89-93,116
+tests/engine/SeasonalCallInjector.test.ts
+  s_0dcbd47568ba71::t_bf332b0badab6f 1-67
+data/fragments/living.ts
+  s_0dcbd47568ba71::t_a63baea2050ec0 42-45
+data/fragments/index.ts
+  s_0dcbd47568ba71::t_0614697335a88b 14-16,25-27,35-37
+data/fragments/liminal.ts
+  s_0dcbd47568ba71::t_f485c735cd0ea3 41-44
+data/fragments/historical.ts
+  s_0dcbd47568ba71::t_cafbccacdcbbd4 1-115
+data/fragments/variations.ts
+  s_0dcbd47568ba71::t_e7d6b7ac3f69d6 54-74
+  s_0dcbd47568ba71::t_c59e996333dc5a 12-14
+lib/constants.ts
+  s_0dcbd47568ba71::t_4277abc3184007 5-14
+engine/progression/SeasonalCallInjector.ts
+  s_0dcbd47568ba71::t_650ae38096ee80 38
+  s_0dcbd47568ba71::t_030ba7f4be3907 1-37,39
+tests/engine/InfiniteSignal.test.ts
+  s_0dcbd47568ba71::t_f944f9d1979687 42
+engine/progression/InfiniteSignal.ts
+  s_0dcbd47568ba71::t_75d98d3f975ad7 14
+  s_0dcbd47568ba71::t_24e455db657241 74,91,93
+data/bands.ts
+  s_0dcbd47568ba71::t_1e8ef9c1eb147d 53-76
+tests/engine/ProceduralCallGenerator.test.ts
+  s_0dcbd47568ba71::t_fc6aa79a609dc7 62-63
+engine/calls/CallScheduler.ts
+  s_0dcbd47568ba71::t_8164c997855ed7 39-44
+data/fragments/pirate.ts
+  s_0dcbd47568ba71::t_c06b01af6d041f 1-117
+engine/audio/TapeDroneSynth.ts
+  s_0dcbd47568ba71::t_770717665cc271 33-35
+  s_0dcbd47568ba71::t_560a2302a9e6a0 94-114
+  s_0dcbd47568ba71::t_ee0487a3cf437c 138-140
+engine/audio/AmbientLayer.ts
+  s_0dcbd47568ba71::t_6e081714808be0 31-33
+data/fragments/seasonal.ts
+  s_0dcbd47568ba71::t_c28a3ae38609ee 1-203
+engine/audio/PlatformBridge.ts
+  s_0dcbd47568ba71::t_2060837de6e2c7 110-115
+  s_0dcbd47568ba71::t_11a16f99925f22 138-143
+__tests__/store/useStoreStore.test.ts
+  s_0dcbd47568ba71::t_54989e627a19f8 160,162
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "777178fc20b41e6c0a6291ca25a66b03543a78d5",
+  "prompts": {},
+  "sessions": {
+    "s_0dcbd47568ba71": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ses_0218bbb66ffeqgY30ESMzu9Phi",
+        "model": "unknown"
+      },
+      "human_author": "Dagger <dagger@pixelated.love>"
+    }
+  }
+}
