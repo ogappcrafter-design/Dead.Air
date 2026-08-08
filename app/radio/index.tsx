@@ -10,6 +10,7 @@ import { useTutorialController } from '@/hooks/useTutorialController';
 import { TutorialIndicator } from '@/components/tutorial/TutorialIndicator';
 import { TutorialTransition } from '@/components/tutorial/TutorialTransition';
 import { useDailyCall } from '@/hooks/useDailyCall'; (feat(calls): DEA-49 daily mystery call system — seeded RNG, streak tracking, exclusive calls)
+import { useDlcFragmentCalls } from '@/hooks/useDlcFragmentCalls';
 import CRTView from '../../components/shared/CRTView';
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 
@@ -20,6 +21,7 @@ export default function RadioScreen() {
   const tutorial = useTutorialController();
 
   useDailyCall();
+  useDlcFragmentCalls();
 
   return (
     <CRTView intensity={0.3}>

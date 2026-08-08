@@ -14,6 +14,7 @@ import { useStoreStore } from '@/store/useStoreStore';
 import { ATMOSPHERIC_FRAGMENTS } from '@/data/fragments';
 import { ATMOSPHERIC_PACKS } from '@/data/atmosphericPacks';
 import { ProceduralCallGenerator } from './ProceduralCallGenerator';
+import { SEASONAL_ID_BASE } from '@/engine/progression/SeasonalCallInjector';
 import { ALL_DLC_CALLS } from '@/data/tapePacks';
 import type { Band } from '@/lib/constants';
 import type { CallData } from './types';
@@ -22,8 +23,34 @@ import type { CallData } from './types';
 // getCallPool generates IDs >= 1000 for procedural/seasonal calls so they
 // never collide with sacred call IDs 0..17 from data/calls.js.
 const _sacredEntries = (CALLS as unknown as CallData[]).map((c) => [c.id, c] as const);
-const _expansionEntries = getCallPool(CALLS as unknown as CallData[], true).map(
-  (c) => [c.id, c] as const,
+
+// Track procedural call IDs (1000 to SEASONAL_ID_BASE-1) from the expansion
+// pool so they can be removed and regenerated after store rehydration (DEA-32-2).
+// Seasonal IDs (>= SEASONAL_ID_BASE) are excluded because they collide with
+// atmospheric DLC idBases and do not depend on ownedTapePacks.
+let _expansionCallIds = new Set<number>();
+
+function buildExpansionEntries(
+  ownedTapePacks: ReadonlyArray<string>,
+): readonly (readonly [number, CallData])[] {
+  const pool = getCallPool(
+    CALLS as unknown as CallData[],
+    true,
+    undefined,
+    { ownedTapePacks },
+  );
+  const entries: (readonly [number, CallData])[] = [];
+  for (const c of pool) {
+    entries.push([c.id, c] as const);
+    if (c.id >= 1000 && c.id < SEASONAL_ID_BASE) {
+      _expansionCallIds.add(c.id);
+    }
+  }
+  return entries;
+}
+
+const _expansionEntries = buildExpansionEntries(
+  useStoreStore.getState().ownedTapePacks,
 );
 const _tutorialEntries = TUTORIAL_CALLS.map((c) => [c.id, c] as const);
 const _dlcEntries = ALL_DLC_CALLS.map((c) => [c.id, c] as const);
@@ -66,6 +93,29 @@ ATMOSPHERIC_FRAGMENTS.forEach((lib, i) => {
  */
 export function registerDailyCall(call: CallData): void {
   registry.set(call.id, call);
+}
+
+export function refreshExpansionCalls(
+  ownedTapePacks: ReadonlyArray<string>,
+): void {
+  for (const id of _expansionCallIds) {
+    registry.delete(id);
+  }
+  _expansionCallIds = new Set();
+
+  const pool = getCallPool(
+    CALLS as unknown as CallData[],
+    true,
+    undefined,
+    { ownedTapePacks },
+  );
+
+  for (const c of pool) {
+    if (c.id >= 1000 && c.id < SEASONAL_ID_BASE) {
+      registry.set(c.id, c);
+      _expansionCallIds.add(c.id);
+    }
+  }
 }
 
 const bands = [

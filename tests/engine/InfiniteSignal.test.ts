@@ -4,6 +4,7 @@
 import { hasInfiniteSignal, getCallPool } from '@/engine/progression/InfiniteSignal';
 import type { CallData } from '@/engine/calls/types';
 import { CALLS } from '@/data/calls';
+import { getDlcFragmentsForOwnedPacks, ALL_DLC_FRAGMENTS } from '@/data/tapePacks';
 
 const CALLS_TYPED = CALLS as unknown as CallData[];
 
@@ -63,6 +64,34 @@ describe('InfiniteSignal', () => {
       const proc1 = pool1.slice(CALLS_TYPED.length);
       const proc2 = pool2.slice(CALLS_TYPED.length);
       expect(proc1).not.toEqual(proc2);
+    });
+
+    it('includes pre-built DLC calls when ownedTapePacks provided', () => {
+      const basePool = getCallPool(CALLS_TYPED, true);
+      const dlcPool = getCallPool(CALLS_TYPED, true, undefined, {
+        ownedTapePacks: ['com.deadair.tape_pack_holiday'],
+      });
+      expect(dlcPool.length).toBeGreaterThan(basePool.length);
+    });
+
+    it('pre-built DLC calls have valid CallData structure', () => {
+      const basePool = getCallPool(CALLS_TYPED, true);
+      const dlcPool = getCallPool(CALLS_TYPED, true, undefined, {
+        ownedTapePacks: ['com.deadair.tape_pack_holiday'],
+      });
+      const dlcCalls = dlcPool.slice(basePool.length);
+      expect(dlcCalls.length).toBeGreaterThan(0);
+      for (const call of dlcCalls) {
+        expect(typeof call.id).toBe('number');
+        expect(typeof call.callerId).toBe('string');
+        expect(typeof call.callerName).toBe('string');
+      }
+    });
+
+    it('DLC fragments are added to the procedural generation pool when ownedTapePacks provided', () => {
+      const dlcFragments = getDlcFragmentsForOwnedPacks(['com.deadair.tape_pack_holiday']);
+      expect(dlcFragments.length).toBeGreaterThan(0);
+      expect(ALL_DLC_FRAGMENTS.length).toBeGreaterThanOrEqual(dlcFragments.length);
     });
   });
 });
