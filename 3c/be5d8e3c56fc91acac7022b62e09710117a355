@@ -1,0 +1,23 @@
+__tests__/engine/progression/Achievements.test.ts
+  s_94cfa3720b94e1::t_3c3b2f5149db31 191-196
+  s_94cfa3720b94e1::t_3c059ae65d5ff4 20-24
+  s_94cfa3720b94e1::t_ff4cffc30db336 211-215
+store/useGameStore.ts
+  s_94cfa3720b94e1::t_a758a5280e1d63 211-212,228,246
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "3cbe5d8e3c56fc91acac7022b62e09710117a355",
+  "prompts": {},
+  "sessions": {
+    "s_94cfa3720b94e1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ses_01c46c08dffevFPiTawqlGfbBP",
+        "model": "unknown"
+      },
+      "human_author": "Dagger <dagger@pixelated.love>"
+    }
+  }
+}
