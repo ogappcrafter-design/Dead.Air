@@ -1,6 +1,7 @@
 import { initCallManager } from './CallManager';
 import { CALLS, BANDS as BANDS_DATA } from '@/data/calls';
 import { getCallPool } from '@/engine/progression/InfiniteSignal';
+import { TUTORIAL_CALLS } from '@/data/tutorialCalls';
 import { useGameStore } from '@/store/useGameStore';
 import { useRadioStore } from '@/store/useRadioStore';
 import { useAchievementStore } from '@/store/useAchievementStore';
@@ -17,7 +18,12 @@ const _sacredEntries = (CALLS as unknown as CallData[]).map((c) => [c.id, c] as 
 const _expansionEntries = getCallPool(CALLS as unknown as CallData[], true).map(
   (c) => [c.id, c] as const,
 );
-const registry = new Map<number, CallData>([..._sacredEntries, ..._expansionEntries]);
+const _tutorialEntries = TUTORIAL_CALLS.map((c) => [c.id, c] as const);
+const registry = new Map<number, CallData>([
+  ..._sacredEntries,
+  ..._expansionEntries,
+  ..._tutorialEntries,
+]);
 
 const bands = [
   ...(
@@ -78,8 +84,16 @@ export const callManager = initCallManager({
       }
     },
     recordCallDuration: (ms) => useGameStore.getState().recordCallDuration(ms),
-    recordChoice: (callId, choiceKey, value) =>
-      useChoiceHistoryStore.getState().recordChoice(callId, choiceKey, value),
+    recordChoice: (callId, choiceKey, value) => {
+      const parts = choiceKey.split(':');
+      const choiceIndex = parseInt(parts[parts.length - 1] ?? '0', 10) || 0;
+      useChoiceHistoryStore.getState().addChoice({
+        callId,
+        choiceIndex,
+        tag: choiceKey,
+        sanityDelta: typeof value === 'number' ? value : 0,
+      });
+    },
     getPlayerStats: () => {
       const s = useGameStore.getState();
       const difficulty = useSettingsStore.getState().difficulty;

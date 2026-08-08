@@ -83,6 +83,9 @@ export interface CallData {
     text: string;
     responses: CallChoice[]; // reuses existing CallChoice type
   }>;
+
+  /** DEA-47: Tutorial calls skip progression tracking (no receivedCalls, no band unlock, no achievements). */
+  isTutorial?: boolean;
 }
 
 /** Active call lifecycle state machine. */

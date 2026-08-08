@@ -222,17 +222,21 @@ export class CallManager {
       this.stores.unlockBand(outcome.bandUnlocked);
     }
 
+    if (call.isTutorial === true) {
+      this.stores.setCurrentCall(null);
+      this.transition('idle', null);
+      return;
+    }
+
     // Record player choice for persistence (DEA-69).
     if (outcome.recordedChoice !== undefined) {
       this.stores.recordChoice(
         outcome.recordedChoice.callId,
         outcome.recordedChoice.choiceKey,
-        outcome.recordedChoice.value,
+        outcome.sanityDelta,
       );
     }
 
-    // Band unlock by received-call threshold. The store persists the
-    // deduped received-call id list; the count used here reflects it.
     this.stores.markCallReceived(call.id);
 
     const unlockedBands = this.stores.getUnlockedBands();
@@ -250,20 +254,14 @@ export class CallManager {
       this.stores.unlockBand(unlock.band);
     }
 
-    // Record call duration for the Patient Listener achievement.
     const duration = Date.now() - this.activeCall.startTime;
     if (duration > 0) {
       this.stores.recordCallDuration(duration);
     }
 
-    // Clear current call in store.
     this.stores.setCurrentCall(null);
-
-    // Reset to idle for next call.
     this.transition('idle', null);
 
-    // Surface the new stats snapshot to the achievement engine so it can
-    // check + queue any freshly-unlocked milestones.
     if (this.onAchievementsCheck !== undefined) {
       this.onAchievementsCheck(this.stores.getPlayerStats());
     }

@@ -5,6 +5,9 @@ import { RadioBody } from '../../components/radio/RadioBody';
 import { ActiveCallDispatcher } from '@/components/calls/ActiveCallDispatcher';
 import { AchievementNotification } from '@/components/progression/AchievementNotification';
 import { useAchievementStore } from '@/store/useAchievementStore';
+import { useTutorialController } from '@/hooks/useTutorialController';
+import { TutorialIndicator } from '@/components/tutorial/TutorialIndicator';
+import { TutorialTransition } from '@/components/tutorial/TutorialTransition';
 import CRTView from '../../components/shared/CRTView';
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 
@@ -12,10 +15,12 @@ export default function RadioScreen() {
   const router = useRouter();
   const recentUnlock = useAchievementStore((s) => s.recentUnlock);
   const clearRecentUnlock = useAchievementStore((s) => s.clearRecentUnlock);
+  const tutorial = useTutorialController();
 
   return (
     <CRTView intensity={0.3}>
       <View style={styles.container}>
+        {tutorial.isActive && <TutorialIndicator />}
         <RadioBody />
         <ErrorBoundary>
           <ActiveCallDispatcher />
@@ -60,6 +65,7 @@ export default function RadioScreen() {
           </Pressable>
         </View>
       </View>
+      {tutorial.isInTransition && <TutorialTransition />}
     </CRTView>
   );
 }

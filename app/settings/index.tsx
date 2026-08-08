@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Pressable, Switch, ScrollView, TextInput } from
 import { router } from 'expo-router';
 import { colors, fonts, spacing } from '../../lib/theme';
 import { useSettingsStore } from '../../store/useSettingsStore';
+import { useTutorialStore } from '../../store/useTutorialStore';
 import { useAnalyticsStore } from '../../store/useAnalyticsStore';
 import { useStoreStore } from '../../store/useStoreStore';
 import { usePlayerStore } from '../../store/usePlayerStore';
@@ -17,6 +18,12 @@ const VOLUME_STEP = 0.1;
 const fmtVolume = (vol: number): string => vol.toFixed(1);
 
 export default function SettingsScreen() {
+  const [confirmSkip, setConfirmSkip] = useState(false);
+
+  const tutorialStep = useTutorialStore((s) => s.step);
+  const tutorialSkipped = useTutorialStore((s) => s.skipped);
+  const skipTutorial = useTutorialStore((s) => s.skip);
+
   const crtEnabled = useSettingsStore((s) => s.crtEnabled);
   const setCrtEnabled = useSettingsStore((s) => s.setCrtEnabled);
   const crtIntensity = useSettingsStore((s) => s.crtIntensity);
@@ -182,6 +189,63 @@ export default function SettingsScreen() {
           </View>
         </View>
       </View>
+
+      {tutorialStep !== 'completed' && !tutorialSkipped && (
+        <View style={styles.card}>
+          <Text style={styles.sectionLabel}>ONBOARDING</Text>
+          {confirmSkip ? (
+            <View style={styles.row}>
+              <Text style={[styles.rowLabel, styles.textRed]}>SKIP TUTORIAL?</Text>
+              <View style={styles.stepper}>
+                <Pressable
+                  testID="tutorial-skip-confirm"
+                  style={({ pressed }) => [styles.restoreBtn, pressed && styles.restoreBtnPressed]}
+                  onPress={() => {
+                    skipTutorial();
+                    setConfirmSkip(false);
+                  }}
+                  accessible
+                  accessibilityRole="button"
+                  accessibilityLabel="Confirm skip tutorial"
+                >
+                  <Text style={[styles.restoreBtnText, styles.textRed]} numberOfLines={1}>
+                    YES
+                  </Text>
+                </Pressable>
+                <Pressable
+                  testID="tutorial-skip-cancel"
+                  style={({ pressed }) => [styles.restoreBtn, pressed && styles.restoreBtnPressed]}
+                  onPress={() => setConfirmSkip(false)}
+                  accessible
+                  accessibilityRole="button"
+                  accessibilityLabel="Cancel skip tutorial"
+                >
+                  <Text style={styles.restoreBtnText} numberOfLines={1}>
+                    NO
+                  </Text>
+                </Pressable>
+              </View>
+            </View>
+          ) : (
+            <View style={styles.row}>
+              <Text style={styles.rowLabel}>TUTORIAL</Text>
+              <Pressable
+                testID="tutorial-skip-btn"
+                style={({ pressed }) => [styles.restoreBtn, pressed && styles.restoreBtnPressed]}
+                onPress={() => setConfirmSkip(true)}
+                accessible
+                accessibilityRole="button"
+                accessibilityLabel="Skip tutorial"
+                accessibilityHint="Skip the onboarding tutorial. This cannot be undone."
+              >
+                <Text style={styles.restoreBtnText} numberOfLines={1}>
+                  SKIP
+                </Text>
+              </Pressable>
+            </View>
+          )}
+        </View>
+      )}
 
       <View style={styles.card}>
         <Text style={styles.sectionLabel}>AUDIO</Text>
