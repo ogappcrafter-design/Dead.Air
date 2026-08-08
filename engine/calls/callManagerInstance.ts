@@ -1,5 +1,6 @@
 import { initCallManager } from './CallManager';
 import { CALLS, BANDS as BANDS_DATA } from '@/data/calls';
+import { getCallPool } from '@/engine/progression/InfiniteSignal';
 import { useGameStore } from '@/store/useGameStore';
 import { useRadioStore } from '@/store/useRadioStore';
 import { useAchievementStore } from '@/store/useAchievementStore';
@@ -8,23 +9,36 @@ import { useChoiceHistoryStore } from '@/store/choiceHistoryStore';
 import type { Band } from '@/lib/constants';
 import type { CallData } from './types';
 
-const registry = new Map<number, CallData>((CALLS as unknown as CallData[]).map((c) => [c.id, c]));
+// Build registry from sacred calls + procedural/seasonal calls (DEA-68 P1 #2).
+// getCallPool generates IDs >= 1000 for procedural/seasonal calls so they
+// never collide with sacred call IDs 0..17 from data/calls.js.
+const _sacredEntries = (CALLS as unknown as CallData[]).map((c) => [c.id, c] as const);
+const _expansionEntries = getCallPool(CALLS as unknown as CallData[], true).map(
+  (c) => [c.id, c] as const,
+);
+const registry = new Map<number, CallData>([..._sacredEntries, ..._expansionEntries]);
 
-const bands = (
-  BANDS_DATA as unknown as Array<{
-    id: number;
-    name: string;
-    freq: string;
-    color: string;
-    unlockAt: number;
-  }>
-).map((b) => ({
-  id: b.id,
-  name: b.name as Band,
-  freq: b.freq,
-  color: b.color,
-  unlockAt: b.unlockAt,
-}));
+const bands = [
+  ...(
+    BANDS_DATA as unknown as Array<{
+      id: number;
+      name: string;
+      freq: string;
+      color: string;
+      unlockAt: number;
+    }>
+  ).map((b) => ({
+    id: b.id,
+    name: b.name as Band,
+    freq: b.freq,
+    color: b.color,
+    unlockAt: b.unlockAt,
+  })),
+  // DEA-68: Progression rows for new bands (data/calls.js is sacred — extend here)
+  { id: 5, name: 'WEATHER' as Band, freq: '160.5 FM', color: '#4FC3F7', unlockAt: 20 },
+  { id: 6, name: 'PIRATE' as Band, freq: '164.7 FM', color: '#FFD700', unlockAt: 25 },
+  { id: 7, name: 'HISTORICAL' as Band, freq: '168.3 AM', color: '#D4A76A', unlockAt: 30 },
+];
 
 export const callManager = initCallManager({
   registry,

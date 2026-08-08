@@ -3,9 +3,10 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Band, SAVE_KEY } from '../lib/constants';
+import { BANDS } from '../data/bands';
 
 const MIN_FREQUENCY = 87.5;
-const MAX_FREQUENCY = 108.0;
+const MAX_FREQUENCY = Math.max(...Object.values(BANDS).map((b) => b.frequencyRange[1]));
 
 interface RadioState {
   currentBand: Band;

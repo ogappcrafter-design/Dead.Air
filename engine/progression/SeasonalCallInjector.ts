@@ -26,6 +26,9 @@ export const getActiveSeason = (date: Date = new Date()): Season => {
 
 export const SEASONAL_CALLS_PER_EVENT = 4;
 
+/** Starting id for seasonal calls. Disjoint from procedural ids (>= 1000) so the CallManager registry Map never sees a collision. */
+export const SEASONAL_ID_BASE = 2000;
+
 export const generateSeasonalCalls = (
   season: Season,
   count: number = SEASONAL_CALLS_PER_EVENT,
@@ -34,6 +37,6 @@ export const generateSeasonalCalls = (
   if (season === 'none') return [];
   const libraries = SEASONAL_FRAGMENTS[season];
   if (!libraries || libraries.length === 0) return [];
-  const generator = new ProceduralCallGenerator(libraries, variations);
+  const generator = new ProceduralCallGenerator(libraries, variations, SEASONAL_ID_BASE);
   return libraries.flatMap((lib) => generator.generateBatch(lib.band, count));
 };

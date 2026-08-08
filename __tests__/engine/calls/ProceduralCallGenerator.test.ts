@@ -180,13 +180,13 @@ describe('ProceduralCallGenerator', () => {
     });
 
     it('throws on out-of-range band index', () => {
-      expect(() => generator.generate(5)).toThrow();
+      expect(() => generator.generate(8)).toThrow();
       expect(() => generator.generate(-1)).toThrow();
     });
 
     it('lines never contain undefined or empty entries', () => {
       for (let i = 0; i < 50; i++) {
-        const call = generator.generate(i % 5);
+        const call = generator.generate(i % 8);
         if (call.lines) {
           for (const line of call.lines) {
             expect(typeof line).toBe('string');
@@ -207,7 +207,7 @@ describe('ProceduralCallGenerator', () => {
 
     it('generates unique ids across multiple batches and bands', () => {
       const allCalls: CallData[] = [];
-      for (let band = 0; band < 5; band++) {
+      for (let band = 0; band < 8; band++) {
         allCalls.push(...generator.generateBatch(band, 10));
       }
       const ids = allCalls.map((c) => c.id);
@@ -282,7 +282,7 @@ describe('ProceduralCallGenerator', () => {
   describe('RIGHT_ANSWER choices', () => {
     it('choices have valid CallChoice shape', () => {
       // Generate many calls until we hit RIGHT_ANSWER in each band.
-      for (let band = 0; band < 5; band++) {
+      for (let band = 0; band < 8; band++) {
         let found = false;
         for (let i = 0; i < 50 && !found; i++) {
           const call = generator.generate(band);
@@ -313,7 +313,7 @@ describe('ProceduralCallGenerator', () => {
 
   describe('SIGNAL_DECODE fields', () => {
     it('SIGNAL_DECODE calls have intro, sequence, decodedMessage', () => {
-      for (let band = 0; band < 5; band++) {
+      for (let band = 0; band < 8; band++) {
         for (let i = 0; i < 50; i++) {
           const call = generator.generate(band);
           if (call.type === 'SIGNAL_DECODE') {
@@ -347,9 +347,9 @@ describe('IAP gate behavior (DEA-78 / DEA-79)', () => {
     expect(pool.length).toBeGreaterThan(18);
   });
 
-  it('owners get the sacred 18 plus 30 procedural (6 per band × 5 bands)', () => {
+  it('owners get the sacred 18 plus 48 procedural (6 per band × 8 bands)', () => {
     const pool = getCallPool(sacredCalls, true);
-    expect(pool.length).toBe(18 + 30);
+    expect(pool.length).toBe(18 + 48);
   });
 
   it('non-owner pool contains only sacred call ids (0..17)', () => {
@@ -368,7 +368,7 @@ describe('IAP gate behavior (DEA-78 / DEA-79)', () => {
     // All 18 sacred ids present.
     expect(sacredIds.length).toBe(18);
     // Procedural ids present and all >= 1000.
-    expect(proceduralIds.length).toBe(30);
+    expect(proceduralIds.length).toBe(48);
     for (const id of proceduralIds) {
       expect(id).toBeGreaterThanOrEqual(PROCEDURAL_ID_BASE);
     }
@@ -383,8 +383,8 @@ describe('IAP gate behavior (DEA-78 / DEA-79)', () => {
 
   it('getCallPool with custom proceduralCountPerBand', () => {
     const pool = getCallPool(sacredCalls, true, { proceduralCountPerBand: 2 });
-    // 18 sacred + (2 per band × 5 bands) = 28
-    expect(pool.length).toBe(18 + 10);
+    // 18 sacred + (2 per band × 8 bands) = 34
+    expect(pool.length).toBe(18 + 16);
   });
 
   it('getCallPool with custom fragments (smaller library)', () => {

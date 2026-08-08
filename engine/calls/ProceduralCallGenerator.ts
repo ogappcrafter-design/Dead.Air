@@ -15,7 +15,8 @@
 // Id range: generated calls use ids >= 1000 to avoid collision with the
 // sacred 18 (ids 0..17). The CallManager registry is keyed by id, so
 // collisions would silently overwrite sacred calls — this guard makes
-// that impossible.
+// that impossible. Callers generating into a disjoint range (e.g. seasonal
+// calls) pass a custom idBase to the constructor.
 
 import type { CallData, CallChoice } from './types';
 import type { CallType } from '../../lib/constants';
@@ -73,6 +74,7 @@ export class ProceduralCallGenerator {
   constructor(
     fragments: ReadonlyArray<FragmentLibrary>,
     variations: ReadonlyArray<BandVariation> = BAND_VARIATIONS,
+    idBase: number = PROCEDURAL_ID_BASE,
   ) {
     this.validateFragments(fragments);
     this.validateVariations(variations, fragments);
@@ -80,7 +82,7 @@ export class ProceduralCallGenerator {
     this.variations = variations;
     this.fragmentsByBand = new Map(this.fragments.map((lib) => [lib.band, lib]));
     this.variationsByBand = new Map(this.variations.map((v) => [v.band, v]));
-    this.nextId = PROCEDURAL_ID_BASE;
+    this.nextId = idBase;
   }
 
   /**
@@ -248,7 +250,7 @@ export class ProceduralCallGenerator {
 
   /** Reset the id counter (test-only). */
   reset(): void {
-    this.nextId = PROCEDURAL_ID_BASE;
+    this.nextId = idBase;
   }
 
   /**

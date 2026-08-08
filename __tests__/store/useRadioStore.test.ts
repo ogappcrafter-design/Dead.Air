@@ -37,7 +37,7 @@ describe('useRadioStore', () => {
     setFrequency(50); // Below minimum
     expect(useRadioStore.getState().frequency).toBe(87.5);
     setFrequency(200); // Above maximum
-    expect(useRadioStore.getState().frequency).toBe(108.0);
+    expect(useRadioStore.getState().frequency).toBe(172.0);
   });
 
   it('sets volume', () => {
