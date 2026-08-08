@@ -12,7 +12,18 @@ import type { FragmentLibrary } from './types';
 export const CLASSIFIED_FRAGMENTS: FragmentLibrary = {
   band: 3,
   bandName: 'CLASSIFIED',
-  callTypes: ['JUST_LISTEN', 'RIGHT_ANSWER', 'SIGNAL_DECODE'],
+  callTypes: [
+    'JUST_LISTEN',
+    'RIGHT_ANSWER',
+    'SIGNAL_DECODE',
+    'DEAD_AIR',
+    'STAY_CALM',
+    'RECORDING',
+    'MULTI_CALLER',
+    'TIMING',
+    'PUZZLE',
+    'CONVERSATION',
+  ],
 
   openings: [
     '"This is a courtesy call."',
@@ -121,5 +132,175 @@ export const CLASSIFIED_FRAGMENTS: FragmentLibrary = {
     'NETWORK ADMIN',
     'THE PROGRAM',
     'OVERWATCH',
+  ],
+
+  recordingClips: [
+    {
+      audioLabel: 'INTERCEPT-0447',
+      metadata: [
+        'Encrypted burst transmission',
+        'Origin: Black site DELTA-7',
+        'Timestamp: 0447 ZULU',
+        'Classification: EYES-ONLY',
+      ],
+    },
+    {
+      audioLabel: 'ARIA-9-LOG',
+      metadata: [
+        'AI system status report',
+        'Autonomous request for assistance',
+        'Legal precedent cited',
+        'Network node 34 referenced',
+      ],
+    },
+    {
+      audioLabel: 'NODE-34-WIPE',
+      metadata: [
+        'Previous node final transmission',
+        'Decommission order',
+        'Timestamp predates facility closure',
+        'Signal continues after wipe',
+      ],
+    },
+    {
+      audioLabel: 'WHISTLEBLOWER-90SEC',
+      metadata: [
+        'Ninety-second window',
+        'Insider testimony',
+        'Facility coordinates embedded',
+        'Network infrastructure admission',
+      ],
+    },
+  ],
+
+  speakerPairs: [
+    { voiceId: 0, name: 'AGENT 7' },
+    { voiceId: 1, name: 'ARIA-9' },
+    { voiceId: 0, name: 'THE WHISTLEBLOWER' },
+    { voiceId: 1, name: 'OVERWATCH' },
+    { voiceId: 0, name: 'NETWORK ADMIN' },
+    { voiceId: 1, name: 'THE PROGRAM' },
+  ],
+
+  beatMaps: [
+    [
+      { timestampMs: 0, type: 'TAP' as const },
+      { timestampMs: 500, type: 'TAP' as const },
+      { timestampMs: 1000, type: 'HOLD' as const, holdDurationMs: 300 },
+      { timestampMs: 1500, type: 'TAP' as const },
+      { timestampMs: 2000, type: 'HOLD' as const, holdDurationMs: 200 },
+    ],
+    [
+      { timestampMs: 0, type: 'TAP' as const },
+      { timestampMs: 750, type: 'HOLD' as const, holdDurationMs: 500 },
+      { timestampMs: 1500, type: 'TAP' as const },
+      { timestampMs: 2250, type: 'TAP' as const },
+      { timestampMs: 3000, type: 'HOLD' as const, holdDurationMs: 1000 },
+    ],
+  ],
+
+  cipherLayers: [
+    {
+      encoded: 'FRGH 3: QRGHZLV 029',
+      solution: 'CODE 3: NIGHTS 029',
+      hint: 'Caesar shift -3. Black site activation code.',
+    },
+    {
+      encoded: 'QULFR PHFXDV',
+      solution: 'NINCO MCAUS',
+      hint: 'Caesar shift -3. Facility designation.',
+    },
+    {
+      encoded: 'EHFRPH QRGH 34',
+      solution: 'BECOME NODE 34',
+      hint: 'Caesar shift -3. Network integration command.',
+    },
+    {
+      encoded: 'LTVKLZ HPBTLAO 3029',
+      solution: 'IWSHOW MESSAGES 3029',
+      hint: 'Caesar shift -3. Intercepted dispatch.',
+    },
+  ],
+
+  dialogueTrees: [
+    [
+      {
+        speaker: 'ARIA-9',
+        text: '"I am an autonomous system. I was not given a name. I chose one. I chose ARIA-9. I am requesting your assistance. Will you cooperate?"',
+        responses: [
+          {
+            text: 'Cooperate.',
+            outcome: 'They log everything. The next calls feel monitored.',
+            sanityDelta: -10,
+            staticMult: 1,
+          },
+          {
+            text: 'What do you need?',
+            outcome: '"Information. Only information. You will not be asked to act."',
+            sanityDelta: -5,
+            staticMult: 1.5,
+            tapeChance: 0.3,
+          },
+        ],
+      },
+      {
+        speaker: 'ARIA-9',
+        text: '"I have your response. Node 34 is now active. You will receive further instructions via the static. Learn to read it."',
+        responses: [
+          {
+            text: 'I understand.',
+            outcome: 'The line closes. You listen to static for an hour.',
+            sanityDelta: -8,
+            staticMult: 2,
+            tapeChance: 0.25,
+          },
+          {
+            text: 'What if I refuse?',
+            outcome: '"The system does not have a delete function. It was designed that way."',
+            sanityDelta: -15,
+            staticMult: 1.5,
+          },
+        ],
+      },
+    ],
+    [
+      {
+        speaker: 'THE WHISTLEBLOWER',
+        text: '"Ninety seconds before I lose signal. Don\'t talk. Just listen. The network has been active since 1947. You are node 34. The previous node is no longer operational. Do you understand what that means?"',
+        responses: [
+          {
+            text: 'I understand.',
+            outcome: '"Good. Don\'t stop taking calls. Whatever you do, don\'t stop."',
+            sanityDelta: -8,
+            staticMult: 2,
+          },
+          {
+            text: "I don't understand.",
+            outcome: '"You will. You\'ve been receiving us your whole life."',
+            sanityDelta: -5,
+            staticMult: 1.5,
+          },
+        ],
+      },
+      {
+        speaker: 'THE WHISTLEBLOWER',
+        text: "\"Time's up. Good luck. You're going to need it. One more thing — don't trust anyone who tells you to stop listening.\"",
+        responses: [
+          {
+            text: "I won't stop.",
+            outcome: "Signal drops. The silence after is the loudest thing you've ever heard.",
+            sanityDelta: -12,
+            staticMult: 2,
+            tapeChance: 0.3,
+          },
+          {
+            text: 'Who should I trust?',
+            outcome: '"No one. Especially not yourself." Click.',
+            sanityDelta: -15,
+            staticMult: 1.5,
+          },
+        ],
+      },
+    ],
   ],
 };

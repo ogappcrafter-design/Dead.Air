@@ -13,7 +13,16 @@ import type { FragmentLibrary } from './types';
 export const LIVING_FRAGMENTS: FragmentLibrary = {
   band: 0,
   bandName: 'LIVING',
-  callTypes: ['JUST_LISTEN', 'RIGHT_ANSWER', 'DEAD_AIR'],
+  callTypes: [
+    'JUST_LISTEN',
+    'RIGHT_ANSWER',
+    'DEAD_AIR',
+    'RECORDING',
+    'MULTI_CALLER',
+    'TIMING',
+    'PUZZLE',
+    'CONVERSATION',
+  ],
 
   openings: [
     '"Hello? Sorry, I know it\'s late."',
@@ -119,5 +128,166 @@ export const LIVING_FRAGMENTS: FragmentLibrary = {
     'INSOMNIAC',
     'POLITE STRANGER',
     'CONFESSION',
+  ],
+
+  recordingClips: [
+    {
+      audioLabel: 'ANSWERING_MACHINE_0247',
+      metadata: [
+        'Call logged at 2:47 AM',
+        'Caller ID blocked',
+        'Background: kitchen faucet running',
+        'Voice matches homeowner',
+      ],
+    },
+    {
+      audioLabel: 'BABY_MONITOR_NIGHT4',
+      metadata: [
+        'No infant in residence',
+        'Recorded from empty crib',
+        'Whispered: "go back to sleep"',
+        'Duration exceeds monitor capacity',
+      ],
+    },
+    {
+      audioLabel: 'DRIVEWAY_CAM_2317',
+      metadata: [
+        'Vehicle never arrives',
+        'Garage opens untriggered',
+        'Figure enters through front door',
+        'No exit recorded',
+      ],
+    },
+    {
+      audioLabel: 'VOICEMAIL_LOOP_7',
+      metadata: [
+        'Identical message left 7 times',
+        'All timestamps identical',
+        'Caller voice matches machine owner',
+        'Tape degrades with each repeat',
+      ],
+    },
+  ],
+
+  speakerPairs: [
+    { voiceId: 0, name: 'THE WIFE' },
+    { voiceId: 1, name: 'THE OTHER' },
+    { voiceId: 0, name: 'THE NEIGHBOR' },
+    { voiceId: 1, name: 'SOMEONE IN HIS VOICE' },
+    { voiceId: 0, name: 'THE MOTHER' },
+    { voiceId: 1, name: 'THE DAUGHTER' },
+  ],
+
+  beatMaps: [
+    [
+      { timestampMs: 0, type: 'TAP' as const },
+      { timestampMs: 600, type: 'TAP' as const },
+      { timestampMs: 1200, type: 'TAP' as const },
+      { timestampMs: 1800, type: 'HOLD' as const, holdDurationMs: 400 },
+    ],
+    [
+      { timestampMs: 0, type: 'TAP' as const },
+      { timestampMs: 800, type: 'HOLD' as const, holdDurationMs: 300 },
+      { timestampMs: 1400, type: 'TAP' as const },
+      { timestampMs: 2200, type: 'TAP' as const },
+    ],
+  ],
+
+  cipherLayers: [
+    { encoded: 'EHJRZLQ KWVSZ', solution: 'BEDROOM WINDOW', hint: 'Each letter shifted by +3' },
+    {
+      encoded: 'VJKU KU QPF VJGP VJGP',
+      solution: 'THIS IS NOT THEM THEM',
+      hint: 'Each letter shifted by +2',
+    },
+    { encoded: 'ZIFUZ WKWHPOAW', solution: 'CLOSE BACKYARD', hint: 'Caesar shift: -4' },
+    { encoded: 'WUYQAWJSIYWJ', solution: 'DONTOPENIT', hint: 'Caesar shift: +4' },
+  ],
+
+  dialogueTrees: [
+    [
+      {
+        speaker: 'NEIGHBOR',
+        text: '"You\'re new here, aren\'t you? I can tell. We all can."',
+        responses: [
+          {
+            text: "I've lived here for years.",
+            outcome: 'They smile. It doesn\'t reach their eyes. "Have you? Have you really?"',
+            sanityDelta: -5,
+            staticMult: 1.5,
+          },
+          {
+            text: 'What do you mean "we"?',
+            outcome:
+              'They gesture at the dark houses. Every porch has someone standing on it. Watching.',
+            sanityDelta: -8,
+            staticMult: 2,
+          },
+        ],
+      },
+      {
+        speaker: 'NEIGHBOR',
+        text: '"The previous family left suddenly. You should check the basement."',
+        responses: [
+          {
+            text: 'I already did.',
+            outcome: '"Then you know." Click. The dial tone sounds like breathing.',
+            sanityDelta: -10,
+            staticMult: 2,
+            tapeChance: 0.2,
+          },
+          {
+            text: "I don't have a basement.",
+            outcome:
+              'Silence. "That\'s what they said too." The line goes cold. The floor creaks beneath you.',
+            sanityDelta: -12,
+            staticMult: 1.5,
+          },
+        ],
+      },
+    ],
+    [
+      {
+        speaker: 'THE WIFE',
+        text: '"I heard you on the phone last night. Who was that?"',
+        responses: [
+          {
+            text: "I wasn't on the phone.",
+            outcome:
+              '"I heard your voice. Through the baby monitor. You were talking to someone." She sounds afraid. Of you.',
+            sanityDelta: -10,
+            staticMult: 2,
+          },
+          {
+            text: 'Just a wrong number.',
+            outcome:
+              '"They knew your name." Long pause. "They knew mine too." The house settles. The walls listen.',
+            sanityDelta: -8,
+            staticMult: 1.5,
+          },
+        ],
+      },
+      {
+        speaker: 'THE WIFE',
+        text: '"The dog won\'t go in the backyard anymore. Did you do something to it?"',
+        responses: [
+          {
+            text: "I haven't touched the backyard.",
+            outcome:
+              '"Something did. The grass grows in patterns now." She hangs up. You look out the window. It does.',
+            sanityDelta: -12,
+            staticMult: 2,
+            tapeChance: 0.15,
+          },
+          {
+            text: "Maybe it's just old.",
+            outcome:
+              'She laughs. "Nothing gets old in this neighborhood. Nothing stays dead either." The call ends.',
+            sanityDelta: -10,
+            staticMult: 1.5,
+          },
+        ],
+      },
+    ],
   ],
 };

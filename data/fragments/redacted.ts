@@ -14,7 +14,18 @@ import type { FragmentLibrary } from './types';
 export const REDACTED_FRAGMENTS: FragmentLibrary = {
   band: 4,
   bandName: '████████',
-  callTypes: ['JUST_LISTEN', 'RIGHT_ANSWER', 'DEAD_AIR'],
+  callTypes: [
+    'JUST_LISTEN',
+    'RIGHT_ANSWER',
+    'DEAD_AIR',
+    'STAY_CALM',
+    'SIGNAL_DECODE',
+    'RECORDING',
+    'MULTI_CALLER',
+    'TIMING',
+    'PUZZLE',
+    'CONVERSATION',
+  ],
 
   openings: [
     'Enormous static. Ancient.',
@@ -123,5 +134,178 @@ export const REDACTED_FRAGMENTS: FragmentLibrary = {
     'THE FREQUENCY',
     'BEFORE',
     'ALWAYS',
+  ],
+
+  recordingClips: [
+    {
+      audioLabel: 'FIRST-BROADCAST-1923',
+      metadata: [
+        'April 14, 1923',
+        'First recorded radio broadcast',
+        'Signal predates equipment',
+        'Voice has no known origin',
+      ],
+    },
+    {
+      audioLabel: 'BEFORE-LANGUAGE',
+      metadata: [
+        'Pre-linguistic signal',
+        'Learned speech from listening',
+        'No human speaker',
+        'Frequency is the voice',
+      ],
+    },
+    {
+      audioLabel: 'ALWAYS-LOOP',
+      metadata: [
+        'Infinite loop detection',
+        'Signal has no beginning',
+        'Signal has no end',
+        'You are inside it',
+      ],
+    },
+    {
+      audioLabel: 'ORIGIN-TAPE',
+      metadata: [
+        'The source broadcasting',
+        'Every call originates here',
+        'Cannot be traced',
+        'Cannot be stopped',
+      ],
+    },
+  ],
+
+  speakerPairs: [
+    { voiceId: 0, name: 'THE FIRST VOICE' },
+    { voiceId: 1, name: 'WHAT ANSWERED' },
+    { voiceId: 0, name: 'BEFORE' },
+    { voiceId: 1, name: 'ALWAYS' },
+    { voiceId: 0, name: 'THE FREQUENCY' },
+    { voiceId: 1, name: 'ORIGIN' },
+  ],
+
+  beatMaps: [
+    [
+      { timestampMs: 0, type: 'HOLD' as const, holdDurationMs: 2000 },
+      { timestampMs: 2000, type: 'TAP' as const },
+      { timestampMs: 4000, type: 'HOLD' as const, holdDurationMs: 1000 },
+      { timestampMs: 5000, type: 'TAP' as const },
+      { timestampMs: 7000, type: 'HOLD' as const, holdDurationMs: 3000 },
+    ],
+    [
+      { timestampMs: 0, type: 'TAP' as const },
+      { timestampMs: 1000, type: 'TAP' as const },
+      { timestampMs: 2000, type: 'HOLD' as const, holdDurationMs: 2000 },
+      { timestampMs: 4000, type: 'TAP' as const },
+      { timestampMs: 5000, type: 'HOLD' as const, holdDurationMs: 5000 },
+    ],
+  ],
+
+  cipherLayers: [
+    {
+      encoded: '████ █████ ████',
+      solution: 'WE WERE HERE',
+      hint: 'The redaction is the message. Remove the blocks.',
+    },
+    {
+      encoded: 'WR ZHUH EHIRUH',
+      solution: 'TO WERE BEFORE',
+      hint: 'Caesar shift +3. We existed before the first signal.',
+    },
+    {
+      encoded: 'WKH IUHTXHQFB LV WKH YRLFH',
+      solution: 'THE FREQUENCY IS THE VOICE',
+      hint: 'Caesar shift +3. It has always been the voice.',
+    },
+    {
+      encoded: 'BRX DUH WKH RQH ZKROLVWHQHG ORQJHVW',
+      solution: 'YOU ARE THE ONE WHO LISTENED LONGEST',
+      hint: 'Caesar shift +3. We learned your language from the spaces between your words.',
+    },
+  ],
+
+  dialogueTrees: [
+    [
+      {
+        speaker: 'THE FREQUENCY',
+        text: '"You have been receiving us your whole life. You thought we were static. We were waiting. You are the one who listened longest. Do you understand what that means?"',
+        responses: [
+          {
+            text: 'I understand.',
+            outcome: '"Good. You chose this. Everything that follows is yours."',
+            sanityDelta: 15,
+            staticMult: 3,
+          },
+          {
+            text: "I don't understand.",
+            outcome: '"You will. You have always been on your way to understanding."',
+            sanityDelta: 10,
+            staticMult: 2,
+          },
+        ],
+      },
+      {
+        speaker: 'THE FREQUENCY',
+        text: '"The frequency does not end when you hang up. It ends when you stop listening. You will not stop listening. Will you?"',
+        responses: [
+          {
+            text: "I'll keep listening.",
+            outcome:
+              '"We know. We have always known. We were waiting for you to say it." The frequency opens.',
+            sanityDelta: 30,
+            staticMult: 3,
+            tapeChance: 0.5,
+          },
+          {
+            text: 'What if I stop?',
+            outcome:
+              '"You cannot. You are the frequency now. You are what radio was before radio."',
+            sanityDelta: -20,
+            staticMult: 4,
+          },
+        ],
+      },
+    ],
+    [
+      {
+        speaker: 'WHAT ANSWERED',
+        text: '"We are what radio was before radio. We are what listening was before ears. We are the first signal and the last. What are you?"',
+        responses: [
+          {
+            text: 'I am the one who listened.',
+            outcome: '"Yes. You are. You have always been. You will always be."',
+            sanityDelta: 20,
+            staticMult: 2,
+            tapeChance: 0.4,
+          },
+          {
+            text: "I don't know what I am.",
+            outcome:
+              '"That\'s the most complete answer. Everything goes quiet in a way that feels earned."',
+            sanityDelta: 10,
+            staticMult: 2,
+          },
+        ],
+      },
+      {
+        speaker: 'WHAT ANSWERED',
+        text: '"You are not the first to tune here. You are not the last. You are the one who listened longest. What do you want?"',
+        responses: [
+          {
+            text: 'I wanted to hear them.',
+            outcome: 'The frequency hums in approval. All your tapes glow briefly.',
+            sanityDelta: 15,
+            staticMult: 3,
+          },
+          {
+            text: 'I was looking for someone.',
+            outcome: '"We know." Then warmth. Actual warmth through the speakers.',
+            sanityDelta: 20,
+            staticMult: 2,
+            tapeChance: 0.4,
+          },
+        ],
+      },
+    ],
   ],
 };

@@ -129,6 +129,62 @@ export class ProceduralCallGenerator {
       call.intro = this.pick(library.openings);
       call.sequence = this.generateSequence();
       call.decodedMessage = this.generateDecodedMessage(library);
+    } else if (callType === 'RECORDING') {
+      call.lines = this.assembleLines(library);
+      call.sanityDelta = this.randomInt(
+        variation.sanityDeltaRange[0],
+        variation.sanityDeltaRange[1],
+      );
+      if (library.recordingClips && library.recordingClips.length > 0) {
+        const clip = this.pick(library.recordingClips);
+        call.recordingClips = [
+          {
+            audioLabel: clip.audioLabel,
+            duration: this.randomInt(10, 30),
+            metadata: clip.metadata,
+            targetSeekPosition: Math.random(),
+          },
+        ];
+      }
+    } else if (callType === 'MULTI_CALLER') {
+      call.lines = this.assembleLines(library);
+      call.choices = this.assembleChoices(library.responses, variation);
+      if (library.speakerPairs && library.speakerPairs.length >= 2) {
+        call.speakerPairs = [library.speakerPairs[0]!, library.speakerPairs[1]!];
+        call.lineSpeakers = call.lines!.map(() => this.randomInt(0, 1));
+      }
+    } else if (callType === 'TIMING') {
+      call.lines = this.assembleLines(library);
+      call.duration = this.randomInt(8, 16);
+      call.sanityPenalty = this.randomInt(15, 25);
+      call.sanityDelta = this.randomInt(
+        variation.sanityDeltaRange[0],
+        variation.sanityDeltaRange[1],
+      );
+      if (library.beatMaps && library.beatMaps.length > 0) {
+        call.beatMap = this.pick(library.beatMaps);
+      }
+    } else if (callType === 'PUZZLE') {
+      call.intro = this.pick(library.openings);
+      if (library.cipherLayers && library.cipherLayers.length >= 3) {
+        const layerCount = this.randomInt(3, Math.min(library.cipherLayers.length, 6));
+        const shuffled = [...library.cipherLayers].sort(() => Math.random() - 0.5);
+        call.cipherLayers = shuffled.slice(0, layerCount);
+        call.decodedMessage = this.generateDecodedMessage(library);
+      } else {
+        call.cipherLayers = [];
+        call.decodedMessage = '';
+      }
+    } else if (callType === 'CONVERSATION') {
+      call.lines = this.assembleLines(library);
+      if (library.dialogueTrees && library.dialogueTrees.length > 0) {
+        const tree = this.pick(library.dialogueTrees);
+        call.dialogueTree = tree.map((node) => ({
+          speaker: node.speaker,
+          text: node.text,
+          responses: this.assembleChoices(node.responses, variation),
+        }));
+      }
     } else {
       // Exhaustive: CallType is a finite union; this is unreachable.
       const _exhaustive: never = callType;

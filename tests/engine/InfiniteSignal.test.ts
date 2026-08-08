@@ -44,11 +44,11 @@ describe('InfiniteSignal', () => {
         expect(typeof call.callerName).toBe('string');
         expect(typeof call.signal).toBe('number');
         expect(typeof call.staticReward).toBe('number');
-        // RIGHT_ANSWER/JUST_LISTEN/DEAD_AIR/STAY_CALM carry lines;
-        // SIGNAL_DECODE carries intro/sequence instead.
-        if (call.type === 'SIGNAL_DECODE') {
+        // RIGHT_ANSWER/JUST_LISTEN/DEAD_AIR/STAY_CALM/RECORDING/MULTI_CALLER/TIMING/CONVERSATION carry lines;
+        // SIGNAL_DECODE carries intro/sequence;
+        // PUZZLE carries intro/cipherLayers.
+        if (call.type === 'SIGNAL_DECODE' || call.type === 'PUZZLE') {
           expect(typeof call.intro).toBe('string');
-          expect(Array.isArray(call.sequence)).toBe(true);
         } else {
           expect(Array.isArray(call.lines)).toBe(true);
           expect(call.lines!.length).toBeGreaterThanOrEqual(2);

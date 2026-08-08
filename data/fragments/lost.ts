@@ -12,7 +12,16 @@ import type { FragmentLibrary } from './types';
 export const LOST_FRAGMENTS: FragmentLibrary = {
   band: 2,
   bandName: 'LOST',
-  callTypes: ['JUST_LISTEN', 'RIGHT_ANSWER', 'DEAD_AIR'],
+  callTypes: [
+    'JUST_LISTEN',
+    'RIGHT_ANSWER',
+    'DEAD_AIR',
+    'RECORDING',
+    'MULTI_CALLER',
+    'TIMING',
+    'PUZZLE',
+    'CONVERSATION',
+  ],
 
   openings: [
     "The signal comes in low. Like it's traveling a long way.",
@@ -128,5 +137,180 @@ export const LOST_FRAGMENTS: FragmentLibrary = {
     'LAST CALL',
     'OLD FRIEND',
     'BELOVED',
+  ],
+
+  recordingClips: [
+    {
+      audioLabel: 'LAST_VOICEMAIL_0621',
+      metadata: [
+        'Final message left on birthday',
+        'Background: birds and wind',
+        'Voice is calm, unafraid',
+        'Duration: 3 minutes 47 seconds',
+      ],
+    },
+    {
+      audioLabel: 'FOUND_TAPE_WOODS',
+      metadata: [
+        'Recovered from hiking trail',
+        'Contains laughter and quiet talking',
+        'No one is identified',
+        'Tape stops mid-sentence',
+      ],
+    },
+    {
+      audioLabel: 'BEDSIDE_RECORDING',
+      metadata: [
+        'Recorded in final hours',
+        'Voice is gentle, addressing family by name',
+        'Background: hospital monitors fading',
+        'Ends with "I love you so much"',
+      ],
+    },
+    {
+      audioLabel: 'ANSWERING_MACHINE_FINAL',
+      metadata: [
+        'Left for someone who never checked it',
+        'Voice knows this is the last call',
+        'Says "don\'t carry this for me"',
+        'Magnetic tape still warm',
+      ],
+    },
+  ],
+
+  speakerPairs: [
+    { voiceId: 0, name: 'THE FATHER' },
+    { voiceId: 1, name: 'THE SON' },
+    { voiceId: 0, name: 'THE MOTHER' },
+    { voiceId: 1, name: 'THE DAUGHTER' },
+    { voiceId: 0, name: 'THE FRIEND' },
+    { voiceId: 1, name: 'THE ONE LEFT BEHIND' },
+  ],
+
+  beatMaps: [
+    [
+      { timestampMs: 0, type: 'TAP' as const },
+      { timestampMs: 700, type: 'TAP' as const },
+      { timestampMs: 1400, type: 'HOLD' as const, holdDurationMs: 600 },
+      { timestampMs: 2100, type: 'TAP' as const },
+    ],
+    [
+      { timestampMs: 0, type: 'HOLD' as const, holdDurationMs: 1000 },
+      { timestampMs: 1100, type: 'TAP' as const },
+      { timestampMs: 1800, type: 'TAP' as const },
+      { timestampMs: 2500, type: 'TAP' as const },
+    ],
+  ],
+
+  cipherLayers: [
+    {
+      encoded: 'WKHQ BRX DUH UHDGB KLPP',
+      solution: 'THEN YOU ARE READY HIM',
+      hint: 'Caesar shift: +3',
+    },
+    { encoded: 'HOOBRXZKHQLWVTXLHW', solution: 'ALLYOUWHENITSQUIET', hint: 'Caesar shift: +3' },
+    {
+      encoded: 'BRX NQRZ ZKR WKLV LV IRU',
+      solution: 'YOU KNOW WHO THIS IS FOR',
+      hint: 'Caesar shift: +3',
+    },
+    {
+      encoded: 'FRPH VRRQHU GRQW ZDLW',
+      solution: 'COME SOONER DONT WAIT',
+      hint: 'Caesar shift: +3',
+    },
+  ],
+
+  dialogueTrees: [
+    [
+      {
+        speaker: 'THE FATHER',
+        text: '"Yo. I know this is weird. Just listen, alright? I don\'t have long on this line."',
+        responses: [
+          {
+            text: "I'm listening.",
+            outcome:
+              'He breathes out. Relieved. "Good. That\'s all I needed. You were always the best listener." The static softens.',
+            sanityDelta: 15,
+            staticMult: 2,
+            tapeChance: 0.3,
+          },
+          {
+            text: 'Who is this?',
+            outcome:
+              'Silence. Then, quietly: "You know. You\'ve always known." The signal wavers. You do know.',
+            sanityDelta: 5,
+            staticMult: 1.5,
+          },
+        ],
+      },
+      {
+        speaker: 'THE FATHER',
+        text: '"Tell my people I\'m good. That\'s all I needed to say."',
+        responses: [
+          {
+            text: "I'll tell them.",
+            outcome:
+              'Relief. Real relief. You feel it through the static. He describes who to tell. You will find them.',
+            sanityDelta: 15,
+            staticMult: 2,
+            tapeChance: 0.35,
+          },
+          {
+            text: 'They already know.',
+            outcome:
+              '"Maybe they do. Maybe they always did." Warmth. Like a hand on your shoulder. Then quiet.',
+            sanityDelta: 10,
+            staticMult: 2,
+            tapeChance: 0.2,
+          },
+        ],
+      },
+    ],
+    [
+      {
+        speaker: 'THE MOTHER',
+        text: '"Baby. Don\'t fuss. I don\'t have long on this line. But I need you to hear this."',
+        responses: [
+          {
+            text: "I'm here, Mom.",
+            outcome:
+              'She laughs. It sounds like sunlight through a kitchen window. "I know you are. I\'ve always known." The static holds.',
+            sanityDelta: 20,
+            staticMult: 3,
+            tapeChance: 0.3,
+          },
+          {
+            text: 'I miss you.',
+            outcome:
+              'Silence. Long. Then: "I know. I can feel it. Every time you miss me, I feel it." The static swells. Like a hug.',
+            sanityDelta: 20,
+            staticMult: 3,
+            tapeChance: 0.2,
+          },
+        ],
+      },
+      {
+        speaker: 'THE MOTHER',
+        text: '"You take care of yourself. Look out for the ones you love. And stop carrying guilt around like it\'s yours to keep."',
+        responses: [
+          {
+            text: "I'll try.",
+            outcome:
+              '"That\'s all I ever asked." The line goes warm. Then warm. Then gone. You feel lighter.',
+            sanityDelta: 10,
+            staticMult: 2,
+          },
+          {
+            text: "I can't promise that.",
+            outcome:
+              '"I know. I know you can\'t. But I had to say it." She sounds like she\'s smiling. "I\'ll keep saying it. Every time it\'s quiet."',
+            sanityDelta: 8,
+            staticMult: 2,
+            tapeChance: 0.25,
+          },
+        ],
+      },
+    ],
   ],
 };

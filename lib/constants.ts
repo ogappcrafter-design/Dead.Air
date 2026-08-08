@@ -11,6 +11,11 @@ export const CALL_TYPES = [
   'RIGHT_ANSWER',
   'SIGNAL_DECODE',
   'STAY_CALM',
+  'RECORDING',
+  'MULTI_CALLER',
+  'TIMING',
+  'PUZZLE',
+  'CONVERSATION',
 ] as const;
 export type CallType = (typeof CALL_TYPES)[number];
 

@@ -84,7 +84,16 @@ export interface CallManagerConfig {
 
 /** Map call.type to handler route label. Wave 2 renderers register here. */
 export type CallTypeRoute =
-  'JUST_LISTEN' | 'DEAD_AIR' | 'RIGHT_ANSWER' | 'SIGNAL_DECODE' | 'STAY_CALM';
+  | 'JUST_LISTEN'
+  | 'DEAD_AIR'
+  | 'RIGHT_ANSWER'
+  | 'SIGNAL_DECODE'
+  | 'STAY_CALM'
+  | 'RECORDING'
+  | 'MULTI_CALLER'
+  | 'TIMING'
+  | 'PUZZLE'
+  | 'CONVERSATION';
 
 const routeForType = (type: CallType): CallTypeRoute => type; // 1:1 today
 

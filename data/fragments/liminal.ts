@@ -12,7 +12,17 @@ import type { FragmentLibrary } from './types';
 export const LIMINAL_FRAGMENTS: FragmentLibrary = {
   band: 1,
   bandName: 'LIMINAL',
-  callTypes: ['JUST_LISTEN', 'RIGHT_ANSWER', 'STAY_CALM', 'DEAD_AIR'],
+  callTypes: [
+    'JUST_LISTEN',
+    'RIGHT_ANSWER',
+    'STAY_CALM',
+    'DEAD_AIR',
+    'RECORDING',
+    'MULTI_CALLER',
+    'TIMING',
+    'PUZZLE',
+    'CONVERSATION',
+  ],
 
   openings: [
     '"I\'ve called before. I know I have. This feels familiar."',
@@ -120,5 +130,183 @@ export const LIMINAL_FRAGMENTS: FragmentLibrary = {
     '3:47 AM',
     'TIMESTAMP',
     'DEJA VU',
+  ],
+
+  recordingClips: [
+    {
+      audioLabel: 'LOOP_0347_RECORDING',
+      metadata: [
+        'Recorded at 3:47 AM',
+        "Caller's voice plays backward on second listen",
+        'Timestamp never changes',
+        'Duration: unknown',
+      ],
+    },
+    {
+      audioLabel: 'ECHO_TAPE_RECOVERED',
+      metadata: [
+        "Tape found in hallway that doesn't exist",
+        'Two voices, identical',
+        "Recording of a call that hasn't happened yet",
+        'Magnetic degradation loops',
+      ],
+    },
+    {
+      audioLabel: 'PREVOICEMAIL_TOMORROW',
+      metadata: [
+        'Left before it was recorded',
+        'Caller describes events that happen 24 hours later',
+        'Voicemail timestamp is tomorrow',
+        'Plays differently each time',
+      ],
+    },
+    {
+      audioLabel: 'HALLWAY_AUDIO_ANNEX',
+      metadata: [
+        'Corridor audio loop',
+        'Footsteps never complete',
+        'Door opens at second 3:47',
+        'No one walks through',
+      ],
+    },
+  ],
+
+  speakerPairs: [
+    { voiceId: 0, name: 'THE FIRST CALLER' },
+    { voiceId: 1, name: 'THE ECHO' },
+    { voiceId: 0, name: "YESTERDAY'S VOICE" },
+    { voiceId: 1, name: "TOMORROW'S VOICE" },
+    { voiceId: 0, name: 'THE ONE WHO REMEMBERS' },
+    { voiceId: 1, name: 'THE ONE WHO FORGETS' },
+  ],
+
+  beatMaps: [
+    [
+      { timestampMs: 0, type: 'TAP' as const },
+      { timestampMs: 347, type: 'TAP' as const },
+      { timestampMs: 694, type: 'TAP' as const },
+      { timestampMs: 1041, type: 'HOLD' as const, holdDurationMs: 347 },
+    ],
+    [
+      { timestampMs: 0, type: 'TAP' as const },
+      { timestampMs: 500, type: 'TAP' as const },
+      { timestampMs: 1000, type: 'TAP' as const },
+      { timestampMs: 1500, type: 'TAP' as const },
+      { timestampMs: 2000, type: 'HOLD' as const, holdDurationMs: 500 },
+    ],
+  ],
+
+  cipherLayers: [
+    {
+      encoded: 'WKH NDFN LV DOPDBB OHDYH',
+      solution: 'THE HALL IS ALMOST GONE',
+      hint: 'Caesar shift: +3',
+    },
+    {
+      encoded: '347 AM 347 AM 347 AM',
+      solution: 'THE TIME IS NOW',
+      hint: 'Replace each 3-4-7 with letter position',
+    },
+    {
+      encoded: 'ZLUQH BRXU VHOI D P HVVDJH',
+      solution: 'WRITE YOURSELF A MESSAGE',
+      hint: 'Caesar shift: +3',
+    },
+    {
+      encoded: 'IROWUOOLHDGBPDGHAWKLVFDLO',
+      solution: 'YOUALREADYMADETHISCALL',
+      hint: 'Caesar shift: +4',
+    },
+  ],
+
+  dialogueTrees: [
+    [
+      {
+        speaker: 'THE LOOP',
+        text: '"I\'ve called before. I know I have. This feels familiar. Don\'t you remember?"',
+        responses: [
+          {
+            text: 'I remember.',
+            outcome:
+              'Relief breaks in their voice. They describe a conversation. You recognize none of it. But it was real. Somewhere. Somewhen.',
+            sanityDelta: -15,
+            staticMult: 2,
+            tapeChance: 0.3,
+          },
+          {
+            text: "I don't remember you.",
+            outcome:
+              "\"That's okay. That happens here.\" They hang up gently. You feel like you've lost something you can't name.",
+            sanityDelta: -5,
+            staticMult: 1,
+          },
+        ],
+      },
+      {
+        speaker: 'THE LOOP',
+        text: '"What time is it there? It doesn\'t matter. It doesn\'t matter what it says."',
+        responses: [
+          {
+            text: "It's 3:47.",
+            outcome:
+              "Silence. Then: \"It's always 3:47. I've been calling for years and it's always 3:47.\" Your clock reads the same.",
+            sanityDelta: -12,
+            staticMult: 1.5,
+          },
+          {
+            text: "Time doesn't work here.",
+            outcome:
+              '"Now you understand." The line warps. Your clock reads the same. It will always read the same.',
+            sanityDelta: -10,
+            staticMult: 2,
+            tapeChance: 0.2,
+          },
+        ],
+      },
+    ],
+    [
+      {
+        speaker: 'ECHO',
+        text: '"Your voice sounds different today. Did you change it? Or did I?"',
+        responses: [
+          {
+            text: "It's always been my voice.",
+            outcome:
+              '"No. It hasn\'t. Listen." They play back your voice. It\'s wrong. Slightly off. Like a recording of a recording.',
+            sanityDelta: -10,
+            staticMult: 2,
+          },
+          {
+            text: 'Maybe you changed.',
+            outcome:
+              '"Maybe we both did. Maybe we\'re both echoes of someone who actually made this call." The static deepens.',
+            sanityDelta: -12,
+            staticMult: 1.5,
+            tapeChance: 0.25,
+          },
+        ],
+      },
+      {
+        speaker: 'ECHO',
+        text: '"I keep calling. The call keeps happening. The number keeps finding me."',
+        responses: [
+          {
+            text: 'Stop calling.',
+            outcome:
+              '"I can\'t. The call has to happen." Click. The phone rings immediately. Same number. Same number.',
+            sanityDelta: -10,
+            staticMult: 2,
+          },
+          {
+            text: "I'll answer next time.",
+            outcome:
+              '"You always say that. You always will say that." Warmth, then static, then nothing.',
+            sanityDelta: -8,
+            staticMult: 1.5,
+            tapeChance: 0.2,
+          },
+        ],
+      },
+    ],
   ],
 };

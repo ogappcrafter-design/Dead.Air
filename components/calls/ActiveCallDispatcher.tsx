@@ -7,6 +7,11 @@ import { RightAnswerCall } from '@/components/calls/RightAnswerCall';
 import { DeadAirCall } from '@/components/calls/DeadAirCall';
 import StayCalmCall from '@/components/calls/StayCalmCall';
 import { SignalDecodeCall } from '@/components/calls/SignalDecodeCall';
+import { RecordingCall } from '@/components/calls/RecordingCall';
+import { MultiCallerCall } from '@/components/calls/MultiCallerCall';
+import { TimingCall } from '@/components/calls/TimingCall';
+import { PuzzleCall } from '@/components/calls/PuzzleCall';
+import { ConversationCall } from '@/components/calls/ConversationCall';
 import { SanityOverlay } from './SanityOverlay';
 import { useSanityEffect } from '../../hooks/useSanityEffect';
 
@@ -42,6 +47,16 @@ export function ActiveCallDispatcher() {
       return <StayCalmCall call={activeCall.call} onComplete={onComplete} />;
     case 'SIGNAL_DECODE':
       return <SignalDecodeCall call={activeCall.call} onComplete={onComplete} />;
+    case 'RECORDING':
+      return <RecordingCall call={activeCall.call} onComplete={onComplete} />;
+    case 'MULTI_CALLER':
+      return <MultiCallerCall call={activeCall.call} onComplete={onComplete} />;
+    case 'TIMING':
+      return <TimingCall call={activeCall.call} onComplete={onComplete} />;
+    case 'PUZZLE':
+      return <PuzzleCall call={activeCall.call} onComplete={onComplete} />;
+    case 'CONVERSATION':
+      return <ConversationCall call={activeCall.call} onComplete={onComplete} />;
     default:
       return null;
   }

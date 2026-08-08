@@ -46,6 +46,41 @@ export interface CallData {
   sequence?: number[];
   /** SIGNAL_DECODE decoded message shown on success. */
   decodedMessage?: string;
+  // --- New call type fields (DEA-71) ---
+
+  /** RECORDING: audio clips player can scrub through. */
+  recordingClips?: Array<{
+    audioLabel: string;
+    duration: number; // seconds
+    metadata: string[]; // hidden facts player can reveal
+    targetSeekPosition: number; // 0..1, the "correct" scrub position
+  }>;
+
+  /** MULTI_CALLER: two speakers on the line. */
+  speakerPairs?: Array<{ voiceId: number; name: string }>;
+  /** MULTI_CALLER: which speaker (0|1) says each line, parallel to lines[]. */
+  lineSpeakers?: number[];
+
+  /** TIMING: beat map the player must tap in sync with. */
+  beatMap?: Array<{
+    timestampMs: number;
+    type: 'TAP' | 'HOLD';
+    holdDurationMs?: number; // for HOLD type
+  }>;
+
+  /** PUZZLE: multi-layer cipher decoded within a single call. */
+  cipherLayers?: Array<{
+    encoded: string;
+    solution: string;
+    hint: string;
+  }>;
+
+  /** CONVERSATION: branching dialogue tree (inline in CallData). */
+  dialogueTree?: Array<{
+    speaker: string;
+    text: string;
+    responses: CallChoice[]; // reuses existing CallChoice type
+  }>;
 }
 
 /** Active call lifecycle state machine. */

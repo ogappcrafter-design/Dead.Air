@@ -83,4 +83,42 @@ export interface FragmentLibrary {
   callerIdPrefixes: string[];
   /** Caller name prefix pool (e.g. 'THE', 'AGENT', 'CALLER'). */
   callerNamePrefixes: string[];
+
+  // --- New call type fragment arrays (DEA-71) ---
+  // All optional. Existing band files work unchanged; bands that include
+  // new call types in callTypes[] populate these arrays.
+
+  /** RECORDING: audio clip templates for the scrubbing mechanic. */
+  recordingClips?: Array<{
+    audioLabel: string;
+    metadata: string[];
+  }>;
+
+  /** MULTI_CALLER: speaker pairs for the dual-voice attribution mechanic. */
+  speakerPairs?: Array<{ voiceId: number; name: string }>;
+
+  /** TIMING: beat map templates for the rhythm sync mechanic. */
+  beatMaps?: Array<
+    Array<{
+      timestampMs: number;
+      type: 'TAP' | 'HOLD';
+      holdDurationMs?: number;
+    }>
+  >;
+
+  /** PUZZLE: cipher layer templates for the multi-layer decode mechanic. */
+  cipherLayers?: Array<{
+    encoded: string;
+    solution: string;
+    hint: string;
+  }>;
+
+  /** CONVERSATION: dialogue tree templates for the branching dialogue mechanic. */
+  dialogueTrees?: Array<
+    Array<{
+      speaker: string;
+      text: string;
+      responses: ResponseOption[];
+    }>
+  >;
 }
