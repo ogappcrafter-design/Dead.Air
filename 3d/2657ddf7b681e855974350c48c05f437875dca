@@ -1,0 +1,31 @@
+engine/calls/callTypes.ts
+  s_6bdbc5e5dd7d8a::t_b6668faab05264 1-58
+data/fragments/living.ts
+  s_6bdbc5e5dd7d8a::t_b87a2f65d34b15 1-52
+data/fragments/types.ts
+  s_6bdbc5e5dd7d8a::t_7a26e2d9f6475d 1-47
+data/fragments/variations.ts
+  s_6bdbc5e5dd7d8a::t_1484bb133f1f80 1-40
+data/fragments/lost.ts
+  s_6bdbc5e5dd7d8a::t_31e2c190c8752b 1-51
+data/fragments/liminal.ts
+  s_6bdbc5e5dd7d8a::t_cfd9627e5064e8 1-51
+data/fragments/classified.ts
+  s_6bdbc5e5dd7d8a::t_54721755699d9d 1-51
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "3d2657ddf7b681e855974350c48c05f437875dca",
+  "prompts": {},
+  "sessions": {
+    "s_6bdbc5e5dd7d8a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ses_02875c73cffeERnzndywsG1SBW",
+        "model": "unknown"
+      },
+      "human_author": "Dagger <dagger@pixelated.love>"
+    }
+  }
+}
