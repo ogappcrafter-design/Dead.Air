@@ -1,0 +1,24 @@
+engine/calls/callManagerInstance.ts
+  s_e702f0b3f89b4b::t_e00f5e682596ab 86-95
+engine/calls/CallManager.ts
+  s_e702f0b3f89b4b::t_3d90cfc4e177f2 225-230,236
+hooks/useTutorialController.ts
+  s_e702f0b3f89b4b::t_559f038c9b52d3 1
+  s_e702f0b3f89b4b::t_20c0c93f61788c 63,67,72-77
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "0c0f69de6efc3a5f08598bc0c73e0374a24c00f9",
+  "prompts": {},
+  "sessions": {
+    "s_e702f0b3f89b4b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ses_01e020871fferhOKKc3vXh0jDc",
+        "model": "unknown"
+      },
+      "human_author": "Dagger <dagger@pixelated.love>"
+    }
+  }
+}

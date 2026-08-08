@@ -1,0 +1,19 @@
+README.md
+  s_782192072b1549::t_40c83d556912a0 60-72,113-119,127-133,164,217-218,220,261-270,335,337
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "b1901f51a52a34b460ea4c789c3fd210365cc397",
+  "prompts": {},
+  "sessions": {
+    "s_782192072b1549": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ses_01e01ed71ffewJNI0aaUlfikld",
+        "model": "unknown"
+      },
+      "human_author": "Dagger <dagger@pixelated.love>"
+    }
+  }
+}
