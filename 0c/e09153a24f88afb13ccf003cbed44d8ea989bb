@@ -1,0 +1,52 @@
+app/settings/index.tsx
+  s_85e95c99ad111b::t_5f52c586d30b68 1-2,8
+  s_85e95c99ad111b::t_5f990c62a7a9e1 500-514
+  s_85e95c99ad111b::t_2154a2da01ee04 67-132
+  s_85e95c99ad111b::t_ce840a5c5e6bda 41-51
+components/calls/DeadAirCall.tsx
+  s_85e95c99ad111b::t_bdb795c1cc411e 27-34
+  s_85e95c99ad111b::t_bed902d8bce9f5 6,11-12
+tests/store/usePlayerStore.test.ts
+  s_85e95c99ad111b::t_2c91ad3d110e93 1-114
+components/radio/RadioBody.tsx
+  s_85e95c99ad111b::t_7a2936a24152b7 28-29
+  s_85e95c99ad111b::t_06a6e0ec11670c 2-3,6
+  s_85e95c99ad111b::t_14dd3a334c32aa 156-165
+  s_85e95c99ad111b::t_4e106b9d3f12ea 65-69
+store/usePlayerStore.ts
+  s_85e95c99ad111b::t_89271ec154d3a6 1-57
+app/onboarding.tsx
+  s_85e95c99ad111b::t_f05f6a9b57373d 1-248
+tests/lib/callInterpolation.test.ts
+  s_85e95c99ad111b::t_918252be45f37c 116,123,136,140
+  s_85e95c99ad111b::t_2e5126212d03a5 1-115,117-122,124-135,137-139,141-143
+lib/callInterpolation.ts
+  s_85e95c99ad111b::t_b59352d323278d 1-92
+app/index.tsx
+  s_85e95c99ad111b::t_5d6d71d72ebc5c 6,11,16-20,24
+app/_layout.tsx
+  s_85e95c99ad111b::t_3cb9f547d94452 38
+components/progression/AchievementNotification.tsx
+  s_85e95c99ad111b::t_67a309c7d21ca4 28
+  s_85e95c99ad111b::t_20ef7900179489 52
+  s_85e95c99ad111b::t_ccfa155c522fe9 103-105
+components/calls/JustListenCall.tsx
+  s_85e95c99ad111b::t_db6096dd06d2d3 7,12-13
+  s_85e95c99ad111b::t_0fd0da64d0ad19 31-38
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "0ce09153a24f88afb13ccf003cbed44d8ea989bb",
+  "prompts": {},
+  "sessions": {
+    "s_85e95c99ad111b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ses_01e196c41ffepwJshxn94Nw0mj",
+        "model": "unknown"
+      },
+      "human_author": "Dagger <dagger@pixelated.love>"
+    }
+  }
+}
