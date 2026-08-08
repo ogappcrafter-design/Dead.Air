@@ -1,0 +1,19 @@
+engine/calls/callManagerInstance.ts
+  s_e7515a8e2ca243::t_53facf053b972c 88
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "008c2bfa883146cb3d64834a6574794582c4fcda",
+  "prompts": {},
+  "sessions": {
+    "s_e7515a8e2ca243": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ses_01e190bfbffeWouktaDXIGv1Ez",
+        "model": "unknown"
+      },
+      "human_author": "Dagger <dagger@pixelated.love>"
+    }
+  }
+}
