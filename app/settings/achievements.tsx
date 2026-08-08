@@ -6,6 +6,7 @@
 import React from 'react';
 import { ScrollView, View, Text, StyleSheet } from 'react-native';
 import { useGameStore } from '../../store/useGameStore';
+import { useSettingsStore } from '../../store/useSettingsStore';
 import { useAchievementStore } from '../../store/useAchievementStore';
 import { getAchievementStatus, type PlayerStats } from '../../engine/progression/Achievements';
 import { AchievementsGrid } from '../../components/progression/AchievementsGrid';
@@ -24,6 +25,7 @@ function usePlayerStats(): PlayerStats {
   const sanityLowest = useGameStore((s) => s.sanityLowest);
   const shiftsCompleted = useGameStore((s) => s.shiftsCompleted);
   const longestCallSurvivedMs = useGameStore((s) => s.longestCallSurvivedMs);
+  const difficultyMode = useSettingsStore((s) => s.difficulty);
 
   return {
     callsReceived: receivedCalls.length,
@@ -32,6 +34,7 @@ function usePlayerStats(): PlayerStats {
     sanityLowest,
     shiftsCompleted,
     longestCallSurvivedMs,
+    difficultyMode,
   };
 }
 

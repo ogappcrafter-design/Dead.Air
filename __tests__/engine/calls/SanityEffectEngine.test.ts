@@ -134,4 +134,87 @@ describe('computeSanityEffect', () => {
     mid.hallucinationTexts.push('contamination');
     expect(computeSanityEffect(45).hallucinationTexts).toEqual(MID_TIER_TEXTS);
   });
+
+  // --- Difficulty-specific tests ---
+
+  describe('night_owl (drain 0.7 → effects trigger later)', () => {
+    it('at sanity=70 → effectiveSanity=100 → all-zero effect', () => {
+      const e = computeSanityEffect(70, 'night_owl');
+      expect(e.visualDistortion).toBe(0);
+      expect(e.audioDistortion).toBe(0);
+      expect(e.vignetteOpacity).toBe(0);
+      expect(e.glitchProbability).toBe(0);
+      expect(e.hallucinationTexts).toEqual([]);
+    });
+
+    it('at sanity=50 → effectiveSanity=71.4 → visualDistortion=0 (clamped), mid-tier hallucinations', () => {
+      const e = computeSanityEffect(50, 'night_owl');
+      // effectiveSanity = 50/0.7 ≈ 71.4 > 60 → visualDistortion clamped to 0
+      expect(e.visualDistortion).toBe(0);
+      expect(e.audioDistortion).toBe(0);
+      expect(e.vignetteOpacity).toBe(0);
+      // hallucination tier uses original sanity (50) → mid tier
+      expect(e.hallucinationTexts).toEqual(MID_TIER_TEXTS);
+    });
+
+    it('at sanity=41 → effectiveSanity≈58.6 → visualDistortion>0, mid-tier hallucinations', () => {
+      const e = computeSanityEffect(41, 'night_owl');
+      // effectiveSanity = 41/0.7 ≈ 58.571, just below 60 threshold
+      expect(e.visualDistortion).toBeCloseTo((60 - 41 / 0.7) / 60, 9);
+      expect(e.audioDistortion).toBe(0);
+      // hallucination tier uses original sanity (41) → mid tier
+      expect(e.hallucinationTexts).toEqual(MID_TIER_TEXTS);
+    });
+  });
+
+  describe('no_rest (drain 1.5 → effects trigger earlier)', () => {
+    it('at sanity=60 → effectiveSanity=40 → visualDistortion≈0.333, audioDistortion=0, vignette≈0.2', () => {
+      const e = computeSanityEffect(60, 'no_rest');
+      // effectiveSanity = 60/1.5 = 40
+      expect(e.visualDistortion).toBeCloseTo((60 - 40) / 60, 9);
+      expect(e.audioDistortion).toBe(0); // exactly at 40 threshold → 0
+      expect(e.vignetteOpacity).toBeCloseTo((50 - 40) / 50, 9);
+      // hallucination tier uses original sanity (60): s > 60 false, s >= 30 true → mid tier
+      expect(e.hallucinationTexts).toEqual(MID_TIER_TEXTS);
+    });
+
+    it('at sanity=45 → effectiveSanity=30 → visualDistortion=0.5, audioDistortion=0.25, mid-tier hallucinations', () => {
+      const e = computeSanityEffect(45, 'no_rest');
+      // effectiveSanity = 45/1.5 = 30
+      expect(e.visualDistortion).toBeCloseTo((60 - 30) / 60, 9);
+      expect(e.audioDistortion).toBeCloseTo((40 - 30) / 40, 9);
+      expect(e.vignetteOpacity).toBeCloseTo((50 - 30) / 50, 9);
+      expect(e.glitchProbability).toBe(0); // effectiveSanity = 30 → (30-30)/100 = 0
+      // hallucination tier uses original sanity (45) → mid tier (30-60)
+      expect(e.hallucinationTexts).toEqual(MID_TIER_TEXTS);
+    });
+
+    it('at sanity=30 → effectiveSanity=20 → strong effects, low-tier hallucinations', () => {
+      const e = computeSanityEffect(30, 'no_rest');
+      // effectiveSanity = 30/1.5 = 20
+      expect(e.visualDistortion).toBeCloseTo((60 - 20) / 60, 9);
+      expect(e.audioDistortion).toBeCloseTo((40 - 20) / 40, 9);
+      expect(e.vignetteOpacity).toBeCloseTo((50 - 20) / 50, 9);
+      expect(e.glitchProbability).toBeCloseTo((30 - 20) / 100, 9);
+      // hallucination tier uses original sanity (30) → mid tier (>= 30)
+      expect(e.hallucinationTexts).toEqual(MID_TIER_TEXTS);
+    });
+
+    it('at sanity=90 → effectiveSanity=60 → all-zero (at threshold boundary)', () => {
+      const e = computeSanityEffect(90, 'no_rest');
+      // effectiveSanity = 90/1.5 = 60, at threshold → visualDistortion = 0
+      expect(e.visualDistortion).toBe(0);
+      expect(e.audioDistortion).toBe(0);
+      expect(e.vignetteOpacity).toBe(0);
+      expect(e.glitchProbability).toBe(0);
+      // hallucination uses original sanity (90) → high tier
+      expect(e.hallucinationTexts).toEqual([]);
+    });
+  });
+
+  it('insomniac (default) matches no-difficulty-param behavior', () => {
+    const withParam = computeSanityEffect(42, 'insomniac');
+    const withoutParam = computeSanityEffect(42);
+    expect(withParam).toEqual(withoutParam);
+  });
 });

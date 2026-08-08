@@ -15,7 +15,7 @@ describe('useSettingsStore', () => {
       reducedMotion: false,
       autoSave: true,
       callFrequency: 'medium',
-      difficulty: 'normal',
+      difficulty: 'insomniac',
       cloudSyncEnabled: false,
       userId: null,
     });
@@ -24,7 +24,7 @@ describe('useSettingsStore', () => {
   it('has initial state', () => {
     const state = useSettingsStore.getState();
     expect(state.masterVolume).toBe(0.7);
-    expect(state.difficulty).toBe('normal');
+    expect(state.difficulty).toBe('insomniac');
     expect(state.cloudSyncEnabled).toBe(false);
   });
 
@@ -55,9 +55,9 @@ describe('useSettingsStore', () => {
   it('resets to defaults', () => {
     const { setMasterVolume, setDifficulty, resetSettings } = useSettingsStore.getState();
     setMasterVolume(0.1);
-    setDifficulty('hard');
+    setDifficulty('no_rest');
     resetSettings();
     expect(useSettingsStore.getState().masterVolume).toBe(0.7);
-    expect(useSettingsStore.getState().difficulty).toBe('normal');
+    expect(useSettingsStore.getState().difficulty).toBe('insomniac');
   });
 });

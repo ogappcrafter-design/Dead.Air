@@ -6,6 +6,8 @@
 
 import type { Band } from '../../lib/constants';
 import type { CallData } from './types';
+import type { DifficultyMode } from '../../lib/difficulty';
+import { DIFFICULTY_CONFIGS } from '../../lib/difficulty';
 
 /** User-callable frequency setting from useSettingsStore. */
 export type CallFrequency = 'low' | 'medium' | 'high';
@@ -18,6 +20,8 @@ export interface SchedulingConfig {
   unlockedBands: Band[];
   /** Call IDs already received this cycle (to avoid immediate repeats). */
   receivedCallIds: number[];
+  /** Difficulty mode — applies call frequency multiplier. */
+  difficulty: DifficultyMode;
 }
 
 /** Call registry — same shape CallManager uses. Injectable for tests. */
@@ -89,6 +93,8 @@ export class CallScheduler {
   private unlockedBands: Band[] = ['LIVING'];
   private received: Set<number> = new Set();
   private lastTriggerAt: number = Number.NEGATIVE_INFINITY;
+  /** Difficulty mode — controls call frequency multiplier. */
+  private difficulty: DifficultyMode = 'insomniac';
   /** Current randomized interval for the active frequency band. */
   private currentIntervalMs: number;
 
@@ -97,20 +103,24 @@ export class CallScheduler {
     this.currentIntervalMs = this.pickInterval();
   }
 
-  /** Pick a random interval within the current frequency's [min, max] band. */
+  /** Pick a random interval within the current frequency's [min, max] band,
+   * scaled by the difficulty's callFrequencyMultiplier. */
   private pickInterval(): number {
     const [min, max] = FREQUENCY_BANDS_MS[this.frequency];
-    return min + Math.random() * (max - min);
+    const multiplier = DIFFICULTY_CONFIGS[this.difficulty].callFrequencyMultiplier;
+    return (min + Math.random() * (max - min)) * multiplier;
   }
 
   /** Update config from stores. Safe to call any time. */
   configure(config: SchedulingConfig): void {
     const oldFrequency = this.frequency;
+    const oldDifficulty = this.difficulty;
     this.frequency = config.frequency;
     this.currentBand = config.currentBand;
     this.unlockedBands = config.unlockedBands;
     this.received = new Set(config.receivedCallIds);
-    if (oldFrequency !== config.frequency) {
+    this.difficulty = config.difficulty;
+    if (oldFrequency !== config.frequency || oldDifficulty !== config.difficulty) {
       this.currentIntervalMs = this.pickInterval();
     }
   }

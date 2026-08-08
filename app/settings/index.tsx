@@ -8,6 +8,8 @@ import { useStoreStore } from '../../store/useStoreStore';
 import { usePlayerStore } from '../../store/usePlayerStore';
 import { ErrorReportButton } from '../../components/shared/ErrorReportButton';
 import { restorePurchases } from '../../lib/iap';
+import { DIFFICULTY_CONFIGS, DIFFICULTY_ORDER } from '../../lib/difficulty';
+import type { DifficultyMode } from '../../lib/difficulty';
 
 const CRT_INTENSITY_STEP = 0.1;
 const VOLUME_STEP = 0.1;
@@ -21,6 +23,8 @@ export default function SettingsScreen() {
   const setCrtIntensity = useSettingsStore((s) => s.setCrtIntensity);
   const reducedMotion = useSettingsStore((s) => s.reducedMotion);
   const setReducedMotion = useSettingsStore((s) => s.setReducedMotion);
+  const difficulty = useSettingsStore((s) => s.difficulty);
+  const setDifficulty = useSettingsStore((s) => s.setDifficulty);
 
   const masterVolume = useSettingsStore((s) => s.masterVolume);
   const setMasterVolume = useSettingsStore((s) => s.setMasterVolume);
@@ -271,6 +275,40 @@ export default function SettingsScreen() {
       </View>
 
       <View style={styles.card}>
+        <Text style={styles.sectionLabel}>DIFFICULTY</Text>
+        {DIFFICULTY_ORDER.map((mode: DifficultyMode) => {
+          const cfg = DIFFICULTY_CONFIGS[mode];
+          const selected = difficulty === mode;
+          return (
+            <Pressable
+              key={mode}
+              testID={`difficulty-${mode}`}
+              style={[styles.diffOption, selected && styles.diffOptionSelected]}
+              onPress={() => setDifficulty(mode)}
+              accessible
+              accessibilityRole="button"
+              accessibilityLabel={cfg.label}
+              accessibilityHint={cfg.description}
+            >
+              <View style={styles.diffHeader}>
+                <Text
+                  style={[
+                    styles.diffLabel,
+                    selected ? styles.diffLabelActive : styles.diffLabelMuted,
+                  ]}
+                >
+                  {cfg.label}
+                </Text>
+                {selected && <Text style={styles.diffIndicator}>●</Text>}
+              </View>
+              <Text style={styles.diffDesc}>{cfg.description}</Text>
+              {cfg.permadeath && <Text style={styles.diffWarning}>PERMADEATH</Text>}
+            </Pressable>
+          );
+        })}
+      </View>
+
+      <View style={styles.card}>
         <Text style={styles.sectionLabel}>ANALYTICS</Text>
         <View style={styles.row}>
           <Text style={styles.rowLabel}>USAGE DATA</Text>
@@ -511,5 +549,47 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.sm,
     letterSpacing: 1,
+  },
+  diffOption: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 4,
+    padding: spacing.sm,
+    gap: spacing.xs,
+  },
+  diffOptionSelected: {
+    borderColor: colors.amber,
+  },
+  diffHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  diffLabel: {
+    fontFamily: fonts.mono,
+    fontSize: 14,
+    letterSpacing: 2,
+  },
+  diffLabelActive: {
+    color: colors.amber,
+  },
+  diffLabelMuted: {
+    color: colors.textMuted,
+  },
+  diffIndicator: {
+    color: colors.amber,
+    fontSize: 10,
+  },
+  diffDesc: {
+    fontFamily: fonts.mono,
+    fontSize: 10,
+    color: colors.textMuted,
+    letterSpacing: 0.5,
+  },
+  diffWarning: {
+    fontFamily: fonts.mono,
+    fontSize: 9,
+    color: colors.red,
+    letterSpacing: 2,
   },
 });

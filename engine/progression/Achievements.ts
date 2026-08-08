@@ -3,6 +3,8 @@
 // metadata. No side effects, no I/O — fully testable. Mirrors the style of
 // engine/progression/BandUnlock.ts.
 
+import type { DifficultyMode } from '../../lib/difficulty';
+
 /**
  * Aggregate stats surfaced from gameplay — the inputs every achievement
  * `check` evaluates against. Callers derive these from useGameStore +
@@ -22,6 +24,10 @@ export interface PlayerStats {
   shiftsCompleted: number;
   /** Longest single-call duration survived, in milliseconds. */
   longestCallSurvivedMs: number;
+  /** Current difficulty mode — informational only (no_rest_complete now reads shiftsCompletedByDifficulty). */
+  difficultyMode: DifficultyMode;
+  /** Completed night shifts, bucketed by the difficulty they were played on. */
+  shiftsCompletedByDifficulty: Partial<Record<DifficultyMode, number>>;
 }
 
 /**
@@ -112,6 +118,13 @@ export const ACHIEVEMENTS: Achievement[] = [
     description: 'Survive a call lasting 2+ minutes',
     icon: ' ⏱',
     check: (s) => s.longestCallSurvivedMs >= 120000,
+  },
+  {
+    id: 'no_rest_complete',
+    name: 'No Rest for the Wicked',
+    description: 'Complete a night shift on NO REST difficulty',
+    icon: ' ☠',
+    check: (s) => (s.shiftsCompletedByDifficulty?.no_rest ?? 0) >= 1,
   },
 ];
 

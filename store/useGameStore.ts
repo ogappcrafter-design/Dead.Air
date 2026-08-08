@@ -3,7 +3,12 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Band, SAVE_KEY, MAX_SANITY, MAX_STATIC } from '../lib/constants';
+import type { DifficultyMode } from '../lib/difficulty';
 import { useAnalyticsStore } from './useAnalyticsStore';
+import { useSettingsStore } from './useSettingsStore';
+import { useAchievementStore } from './useAchievementStore';
+import { useNarrativeStore } from './narrativeStore';
+import { useChoiceHistoryStore } from './choiceHistoryStore';
 
 interface GameState {
   sanity: number;
@@ -19,6 +24,8 @@ interface GameState {
   shiftsCompleted: number;
   /** Longest single-call duration survived, in milliseconds. */
   longestCallSurvivedMs: number;
+  /** Completed night shifts, bucketed by the difficulty they were played on. */
+  shiftsCompletedByDifficulty: Partial<Record<DifficultyMode, number>>;
 
   // Actions
   decreaseSanity: (amount: number) => void;
@@ -45,6 +52,7 @@ const initialState = {
   sanityLowest: MAX_SANITY,
   shiftsCompleted: 0,
   longestCallSurvivedMs: 0,
+  shiftsCompletedByDifficulty: {} as Partial<Record<DifficultyMode, number>>,
 };
 
 export const useGameStore = create<GameState>()(
@@ -55,6 +63,16 @@ export const useGameStore = create<GameState>()(
       decreaseSanity: (amount) =>
         set((state) => {
           const sanity = Math.max(0, state.sanity - amount);
+          if (sanity === 0 && state.sanity > 0) {
+            const difficulty = useSettingsStore.getState().difficulty;
+            if (difficulty === 'no_rest') {
+              useAnalyticsStore.getState().track('permadeath', {});
+              useAchievementStore.getState().clearUnlocked();
+              useNarrativeStore.getState().reset();
+              useChoiceHistoryStore.getState().reset();
+              return initialState;
+            }
+          }
           return {
             sanity,
             sanityLowest: Math.min(state.sanityLowest, sanity),
@@ -99,7 +117,16 @@ export const useGameStore = create<GameState>()(
         })),
 
       incrementShiftsCompleted: () =>
-        set((state) => ({ shiftsCompleted: state.shiftsCompleted + 1 })),
+        set((state) => {
+          const d = useSettingsStore.getState().difficulty;
+          return {
+            shiftsCompleted: state.shiftsCompleted + 1,
+            shiftsCompletedByDifficulty: {
+              ...state.shiftsCompletedByDifficulty,
+              [d]: (state.shiftsCompletedByDifficulty[d] ?? 0) + 1,
+            },
+          };
+        }),
 
       recordCallDuration: (durationMs) =>
         set((state) => ({

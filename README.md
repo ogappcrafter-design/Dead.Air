@@ -64,7 +64,7 @@ Answer the call. Or don't. Either way, something heard you.
 | 🧠  | **Sanity + Static economy**       | Every choice shifts your sanity and earns static — your choices have weight   |
 | 🎵  | **Real-time audio synthesis**     | Web Audio API engine: static synth → distortion → reverb → spatial processing |
 | 📼  | **15 collectible tapes**          | Archive every transmission. Rarity tiers from `common` to `legendary`         |
-| 🏆  | **10 achievements**               | Track milestones from First Contact to Frequency Walker                       |
+| 🏆  | **11 achievements**               | Track milestones from First Contact to No Rest for the Wicked                 |
 | 🌙  | **Night Shift system**            | 4-hour in-game sessions compressed to ~20 minutes real-time                   |
 | ♾️  | **Infinite Signal mode**          | AI-generated calls — endless, never the same twice _(planned)_                |
 | 💾  | **Persistent saves**              | Pick up exactly where you left off, every single time                         |
@@ -337,3 +337,4 @@ _The frequency is open. Something is already waiting._
 `░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░`
 
 </div>
+

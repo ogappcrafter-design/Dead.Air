@@ -49,6 +49,7 @@ const makeConfig = (overrides: Partial<SchedulingConfig> = {}): SchedulingConfig
   currentBand: 'LIVING',
   unlockedBands: ['LIVING'],
   receivedCallIds: [],
+  difficulty: 'insomniac',
   ...overrides,
 });
 
@@ -150,6 +151,100 @@ describe('CallScheduler timing', () => {
     // Even though high interval is 15s, lastTriggerAt is 10s ago → 5s left.
     expect(scheduler.shouldTriggerCall(fakeNow)).toBe(false);
     fakeNow = 25_000;
+    expect(scheduler.shouldTriggerCall(fakeNow)).toBe(true);
+  });
+});
+
+describe('CallScheduler difficulty timing', () => {
+  let scheduler: CallScheduler;
+  const originalNow = Date.now;
+  const originalRandom = Math.random;
+  let fakeNow = 0;
+
+  beforeEach(() => {
+    resetCallScheduler();
+    fakeNow = 0;
+    Date.now = jest.fn(() => fakeNow) as typeof Date.now;
+    Math.random = jest.fn(() => 0) as typeof Math.random;
+    scheduler = new CallScheduler(makeRegistry());
+  });
+
+  afterEach(() => {
+    Date.now = originalNow;
+    Math.random = originalRandom;
+  });
+
+  it('night_owl (×1.3): low frequency min interval = 78s', () => {
+    scheduler.configure(makeConfig({ difficulty: 'night_owl', frequency: 'low' }));
+    scheduler.markReceived(1);
+    fakeNow = 77_999;
+    expect(scheduler.shouldTriggerCall(fakeNow)).toBe(false);
+    fakeNow = 78_000;
+    expect(scheduler.shouldTriggerCall(fakeNow)).toBe(true);
+  });
+
+  it('night_owl (×1.3): medium frequency min interval = 39s', () => {
+    scheduler.configure(makeConfig({ difficulty: 'night_owl', frequency: 'medium' }));
+    scheduler.markReceived(1);
+    fakeNow = 38_999;
+    expect(scheduler.shouldTriggerCall(fakeNow)).toBe(false);
+    fakeNow = 39_000;
+    expect(scheduler.shouldTriggerCall(fakeNow)).toBe(true);
+  });
+
+  it('night_owl (×1.3): high frequency min interval = 19.5s', () => {
+    scheduler.configure(makeConfig({ difficulty: 'night_owl', frequency: 'high' }));
+    scheduler.markReceived(1);
+    fakeNow = 19_499;
+    expect(scheduler.shouldTriggerCall(fakeNow)).toBe(false);
+    fakeNow = 19_500;
+    expect(scheduler.shouldTriggerCall(fakeNow)).toBe(true);
+  });
+
+  it('no_rest (×0.75): low frequency min interval = 45s', () => {
+    scheduler.configure(makeConfig({ difficulty: 'no_rest', frequency: 'low' }));
+    scheduler.markReceived(1);
+    fakeNow = 44_999;
+    expect(scheduler.shouldTriggerCall(fakeNow)).toBe(false);
+    fakeNow = 45_000;
+    expect(scheduler.shouldTriggerCall(fakeNow)).toBe(true);
+  });
+
+  it('no_rest (×0.75): medium frequency min interval = 22.5s', () => {
+    scheduler.configure(makeConfig({ difficulty: 'no_rest', frequency: 'medium' }));
+    scheduler.markReceived(1);
+    fakeNow = 22_499;
+    expect(scheduler.shouldTriggerCall(fakeNow)).toBe(false);
+    fakeNow = 22_500;
+    expect(scheduler.shouldTriggerCall(fakeNow)).toBe(true);
+  });
+
+  it('no_rest (×0.75): high frequency min interval = 11.25s', () => {
+    scheduler.configure(makeConfig({ difficulty: 'no_rest', frequency: 'high' }));
+    scheduler.markReceived(1);
+    fakeNow = 11_249;
+    expect(scheduler.shouldTriggerCall(fakeNow)).toBe(false);
+    fakeNow = 11_250;
+    expect(scheduler.shouldTriggerCall(fakeNow)).toBe(true);
+  });
+
+  it('night_owl low max interval = 117s (90s × 1.3)', () => {
+    Math.random = jest.fn(() => 1) as typeof Math.random;
+    scheduler.configure(makeConfig({ difficulty: 'night_owl', frequency: 'low' }));
+    scheduler.markReceived(1);
+    fakeNow = 116_999;
+    expect(scheduler.shouldTriggerCall(fakeNow)).toBe(false);
+    fakeNow = 117_000;
+    expect(scheduler.shouldTriggerCall(fakeNow)).toBe(true);
+  });
+
+  it('no_rest low max interval = 67.5s (90s × 0.75)', () => {
+    Math.random = jest.fn(() => 1) as typeof Math.random;
+    scheduler.configure(makeConfig({ difficulty: 'no_rest', frequency: 'low' }));
+    scheduler.markReceived(1);
+    fakeNow = 67_499;
+    expect(scheduler.shouldTriggerCall(fakeNow)).toBe(false);
+    fakeNow = 67_500;
     expect(scheduler.shouldTriggerCall(fakeNow)).toBe(true);
   });
 });

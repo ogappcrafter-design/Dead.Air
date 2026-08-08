@@ -17,7 +17,8 @@ export type AnalyticsEventName =
   | 'iap_started'
   | 'iap_completed'
   | 'iap_restore_started'
-  | 'iap_restore_completed';
+  | 'iap_restore_completed'
+  | 'permadeath';
 
 export interface AnalyticsEvent {
   event: AnalyticsEventName;

@@ -14,6 +14,8 @@ const BASE_STATS: PlayerStats = {
   sanityLowest: 100,
   shiftsCompleted: 0,
   longestCallSurvivedMs: 0,
+  difficultyMode: 'insomniac',
+  shiftsCompletedByDifficulty: {},
 };
 
 const withStats = (over: Partial<PlayerStats>): PlayerStats => ({
@@ -103,6 +105,42 @@ describe('checkAchievements', () => {
     const result = checkAchievements(withStats({ longestCallSurvivedMs: 119999 }), []);
     expect(result).not.toContain('long_call');
   });
+
+  it('no_rest_complete unlocks after a shift completed on no_rest', () => {
+    const result = checkAchievements(
+      withStats({
+        difficultyMode: 'no_rest',
+        shiftsCompleted: 1,
+        shiftsCompletedByDifficulty: { no_rest: 1 },
+      }),
+      [],
+    );
+    expect(result).toContain('no_rest_complete');
+  });
+
+  it('no_rest_complete does NOT unlock on insomniac even with shifts', () => {
+    const result = checkAchievements(
+      withStats({
+        difficultyMode: 'insomniac',
+        shiftsCompleted: 10,
+        shiftsCompletedByDifficulty: {},
+      }),
+      [],
+    );
+    expect(result).not.toContain('no_rest_complete');
+  });
+
+  it('no_rest_complete does NOT unlock when shifts were completed on another difficulty (Greptile repro)', () => {
+    const result = checkAchievements(
+      withStats({
+        difficultyMode: 'no_rest',
+        shiftsCompleted: 1,
+        shiftsCompletedByDifficulty: { night_owl: 1 },
+      }),
+      [],
+    );
+    expect(result).not.toContain('no_rest_complete');
+  });
 });
 
 describe('getAchievementStatus', () => {
@@ -140,6 +178,7 @@ describe('getAchievementStatus', () => {
       'low_sanity',
       'night_owl',
       'long_call',
+      'no_rest_complete',
     ]);
   });
 
@@ -151,6 +190,8 @@ describe('getAchievementStatus', () => {
       sanityLowest: 5,
       shiftsCompleted: 5,
       longestCallSurvivedMs: 180000,
+      difficultyMode: 'no_rest',
+      shiftsCompletedByDifficulty: { no_rest: 5, insomniac: 5, night_owl: 5 },
     });
     const result = getAchievementStatus(maxedStats, []);
     expect(result.every((r) => r.unlocked)).toBe(true);

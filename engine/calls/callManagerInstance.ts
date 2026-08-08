@@ -6,6 +6,7 @@ import { useRadioStore } from '@/store/useRadioStore';
 import { useAchievementStore } from '@/store/useAchievementStore';
 import { useAnalyticsStore } from '@/store/useAnalyticsStore';
 import { useChoiceHistoryStore } from '@/store/choiceHistoryStore';
+import { useSettingsStore } from '@/store/useSettingsStore';
 import type { Band } from '@/lib/constants';
 import type { CallData } from './types';
 
@@ -81,13 +82,16 @@ export const callManager = initCallManager({
       useChoiceHistoryStore.getState().recordChoice(callId, choiceKey, value),
     getPlayerStats: () => {
       const s = useGameStore.getState();
+      const difficulty = useSettingsStore.getState().difficulty;
       return {
         callsReceived: s.receivedCalls.length,
         bandsUnlocked: s.unlockedBands.length,
         tapesCollected: s.tapes.length,
         sanityLowest: s.sanityLowest,
         shiftsCompleted: s.shiftsCompleted,
+        shiftsCompletedByDifficulty: s.shiftsCompletedByDifficulty,
         longestCallSurvivedMs: s.longestCallSurvivedMs,
+        difficultyMode: difficulty,
       };
     },
   },

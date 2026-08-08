@@ -3,6 +3,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SAVE_KEY } from '../lib/constants';
+import type { DifficultyMode } from '../lib/difficulty';
 
 interface SettingsState {
   // Audio
@@ -21,7 +22,7 @@ interface SettingsState {
   // Gameplay
   autoSave: boolean;
   callFrequency: 'low' | 'medium' | 'high';
-  difficulty: 'easy' | 'normal' | 'hard';
+  difficulty: DifficultyMode;
 
   // Account
   cloudSyncEnabled: boolean;
@@ -39,7 +40,7 @@ interface SettingsState {
   setReducedMotion: (reduced: boolean) => void;
   setAutoSave: (enabled: boolean) => void;
   setCallFrequency: (freq: 'low' | 'medium' | 'high') => void;
-  setDifficulty: (diff: 'easy' | 'normal' | 'hard') => void;
+  setDifficulty: (diff: DifficultyMode) => void;
   setCloudSyncEnabled: (enabled: boolean) => void;
   setUserId: (id: string | null) => void;
   resetSettings: () => void;
@@ -57,9 +58,20 @@ const initialState = {
   reducedMotion: false,
   autoSave: true,
   callFrequency: 'medium' as const,
-  difficulty: 'normal' as const,
+  difficulty: 'insomniac' as const,
   cloudSyncEnabled: false,
   userId: null as string | null,
+};
+
+/** Legacy difficulty values → new DifficultyMode. */
+const DIFFICULTY_MIGRATION: Record<string, DifficultyMode> = {
+  easy: 'night_owl',
+  normal: 'insomniac',
+  hard: 'no_rest',
+  // Already-migrated values pass through.
+  night_owl: 'night_owl',
+  insomniac: 'insomniac',
+  no_rest: 'no_rest',
 };
 
 export const useSettingsStore = create<SettingsState>()(
@@ -87,6 +99,18 @@ export const useSettingsStore = create<SettingsState>()(
     {
       name: `${SAVE_KEY}_settings`,
       storage: createJSONStorage(() => AsyncStorage),
+      version: 2,
+      migrate: (persistedState: unknown, version: number) => {
+        if (persistedState === null || typeof persistedState !== 'object') {
+          return persistedState;
+        }
+        const s = persistedState as Record<string, unknown>;
+        // Version <2 used 'easy'|'normal'|'hard'. Migrate to DifficultyMode.
+        if (version < 2 && typeof s.difficulty === 'string') {
+          s.difficulty = DIFFICULTY_MIGRATION[s.difficulty] ?? 'insomniac';
+        }
+        return s;
+      },
     },
   ),
 );

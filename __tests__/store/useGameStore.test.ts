@@ -1,5 +1,8 @@
 // __tests__/store/useGameStore.test.ts
 import { useGameStore } from '../../store/useGameStore';
+import { useSettingsStore } from '../../store/useSettingsStore';
+import { useNarrativeStore } from '../../store/narrativeStore';
+import { useChoiceHistoryStore } from '../../store/choiceHistoryStore';
 
 describe('useGameStore', () => {
   beforeEach(() => {
@@ -14,6 +17,7 @@ describe('useGameStore', () => {
       sanityLowest: 100,
       shiftsCompleted: 0,
       longestCallSurvivedMs: 0,
+      shiftsCompletedByDifficulty: {},
     });
   });
 
@@ -115,5 +119,53 @@ describe('useGameStore', () => {
     expect(useGameStore.getState().longestCallSurvivedMs).toBe(5000);
     recordCallDuration(10000);
     expect(useGameStore.getState().longestCallSurvivedMs).toBe(10000);
+  });
+});
+
+
+describe('DEA-46 P1: per-difficulty shift tracking + permadeath resets', () => {
+  beforeEach(() => {
+    useSettingsStore.setState({ difficulty: 'insomniac' });
+    useNarrativeStore.getState().reset();
+    useChoiceHistoryStore.getState().reset();
+    useGameStore.getState().resetGame();
+  });
+
+  it('buckets completed shifts by the active difficulty', () => {
+    useSettingsStore.setState({ difficulty: 'no_rest' });
+    useGameStore.getState().incrementShiftsCompleted();
+    expect(useGameStore.getState().shiftsCompleted).toBe(1);
+    expect(useGameStore.getState().shiftsCompletedByDifficulty.no_rest).toBe(1);
+    expect(
+      useGameStore.getState().shiftsCompletedByDifficulty.night_owl,
+    ).toBeUndefined();
+  });
+
+  it('keeps buckets independent across difficulty switches', () => {
+    useSettingsStore.setState({ difficulty: 'night_owl' });
+    useGameStore.getState().incrementShiftsCompleted();
+    useSettingsStore.setState({ difficulty: 'no_rest' });
+    useGameStore.getState().incrementShiftsCompleted();
+    useGameStore.getState().incrementShiftsCompleted();
+    expect(useGameStore.getState().shiftsCompleted).toBe(3);
+    expect(useGameStore.getState().shiftsCompletedByDifficulty).toEqual({
+      night_owl: 1,
+      no_rest: 2,
+    });
+  });
+
+  it('resets narrative + choice history on no-rest permadeath', () => {
+    useSettingsStore.setState({ difficulty: 'no_rest' });
+    useNarrativeStore.setState({ deadAirReceived: true });
+    useChoiceHistoryStore.getState().recordChoice(1, 'k', 'v');
+
+    useGameStore.getState().decreaseSanity(150);
+
+    const game = useGameStore.getState();
+    expect(game.sanity).toBe(100);
+    expect(game.tapes).toEqual([]);
+    expect(game.shiftsCompleted).toBe(0);
+    expect(useNarrativeStore.getState().deadAirReceived).toBe(false);
+    expect(useChoiceHistoryStore.getState().choices).toHaveLength(0);
   });
 });

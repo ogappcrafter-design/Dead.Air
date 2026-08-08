@@ -30,6 +30,8 @@ interface AchievementState {
   clearRecentUnlock: () => void;
   /** Predicate: has `id` been unlocked? */
   isUnlocked: (id: string) => boolean;
+  /** Wipe all unlocked achievements (permadeath). */
+  clearUnlocked: () => void;
 }
 
 const achievementById = new Map<string, Achievement>(ACHIEVEMENTS.map((a) => [a.id, a]));
@@ -61,6 +63,8 @@ export const useAchievementStore = create<AchievementState>()(
       clearRecentUnlock: () => set({ recentUnlock: null }),
 
       isUnlocked: (id) => get().unlocked.includes(id),
+
+      clearUnlocked: () => set({ unlocked: [], recentUnlock: null }),
     }),
     {
       name: `${SAVE_KEY}_achievements`,
