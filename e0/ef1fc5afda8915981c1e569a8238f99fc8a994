@@ -1,0 +1,42 @@
+README.md
+  s_2db24b465958e6::t_10157940e231e3 68
+  s_2db24b465958e6::t_1296471e5eed99 70
+  s_2db24b465958e6::t_63968126725de9 67,69
+  s_2db24b465958e6::t_3f22571cdbcbc9 300-301
+  s_2db24b465958e6::t_ee1cfe8d0129c3 166
+  s_2db24b465958e6::t_44dea0be4d5d15 168
+  s_2db24b465958e6::t_65b08df97f8642 181-183
+engine/calls/callManagerInstance.ts
+  s_2db24b465958e6::t_af1acf5820e44d 12
+  s_2db24b465958e6::t_f0abb99e952854 185
+  s_2db24b465958e6::t_198a39d599f8b3 37,48,92,98,196,211
+  s_2db24b465958e6::t_c82f3b1cac23ce 5
+__tests__/engine/progression/Achievements.test.ts
+  s_be0c26e287d0ab::t_ba2cb5140c0105 190
+  s_be0c26e287d0ab::t_6f2736faf03ecd 19
+  s_be0c26e287d0ab::t_be11b9f0c37741 210
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "e0ef1fc5afda8915981c1e569a8238f99fc8a994",
+  "prompts": {},
+  "sessions": {
+    "s_2db24b465958e6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ses_01c3a4b13ffeRRwlbWgMMfxPDZ",
+        "model": "unknown"
+      },
+      "human_author": "Dagger <dagger@pixelated.love>"
+    },
+    "s_be0c26e287d0ab": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ses_01c3de6b9ffenM3yqKm39uunON",
+        "model": "unknown"
+      },
+      "human_author": "Dagger <dagger@pixelated.love>"
+    }
+  }
+}
