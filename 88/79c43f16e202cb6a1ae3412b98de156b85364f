@@ -1,0 +1,21 @@
+engine/progression/InfiniteSignal.ts
+  s_a83cffb80037f9::t_e3c2c8c832f6b5 97-103
+engine/calls/ProceduralCallGenerator.ts
+  s_a83cffb80037f9::t_beffd7a4246e36 239-262
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "8879c43f16e202cb6a1ae3412b98de156b85364f",
+  "prompts": {},
+  "sessions": {
+    "s_a83cffb80037f9": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ses_0218babc2ffejHtLmnRwkRO6iP",
+        "model": "unknown"
+      },
+      "human_author": "Dagger <dagger@pixelated.love>"
+    }
+  }
+}
