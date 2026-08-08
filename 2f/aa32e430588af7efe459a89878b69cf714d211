@@ -1,0 +1,21 @@
+engine/audio/SanityAudioProcessor.ts
+  s_d95d8fa5a5add0::t_0cd972ac14d328 264-268
+  s_d95d8fa5a5add0::t_d0b72a206d7231 99
+  s_d95d8fa5a5add0::t_e411d63024ed2e 210-220,226,235-238
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "2faa32e430588af7efe459a89878b69cf714d211",
+  "prompts": {},
+  "sessions": {
+    "s_d95d8fa5a5add0": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ses_01c5d3f96ffemZwVeHmJ1oA9ZL",
+        "model": "unknown"
+      },
+      "human_author": "Dagger <dagger@pixelated.love>"
+    }
+  }
+}
