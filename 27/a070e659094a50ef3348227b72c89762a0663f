@@ -1,0 +1,19 @@
+lib/iap.ts
+  s_a3afad1b53f48d::t_ecf1ee48714b57 164
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "27a070e659094a50ef3348227b72c89762a0663f",
+  "prompts": {},
+  "sessions": {
+    "s_a3afad1b53f48d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ses_01d40345fffehEpY61SbH7a2FX",
+        "model": "unknown"
+      },
+      "human_author": "Dagger <dagger@pixelated.love>"
+    }
+  }
+}
