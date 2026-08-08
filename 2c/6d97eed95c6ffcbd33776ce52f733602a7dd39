@@ -1,0 +1,20 @@
+store/useGameStore.ts
+  s_d29f5e5375850f::t_440e4ec4199f26 242
+  s_d29f5e5375850f::t_6c580f2a8ac251 209
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "2c6d97eed95c6ffcbd33776ce52f733602a7dd39",
+  "prompts": {},
+  "sessions": {
+    "s_d29f5e5375850f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ses_01c556cb6ffeNW9eKsWb4Xg3CC",
+        "model": "unknown"
+      },
+      "human_author": "Dagger <dagger@pixelated.love>"
+    }
+  }
+}
