@@ -1,0 +1,21 @@
+engine/calls/DailyCallGenerator.ts
+  s_d4c71179cd31de::t_3ce287f099db34 438
+hooks/useDailyCall.ts
+  s_d4c71179cd31de::t_a94e82e803d4a4 30-34
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "1ecf55a16086056f2c5cccbfffa128702ec5300b",
+  "prompts": {},
+  "sessions": {
+    "s_d4c71179cd31de": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ses_01df194e0ffeazEf1SJKf5XFam",
+        "model": "unknown"
+      },
+      "human_author": "Dagger <dagger@pixelated.love>"
+    }
+  }
+}
