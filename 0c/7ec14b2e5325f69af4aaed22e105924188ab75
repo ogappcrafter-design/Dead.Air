@@ -1,0 +1,22 @@
+tests/engine/InfiniteSignal.test.ts
+  s_58247b52487a25::t_831d266a412e9c 67-83,85-88
+  s_58247b52487a25::t_8e2b3c6f6e64c5 84
+engine/calls/callManagerInstance.ts
+  s_58247b52487a25::t_07de9c57808ab0 25-30
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "0c7ec14b2e5325f69af4aaed22e105924188ab75",
+  "prompts": {},
+  "sessions": {
+    "s_58247b52487a25": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ses_01cecb78fffeILJlw7Zg562lIC",
+        "model": "unknown"
+      },
+      "human_author": "Dagger <dagger@pixelated.love>"
+    }
+  }
+}
