@@ -1,0 +1,31 @@
+store/useRadioStore.ts
+  s_0dcbd47568ba71::t_1759b65a579ca3 6,9
+engine/calls/callManagerInstance.ts
+  s_0dcbd47568ba71::t_31a117001b4ad6 21-41
+  s_0dcbd47568ba71::t_569075ab7c3cde 3,12-19
+__tests__/store/useRadioStore.test.ts
+  s_0dcbd47568ba71::t_4b2973640ccaf0 40
+__tests__/engine/calls/ProceduralCallGenerator.test.ts
+  s_0dcbd47568ba71::t_2fee624703d06d 183
+  s_0dcbd47568ba71::t_d9b5ecec0a596b 189
+  s_0dcbd47568ba71::t_7cfca745125a6e 210,285,316
+  s_0dcbd47568ba71::t_856b1a93f1d176 386-387
+  s_0dcbd47568ba71::t_a497bd13bdbd6f 371
+  s_0dcbd47568ba71::t_62d23099fd11c1 350,352
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "7b9a5463f0d3c0ecf07eeac063efcc5c64e7fb60",
+  "prompts": {},
+  "sessions": {
+    "s_0dcbd47568ba71": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ses_0218bbb66ffeqgY30ESMzu9Phi",
+        "model": "unknown"
+      },
+      "human_author": null
+    }
+  }
+}
