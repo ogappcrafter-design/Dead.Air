@@ -1,6 +1,7 @@
 // lib/constants.ts
 export const SAVE_KEY = 'dead_air_save_v1';
 export const PURCHASES_KEY = 'dead_air_purchases_v1';
+export const SKINS_KEY = 'dead_air_skins_v1';
 
 export const BANDS = [
   'LIVING',

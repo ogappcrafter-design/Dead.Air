@@ -1,6 +1,7 @@
 import { useCallback, useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { colors, fonts, spacing } from '../../lib/theme';
+import { useSkinStore } from '../../store/useSkinStore';
+import { getSkin } from '../../lib/skins';
 import { useRadioStore } from '../../store/useRadioStore';
 import { useGameStore } from '../../store/useGameStore';
 import { usePlayerStore } from '../../store/usePlayerStore';
@@ -28,6 +29,10 @@ export function RadioBody() {
   const stationName = usePlayerStore((s) => s.stationName);
 
   const setBand = useRadioStore((s) => s.setBand);
+
+  // Active cosmetic skin — drives all visual properties (colors, fonts, spacing).
+  const activeSkin = useSkinStore((s) => s.activeSkin);
+  const skin = getSkin(activeSkin);
 
   const bandInfo = BAND_DATA[currentBand];
   const minFreq = bandInfo.frequencyRange[0];
@@ -58,12 +63,72 @@ export function RadioBody() {
 
   const bandName = useMemo(() => bandInfo.name, [bandInfo]);
 
+  const skinStyles = useMemo(
+    () =>
+      StyleSheet.create({
+        container: {
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          padding: skin.spacing.comfortable,
+        },
+        radio: {
+          width: '100%',
+          maxWidth: 380,
+          backgroundColor: skin.colors.surface,
+          borderWidth: 2,
+          borderColor: skin.colors.border,
+          borderRadius: 8,
+          padding: skin.spacing.comfortable + 8,
+        },
+        mainArea: {
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginVertical: skin.spacing.comfortable,
+        },
+        leftColumn: {
+          flex: 1,
+        },
+        centerColumn: {
+          flex: 1,
+          alignItems: 'center',
+        },
+        rightColumn: {
+          flex: 1,
+          alignItems: 'center',
+        },
+        footer: {
+          flexDirection: 'row',
+          justifyContent: 'center',
+          marginTop: skin.spacing.compact + 4,
+        },
+        powerIndicator: {
+          width: 8,
+          height: 8,
+          borderRadius: 4,
+          backgroundColor: skin.colors.power,
+        },
+        stationName: {
+          fontFamily: skin.fonts.primary,
+          fontSize: 11,
+          color: skin.colors.station,
+          textAlign: 'center',
+          letterSpacing: 2,
+          marginTop: skin.spacing.compact,
+          marginBottom: skin.spacing.compact,
+          opacity: 0.8,
+        },
+      }),
+    [skin],
+  );
+
   return (
-    <View style={styles.container}>
-      <View style={styles.radio} accessible accessibilityLabel="Radio receiver">
+    <View style={skinStyles.container}>
+      <View style={skinStyles.radio} accessible accessibilityLabel="Radio receiver">
         <FrequencyDisplay frequency={frequency} bandName={bandName} />
         {stationName.length > 0 && (
-          <Text style={styles.stationName} numberOfLines={1}>
+          <Text style={skinStyles.stationName} numberOfLines={1}>
             {stationName}
           </Text>
         )}
@@ -74,8 +139,8 @@ export function RadioBody() {
           onBandSelect={handleBandSelect}
         />
 
-        <View style={styles.mainArea}>
-          <View style={styles.leftColumn}>
+        <View style={skinStyles.mainArea}>
+          <View style={skinStyles.leftColumn}>
             <VolumeControl
               volume={volume}
               onVolumeChange={handleVolumeChange}
@@ -84,7 +149,7 @@ export function RadioBody() {
             />
           </View>
 
-          <View style={styles.centerColumn}>
+          <View style={skinStyles.centerColumn}>
             <TuningDial
               frequency={frequency}
               minFreq={minFreq}
@@ -96,71 +161,15 @@ export function RadioBody() {
             />
           </View>
 
-          <View style={styles.rightColumn}>
+          <View style={skinStyles.rightColumn}>
             <SignalStrength strength={signalStrength} isTuning={isTuning} />
           </View>
         </View>
 
-        <View style={styles.footer}>
-          <View style={styles.powerIndicator} />
+        <View style={skinStyles.footer}>
+          <View style={skinStyles.powerIndicator} />
         </View>
       </View>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: spacing.md,
-  },
-  radio: {
-    width: '100%',
-    maxWidth: 380,
-    backgroundColor: colors.surface,
-    borderWidth: 2,
-    borderColor: colors.border,
-    borderRadius: 8,
-    padding: spacing.lg,
-  },
-  mainArea: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginVertical: spacing.md,
-  },
-  leftColumn: {
-    flex: 1,
-  },
-  centerColumn: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  rightColumn: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  footer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginTop: spacing.sm,
-  },
-  powerIndicator: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: colors.green,
-  },
-  stationName: {
-    fontFamily: fonts.mono,
-    fontSize: 11,
-    color: colors.amber,
-    textAlign: 'center',
-    letterSpacing: 2,
-    marginTop: spacing.xs,
-    marginBottom: spacing.xs,
-    opacity: 0.8,
-  },
-});

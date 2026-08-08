@@ -11,6 +11,7 @@ import { ErrorReportButton } from '../../components/shared/ErrorReportButton';
 import { Leaderboard } from '../../components/leaderboard/Leaderboard';
 import { CallOfTheDay } from '../../components/callOfTheDay/CallOfTheDay';
 import { FriendCodeManager } from '../../components/friends/FriendCodeManager';
+import { SkinPicker } from '../../components/settings/SkinPicker';
 import { restorePurchases } from '../../lib/iap';
 import { DIFFICULTY_CONFIGS, DIFFICULTY_ORDER } from '../../lib/difficulty';
 import type { DifficultyMode } from '../../lib/difficulty';
@@ -464,6 +465,11 @@ export default function SettingsScreen() {
       <View style={styles.card}>
         <Text style={styles.sectionLabel}>FRIEND CODES</Text>
         <FriendCodeManager />
+      </View>
+
+      <View style={styles.card}>
+        <Text style={styles.sectionLabel}>SKINS</Text>
+        <SkinPicker />
       </View>
 
       <View style={styles.card}>

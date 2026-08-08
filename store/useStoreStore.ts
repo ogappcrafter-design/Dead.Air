@@ -35,6 +35,7 @@ interface StoreState {
   isConnected: boolean;
   // Purchasing UI state
   purchasing: boolean;
+  purchasingProductId: string | null;
   // Non-blocking error state
   lastError: IAPErrorState | null;
   // Info message (e.g. "Nothing to restore", "Already owned")
@@ -47,6 +48,7 @@ interface StoreState {
   addPurchase: (record: PurchaseRecord) => void;
   setConnected: (connected: boolean) => void;
   setPurchasing: (purchasing: boolean) => void;
+  setPurchasingProductId: (productId: string | null) => void;
   setError: (error: IAPErrorState | null) => void;
   setMessage: (message: string | null) => void;
   resetPurchases: () => void;
@@ -61,6 +63,7 @@ export const useStoreStore = create<StoreState>()(
       purchases: [],
       isConnected: false,
       purchasing: false,
+      purchasingProductId: null,
       lastError: null,
       lastMessage: null,
 
@@ -88,6 +91,8 @@ export const useStoreStore = create<StoreState>()(
       setConnected: (connected) => set({ isConnected: connected }),
 
       setPurchasing: (purchasing) => set({ purchasing }),
+
+      setPurchasingProductId: (productId) => set({ purchasingProductId: productId }),
 
       setError: (error) => set({ lastError: error }),
 

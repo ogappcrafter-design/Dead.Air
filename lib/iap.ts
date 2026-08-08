@@ -5,6 +5,8 @@
 
 import * as InAppPurchases from 'expo-in-app-purchases';
 import { useStoreStore, IAPErrorKind, IAPErrorState, PurchaseRecord } from '../store/useStoreStore';
+import { useSkinStore, skinIdFromProductId } from '../store/useSkinStore';
+import { PURCHASABLE_SKIN_IDS } from './skins';
 
 export const PRODUCT_IDS = {
   BASE: 'com.deadair.base',
@@ -12,7 +14,13 @@ export const PRODUCT_IDS = {
   ATMOS_RAIN_NIGHT: 'com.deadair.atmos_rain_night',
   ATMOS_WINTER_STATIC: 'com.deadair.atmos_winter_static',
   ATMOS_DEEP_SPACE: 'com.deadair.atmos_deep_space',
+  SKIN_VINTAGE_WOOD: 'com.deadair.skin.vintage_wood',
+  SKIN_MILITARY_GREEN: 'com.deadair.skin.military_green',
+  SKIN_SPACE_AGE_BLUE: 'com.deadair.skin.space_age_blue',
+  SKIN_DIGITAL_PIXEL: 'com.deadair.skin.digital_pixel',
 } as const;
+
+export const SKIN_PRODUCT_IDS = PURCHASABLE_SKIN_IDS.map((skinId) => `com.deadair.skin.${skinId}`);
 
 export const ALL_PRODUCT_IDS = [
   PRODUCT_IDS.BASE,
@@ -20,6 +28,7 @@ export const ALL_PRODUCT_IDS = [
   PRODUCT_IDS.ATMOS_RAIN_NIGHT,
   PRODUCT_IDS.ATMOS_WINTER_STATIC,
   PRODUCT_IDS.ATMOS_DEEP_SPACE,
+  ...SKIN_PRODUCT_IDS,
 ];
 
 /** Map atmospheric product ID → pack ID for store.addOwnedAtmosphericPack. */
@@ -73,6 +82,11 @@ function applyPurchase(productId: string, purchase: InAppPurchases.InAppPurchase
     const packId = ATMOS_PACK_IDS[productId];
     if (packId !== undefined) {
       store.addOwnedAtmosphericPack(packId);
+    } else {
+      const skinId = skinIdFromProductId(productId);
+      if (skinId) {
+        useSkinStore.getState().addOwnedSkin(skinId);
+      }
     }
   }
   return true;
@@ -169,6 +183,7 @@ export async function initIAP(): Promise<void> {
       pendingResolvers.clear();
     }
     store.setPurchasing(false);
+    store.setPurchasingProductId(null);
   };
 
   InAppPurchases.setPurchaseListener(purchaseListener);
@@ -214,6 +229,7 @@ export async function purchaseProduct(
   }
 
   store.setPurchasing(true);
+  store.setPurchasingProductId(productId);
   store.setError(null);
   store.setMessage(null);
 
@@ -223,6 +239,7 @@ export async function purchaseProduct(
       InAppPurchases.purchaseItemAsync(productId).catch((err: unknown) => {
         pendingResolvers.delete(productId);
         store.setPurchasing(false);
+        store.setPurchasingProductId(null);
         store.setError({
           kind: 'unknown',
           message: 'Purchase failed to start.',
