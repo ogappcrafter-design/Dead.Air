@@ -1,0 +1,21 @@
+engine/calls/renderers/TimingHandler.ts
+  s_2b0387fe4f6b08::t_3f15a2de9b3f9a 40-44
+tests/engine/ProceduralCallGenerator.test.ts
+  s_2b0387fe4f6b08::t_9ed6c2bdd7ee50 33,35-39
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "209b18accd27a648c9d67ec1b444a18fb013020a",
+  "prompts": {},
+  "sessions": {
+    "s_2b0387fe4f6b08": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ses_0218bec04ffepdra4pikw0uAPJ",
+        "model": "unknown"
+      },
+      "human_author": "Dagger <dagger@pixelated.love>"
+    }
+  }
+}
