@@ -1,0 +1,69 @@
+components/settings/SkinPicker.tsx
+  s_d8c4d3ed8ee1db::t_16e02bbc0f0f20 1-35,37-40,42-54,56-90,92-208,210-241
+  s_d8c4d3ed8ee1db::t_1f50d12f815b3c 209
+  s_6b5ce32826dace::t_a7b65ccceef607 41
+  s_d8c4d3ed8ee1db::t_5a8bef9620a93e 36
+  s_d8c4d3ed8ee1db::t_4aba2ceaf5f1e9 55
+__tests__/components/RadioBodySkins.test.ts
+  s_d8c4d3ed8ee1db::t_c58cb168b33a56 1-41,48-67,44-45
+  s_d8c4d3ed8ee1db::t_ff3fc79492c827 42-43,46-47
+lib/iap.ts
+  s_d8c4d3ed8ee1db::t_2b4a88da7ad29d 6-9,12-13,17-20,23-24,44,49,55,63-64,102-103,106,110-111,115-116,119,121,130,138-139,146-148,154,159-160,200-203,214-215,224-225,243-244,257-258,268,270,276,287,293
+  s_d8c4d3ed8ee1db::t_b249fa8f3a7138 81,90
+  s_d8c4d3ed8ee1db::t_6a58cbc04fabc1 231
+  s_d8c4d3ed8ee1db::t_cd2a42d52f7bae 241
+components/radio/RadioBody.tsx
+  s_d8c4d3ed8ee1db::t_4dbae0c02256e6 3-4
+  s_d8c4d3ed8ee1db::t_f7c0fbb9f873c9 33-36
+  s_d8c4d3ed8ee1db::t_76d757e9801f61 66-109,111-114,116-125,127-128,131,142-143,152,164,169-170
+  s_d8c4d3ed8ee1db::t_80d67a48c7600c 110
+  s_d8c4d3ed8ee1db::t_7080ae749e1d0e 115
+__tests__/components/SkinPicker.test.ts
+  s_d8c4d3ed8ee1db::t_588e2c987bf455 1-39,42-125
+  s_d8c4d3ed8ee1db::t_6d28b2a85e78cd 40-41
+lib/skins.ts
+  s_d8c4d3ed8ee1db::t_a4bfbc79bf39fe 1-12,17-38,57,66-77,80-101,104-125,128-149,152-163,166-167,169-170,172
+  s_d8c4d3ed8ee1db::t_5d7d117a16d309 39-50,53-56,58-65
+  s_d8c4d3ed8ee1db::t_2523aaf86b1482 164-165
+  s_d8c4d3ed8ee1db::t_767030f861e194 168
+  s_d8c4d3ed8ee1db::t_92f7b1a576be9d 171
+  s_d8c4d3ed8ee1db::t_be3a4783681673 173-174
+  s_d8c4d3ed8ee1db::t_a16da6bc1908e3 13-16
+  s_d8c4d3ed8ee1db::t_3704aedb184a28 51-52
+  s_d8c4d3ed8ee1db::t_0d7c3b4803ef1a 78-79
+  s_d8c4d3ed8ee1db::t_4e72556538711b 102-103
+  s_d8c4d3ed8ee1db::t_9c3c396363b48a 126-127
+  s_d8c4d3ed8ee1db::t_e570dfbb34afcb 150-151
+__tests__/lib/skins.test.ts
+  s_d8c4d3ed8ee1db::t_c02a7f11909f35 1-57,60-133
+  s_d8c4d3ed8ee1db::t_13bf6eb41a9770 58-59
+store/useStoreStore.ts
+  s_d8c4d3ed8ee1db::t_82253754bae5ad 38
+  s_d8c4d3ed8ee1db::t_eada754e5d3520 51
+  s_d8c4d3ed8ee1db::t_9cbaf9909504a6 66
+  s_d8c4d3ed8ee1db::t_e7caedcd5cb6f5 95-96
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "caac9a59d12aba6e812e8e1513c3c217f6b38156",
+  "prompts": {},
+  "sessions": {
+    "s_6b5ce32826dace": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ses_01d7bf355ffeJq0zNJlWYJdy4t",
+        "model": "unknown"
+      },
+      "human_author": "Dagger <dagger@pixelated.love>"
+    },
+    "s_d8c4d3ed8ee1db": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ses_01da11ec6ffejh9g9yjBk1VzQx",
+        "model": "unknown"
+      },
+      "human_author": "Dagger <dagger@pixelated.love>"
+    }
+  }
+}

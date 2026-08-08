@@ -1,0 +1,29 @@
+components/settings/SkinPicker.tsx
+  s_d8c4d3ed8ee1db::t_16e02bbc0f0f20 1-35,37-40,42-54,56-90,92-208,210-241
+  s_d8c4d3ed8ee1db::t_1f50d12f815b3c 209
+  s_6b5ce32826dace::t_a7b65ccceef607 41
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "3fbb81c019763b1f1d985b4d1f57fb8187bd043c",
+  "prompts": {},
+  "sessions": {
+    "s_6b5ce32826dace": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ses_01d7bf355ffeJq0zNJlWYJdy4t",
+        "model": "unknown"
+      },
+      "human_author": "Dagger <dagger@pixelated.love>"
+    },
+    "s_d8c4d3ed8ee1db": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ses_01da11ec6ffejh9g9yjBk1VzQx",
+        "model": "unknown"
+      },
+      "human_author": "Dagger <dagger@pixelated.love>"
+    }
+  }
+}
