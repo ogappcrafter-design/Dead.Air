@@ -28,6 +28,8 @@ export interface PlayerStats {
   difficultyMode: DifficultyMode;
   /** Completed night shifts, bucketed by the difficulty they were played on. */
   shiftsCompletedByDifficulty: Partial<Record<DifficultyMode, number>>;
+  /** Current daily call streak (consecutive days completed). */
+  dailyStreak: number; (feat(calls): DEA-49 daily mystery call system — seeded RNG, streak tracking, exclusive calls)
 }
 
 /**
@@ -125,6 +127,27 @@ export const ACHIEVEMENTS: Achievement[] = [
     description: 'Complete a night shift on NO REST difficulty',
     icon: ' ☠',
     check: (s) => (s.shiftsCompletedByDifficulty?.no_rest ?? 0) >= 1,
+  },
+  {
+    id: 'streak_7',
+    name: 'Weekly Signal',
+    description: '7-day daily call streak',
+    icon: ' ⟡',
+    check: (s) => s.dailyStreak >= 7,
+  },
+  {
+    id: 'streak_30',
+    name: 'Faithful Listener',
+    description: '30-day daily call streak',
+    icon: ' ⟐',
+    check: (s) => s.dailyStreak >= 30,
+  },
+  {
+    id: 'streak_100',
+    name: 'Devoted',
+    description: '100-day daily call streak',
+    icon: ' ⟳',
+    check: (s) => s.dailyStreak >= 100, (feat(calls): DEA-49 daily mystery call system — seeded RNG, streak tracking, exclusive calls)
   },
 ];
 

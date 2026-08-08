@@ -8,6 +8,7 @@ import { ScrollView, View, Text, StyleSheet } from 'react-native';
 import { useGameStore } from '../../store/useGameStore';
 import { useSettingsStore } from '../../store/useSettingsStore';
 import { useAchievementStore } from '../../store/useAchievementStore';
+import { useDailyCallStore } from '../../store/useDailyCallStore';
 import { getAchievementStatus, type PlayerStats } from '../../engine/progression/Achievements';
 import { AchievementsGrid } from '../../components/progression/AchievementsGrid';
 import { colors, fonts, spacing } from '../../lib/theme';
@@ -26,6 +27,7 @@ function usePlayerStats(): PlayerStats {
   const shiftsCompleted = useGameStore((s) => s.shiftsCompleted);
   const longestCallSurvivedMs = useGameStore((s) => s.longestCallSurvivedMs);
   const difficultyMode = useSettingsStore((s) => s.difficulty);
+  const dailyStreak = useDailyCallStore((s) => s.streak); (feat(calls): DEA-49 daily mystery call system — seeded RNG, streak tracking, exclusive calls)
 
   return {
     callsReceived: receivedCalls.length,
@@ -35,6 +37,7 @@ function usePlayerStats(): PlayerStats {
     shiftsCompleted,
     longestCallSurvivedMs,
     difficultyMode,
+    dailyStreak, (feat(calls): DEA-49 daily mystery call system — seeded RNG, streak tracking, exclusive calls)
   };
 }
 

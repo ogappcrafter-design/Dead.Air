@@ -16,6 +16,7 @@ const BASE_STATS: PlayerStats = {
   longestCallSurvivedMs: 0,
   difficultyMode: 'insomniac',
   shiftsCompletedByDifficulty: {},
+  dailyStreak: 0, (no-mistakes(document): Fix stale achievement count in README for daily streak additions)
 };
 
 const withStats = (over: Partial<PlayerStats>): PlayerStats => ({
@@ -179,6 +180,9 @@ describe('getAchievementStatus', () => {
       'night_owl',
       'long_call',
       'no_rest_complete',
+      'streak_7',
+      'streak_30',
+      'streak_100', (no-mistakes(document): Fix stale achievement count in README for daily streak additions)
     ]);
   });
 
@@ -192,6 +196,7 @@ describe('getAchievementStatus', () => {
       longestCallSurvivedMs: 180000,
       difficultyMode: 'no_rest',
       shiftsCompletedByDifficulty: { no_rest: 5, insomniac: 5, night_owl: 5 },
+      dailyStreak: 100, (no-mistakes(document): Fix stale achievement count in README for daily streak additions)
     });
     const result = getAchievementStatus(maxedStats, []);
     expect(result.every((r) => r.unlocked)).toBe(true);

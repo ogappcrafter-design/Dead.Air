@@ -64,7 +64,7 @@ Answer the call. Or don't. Either way, something heard you.
 | 🧠  | **Sanity + Static economy**       | Every choice shifts your sanity and earns static — your choices have weight   |
 | 🎵  | **Real-time audio synthesis**     | Web Audio API engine: static synth → distortion → reverb → spatial processing |
 | 📼  | **15 collectible tapes**          | Archive every transmission. Rarity tiers from `common` to `legendary`         |
-| 🏆  | **11 achievements**               | Track milestones from First Contact to No Rest for the Wicked                 |
+| 🏆  | **14 achievements**               | Track milestones from First Contact to No Rest for the Wicked, plus daily streaks | (no-mistakes(document): Fix stale achievement count in README for daily streak additions)
 | 🌙  | **Night Shift system**            | 4-hour in-game sessions compressed to ~20 minutes real-time                   |
 | ♾️  | **Infinite Signal mode**          | AI-generated calls — endless, never the same twice _(planned)_                |
 | 💾  | **Persistent saves**              | Pick up exactly where you left off, every single time                         |

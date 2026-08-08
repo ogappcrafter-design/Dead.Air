@@ -2,12 +2,14 @@ import { View, StyleSheet, Pressable, Text } from 'react-native';
 import { useRouter } from 'expo-router';
 import { colors, fonts, spacing } from '../../lib/theme';
 import { RadioBody } from '../../components/radio/RadioBody';
+import { StreakIndicator } from '../../components/radio/StreakIndicator';
 import { ActiveCallDispatcher } from '@/components/calls/ActiveCallDispatcher';
 import { AchievementNotification } from '@/components/progression/AchievementNotification';
 import { useAchievementStore } from '@/store/useAchievementStore';
 import { useTutorialController } from '@/hooks/useTutorialController';
 import { TutorialIndicator } from '@/components/tutorial/TutorialIndicator';
 import { TutorialTransition } from '@/components/tutorial/TutorialTransition';
+import { useDailyCall } from '@/hooks/useDailyCall'; (feat(calls): DEA-49 daily mystery call system — seeded RNG, streak tracking, exclusive calls)
 import CRTView from '../../components/shared/CRTView';
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 
@@ -17,11 +19,14 @@ export default function RadioScreen() {
   const clearRecentUnlock = useAchievementStore((s) => s.clearRecentUnlock);
   const tutorial = useTutorialController();
 
+  useDailyCall();
+
   return (
     <CRTView intensity={0.3}>
       <View style={styles.container}>
         {tutorial.isActive && <TutorialIndicator />}
         <RadioBody />
+        <StreakIndicator />
         <ErrorBoundary>
           <ActiveCallDispatcher />
         </ErrorBoundary>

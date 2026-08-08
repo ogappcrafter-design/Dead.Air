@@ -2,12 +2,14 @@ import { initCallManager } from './CallManager';
 import { CALLS, BANDS as BANDS_DATA } from '@/data/calls';
 import { getCallPool } from '@/engine/progression/InfiniteSignal';
 import { TUTORIAL_CALLS } from '@/data/tutorialCalls';
+import { DailyCallGenerator, getTodayUTC } from './DailyCallGenerator'; (feat(calls): DEA-49 daily mystery call system — seeded RNG, streak tracking, exclusive calls)
 import { useGameStore } from '@/store/useGameStore';
 import { useRadioStore } from '@/store/useRadioStore';
 import { useAchievementStore } from '@/store/useAchievementStore';
 import { useAnalyticsStore } from '@/store/useAnalyticsStore';
 import { useChoiceHistoryStore } from '@/store/choiceHistoryStore';
 import { useSettingsStore } from '@/store/useSettingsStore';
+import { useDailyCallStore } from '@/store/useDailyCallStore'; (feat(calls): DEA-49 daily mystery call system — seeded RNG, streak tracking, exclusive calls)
 import type { Band } from '@/lib/constants';
 import type { CallData } from './types';
 
@@ -24,6 +26,24 @@ const registry = new Map<number, CallData>([
   ..._expansionEntries,
   ..._tutorialEntries,
 ]);
+
+// Generate today's daily call and add to registry (DEA-49).
+// The streak may be 0 if the store hasn't rehydrated yet; useDailyCall
+// hook will refresh the registration once the correct streak is known.
+const _dailyGenerator = new DailyCallGenerator();
+const _dailyStreak = useDailyCallStore.getState().streak;
+const _todayStr = getTodayUTC();
+const _dailyResult = _dailyGenerator.generate({ streak: _dailyStreak, dateStr: _todayStr });
+registry.set(_dailyResult.call.id, _dailyResult.call);
+
+/**
+ * Register or replace a daily call in the registry.
+ * Called by useDailyCall hook after store rehydration to ensure
+ * the daily call reflects the player's actual streak tier.
+ */
+export function registerDailyCall(call: CallData): void {
+  registry.set(call.id, call);
+}
 
 const bands = [
   ...(
@@ -76,6 +96,11 @@ export const callManager = initCallManager({
     getUnlockedBands: () => useGameStore.getState().unlockedBands,
     markCallReceived: (callId) => {
       useGameStore.getState().markCallReceived(callId);
+      const dailyState = useDailyCallStore.getState();
+      const today = getTodayUTC();
+      if (dailyState.currentDailyCallId === callId && dailyState.currentDailyCallDate === today) {
+        dailyState.markCompleted(today);
+      }
       const call = registry.get(callId);
       if (call !== undefined) {
         useAnalyticsStore.getState().track('call_survived', {
@@ -97,6 +122,7 @@ export const callManager = initCallManager({
     getPlayerStats: () => {
       const s = useGameStore.getState();
       const difficulty = useSettingsStore.getState().difficulty;
+      const ds = useDailyCallStore.getState(); (feat(calls): DEA-49 daily mystery call system — seeded RNG, streak tracking, exclusive calls)
       return {
         callsReceived: s.receivedCalls.length,
         bandsUnlocked: s.unlockedBands.length,
@@ -106,6 +132,7 @@ export const callManager = initCallManager({
         shiftsCompletedByDifficulty: s.shiftsCompletedByDifficulty,
         longestCallSurvivedMs: s.longestCallSurvivedMs,
         difficultyMode: difficulty,
+        dailyStreak: ds.streak, (feat(calls): DEA-49 daily mystery call system — seeded RNG, streak tracking, exclusive calls)
       };
     },
   },
