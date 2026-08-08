@@ -157,7 +157,7 @@ describe('getCallPool', () => {
 
   // Procedural generation is wired: owning the expansion adds procedural calls.
   it('returns sacred + procedural calls when expansion IS owned', () => {
-    const pool = getCallPool(sacredCalls, true, { now: new Date(2026, 5, 15) });
+    const pool = getCallPool(sacredCalls, true, undefined, { now: new Date(2026, 5, 15) });
     expect(pool.length).toBeGreaterThan(18);
     expect(pool.length).toBe(66);
   });

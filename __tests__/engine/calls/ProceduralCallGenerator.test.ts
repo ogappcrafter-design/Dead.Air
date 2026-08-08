@@ -382,14 +382,14 @@ describe('IAP gate behavior (DEA-78 / DEA-79)', () => {
   });
 
   it('getCallPool with custom proceduralCountPerBand', () => {
-    const pool = getCallPool(sacredCalls, true, { proceduralCountPerBand: 2 });
+    const pool = getCallPool(sacredCalls, true, undefined, { proceduralCountPerBand: 2 });
     // 18 sacred + (2 per band × 8 bands) = 34
     expect(pool.length).toBe(18 + 16);
   });
 
   it('getCallPool with custom fragments (smaller library)', () => {
     const singleBandFragments: FragmentLibrary[] = [ALL_FRAGMENTS[0]!];
-    const pool = getCallPool(sacredCalls, true, {
+    const pool = getCallPool(sacredCalls, true, undefined, {
       fragments: singleBandFragments,
       proceduralCountPerBand: 5,
     });

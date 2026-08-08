@@ -1,8 +1,9 @@
 import { useCallback, useMemo } from 'react';
-import { View, StyleSheet } from 'react-native';
-import { colors, spacing } from '../../lib/theme';
+import { View, Text, StyleSheet } from 'react-native';
+import { colors, fonts, spacing } from '../../lib/theme';
 import { useRadioStore } from '../../store/useRadioStore';
 import { useGameStore } from '../../store/useGameStore';
+import { usePlayerStore } from '../../store/usePlayerStore';
 import { FrequencyDisplay } from './FrequencyDisplay';
 import { BandSelector } from './BandSelector';
 import { TuningDial } from './TuningDial';
@@ -23,6 +24,8 @@ export function RadioBody() {
   const setVolume = useRadioStore((s) => s.setVolume);
 
   const unlockedBands = useGameStore((s) => s.unlockedBands);
+
+  const stationName = usePlayerStore((s) => s.stationName);
 
   const setBand = useRadioStore((s) => s.setBand);
 
@@ -59,6 +62,11 @@ export function RadioBody() {
     <View style={styles.container}>
       <View style={styles.radio} accessible accessibilityLabel="Radio receiver">
         <FrequencyDisplay frequency={frequency} bandName={bandName} />
+        {stationName.length > 0 && (
+          <Text style={styles.stationName} numberOfLines={1}>
+            {stationName}
+          </Text>
+        )}
 
         <BandSelector
           currentBand={currentBand}
@@ -144,5 +152,15 @@ const styles = StyleSheet.create({
     height: 8,
     borderRadius: 4,
     backgroundColor: colors.green,
+  },
+  stationName: {
+    fontFamily: fonts.mono,
+    fontSize: 11,
+    color: colors.amber,
+    textAlign: 'center',
+    letterSpacing: 2,
+    marginTop: spacing.xs,
+    marginBottom: spacing.xs,
+    opacity: 0.8,
   },
 });

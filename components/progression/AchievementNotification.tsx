@@ -25,6 +25,7 @@ import Animated, {
 import type { Achievement } from '../../engine/progression/Achievements';
 import { colors, fonts, spacing } from '../../lib/theme';
 import { useSettingsStore } from '../../store/useSettingsStore';
+import { usePlayerStore } from '../../store/usePlayerStore';
 
 interface AchievementNotificationProps {
   /** Achievement to announce, or null to hide. */
@@ -48,6 +49,7 @@ export const AchievementNotification = memo(function AchievementNotification({
   const offsetY = useSharedValue(slideDistance);
   const opacity = useSharedValue(0);
   const reducedMotion = useSettingsStore((s) => s.reducedMotion);
+  const djCallSign = usePlayerStore((s) => s.djCallSign);
 
   useEffect(() => {
     if (achievement === null) {
@@ -98,7 +100,9 @@ export const AchievementNotification = memo(function AchievementNotification({
       <View style={styles.row}>
         <Text style={styles.icon}>{achievement.icon}</Text>
         <View style={styles.textCol}>
-          <Text style={styles.label}>ACHIEVEMENT UNLOCKED</Text>
+          <Text style={styles.label}>
+            {djCallSign ? `${djCallSign} — ` : ''}ACHIEVEMENT UNLOCKED
+          </Text>
           <Text style={styles.name}>{achievement.name}</Text>
           <Text style={styles.description}>{achievement.description}</Text>
         </View>

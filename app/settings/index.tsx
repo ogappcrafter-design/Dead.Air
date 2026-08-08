@@ -1,9 +1,11 @@
-import { View, Text, StyleSheet, Pressable, Switch, ScrollView } from 'react-native';
+import { useState } from 'react';
+import { View, Text, StyleSheet, Pressable, Switch, ScrollView, TextInput } from 'react-native';
 import { router } from 'expo-router';
 import { colors, fonts, spacing } from '../../lib/theme';
 import { useSettingsStore } from '../../store/useSettingsStore';
 import { useAnalyticsStore } from '../../store/useAnalyticsStore';
 import { useStoreStore } from '../../store/useStoreStore';
+import { usePlayerStore } from '../../store/usePlayerStore';
 import { ErrorReportButton } from '../../components/shared/ErrorReportButton';
 import { restorePurchases } from '../../lib/iap';
 
@@ -36,6 +38,17 @@ export default function SettingsScreen() {
   const lastError = useStoreStore((s) => s.lastError);
   const lastMessage = useStoreStore((s) => s.lastMessage);
 
+  const playerName = usePlayerStore((s) => s.playerName);
+  const setPlayerName = usePlayerStore((s) => s.setPlayerName);
+  const djCallSign = usePlayerStore((s) => s.djCallSign);
+  const setDjCallSign = usePlayerStore((s) => s.setDjCallSign);
+  const stationName = usePlayerStore((s) => s.stationName);
+  const setStationName = usePlayerStore((s) => s.setStationName);
+
+  const [editingName, setEditingName] = useState(playerName);
+  const [editingCallSign, setEditingCallSign] = useState(djCallSign);
+  const [editingStation, setEditingStation] = useState(stationName);
+
   const lower = Math.max(0, Math.round((crtIntensity - CRT_INTENSITY_STEP) * 10) / 10);
   const raise = Math.min(1, Math.round((crtIntensity + CRT_INTENSITY_STEP) * 10) / 10);
 
@@ -49,6 +62,73 @@ export default function SettingsScreen() {
       <Text style={styles.title} accessibilityRole="header">
         SETTINGS
       </Text>
+
+      <View style={styles.card}>
+        <Text style={styles.sectionLabel}>IDENTITY</Text>
+
+        <View style={styles.identityRow}>
+          <Text style={styles.rowLabel}>NAME</Text>
+          <TextInput
+            testID="settings-player-name"
+            style={styles.textInput}
+            value={editingName}
+            onChangeText={setEditingName}
+            onBlur={() => {
+              const trimmed = editingName.trim();
+              if (trimmed.length > 0) setPlayerName(trimmed);
+              else setEditingName(playerName);
+            }}
+            maxLength={32}
+            autoCapitalize="words"
+            placeholder="Your name"
+            placeholderTextColor={colors.textMuted}
+            accessible
+            accessibilityLabel="Player name"
+          />
+        </View>
+
+        <View style={styles.identityRow}>
+          <Text style={styles.rowLabel}>CALL SIGN</Text>
+          <TextInput
+            testID="settings-dj-call-sign"
+            style={styles.textInput}
+            value={editingCallSign}
+            onChangeText={setEditingCallSign}
+            onBlur={() => {
+              const trimmed = editingCallSign.trim();
+              if (trimmed.length > 0) setDjCallSign(trimmed);
+              else setEditingCallSign(djCallSign);
+            }}
+            maxLength={20}
+            autoCapitalize="characters"
+            placeholder="DJ call sign"
+            placeholderTextColor={colors.textMuted}
+            accessible
+            accessibilityLabel="DJ call sign"
+          />
+        </View>
+
+        <View style={styles.identityRow}>
+          <Text style={styles.rowLabel}>STATION</Text>
+          <TextInput
+            testID="settings-station-name"
+            style={styles.textInput}
+            value={editingStation}
+            onChangeText={setEditingStation}
+            onBlur={() => {
+              const trimmed = editingStation.trim();
+              if (trimmed.length > 0) setStationName(trimmed);
+              else setEditingStation(stationName);
+            }}
+            maxLength={32}
+            autoCapitalize="words"
+            placeholder="Station name"
+            placeholderTextColor={colors.textMuted}
+            accessible
+            accessibilityLabel="Station name"
+          />
+        </View>
+      </View>
 
       <View style={styles.card}>
         <Text style={styles.sectionLabel}>CRT</Text>
@@ -416,5 +496,20 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.amber,
     letterSpacing: 2,
+  },
+  identityRow: {
+    flexDirection: 'column',
+    gap: spacing.xs,
+  },
+  textInput: {
+    fontFamily: fonts.mono,
+    fontSize: 13,
+    color: colors.text,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 4,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.sm,
+    letterSpacing: 1,
   },
 });

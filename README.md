@@ -57,19 +57,19 @@ Answer the call. Or don't. Either way, something heard you.
 
 ## 🎮 Features
 
-| | Feature | Description |
-|---|---|---|
-| 📡 | **18 hand-crafted transmissions** | Five unlockable frequency bands, each with its own escalating dread |
-| 📞 | **5 call types** | Just Listen · Dead Air · Right Answer · Signal Decode · Stay Calm |
-| 🧠 | **Sanity + Static economy** | Every choice shifts your sanity and earns static — your choices have weight |
-| 🎵 | **Real-time audio synthesis** | Web Audio API engine: static synth → distortion → reverb → spatial processing |
-| 📼 | **15 collectible tapes** | Archive every transmission. Rarity tiers from `common` to `legendary` |
-| 🏆 | **10 achievements** | Track milestones from First Contact to Frequency Walker |
-| 🌙 | **Night Shift system** | 4-hour in-game sessions compressed to ~20 minutes real-time |
-| ♾️ | **Infinite Signal mode** | AI-generated calls — endless, never the same twice *(planned)* |
-| 💾 | **Persistent saves** | Pick up exactly where you left off, every single time |
-| 📱 | **Cross-platform** | iOS · Android · Web PWA — single codebase |
-| 🖥️ | **CRT aesthetic** | Amber and green on near-black, scanlines, glow text |
+|     | Feature                           | Description                                                                   |
+| --- | --------------------------------- | ----------------------------------------------------------------------------- |
+| 📡  | **18 hand-crafted transmissions** | Five unlockable frequency bands, each with its own escalating dread           |
+| 📞  | **5 call types**                  | Just Listen · Dead Air · Right Answer · Signal Decode · Stay Calm             |
+| 🧠  | **Sanity + Static economy**       | Every choice shifts your sanity and earns static — your choices have weight   |
+| 🎵  | **Real-time audio synthesis**     | Web Audio API engine: static synth → distortion → reverb → spatial processing |
+| 📼  | **15 collectible tapes**          | Archive every transmission. Rarity tiers from `common` to `legendary`         |
+| 🏆  | **10 achievements**               | Track milestones from First Contact to Frequency Walker                       |
+| 🌙  | **Night Shift system**            | 4-hour in-game sessions compressed to ~20 minutes real-time                   |
+| ♾️  | **Infinite Signal mode**          | AI-generated calls — endless, never the same twice _(planned)_                |
+| 💾  | **Persistent saves**              | Pick up exactly where you left off, every single time                         |
+| 📱  | **Cross-platform**                | iOS · Android · Web PWA — single codebase                                     |
+| 🖥️  | **CRT aesthetic**                 | Amber and green on near-black, scanlines, glow text                           |
 
 ---
 
@@ -110,13 +110,13 @@ That's it. The Expo dev server launches and you're tuning in.
 
 Tune the dial. Each band is darker than the last.
 
-| Band | Frequency | Unlocks At | Vibe |
-|---|---|---|---|
-| **LIVING** | 88.7 FM | Start | Eerily normal callers. Mundane conversations that reveal something deeply wrong in the last line. |
-| **LIMINAL** | 102.3 FM | Survive 3 night shifts | Whispers, reversed audio, time distortion. Something listens. |
-| **LOST** | 117.8 AM | Collect 5 tapes | Children singing, dial-up tones, impossible distances. |
-| **CLASSIFIED** | ███.█ FM | Complete "The Signal" call | Numbers stations, emergency alerts, distorted orders. They know you're listening. |
-| **████████** | ???.? | Find all 15 tapes | `[DATA EXPUNGED]` |
+| Band           | Frequency | Unlocks At                 | Vibe                                                                                              |
+| -------------- | --------- | -------------------------- | ------------------------------------------------------------------------------------------------- |
+| **LIVING**     | 88.7 FM   | Start                      | Eerily normal callers. Mundane conversations that reveal something deeply wrong in the last line. |
+| **LIMINAL**    | 102.3 FM  | Survive 3 night shifts     | Whispers, reversed audio, time distortion. Something listens.                                     |
+| **LOST**       | 117.8 AM  | Collect 5 tapes            | Children singing, dial-up tones, impossible distances.                                            |
+| **CLASSIFIED** | ███.█ FM  | Complete "The Signal" call | Numbers stations, emergency alerts, distorted orders. They know you're listening.                 |
+| **████████**   | ???.?     | Find all 15 tapes          | `[DATA EXPUNGED]`                                                                                 |
 
 ---
 
@@ -124,13 +124,13 @@ Tune the dial. Each band is darker than the last.
 
 Every transmission is a different kind of encounter.
 
-| Type | Mechanic |
-|---|---|
-| **Just Listen** | Stay on the line. Don't touch anything. Let it finish. |
-| **Dead Air** | The silence between stations. Something fills it. |
-| **Right Answer** | They ask a question. Your answer determines what happens next. |
-| **Signal Decode** | Break the code. Read between the frequencies. |
-| **Stay Calm** | Your sanity is draining. Keep it together. |
+| Type              | Mechanic                                                       |
+| ----------------- | -------------------------------------------------------------- |
+| **Just Listen**   | Stay on the line. Don't touch anything. Let it finish.         |
+| **Dead Air**      | The silence between stations. Something fills it.              |
+| **Right Answer**  | They ask a question. Your answer determines what happens next. |
+| **Signal Decode** | Break the code. Read between the frequencies.                  |
+| **Stay Calm**     | Your sanity is draining. Keep it together.                     |
 
 ---
 
@@ -161,6 +161,7 @@ deadair/
 │   ├── useRadioStore.ts        #   Frequency, signal strength
 │   ├── useSettingsStore.ts     #   Volume, CRT effects toggles
 │   ├── useStoreStore.ts        #   IAP entitlements
+│   ├── usePlayerStore.ts       #   Player name, DJ call sign, station name
 │   ├── useAchievementStore.ts  #   Unlocked achievements
 │   └── useAnalyticsStore.ts    #   Event tracking
 ├── data/                       # Game content
@@ -213,10 +214,10 @@ A shift is a 4-hour in-game block compressed to ~20 minutes real-time. Calls are
 
 Two resources that define your playthrough:
 
-| Resource | Range | Effect |
-|---|---|---|
+| Resource   | Range   | Effect                                                |
+| ---------- | ------- | ----------------------------------------------------- |
 | **Sanity** | 100 → 0 | Drops with disturbing calls. At 0, something happens. |
-| **Static** | 0 → 100 | Earned by answering calls. Currency for progression. |
+| **Static** | 0 → 100 | Earned by answering calls. Currency for progression.  |
 
 Every call type has configurable `sanityDelta` and `staticReward` values. Some calls restore sanity. Some drain it. The choice is always yours — and always costs something.
 
@@ -257,16 +258,16 @@ Saves automatically after every completed call. Loads before the first screen re
 
 </div>
 
-| Layer | Technology |
-|---|---|
-| Framework | React 19 + React Native 0.85 |
-| Build/Dev | Expo SDK 56 · Expo Router · Metro |
-| Language | TypeScript 6.0 |
-| State | Zustand 5.0 + AsyncStorage persistence |
-| Audio | Web Audio API (custom engine) |
-| Testing | Jest + React Native Testing Library |
-| Error Tracking | Sentry |
-| Builds | EAS (Expo Application Services) |
+| Layer          | Technology                             |
+| -------------- | -------------------------------------- |
+| Framework      | React 19 + React Native 0.85           |
+| Build/Dev      | Expo SDK 56 · Expo Router · Metro      |
+| Language       | TypeScript 6.0                         |
+| State          | Zustand 5.0 + AsyncStorage persistence |
+| Audio          | Web Audio API (custom engine)          |
+| Testing        | Jest + React Native Testing Library    |
+| Error Tracking | Sentry                                 |
+| Builds         | EAS (Expo Application Services)        |
 
 ---
 
@@ -331,8 +332,8 @@ Not for redistribution without permission.
 
 <div align="center">
 
-*The frequency is open. Something is already waiting.*
+_The frequency is open. Something is already waiting._
 
-` ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ `
+`░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░`
 
 </div>

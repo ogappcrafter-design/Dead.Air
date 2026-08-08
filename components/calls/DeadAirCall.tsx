@@ -3,11 +3,13 @@
 // Lines play one at a time (2.5s auto-advance, tap to skip), then a countdown timer
 // for `call.waitSeconds`, then the call auto-completes. No player interaction.
 
-import { useCallback, useEffect, useRef, useState, type JSX, memo } from 'react';
+import { useCallback, useEffect, useRef, useState, useMemo, type JSX, memo } from 'react';
 import { Pressable, Text, View, StyleSheet } from 'react-native';
 import { colors, fonts, spacing } from '../../lib/theme';
 import type { CallData, CallOutcome } from '../../engine/calls/types';
 import { computeDeadAirOutcome } from '../../engine/calls/renderers/DeadAirHandler';
+import { interpolateCallLines } from '../../lib/callInterpolation';
+import { usePlayerStore } from '../../store/usePlayerStore';
 
 interface DeadAirCallProps {
   call: CallData;
@@ -22,7 +24,14 @@ export const DeadAirCall = memo(function DeadAirCall({
   call,
   onComplete,
 }: DeadAirCallProps): JSX.Element {
-  const lines = call.lines ?? [];
+  const playerName = usePlayerStore((s) => s.playerName);
+  const djCallSign = usePlayerStore((s) => s.djCallSign);
+  const stationName = usePlayerStore((s) => s.stationName);
+
+  const lines = useMemo(
+    () => interpolateCallLines(call.id, call.lines ?? [], { playerName, djCallSign, stationName }),
+    [call.id, call.lines, playerName, djCallSign, stationName],
+  );
   const [phase, setPhase] = useState<Phase>('lines');
   const [lineIndex, setLineIndex] = useState(0);
   const [remainingSeconds, setRemainingSeconds] = useState(call.waitSeconds ?? 0);

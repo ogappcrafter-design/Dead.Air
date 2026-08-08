@@ -35,6 +35,7 @@ export default function RootLayout() {
             }}
           >
             <Stack.Screen name="index" />
+            <Stack.Screen name="onboarding" />
             <Stack.Screen name="radio" />
             <Stack.Screen name="tapes" />
             <Stack.Screen name="store" />

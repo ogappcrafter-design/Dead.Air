@@ -69,6 +69,7 @@ export class ProceduralCallGenerator {
   private readonly variations: ReadonlyArray<BandVariation>;
   private readonly fragmentsByBand: Map<number, FragmentLibrary>;
   private readonly variationsByBand: Map<number, BandVariation>;
+  private readonly idBase: number;
   private nextId: number;
 
   constructor(
@@ -82,6 +83,7 @@ export class ProceduralCallGenerator {
     this.variations = variations;
     this.fragmentsByBand = new Map(this.fragments.map((lib) => [lib.band, lib]));
     this.variationsByBand = new Map(this.variations.map((v) => [v.band, v]));
+    this.idBase = idBase;
     this.nextId = idBase;
   }
 
@@ -250,7 +252,7 @@ export class ProceduralCallGenerator {
 
   /** Reset the id counter (test-only). */
   reset(): void {
-    this.nextId = idBase;
+    this.nextId = this.idBase;
   }
 
   /**

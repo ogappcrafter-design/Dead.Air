@@ -17,6 +17,8 @@ import { ProceduralCallGenerator } from '../calls/ProceduralCallGenerator';
 import { ALL_FRAGMENTS } from '../../data/fragments';
 import type { FragmentLibrary, BandVariation } from '../../data/fragments/types';
 import { isCallUnlocked } from './UnlockGraph';
+import type { ChoiceHistorySnapshot } from '../../store/choiceHistoryStore';
+import { generateSeasonalCalls, getActiveSeason } from './SeasonalCallInjector';
 
 /**
  * Minimal subset of the store this module needs. The full useStoreStore
@@ -113,5 +115,5 @@ export const getCallPool = (
   });
   const seasonal = generateSeasonalCalls(getActiveSeason(options?.now));
 
-  return [...eligibleSacred, ...procedural];
+  return [...eligibleSacred, ...procedural, ...seasonal];
 };

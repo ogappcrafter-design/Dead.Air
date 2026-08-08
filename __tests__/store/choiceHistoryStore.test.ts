@@ -229,3 +229,83 @@ describe('choiceHistoryStore', () => {
     });
   });
 });
+
+
+describe('legacy choice-history migration (DEA-48 P1)', () => {
+  const LEGACY_KEY = `${SAVE_KEY}_choices`;
+
+  beforeEach(() => {
+    useChoiceHistoryStore.getState().clear();
+  });
+
+  it('imports valid legacy records when the v1 key is empty', async () => {
+    await AsyncStorage.setItem(
+      LEGACY_KEY,
+      JSON.stringify([
+        makeRecord(1001, 'LEGACY_KEY', 'Door A'),
+        makeRecord(1002, 'RIGHT_ANSWER:1002:0', 2),
+      ]),
+    );
+    await AsyncStorage.removeItem(STORAGE_KEY);
+
+    await useChoiceHistoryStore.persist.rehydrate();
+    await flushPromises();
+    await flushPromises();
+
+    const state = useChoiceHistoryStore.getState();
+    expect(state.choices).toHaveLength(2);
+    expect(state.choices[0].choiceKey).toBe('LEGACY_KEY');
+    expect(state.choices[1].value).toBe(2);
+
+    const raw = await AsyncStorage.getItem(STORAGE_KEY);
+    expect(raw).toBeTruthy();
+    const parsed = JSON.parse(raw!);
+    expect(parsed.state.choices).toHaveLength(2);
+    expect(parsed.state.choices[0].choiceKey).toBe('LEGACY_KEY');
+  });
+
+  it('supports the persisted-envelope legacy format', async () => {
+    await AsyncStorage.setItem(
+      LEGACY_KEY,
+      JSON.stringify({
+        state: { choices: [makeRecord(3001, 'ENVELOPE_KEY', 'env')] },
+        version: 0,
+      }),
+    );
+    await AsyncStorage.removeItem(STORAGE_KEY);
+
+    await useChoiceHistoryStore.persist.rehydrate();
+    await flushPromises();
+    await flushPromises();
+
+    const state = useChoiceHistoryStore.getState();
+    expect(state.choices).toHaveLength(1);
+    expect(state.choices[0].choiceKey).toBe('ENVELOPE_KEY');
+  });
+
+  it('never overwrites existing v1 choices with legacy records', async () => {
+    useChoiceHistoryStore.getState().recordChoice(2001, 'V1_KEY', 'keep');
+    await flushPromises();
+    await AsyncStorage.setItem(
+      LEGACY_KEY,
+      JSON.stringify([makeRecord(1001, 'LEGACY_KEY', 'drop')]),
+    );
+
+    await useChoiceHistoryStore.persist.rehydrate();
+    await flushPromises();
+
+    const state = useChoiceHistoryStore.getState();
+    expect(state.choices).toHaveLength(1);
+    expect(state.choices[0].choiceKey).toBe('V1_KEY');
+  });
+
+  it('ignores corrupt legacy payloads without breaking hydration', async () => {
+    await AsyncStorage.setItem(LEGACY_KEY, '{not-json');
+    await AsyncStorage.removeItem(STORAGE_KEY);
+
+    await useChoiceHistoryStore.persist.rehydrate();
+    await flushPromises();
+
+    expect(useChoiceHistoryStore.getState().choices).toHaveLength(0);
+  });
+});
