@@ -11,6 +11,7 @@ import { useStoreStore } from '../../store/useStoreStore';
 import { useAnalyticsStore } from '../../store/useAnalyticsStore';
 import { StoreCard } from '../../components/store/StoreCard';
 import { purchaseProduct, restorePurchases, PRODUCT_IDS } from '../../lib/iap';
+import { ATMOSPHERIC_PACKS } from '../../data/atmosphericPacks';
 
 /** Stable noop — avoids creating a new function reference on every render. */
 const NOOP = () => {};
@@ -20,6 +21,7 @@ export default function StoreScreen() {
   const hasInfiniteSignal = useStoreStore((s) => s.hasInfiniteSignal);
   const hasBase = useStoreStore((s) => s.hasBase);
   const purchasing = useStoreStore((s) => s.purchasing);
+  const ownedAtmosphericPacks = useStoreStore((s) => s.ownedAtmosphericPacks);
   const lastError = useStoreStore((s) => s.lastError);
   const lastMessage = useStoreStore((s) => s.lastMessage);
   const track = useAnalyticsStore((s) => s.track);
@@ -41,6 +43,17 @@ export default function StoreScreen() {
     const result = await purchaseProduct(PRODUCT_IDS.INFINITE_SIGNAL);
     if (result?.responseCode === 0 && useStoreStore.getState().hasInfiniteSignal) {
       track('iap_completed', { productId: 'infinite_signal' });
+    }
+  };
+
+  const handlePurchaseAtmos = async (productId: string, packId: string) => {
+    track('iap_started', { productId: packId });
+    const result = await purchaseProduct(productId);
+    if (
+      result?.responseCode === 0 &&
+      useStoreStore.getState().ownedAtmosphericPacks.includes(packId)
+    ) {
+      track('iap_completed', { productId: packId });
     }
   };
 
@@ -113,6 +126,26 @@ export default function StoreScreen() {
           onPurchase={handlePurchaseInfiniteSignal}
           purchaseButtonTestID="infinite-signal-purchase"
         />
+
+        {ATMOSPHERIC_PACKS.map((pack) => {
+          const owned = ownedAtmosphericPacks.includes(pack.id);
+          const state: 'owned' | 'purchasing' | 'available' = owned
+            ? 'owned'
+            : purchasing
+              ? 'purchasing'
+              : 'available';
+          return (
+            <StoreCard
+              key={pack.id}
+              title={pack.name}
+              description={pack.description}
+              price={pack.price}
+              state={state}
+              onPurchase={() => handlePurchaseAtmos(pack.productId, pack.id)}
+              purchaseButtonTestID={`atmos-${pack.id}-purchase`}
+            />
+          );
+        })}
 
         <Pressable
           testID="restore-purchases"

@@ -36,6 +36,7 @@ import { getAudioEngine, getOrCreateAudioEngine } from '../../engine/audio/Audio
 import { VoiceProcessor } from '../../engine/audio/VoiceProcessor';
 import { createWebAudioBridge } from '../../engine/audio/WebAudioBridge';
 import TapePlayer from '../../components/tapes/TapePlayer';
+import { useAmbientAudioBridge } from '../../hooks/useAmbientAudioBridge';
 
 const BAND_BY_INDEX: readonly Band[] = BANDS;
 
@@ -117,6 +118,9 @@ export default function TapesScreen() {
 
   const droneRef = useRef<TapeDroneSynth | null>(null);
   const tickRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Wire ambient pack selection → AudioEngine profile.
+  useAmbientAudioBridge();
 
   const collectedSet = useMemo(() => new Set(collectedTapes), [collectedTapes]);
 

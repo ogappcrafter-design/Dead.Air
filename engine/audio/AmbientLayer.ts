@@ -8,8 +8,10 @@ import {
   BridgeBufferSourceNode,
   BridgeGainNode,
   BridgeBiquadNode,
+  StaticCharacter,
 } from './PlatformBridge';
 import { Band } from '../../lib/constants';
+import type { AmbientProfile } from './profiles/types';
 
 /** Map band → ambient character params (filter + base gain). */
 export interface AmbientBandParams {
@@ -53,6 +55,7 @@ export class AmbientLayer {
   private tone: BridgeBiquadNode;
   private source: BridgeBufferSourceNode | null = null;
   private currentBand: Band | null = null;
+  private currentProfile: AmbientProfile | null = null;
   private currentGain = 0;
   private targetGain = 0;
   private playing = false;
@@ -84,12 +87,13 @@ export class AmbientLayer {
     this.currentBand = band;
     this.playing = true;
 
-    const params = bandAmbientParams[band];
+    const params = this.getParamsForBand(band);
     this.tone.setFrequency(params.centerFreq);
     this.targetGain = params.baseGain;
 
     if (this.source === null) {
-      this.source = this.bridge.createStaticSource(this.ctx, 'pink');
+      const character = this.currentProfile?.staticCharacter ?? 'pink';
+      this.source = this.bridge.createStaticSource(this.ctx, character);
       this.source.setLoop(true);
       this.source.connect(this.tone);
       this.source.start(this.ctx.currentTime);
@@ -104,7 +108,7 @@ export class AmbientLayer {
       return;
     }
     this.currentBand = band;
-    const params = bandAmbientParams[band];
+    const params = this.getParamsForBand(band);
     this.tone.setFrequency(params.centerFreq);
     this.targetGain = params.baseGain;
     this.fadeTo(params.baseGain, fadeSeconds);
@@ -121,7 +125,7 @@ export class AmbientLayer {
     if (this.currentBand === null) {
       return;
     }
-    const params = bandAmbientParams[this.currentBand];
+    const params = this.getParamsForBand(this.currentBand);
     this.targetGain = params.baseGain;
     this.fadeTo(params.baseGain, fadeSeconds);
   }
@@ -144,6 +148,41 @@ export class AmbientLayer {
   /** True if layer is currently playing. */
   isPlaying(): boolean {
     return this.playing;
+  }
+
+  /** Current ambient profile, or null if using default. */
+  getProfile(): AmbientProfile | null {
+    return this.currentProfile;
+  }
+
+  /** Set an atmospheric ambient profile. Recreates source if noise character changes. */
+  setProfile(profile: AmbientProfile | null): void {
+    const prevChar: StaticCharacter = this.currentProfile?.staticCharacter ?? 'pink';
+    const nextChar: StaticCharacter = profile?.staticCharacter ?? 'pink';
+    this.currentProfile = profile;
+
+    if (this.source !== null && prevChar !== nextChar) {
+      this.source.stop();
+      this.source.disconnect();
+      this.source = this.bridge.createStaticSource(this.ctx, nextChar);
+      this.source.setLoop(true);
+      this.source.connect(this.tone);
+      this.source.start(this.ctx.currentTime);
+    }
+
+    if (this.currentBand !== null && this.playing) {
+      const params = this.getParamsForBand(this.currentBand);
+      this.tone.setFrequency(params.centerFreq);
+      this.targetGain = params.baseGain;
+      this.fadeTo(params.baseGain, this.fadeSeconds);
+    }
+  }
+
+  private getParamsForBand(band: Band): AmbientBandParams {
+    if (this.currentProfile !== null) {
+      return this.currentProfile.bandParams[band];
+    }
+    return bandAmbientParams[band];
   }
 
   /** Internal: simple linear fade using setInterval ticks. */

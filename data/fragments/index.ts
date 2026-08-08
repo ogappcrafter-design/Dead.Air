@@ -14,6 +14,9 @@ import { REDACTED_FRAGMENTS } from './redacted';
 import { WEATHER_FRAGMENTS } from './weather';
 import { PIRATE_FRAGMENTS } from './pirate';
 import { HISTORICAL_FRAGMENTS } from './historical';
+import { RAIN_NIGHT_FRAGMENTS } from './rainNight';
+import { WINTER_STATIC_FRAGMENTS } from './winterStatic';
+import { DEEP_SPACE_FRAGMENTS } from './deepSpace';
 
 export type { FragmentLibrary, BandVariation, ResponseOption } from './types';
 export { BAND_VARIATIONS, getBandVariation } from './variations';
@@ -25,6 +28,9 @@ export { REDACTED_FRAGMENTS } from './redacted';
 export { WEATHER_FRAGMENTS } from './weather';
 export { PIRATE_FRAGMENTS } from './pirate';
 export { HISTORICAL_FRAGMENTS } from './historical';
+export { RAIN_NIGHT_FRAGMENTS } from './rainNight';
+export { WINTER_STATIC_FRAGMENTS } from './winterStatic';
+export { DEEP_SPACE_FRAGMENTS } from './deepSpace';
 
 export const ALL_FRAGMENTS: FragmentLibrary[] = [
   LIVING_FRAGMENTS,
@@ -35,4 +41,10 @@ export const ALL_FRAGMENTS: FragmentLibrary[] = [
   WEATHER_FRAGMENTS,
   PIRATE_FRAGMENTS,
   HISTORICAL_FRAGMENTS,
+];
+
+export const ATMOSPHERIC_FRAGMENTS: FragmentLibrary[] = [
+  RAIN_NIGHT_FRAGMENTS,
+  WINTER_STATIC_FRAGMENTS,
+  DEEP_SPACE_FRAGMENTS,
 ];

@@ -3,44 +3,47 @@
 // Connects to expo-in-app-purchases, manages purchase lifecycle, and updates useStoreStore.
 // State lives in useStoreStore; this module is the service layer.
 
-import * as InAppPurchases from "expo-in-app-purchases";
-import {
-  useStoreStore,
-  IAPErrorKind,
-  IAPErrorState,
-  PurchaseRecord,
-} from "../store/useStoreStore";
+import * as InAppPurchases from 'expo-in-app-purchases';
+import { useStoreStore, IAPErrorKind, IAPErrorState, PurchaseRecord } from '../store/useStoreStore';
 
 export const PRODUCT_IDS = {
-  BASE: "com.deadair.base",
-  INFINITE_SIGNAL: "com.deadair.infinite_signal",
+  BASE: 'com.deadair.base',
+  INFINITE_SIGNAL: 'com.deadair.infinite_signal',
+  ATMOS_RAIN_NIGHT: 'com.deadair.atmos_rain_night',
+  ATMOS_WINTER_STATIC: 'com.deadair.atmos_winter_static',
+  ATMOS_DEEP_SPACE: 'com.deadair.atmos_deep_space',
 } as const;
 
-export const ALL_PRODUCT_IDS = [PRODUCT_IDS.BASE, PRODUCT_IDS.INFINITE_SIGNAL];
+export const ALL_PRODUCT_IDS = [
+  PRODUCT_IDS.BASE,
+  PRODUCT_IDS.INFINITE_SIGNAL,
+  PRODUCT_IDS.ATMOS_RAIN_NIGHT,
+  PRODUCT_IDS.ATMOS_WINTER_STATIC,
+  PRODUCT_IDS.ATMOS_DEEP_SPACE,
+];
+
+/** Map atmospheric product ID → pack ID for store.addOwnedAtmosphericPack. */
+const ATMOS_PACK_IDS: Record<string, string> = {
+  [PRODUCT_IDS.ATMOS_RAIN_NIGHT]: 'rain_night',
+  [PRODUCT_IDS.ATMOS_WINTER_STATIC]: 'winter_static',
+  [PRODUCT_IDS.ATMOS_DEEP_SPACE]: 'deep_space',
+};
 
 // ---- Module-level state (not exported) ----
 
 let purchaseListener:
-  | ((
-      result: InAppPurchases.IAPQueryResponse<InAppPurchases.InAppPurchase>,
-    ) => void)
-  | null = null;
+  ((result: InAppPurchases.IAPQueryResponse<InAppPurchases.InAppPurchase>) => void) | null = null;
 // Resolvers for in-flight purchaseItemAsync calls, keyed by product id so concurrent
 // purchases each get their own promise resolved by the matching purchase event.
 const pendingResolvers = new Map<
   string,
-  (
-    result: InAppPurchases.IAPQueryResponse<InAppPurchases.InAppPurchase>,
-  ) => void
+  (result: InAppPurchases.IAPQueryResponse<InAppPurchases.InAppPurchase>) => void
 >();
 let initialized = false;
 
 // ---- Helpers ----
 
-function applyPurchase(
-  productId: string,
-  purchase: InAppPurchases.InAppPurchase,
-): boolean {
+function applyPurchase(productId: string, purchase: InAppPurchases.InAppPurchase): boolean {
   const store = useStoreStore.getState();
 
   // Only treat a purchase as valid when the store returned a transaction receipt.
@@ -48,9 +51,8 @@ function applyPurchase(
   // must not persist it or unlock the product.
   if (!purchase.transactionReceipt || !purchase.orderId) {
     store.setError({
-      kind: "declined",
-      message:
-        "Purchase could not be verified. No transaction receipt was provided.",
+      kind: 'declined',
+      message: 'Purchase could not be verified. No transaction receipt was provided.',
     });
     return false;
   }
@@ -67,6 +69,11 @@ function applyPurchase(
     store.setInfiniteSignal(true);
   } else if (productId === PRODUCT_IDS.BASE) {
     store.setBase(true);
+  } else {
+    const packId = ATMOS_PACK_IDS[productId];
+    if (packId !== undefined) {
+      store.addOwnedAtmosphericPack(packId);
+    }
   }
   return true;
 }
@@ -78,27 +85,26 @@ function classifyError(errorCode?: InAppPurchases.IAPErrorCode): IAPErrorState {
     case InAppPurchases.IAPErrorCode.SERVICE_TIMEOUT:
     case InAppPurchases.IAPErrorCode.CLOUD_SERVICE:
       return {
-        kind: "service_unavailable",
-        message:
-          "Store service unavailable. Check your connection and try again.",
+        kind: 'service_unavailable',
+        message: 'Store service unavailable. Check your connection and try again.',
       };
     case InAppPurchases.IAPErrorCode.ITEM_ALREADY_OWNED:
-      return { kind: "already_owned", message: "You already own this item." };
+      return { kind: 'already_owned', message: 'You already own this item.' };
     case InAppPurchases.IAPErrorCode.ITEM_UNAVAILABLE:
     case InAppPurchases.IAPErrorCode.INVALID_IDENTIFIER:
       return {
-        kind: "unknown",
-        message: "This item is not available for purchase.",
+        kind: 'unknown',
+        message: 'This item is not available for purchase.',
       };
     case InAppPurchases.IAPErrorCode.BILLING_UNAVAILABLE:
       return {
-        kind: "service_unavailable",
-        message: "Billing is not available on this device.",
+        kind: 'service_unavailable',
+        message: 'Billing is not available on this device.',
       };
     case InAppPurchases.IAPErrorCode.PAYMENT_INVALID:
-      return { kind: "declined", message: "Payment was declined." };
+      return { kind: 'declined', message: 'Payment was declined.' };
     default:
-      return { kind: "unknown", message: "An unexpected error occurred." };
+      return { kind: 'unknown', message: 'An unexpected error occurred.' };
   }
 }
 
@@ -107,9 +113,7 @@ function classifyError(errorCode?: InAppPurchases.IAPErrorCode): IAPErrorState {
 export async function initIAP(): Promise<void> {
   if (initialized) return;
 
-  purchaseListener = (
-    result: InAppPurchases.IAPQueryResponse<InAppPurchases.InAppPurchase>,
-  ) => {
+  purchaseListener = (result: InAppPurchases.IAPQueryResponse<InAppPurchases.InAppPurchase>) => {
     const store = useStoreStore.getState();
     const purchase = result.results?.[0];
 
@@ -117,33 +121,29 @@ export async function initIAP(): Promise<void> {
       case InAppPurchases.IAPResponseCode.OK: {
         if (
           purchase &&
-          (purchase.purchaseState ===
-            InAppPurchases.InAppPurchaseState.PURCHASED ||
-            purchase.purchaseState ===
-              InAppPurchases.InAppPurchaseState.RESTORED)
+          (purchase.purchaseState === InAppPurchases.InAppPurchaseState.PURCHASED ||
+            purchase.purchaseState === InAppPurchases.InAppPurchaseState.RESTORED)
         ) {
           applyPurchase(purchase.productId, purchase);
           InAppPurchases.finishTransactionAsync(purchase, false).catch(() => {
             // Best-effort finish; the purchase is already recorded.
           });
           store.setMessage(
-            purchase.purchaseState ===
-              InAppPurchases.InAppPurchaseState.RESTORED
-              ? "Purchase restored."
-              : "Purchase complete.",
+            purchase.purchaseState === InAppPurchases.InAppPurchaseState.RESTORED
+              ? 'Purchase restored.'
+              : 'Purchase complete.',
           );
         }
         break;
       }
       case InAppPurchases.IAPResponseCode.USER_CANCELED: {
-        store.setError({ kind: "declined", message: "Purchase canceled." });
+        store.setError({ kind: 'declined', message: 'Purchase canceled.' });
         break;
       }
       case InAppPurchases.IAPResponseCode.DEFERRED: {
         store.setError({
-          kind: "interrupted",
-          message:
-            "Purchase deferred (e.g. Ask to Buy). It will complete later.",
+          kind: 'interrupted',
+          message: 'Purchase deferred (e.g. Ask to Buy). It will complete later.',
         });
         break;
       }
@@ -183,12 +183,10 @@ export async function initIAP(): Promise<void> {
     // Leave initialized=false so initIAP() can retry next time.
     initialized = false;
     useStoreStore.getState().setConnected(false);
-    useStoreStore
-      .getState()
-      .setError({
-        kind: "service_unavailable",
-        message: "Could not connect to the store.",
-      });
+    useStoreStore.getState().setError({
+      kind: 'service_unavailable',
+      message: 'Could not connect to the store.',
+    });
   }
 }
 
@@ -199,8 +197,8 @@ export async function purchaseProduct(
 
   if (!store.isConnected) {
     store.setError({
-      kind: "service_unavailable",
-      message: "Store is not connected. Try again later.",
+      kind: 'service_unavailable',
+      message: 'Store is not connected. Try again later.',
     });
     return null;
   }
@@ -209,8 +207,8 @@ export async function purchaseProduct(
   // the store listener can only complete one pending request per product.
   if (pendingResolvers.has(productId)) {
     store.setError({
-      kind: "already_owned",
-      message: "A purchase for this item is already in progress.",
+      kind: 'already_owned',
+      message: 'A purchase for this item is already in progress.',
     });
     return null;
   }
@@ -226,8 +224,8 @@ export async function purchaseProduct(
         pendingResolvers.delete(productId);
         store.setPurchasing(false);
         store.setError({
-          kind: "unknown",
-          message: "Purchase failed to start.",
+          kind: 'unknown',
+          message: 'Purchase failed to start.',
         });
         resolve(null);
       });
@@ -240,8 +238,8 @@ export async function restorePurchases(): Promise<void> {
 
   if (!store.isConnected) {
     store.setError({
-      kind: "service_unavailable",
-      message: "Store is not connected.",
+      kind: 'service_unavailable',
+      message: 'Store is not connected.',
     });
     return;
   }
@@ -251,19 +249,15 @@ export async function restorePurchases(): Promise<void> {
 
   try {
     const result = await InAppPurchases.getPurchaseHistoryAsync();
-    if (
-      result.responseCode === InAppPurchases.IAPResponseCode.OK &&
-      result.results
-    ) {
+    if (result.responseCode === InAppPurchases.IAPResponseCode.OK && result.results) {
       if (result.results.length === 0) {
-        store.setMessage("No purchases to restore.");
+        store.setMessage('No purchases to restore.');
         return;
       }
       let restoredCount = 0;
       for (const purchase of result.results) {
         if (
-          purchase.purchaseState ===
-            InAppPurchases.InAppPurchaseState.PURCHASED ||
+          purchase.purchaseState === InAppPurchases.InAppPurchaseState.PURCHASED ||
           purchase.purchaseState === InAppPurchases.InAppPurchaseState.RESTORED
         ) {
           if (applyPurchase(purchase.productId, purchase)) {
@@ -274,13 +268,13 @@ export async function restorePurchases(): Promise<void> {
       store.setMessage(
         restoredCount > 0
           ? `Restored ${restoredCount} purchase(s).`
-          : "No new purchases to restore.",
+          : 'No new purchases to restore.',
       );
     } else if (result.responseCode === InAppPurchases.IAPResponseCode.ERROR) {
       store.setError(classifyError(result.errorCode));
     }
   } catch {
-    store.setError({ kind: "unknown", message: "Restore failed." });
+    store.setError({ kind: 'unknown', message: 'Restore failed.' });
   }
 }
 

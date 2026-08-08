@@ -10,6 +10,10 @@ import { useAnalyticsStore } from '@/store/useAnalyticsStore';
 import { useChoiceHistoryStore } from '@/store/choiceHistoryStore';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { useDailyCallStore } from '@/store/useDailyCallStore'; (feat(calls): DEA-49 daily mystery call system — seeded RNG, streak tracking, exclusive calls)
+import { useStoreStore } from '@/store/useStoreStore';
+import { ATMOSPHERIC_FRAGMENTS } from '@/data/fragments';
+import { ATMOSPHERIC_PACKS } from '@/data/atmosphericPacks';
+import { ProceduralCallGenerator } from './ProceduralCallGenerator';
 import type { Band } from '@/lib/constants';
 import type { CallData } from './types';
 
@@ -35,6 +39,22 @@ const _dailyStreak = useDailyCallStore.getState().streak;
 const _todayStr = getTodayUTC();
 const _dailyResult = _dailyGenerator.generate({ streak: _dailyStreak, dateStr: _todayStr });
 registry.set(_dailyResult.call.id, _dailyResult.call);
+
+// Generate atmospheric DLC calls and register them (DEA-30).
+// Each pack gets a unique idBase to avoid collision with base game IDs.
+const _atmosIdBases = [2000, 3000, 4000];
+const atmosphericCallPackMap = new Map<number, string>();
+ATMOSPHERIC_FRAGMENTS.forEach((lib, i) => {
+  const packId = ATMOSPHERIC_PACKS[i]?.id;
+  if (packId === undefined) return;
+  const idBase = _atmosIdBases[i] ?? 5000;
+  const gen = new ProceduralCallGenerator([lib], undefined, idBase);
+  const calls = gen.generateBatch(0, 5);
+  for (const c of calls) {
+    registry.set(c.id, c);
+    atmosphericCallPackMap.set(c.id, packId);
+  }
+});
 
 /**
  * Register or replace a daily call in the registry.
@@ -141,6 +161,9 @@ export const callManager = initCallManager({
   },
   audio: null,
   bands,
+  ownsAtmosphericPack: (packId) =>
+    useStoreStore.getState().ownedAtmosphericPacks.includes(packId),
+  callPackMap: atmosphericCallPackMap,
   onAchievementsCheck: (stats) => useAchievementStore.getState().checkAndUnlock(stats),
   onCallReset: (activeCall) => {
     if (activeCall === null) {

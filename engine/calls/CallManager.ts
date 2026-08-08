@@ -82,6 +82,10 @@ export interface CallManagerConfig {
    * `call_failed`. Not invoked by endCall — only by the abort path.
    */
   onCallReset?(activeCall: ActiveCall | null): void;
+  /** Returns true if the player owns the given atmospheric pack. */
+  ownsAtmosphericPack?(packId: string): boolean;
+  /** Maps atmospheric call IDs to their pack IDs for ownership checks in startCall. */
+  callPackMap?: Map<number, string>;
 }
 
 /** Map call.type to handler route label. Wave 2 renderers register here. */
@@ -116,6 +120,8 @@ export class CallManager {
   private readonly bands: readonly BandUnlockRow[];
   private readonly onAchievementsCheck?: (stats: PlayerStats) => void;
   private readonly onCallReset?: (activeCall: ActiveCall | null) => void;
+  private readonly ownsAtmosphericPack?: (packId: string) => boolean;
+  private readonly callPackMap?: Map<number, string>;
   private audio: CallManagerAudioAccess | null;
 
   private state: CallLifecycleState = 'idle';
@@ -130,6 +136,8 @@ export class CallManager {
     this.audio = config.audio ?? null;
     this.onAchievementsCheck = config.onAchievementsCheck;
     this.onCallReset = config.onCallReset;
+    this.ownsAtmosphericPack = config.ownsAtmosphericPack;
+    this.callPackMap = config.callPackMap;
   }
 
   // --- Lifecycle ---
@@ -147,6 +155,12 @@ export class CallManager {
     const call = this.registry.get(callId);
     if (call === undefined) {
       return false;
+    }
+    if (this.callPackMap !== undefined) {
+      const packId = this.callPackMap.get(callId);
+      if (packId !== undefined && !this.isPackOwned(packId)) {
+        return false;
+      }
     }
     this.transition('incoming', { call, state: 'incoming', startTime: 0 });
     // Brief: startCall transitions idle → incoming → active in one call.
@@ -280,6 +294,14 @@ export class CallManager {
   /** Get the route label for the active call's type (null if no active call). */
   getActiveRoute(): CallTypeRoute | null {
     return this.activeCall === null ? null : routeForType(this.activeCall.call.type);
+  }
+
+  /** Check if the player owns an atmospheric DLC pack. */
+  isPackOwned(packId: string): boolean {
+    if (this.ownsAtmosphericPack === undefined) {
+      return false;
+    }
+    return this.ownsAtmosphericPack(packId);
   }
 
   // --- Observer pattern ---

@@ -27,6 +27,8 @@ interface StoreState {
   // Owned entitlements
   hasInfiniteSignal: boolean;
   hasBase: boolean;
+  // Owned atmospheric DLC pack IDs (deduped)
+  ownedAtmosphericPacks: string[];
   // Purchase records (audit trail, dedup by orderId)
   purchases: PurchaseRecord[];
   // Connection state
@@ -41,6 +43,7 @@ interface StoreState {
   // Actions
   setInfiniteSignal: (owned: boolean) => void;
   setBase: (owned: boolean) => void;
+  addOwnedAtmosphericPack: (packId: string) => void;
   addPurchase: (record: PurchaseRecord) => void;
   setConnected: (connected: boolean) => void;
   setPurchasing: (purchasing: boolean) => void;
@@ -54,6 +57,7 @@ export const useStoreStore = create<StoreState>()(
     (set, get) => ({
       hasInfiniteSignal: false,
       hasBase: false,
+      ownedAtmosphericPacks: [],
       purchases: [],
       isConnected: false,
       purchasing: false,
@@ -63,6 +67,14 @@ export const useStoreStore = create<StoreState>()(
       setInfiniteSignal: (owned) => set({ hasInfiniteSignal: owned }),
 
       setBase: (owned) => set({ hasBase: owned }),
+
+      addOwnedAtmosphericPack: (packId) => {
+        const existing = get().ownedAtmosphericPacks;
+        if (existing.includes(packId)) {
+          return;
+        }
+        set({ ownedAtmosphericPacks: [...existing, packId] });
+      },
 
       addPurchase: (record) => {
         const existing = get().purchases;
@@ -85,6 +97,7 @@ export const useStoreStore = create<StoreState>()(
         set({
           hasInfiniteSignal: false,
           hasBase: false,
+          ownedAtmosphericPacks: [],
           purchases: [],
           lastError: null,
           lastMessage: null,
@@ -96,6 +109,7 @@ export const useStoreStore = create<StoreState>()(
       partialize: (state) => ({
         hasInfiniteSignal: state.hasInfiniteSignal,
         hasBase: state.hasBase,
+        ownedAtmosphericPacks: state.ownedAtmosphericPacks,
         purchases: state.purchases,
       }),
     },

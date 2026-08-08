@@ -9,6 +9,8 @@ import {
   type AudioPerformanceConfig,
   type LatencyHint,
 } from './AudioPerformanceConfig';
+import type { AmbientLayer } from './AmbientLayer';
+import type { AmbientProfile } from './profiles/types';
 
 export interface AudioEngineOptions {
   bridge: PlatformBridge;
@@ -43,6 +45,8 @@ export class AudioEngine {
   private mutedVolume: number | null = null;
   private readonly perfConfig: AudioPerformanceConfig;
   private readonly latencyProfiler: LatencyProfiler;
+  private ambientLayer: AmbientLayer | null = null;
+  private pendingProfile: AmbientProfile | null = null;
 
   constructor(opts: AudioEngineOptions) {
     this.bridge = opts.bridge;
@@ -208,6 +212,26 @@ export class AudioEngine {
   /** True when init() has succeeded and context is alive. */
   isReady(): boolean {
     return this.state === 'running' || this.state === 'suspended';
+  }
+
+  setAmbientLayer(layer: AmbientLayer | null): void {
+    this.ambientLayer = layer;
+    if (layer !== null && this.pendingProfile !== null) {
+      layer.setProfile(this.pendingProfile);
+      this.pendingProfile = null;
+    }
+  }
+
+  getAmbientLayer(): AmbientLayer | null {
+    return this.ambientLayer;
+  }
+
+  setAmbientProfile(profile: AmbientProfile | null): void {
+    if (this.ambientLayer !== null) {
+      this.ambientLayer.setProfile(profile);
+    } else {
+      this.pendingProfile = profile;
+    }
   }
 }
 
