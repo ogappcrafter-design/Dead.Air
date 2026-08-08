@@ -1,0 +1,37 @@
+context/ui-components.md
+  s_757bf6f86a2407::t_3e0b46711fe8ba 16,25,31,36,38-41
+docs/store/app-store-listing.md
+  s_757bf6f86a2407::t_e1fae0b138d36b 125
+docs/store/review-notes.md
+  s_757bf6f86a2407::t_8dce00b39338fd 31-38
+context/architecture.md
+  s_757bf6f86a2407::t_853969a4300cf1 38-39
+  s_757bf6f86a2407::t_4b05da988a8440 45-48
+README.md
+  s_757bf6f86a2407::t_b0b964afd85519 60-73
+  s_757bf6f86a2407::t_202ce30938c161 155-158
+  s_757bf6f86a2407::t_a9498a7d30f22f 171-174
+  s_757bf6f86a2407::t_521dce0937360f 181
+docs/platform-matrix.md
+  s_757bf6f86a2407::t_15c1d868fabce1 37-46
+docs/store/play-store-listing.md
+  s_757bf6f86a2407::t_cb68880dfea184 103-115
+docs/store/app-privacy.md
+  s_757bf6f86a2407::t_83df5b58e0784b 27
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "b005433d68fa7d2d274d51e009e86fc996d10613",
+  "prompts": {},
+  "sessions": {
+    "s_757bf6f86a2407": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ses_01d5df90dffe1PQ3AeSqwFLl90",
+        "model": "unknown"
+      },
+      "human_author": "Dagger <dagger@pixelated.love>"
+    }
+  }
+}
