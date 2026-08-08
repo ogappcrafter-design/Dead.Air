@@ -12,6 +12,8 @@ export interface CallChoice {
   staticMult: number;
   tape?: boolean;
   tapeName?: string;
+  /** DEA-58: semantic tag recorded by choiceHistoryStore for meta-narrative. */
+  choiceTag?: string;
 }
 
 /** Shape of an entry in data/calls.js CALLS array. All 18 calls match this. */

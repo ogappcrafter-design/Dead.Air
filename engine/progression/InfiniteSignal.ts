@@ -6,13 +6,17 @@
 // Phase 6 (DEA-84): procedural call generation is now wired. When
 // `hasExpansion` is true, `getCallPool` appends procedurally generated
 // calls from all five band fragment libraries to the 18 sacred calls.
+//
+// DEA-62: sacred calls are gated by the unlock DAG. Only calls whose
+// prerequisites are present in `receivedCalls` are eligible; the rest are
+// filtered out before they enter the pool. Procedural calls are unaffected
+// (band unlock already gates them) — only sacred ids 0..17 are filtered.
 
 import type { CallData } from '../calls/types';
 import { ProceduralCallGenerator } from '../calls/ProceduralCallGenerator';
 import { ALL_FRAGMENTS } from '../../data/fragments';
 import type { FragmentLibrary, BandVariation } from '../../data/fragments/types';
-import type { ChoiceHistorySnapshot } from '../../store/choiceHistoryStore';
-import { getActiveSeason, generateSeasonalCalls } from './SeasonalCallInjector';
+import { isCallUnlocked } from './UnlockGraph';
 
 /**
  * Minimal subset of the store this module needs. The full useStoreStore
@@ -53,21 +57,25 @@ export const DEFAULT_PROCEDURAL_COUNT_PER_BAND = 6;
  * calls are appended to the 18 sacred calls. Non-owners receive only
  * the sacred 18.
  *
+ * DEA-62: sacred calls are filtered by the unlock DAG — only ids whose
+ * prerequisites are present in `receivedCalls` survive. Procedural ids
+ * (>= 1000) are never filtered here (band unlock gates them directly).
+ *
  * The procedural calls use ids >= 1000 (see ProceduralCallGenerator
  * PROCEDURAL_ID_BASE) so they never collide with sacred call ids 0..17
  * in the CallManager registry.
  *
- * @param sacredCalls  The 18 hand-authored calls from data/calls.js (CALLS).
- * @param hasExpansion  True when Infinite Signal is owned.
- * @param options       Optional overrides for test injection:
- *                      - fragments: fragment libraries (defaults to ALL_FRAGMENTS)
- *                      - variations: band variations (defaults to BAND_VARIATIONS)
- *                      - proceduralCountPerBand: calls per band (default 6)
+ * @param sacredCalls    The 18 hand-authored calls from data/calls.js (CALLS).
+ * @param hasExpansion    True when Infinite Signal is owned.
+ * @param receivedCalls   Ids of calls the player has already received (for DEA-62 filter).
+ *                        When left undefined, no DAG filtering is applied (legacy callers).
+ * @param options         Optional overrides for test injection.
  * @returns the call pool to draw from (base game + expansion).
  */
 export const getCallPool = (
   sacredCalls: ReadonlyArray<CallData>,
   hasExpansion: boolean,
+  receivedCalls?: ReadonlyArray<number>,
   options?: {
     fragments?: ReadonlyArray<FragmentLibrary>;
     variations?: ReadonlyArray<BandVariation>;
@@ -76,10 +84,21 @@ export const getCallPool = (
     choiceHistory?: ChoiceHistorySnapshot;
   },
 ): CallData[] => {
+  // DEA-62: filter sacred calls through unlock DAG before anything else.
+  // When `receivedCalls` is undefined (legacy callers/tests), skip
+  // filtering and behave exactly like Phase 6.
+  const eligibleSacred =
+    receivedCalls === undefined
+      ? [...sacredCalls]
+      : sacredCalls.filter((c) => isCallUnlocked(c.id, receivedCalls));
+
+  // Non-owners: base game only. Always return a fresh array (never the
+  // input reference) so callers can safely mutate the result.
   if (!hasExpansion) {
-    return [...sacredCalls];
+    return eligibleSacred;
   }
 
+  // Owners: eligible sacred calls + procedural expansion.
   const fragments = options?.fragments ?? ALL_FRAGMENTS;
   const proceduralCountPerBand =
     options?.proceduralCountPerBand ?? DEFAULT_PROCEDURAL_COUNT_PER_BAND;
@@ -94,11 +113,5 @@ export const getCallPool = (
   });
   const seasonal = generateSeasonalCalls(getActiveSeason(options?.now));
 
-  // DEA-61: exclude gated calls whose prerequisite choice hasn't been
-  // recorded yet. No-op when CHOICE_GATES is empty.
-  const pool = [...sacredCalls, ...procedural, ...seasonal];
-  if (options?.choiceHistory) {
-    return generator.filterGatedCalls(pool, options.choiceHistory);
-  }
-  return pool;
+  return [...eligibleSacred, ...procedural];
 };

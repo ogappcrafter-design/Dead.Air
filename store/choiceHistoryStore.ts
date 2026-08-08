@@ -1,11 +1,15 @@
 // store/choiceHistoryStore.ts
-// DEA-58 / DEA-69: Persistent record of every player choice made during calls.
-// Choice keys are namespaced by callType (e.g. "RIGHT_ANSWER:callId:0",
-// "PUZZLE:cipherPath", "CONVERSATION:trust"). The store is deliberately
-// separate from narrativeStore (DEA-70) but is expected to feed it.
+// DEA-58: Persistent choice history driving ending variant selection.
 //
-// Persist middleware mirrors useGameStore / useAchievementStore:
-//   createJSONStorage(() => AsyncStorage) + partialize.
+// Records every meaningful decision the player makes across calls. Each
+// RIGHT_ANSWER choice is tagged with a `choiceTag` (short semantic key)
+// so MetaNarrative can evaluate the ending variant without re-parsing
+// English choice text. Tags are derived from `CallChoice.choiceTag` if
+// present, otherwise synthesized as `call:<id>:<index>`.
+//
+// Pure-ish: the store uses Zustand + AsyncStorage persistence; the
+// evaluation logic lives in engine/progression/MetaNarrative.ts so it
+// can be unit-tested without wiring React.
 
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
@@ -13,110 +17,78 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SAVE_KEY } from '../lib/constants';
 
 /**
- * A single recorded player choice.
- *
- * `choiceKey` is namespaced by callType (e.g. "RIGHT_ANSWER:1005:0",
- * "PUZZLE:cipherPath", "CONVERSATION:trust"). Namespacing prevents
- * collisions between different call types and allows pattern queries
- * via `hasChoicePattern`.
+ * A recorded player decision. One entry per RIGHT_ANSWER choice made.
  */
 export interface ChoiceRecord {
-  /** Call instance identifier (sacred call id or procedural id ≥1000). */
+  /** Id of the call the choice belongs to. */
   callId: number;
-  /** Namespaced choice key, e.g. "RIGHT_ANSWER:1005:0". */
-  choiceKey: string;
-  /** Player-selected value: choice text, decoded string, or index. */
-  value: string | number;
-  /** Unix epoch milliseconds when the choice was recorded. */
+  /** Index of the chosen option in the call's choices array. */
+  choiceIndex: number;
+  /** Short semantic tag (e.g. `cooperate`, `refuse`, `seek_truth`).
+   *  When the call data carries an explicit `choiceTag` on CallChoice,
+   *  that value is used. Otherwise synthesized as `call:<callId>:<idx>`. */
+  tag: string;
+  /** Sanity delta applied by the choice (snapshot). */
+  sanityDelta: number;
+  /** Timestamp (ms epoch) when the choice was made. */
   timestamp: number;
 }
 
-/**
- * Read-only snapshot passed to engine code (ProceduralCallGenerator, gates)
- * so the engine stays framework-agnostic — no store import required.
- */
-export interface ChoiceHistorySnapshot {
-  records: ReadonlyArray<ChoiceRecord>;
-  hasChoice: (choiceKey: string) => boolean;
-  getChoice: (choiceKey: string) => ChoiceRecord | undefined;
-  getChoicesForCall: (callId: number) => ReadonlyArray<ChoiceRecord>;
-  hasChoicePattern: (pattern: RegExp) => boolean;
-}
-
 interface ChoiceHistoryState {
-  /** All recorded choices, oldest first. */
+  /** Chronological list of recorded choices (oldest first). */
   choices: ChoiceRecord[];
-  /** Record a new choice. Deduplicates by choiceKey (last write wins). */
-  recordChoice: (callId: number, choiceKey: string, value: string | number) => void;
-  /** Predicate: has a choice with this exact key been recorded? */
-  hasChoice: (choiceKey: string) => boolean;
-  /** Return the most recent record for a key, or undefined. */
-  getChoice: (choiceKey: string) => ChoiceRecord | undefined;
-  /** Return all choices recorded for a specific call instance. */
-  getChoicesForCall: (callId: number) => ChoiceRecord[];
-  /** Predicate: does any choice key match the regex? */
-  hasChoicePattern: (pattern: RegExp) => boolean;
-  /** Produce a framework-agnostic snapshot for engine consumption. */
-  toSnapshot: () => ChoiceHistorySnapshot;
-  /** Wipe all history (used by resetGame / debug). */
-  clear: () => void;
+  // Actions
+  /** Record a player decision. Idempotent per (callId, choiceIndex). */
+  addChoice: (record: Omit<ChoiceRecord, 'timestamp'>) => void;
+  /** Return the full choice log ( Defensive copy ). */
+  getChoiceLog: () => ChoiceRecord[];
+  /** Return all tags in recording order, deduplicated, preserving first occurrence. */
+  getTags: () => string[];
+  /** True when at least one recorded choice matches the tag. */
+  hasTag: (tag: string) => boolean;
+  /** Clear the log (used by resetGame). */
+  reset: () => void;
 }
 
-/** AsyncStorage persistence key, versioned alongside the main save. */
-const STORAGE_NAME = `${SAVE_KEY}_choices_v1`;
-
-/** Cap history to prevent unbounded growth across sessions. */
-const MAX_RECORDS = 500;
+const recordKey = (r: { callId: number; choiceIndex: number }): string =>
+  `${r.callId}:${r.choiceIndex}`;
 
 export const useChoiceHistoryStore = create<ChoiceHistoryState>()(
   persist(
     (set, get) => ({
       choices: [],
 
-      recordChoice: (callId, choiceKey, value) => {
-        const ts = Date.now();
-        set((state) => {
-          // Replace existing entry with same key (last write wins);
-          // otherwise append.
-          const filtered = state.choices.filter((c) => c.choiceKey !== choiceKey);
-          const next: ChoiceRecord = { callId, choiceKey, value, timestamp: ts };
-          let updated = [...filtered, next];
-          // Trim oldest entries if over cap.
-          if (updated.length > MAX_RECORDS) {
-            updated = updated.slice(updated.length - MAX_RECORDS);
+      addChoice: (record) => {
+        const key = recordKey(record);
+        // Idempotent: skip if already recorded.
+        if (get().choices.some((c) => recordKey(c) === key)) {
+          return;
+        }
+        set((state) => ({
+          choices: [...state.choices, { ...record, timestamp: Date.now() }],
+        }));
+      },
+
+      getChoiceLog: () => [...get().choices],
+
+      getTags: () => {
+        const seen = new Set<string>();
+        const tags: string[] = [];
+        for (const c of get().choices) {
+          if (!seen.has(c.tag)) {
+            seen.add(c.tag);
+            tags.push(c.tag);
           }
-          return { choices: updated };
-        });
+        }
+        return tags;
       },
 
-      hasChoice: (choiceKey) => get().choices.some((c) => c.choiceKey === choiceKey),
+      hasTag: (tag) => get().choices.some((c) => c.tag === tag),
 
-      getChoice: (choiceKey) => {
-        const matches = get().choices.filter((c) => c.choiceKey === choiceKey);
-        if (matches.length === 0) return undefined;
-        // Return the most recent (last in array, since we append).
-        return matches[matches.length - 1];
-      },
-
-      getChoicesForCall: (callId) => get().choices.filter((c) => c.callId === callId),
-
-      hasChoicePattern: (pattern) => get().choices.some((c) => pattern.test(c.choiceKey)),
-
-      toSnapshot: () => {
-        const state = get();
-        return {
-          records: [...state.choices],
-          hasChoice: state.hasChoice,
-          getChoice: state.getChoice,
-          getChoicesForCall: state.getChoicesForCall,
-          hasChoicePattern: state.hasChoicePattern,
-        };
-      },
-
-      clear: () => set({ choices: [] }),
+      reset: () => set({ choices: [] }),
     }),
     {
-      name: STORAGE_NAME,
+      name: `${SAVE_KEY}_choices`,
       storage: createJSONStorage(() => AsyncStorage),
     },
   ),
