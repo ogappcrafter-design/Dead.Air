@@ -1,0 +1,21 @@
+app/settings/index.tsx
+  s_604b9cb35e4e79::t_bb34a98bc27d5b 455
+components/callOfTheDay/CallOfTheDay.tsx
+  s_604b9cb35e4e79::t_1c88eceeb7c27e 1,5-7,9-10,14-23,25,35-36,38
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "3b107d4a6b974770addec42063ebfd4340eb2cfe",
+  "prompts": {},
+  "sessions": {
+    "s_604b9cb35e4e79": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ses_01d792228ffeJi3wccNTdChojV",
+        "model": "unknown"
+      },
+      "human_author": "Dagger <dagger@pixelated.love>"
+    }
+  }
+}
