@@ -1,0 +1,44 @@
+store/useLeaderboardStore.ts
+  s_b32acac415f054::t_009b7bc33dd39d 1-136
+utils/transcriptFormatter.ts
+  s_b32acac415f054::t_5fade2b3d8f13c 1-66
+package.json
+  s_b32acac415f054::t_9d88bdb94c03ad 14,21,31
+components/callOfTheDay/CallOfTheDay.tsx
+  s_b32acac415f054::t_c488c745dcd524 1-106
+utils/friendCodeGenerator.ts
+  s_b32acac415f054::t_2209375c39ff84 1-24
+engine/calls/CallOfTheDayGenerator.ts
+  s_b32acac415f054::t_3155a1ffe1ac83 1-58
+store/useCallOfTheDayStore.ts
+  s_b32acac415f054::t_8c941bcc31f8ef 1-59
+pnpm-lock.yaml
+  ai_agent 26-28,47-49,77-79,654-656,660-662,764-766,786-793,1734-1737,1935-1937,2227-2233,2348-2354,2617-2620,3573-3579,3953-3955,4080-4082,4973-4991,4994-4995,5094,5223-5228,5232,5265-5274,6408-6409,6621-6624,6860,6882-6887,7024-7035,7322-7326,8542-8547,8941-8944,9042-9044
+app/settings/index.tsx
+  s_b32acac415f054::t_16948685248834 448-467
+  s_b32acac415f054::t_7fd46ef69aa115 11-13
+components/friends/FriendCodeManager.tsx
+  s_b32acac415f054::t_65dda96aa02e1f 1-217
+components/share/ShareTranscript.tsx
+  s_b32acac415f054::t_8e08d8149274be 1-175
+components/leaderboard/Leaderboard.tsx
+  s_b32acac415f054::t_6b685b42cc84dc 1-70
+store/useFriendCodeStore.ts
+  s_b32acac415f054::t_a9d034ff2513e4 1-58
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "704ffa01f38ced28281226c146f12245de4e3f2e",
+  "prompts": {},
+  "sessions": {
+    "s_b32acac415f054": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ses_01da0e51affeMeuzyjiJrDI5SP",
+        "model": "unknown"
+      },
+      "human_author": "Dagger <dagger@pixelated.love>"
+    }
+  }
+}
