@@ -2,7 +2,16 @@
 export const SAVE_KEY = 'dead_air_save_v1';
 export const PURCHASES_KEY = 'dead_air_purchases_v1';
 
-export const BANDS = ['LIVING', 'LIMINAL', 'LOST', 'CLASSIFIED', '████████'] as const;
+export const BANDS = [
+  'LIVING',
+  'LIMINAL',
+  'LOST',
+  'CLASSIFIED',
+  '████████',
+  'WEATHER',
+  'PIRATE',
+  'HISTORICAL',
+] as const;
 export type Band = (typeof BANDS)[number];
 
 export const CALL_TYPES = [

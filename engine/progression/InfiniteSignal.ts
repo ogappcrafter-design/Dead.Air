@@ -11,6 +11,7 @@ import type { CallData } from '../calls/types';
 import { ProceduralCallGenerator } from '../calls/ProceduralCallGenerator';
 import { ALL_FRAGMENTS } from '../../data/fragments';
 import type { FragmentLibrary, BandVariation } from '../../data/fragments/types';
+import { getActiveSeason, generateSeasonalCalls } from './SeasonalCallInjector';
 
 /**
  * Minimal subset of the store this module needs. The full useStoreStore
@@ -70,15 +71,13 @@ export const getCallPool = (
     fragments?: ReadonlyArray<FragmentLibrary>;
     variations?: ReadonlyArray<BandVariation>;
     proceduralCountPerBand?: number;
+    now?: Date;
   },
 ): CallData[] => {
-  // Non-owners: base game only. Always return a fresh array (never the
-  // input reference) so callers can safely mutate the result.
   if (!hasExpansion) {
     return [...sacredCalls];
   }
 
-  // Owners: sacred calls + procedural expansion.
   const fragments = options?.fragments ?? ALL_FRAGMENTS;
   const proceduralCountPerBand =
     options?.proceduralCountPerBand ?? DEFAULT_PROCEDURAL_COUNT_PER_BAND;
@@ -89,6 +88,7 @@ export const getCallPool = (
       : new ProceduralCallGenerator(fragments);
 
   const procedural = generator.generateAcrossBands(proceduralCountPerBand);
+  const seasonal = generateSeasonalCalls(getActiveSeason(options?.now));
 
-  return [...sacredCalls, ...procedural];
+  return [...sacredCalls, ...procedural, ...seasonal];
 };

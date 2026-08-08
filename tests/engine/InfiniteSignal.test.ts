@@ -39,7 +39,7 @@ describe('InfiniteSignal', () => {
       for (const call of procedural) {
         expect(call.id).toBeGreaterThanOrEqual(1000);
         expect(call.band).toBeGreaterThanOrEqual(0);
-        expect(call.band).toBeLessThanOrEqual(4);
+        expect(call.band).toBeLessThanOrEqual(7);
         expect(typeof call.callerId).toBe('string');
         expect(typeof call.callerName).toBe('string');
         expect(typeof call.signal).toBe('number');

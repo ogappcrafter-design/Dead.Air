@@ -28,6 +28,9 @@ export const bandAmbientParams: Record<Band, AmbientBandParams> = {
   LOST: { centerFreq: 110, baseGain: 0.35, detuneCents: -700 },
   CLASSIFIED: { centerFreq: 800, baseGain: 0.4, detuneCents: 400 },
   '████████': { centerFreq: 1000, baseGain: 0.5, detuneCents: -1200 },
+  WEATHER: { centerFreq: 200, baseGain: 0.38, detuneCents: -300 },
+  PIRATE: { centerFreq: 450, baseGain: 0.35, detuneCents: 200 },
+  HISTORICAL: { centerFreq: 350, baseGain: 0.3, detuneCents: -100 },
 };
 
 /** Default fade time (seconds). */

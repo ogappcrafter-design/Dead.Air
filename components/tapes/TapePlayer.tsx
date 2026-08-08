@@ -49,6 +49,9 @@ const BAND_LABEL: ReadonlyRecord<Band, string> = {
   LOST: 'LOST',
   CLASSIFIED: 'CLASSIFIED',
   '████████': '████████',
+  WEATHER: 'WEATHER',
+  PIRATE: 'PIRATE',
+  HISTORICAL: 'HISTORICAL',
 };
 
 /** Minimal record utility — keeps type-safety without pulling in TS helpers. */

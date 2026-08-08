@@ -48,6 +48,10 @@ export const LIVING_FRAGMENTS: FragmentLibrary = {
     '"I set the table for four last night. There are only two of us. There have only ever been two."',
     "\"I cleaned out the garage. Found a box marked 'hers'. I don't know whose.\"",
     '"The baby monitor picks up your station. The baby\'s been gone nine months."',
+    '"I rearranged the furniture. The room looks bigger now. Something has more space."',
+    '"The thermostat keeps setting itself to 62. Nobody likes 62. Nobody I can see."',
+    '"My alarm clock goes off at 6:47 every morning. I haven\'t set an alarm in four years."',
+    '"The neighbor\'s kid drew our house for a school project. There were five people in the drawing. There are two of us."',
   ],
 
   closings: [

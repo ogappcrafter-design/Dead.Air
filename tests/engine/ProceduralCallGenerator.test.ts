@@ -62,13 +62,8 @@ describe('ProceduralCallGenerator', () => {
   describe('band-keyed lookup (reordered fragments)', () => {
     it('keeps dialogue and rewards aligned when fragments are reordered', () => {
       const reordered = [...ALL_FRAGMENTS].reverse() as FragmentLibrary[];
-      expect(reordered.map((lib) => lib.band)).toEqual([
-        BAND_COUNT - 1,
-        BAND_COUNT - 2,
-        BAND_COUNT - 3,
-        BAND_COUNT - 4,
-        0,
-      ]);
+      const expectedOrder = Array.from({ length: BAND_COUNT }, (_, i) => BAND_COUNT - 1 - i);
+      expect(reordered.map((lib) => lib.band)).toEqual(expectedOrder);
       const gen = new ProceduralCallGenerator(reordered);
       for (let band = 0; band < BAND_COUNT; band++) {
         const call = gen.generate(band);

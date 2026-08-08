@@ -36,6 +36,12 @@ const bandIndex = (band: Band): number => {
       return 3;
     case '████████':
       return 4;
+    case 'WEATHER':
+      return 5;
+    case 'PIRATE':
+      return 6;
+    case 'HISTORICAL':
+      return 7;
     default: {
       // Exhaustive: switch is total over Band.
       const _exhaustive: never = band;

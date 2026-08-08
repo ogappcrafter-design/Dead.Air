@@ -48,6 +48,10 @@ export const LIMINAL_FRAGMENTS: FragmentLibrary = {
     '"The room I\'m in doesn\'t have walls. It has memories of walls."',
     '"I keep calling. The call keeps happening. The number keeps finding me."',
     '"Time is folding. Like paper. Like your voice folding back on itself."',
+    '"I said this exact sentence to you last week. You said I hadn\'t. I\'ll say it next week too."',
+    '"The hallway has a third door now. It was not here when I started this call. It is not here now."',
+    '"I checked my call history. There are 400 calls to this number. My phone is brand new."',
+    '"The reflection in the window behind me just waved. I did not wave. I will not turn around."',
   ],
 
   closings: [

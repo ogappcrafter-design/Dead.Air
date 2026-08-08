@@ -9,6 +9,9 @@
 //   LOST       (band 2): staticReward 90-150, sanityDelta +10..+25, signal 1-4
 //   CLASSIFIED (band 3): staticReward 100-130, sanityDelta -8..-20, signal 2-5
 //   ████████  (band 4): staticReward 280-500, sanityDelta -30..+30, signal 0-3
+//   WEATHER   (band 5): staticReward 60-95,  sanityDelta -5..-18,  signal 2-4
+//   PIRATE    (band 6): staticReward 70-110, sanityDelta -8..-20,  signal 1-4
+//   HISTORICAL(band 7): staticReward 80-120, sanityDelta -3..+15,  signal 2-5
 
 import type { BandVariation } from './types';
 
@@ -47,6 +50,27 @@ export const BAND_VARIATIONS: BandVariation[] = [
     staticRewardRange: [280, 500],
     sanityDeltaRange: [-30, 30],
     signalRange: [0, 3],
+  },
+  {
+    band: 5,
+    bandName: 'WEATHER',
+    staticRewardRange: [60, 95],
+    sanityDeltaRange: [-18, -5],
+    signalRange: [2, 4],
+  },
+  {
+    band: 6,
+    bandName: 'PIRATE',
+    staticRewardRange: [70, 110],
+    sanityDeltaRange: [-20, -8],
+    signalRange: [1, 4],
+  },
+  {
+    band: 7,
+    bandName: 'HISTORICAL',
+    staticRewardRange: [80, 120],
+    sanityDeltaRange: [-3, 15],
+    signalRange: [2, 5],
   },
 ];
 

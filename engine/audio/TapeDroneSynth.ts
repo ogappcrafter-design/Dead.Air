@@ -30,6 +30,9 @@ export const BAND_BASE_FREQ: ReadonlyRecord<Band, number> = {
   LOST: 60,
   CLASSIFIED: 200,
   '████████': 40,
+  WEATHER: 80,
+  PIRATE: 150,
+  HISTORICAL: 100,
 };
 
 /** Minimal readonly record utility — avoids Record<K, V> helper imports. */
@@ -88,6 +91,27 @@ export const BAND_TEXTURE: ReadonlyRecord<Band, BandTextureParams> = {
     filterQ: 1.0,
     gain: 0.2,
   },
+  WEATHER: {
+    noise: 'brown',
+    filterType: 'lowpass',
+    filterFreq: 300,
+    filterQ: 0.8,
+    gain: 0.15,
+  },
+  PIRATE: {
+    noise: 'white',
+    filterType: 'bandpass',
+    filterFreq: 600,
+    filterQ: 1.5,
+    gain: 0.12,
+  },
+  HISTORICAL: {
+    noise: 'pink',
+    filterType: 'lowpass',
+    filterFreq: 500,
+    filterQ: 0.7,
+    gain: 0.1,
+  },
 };
 
 /** Voice fragment character per band. */
@@ -111,6 +135,9 @@ export const BAND_VOICE_FRAGMENT: ReadonlyRecord<Band, BandVoiceFragmentParams> 
   LOST: { formantFreq: 300, formantQ: 6, avgIntervalSec: 10, durationSec: 0.5, gain: 0.07 },
   CLASSIFIED: { formantFreq: 1200, formantQ: 8, avgIntervalSec: 4, durationSec: 0.2, gain: 0.08 },
   '████████': { formantFreq: 120, formantQ: 3, avgIntervalSec: 15, durationSec: 1.5, gain: 0.1 },
+  WEATHER: { formantFreq: 400, formantQ: 5, avgIntervalSec: 6, durationSec: 0.4, gain: 0.06 },
+  PIRATE: { formantFreq: 900, formantQ: 7, avgIntervalSec: 5, durationSec: 0.3, gain: 0.07 },
+  HISTORICAL: { formantFreq: 500, formantQ: 4, avgIntervalSec: 8, durationSec: 0.6, gain: 0.05 },
 };
 
 /** Tape audio profile — derived from band + tape id. */

@@ -50,6 +50,30 @@ export const BANDS: Record<Band, BandInfo> = {
     vibe: '[DATA EXPUNGED]',
     unlockRequirement: 'Find all 15 tapes',
   },
+  WEATHER: {
+    id: 'WEATHER',
+    name: 'WEATHER',
+    description: 'Atmospheric broadcasts. The storm is inside.',
+    frequencyRange: [160.0, 164.0],
+    vibe: 'thunder, static breaks, emergency klaxons, barometric dread',
+    unlockRequirement: 'Survive 7 night shifts',
+  },
+  PIRATE: {
+    id: 'PIRATE',
+    name: 'PIRATE',
+    description: 'Rogue frequencies. No license. No rules.',
+    frequencyRange: [164.0, 168.0],
+    vibe: 'numbers stations, cipher bursts, rebel comms, analog rebellion',
+    unlockRequirement: 'Collect 10 tapes',
+  },
+  HISTORICAL: {
+    id: 'HISTORICAL',
+    name: 'HISTORICAL',
+    description: 'Echoes from dead decades. They are still broadcasting.',
+    frequencyRange: [168.0, 172.0],
+    vibe: 'tube warmth, warble, period-accurate dread across the 20th century',
+    unlockRequirement: 'Reach 100% static on any shift',
+  },
 };
 
 export const getBandByFrequency = (freq: number): BandInfo | null => {

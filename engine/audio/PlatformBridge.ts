@@ -107,6 +107,12 @@ export const bandStaticCharacter = (band: Band): StaticCharacter => {
       return 'white';
     case '████████':
       return 'pink';
+    case 'WEATHER':
+      return 'brown';
+    case 'PIRATE':
+      return 'white';
+    case 'HISTORICAL':
+      return 'pink';
     default: {
       // Exhaustive: switch is total over Band. Default unreachable but
       // required for runtime safety if Band is widened elsewhere.
@@ -129,6 +135,12 @@ export const bandVoicePreset = (band: Band): VoicePreset => {
       return 'CLASSIFIED';
     case '████████':
       return 'REDACTED';
+    case 'WEATHER':
+      return 'LIVING';
+    case 'PIRATE':
+      return 'CLASSIFIED';
+    case 'HISTORICAL':
+      return 'LOST';
     default: {
       const _exhaustive: never = band;
       return _exhaustive as VoicePreset;
