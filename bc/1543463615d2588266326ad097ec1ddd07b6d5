@@ -1,0 +1,73 @@
+__tests__/data/dlcFragments.test.ts
+  s_c115f4a58c8557::t_0c4ff3ee4c0439 1-137
+store/useStoreStore.ts
+  s_c115f4a58c8557::t_5041d6f1446dde 102
+  s_c115f4a58c8557::t_1c57a2efaf0b6c 30,39
+  s_c115f4a58c8557::t_2f104493f325e9 53,71-76,90
+components/store/TapePackSection.tsx
+  s_c115f4a58c8557::t_320dc9f53a221c 1-94
+data/tapePacks/holidayCalls.ts
+  s_c115f4a58c8557::t_902ff82a61b24c 1-118
+data/fragments/holidayDLC.ts
+  s_c115f4a58c8557::t_1810fffbf96dcd 1-119
+engine/progression/InfiniteSignal.ts
+  s_c115f4a58c8557::t_539e618ae589e2 88
+  s_c115f4a58c8557::t_4cd18d48af10c0 106
+  s_c115f4a58c8557::t_fda87870cd5be7 107-109,123-125
+  s_c115f4a58c8557::t_eb817059719067 22
+engine/calls/CallManager.ts
+  s_c115f4a58c8557::t_cc9153d45157c0 47-48
+  s_c115f4a58c8557::t_30fce85f46193e 153-158
+data/tapePacks/voicesBeyondCalls.ts
+  s_c115f4a58c8557::t_850ea1ac94c3d4 1-94
+data/tapePacks/index.ts
+  s_c115f4a58c8557::t_04f9f2fc4d84d5 1-121
+data/fragments/voicesBeyondDLC.ts
+  s_c115f4a58c8557::t_7e6c16f5be75ec 1-126
+lib/iap.ts
+  s_c115f4a58c8557::t_5b43911414bbc4 65-66
+  s_c115f4a58c8557::t_74f9307965d529 6-7,10-14,17-23,28,33,39,47-48,78-79,82,86-87,91-92,95,97,106,114-115,122-124,130,135-136,176-179,190-191,200-201,217-218,231-232,242,244,250,261,267
+data/tapes.ts
+  s_c115f4a58c8557::t_a767421af2ac9e 133-262,264,268
+data/tapePacks/numbersStationCalls.ts
+  s_c115f4a58c8557::t_cb152791bd60d3 1-25,27-95
+  s_c115f4a58c8557::t_9b714504b19ae8 26
+engine/calls/types.ts
+  s_c115f4a58c8557::t_1d90f9986d08df 89-92
+data/fragments/numbersStationDLC.ts
+  s_c115f4a58c8557::t_716c103ff9cbb7 1-135
+__tests__/store/useStoreStore.test.ts
+  s_c115f4a58c8557::t_7f5322ae58dc7c 17
+  s_c115f4a58c8557::t_f5ae742f86a6be 139-169
+  s_c115f4a58c8557::t_d529d8d9659705 203-237
+__tests__/engine/calls/CallManager.test.ts
+  s_c115f4a58c8557::t_33b41d3728024f 125-166
+  s_c115f4a58c8557::t_cd25e9737bab7a 47
+__tests__/data/tapePacks.test.ts
+  s_c115f4a58c8557::t_2270def438c1a4 91
+  s_c115f4a58c8557::t_c21ae55c101f4b 1-90,92-100,102-254
+  s_c115f4a58c8557::t_3e4bef55f28b93 101
+engine/calls/callManagerInstance.ts
+  s_c115f4a58c8557::t_80e0e3d5651312 26,31
+  s_c115f4a58c8557::t_c8da1ea7bcf3c8 142
+  s_c115f4a58c8557::t_8d85a87da40261 13-14
+app/store/index.tsx
+  s_c115f4a58c8557::t_326f2719ee369f 13
+  s_c115f4a58c8557::t_5fe0f98b6a649e 118-119
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "bc1543463615d2588266326ad097ec1ddd07b6d5",
+  "prompts": {},
+  "sessions": {
+    "s_c115f4a58c8557": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ses_01da0f7e5ffeSSbOhfnVCzICoj",
+        "model": "unknown"
+      },
+      "human_author": "Dagger <dagger@pixelated.love>"
+    }
+  }
+}
