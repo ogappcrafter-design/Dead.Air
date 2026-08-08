@@ -1,0 +1,49 @@
+data/ngPlusContent.ts
+  s_fde0542176aa51::t_757ac24759821e 1-149
+__tests__/engine/progression/NewGamePlus.test.ts
+  s_fde0542176aa51::t_b9b2d405961d50 1-114
+__tests__/engine/progression/TapeMastery.test.ts
+  s_fde0542176aa51::t_faefb4752f382a 1-226
+engine/progression/NewGamePlus.ts
+  s_fde0542176aa51::t_97dcc85ac04dfa 74
+  s_fde0542176aa51::t_bac172ed532413 1-73,75-127
+engine/progression/EndlessNight.ts
+  s_fde0542176aa51::t_7710f5c1b20e8f 1-38,40-86,88-125,127-179
+  s_fde0542176aa51::t_9625f4719daa4c 87,126
+engine/progression/Achievements.ts
+  s_fde0542176aa51::t_adc64b435ac588 33-42
+  s_fde0542176aa51::t_beddb653c039ba 160
+  s_fde0542176aa51::t_6515e29d1539ef 162-202
+data/tapeMasteryLayers.ts
+  s_fde0542176aa51::t_4d392f5b625962 1-424
+engine/progression/TapeMastery.ts
+  s_fde0542176aa51::t_567a2a58c3c676 1-188
+store/useGameStore.ts
+  s_fde0542176aa51::t_17644879b73fe9 195-245,249-261,265-268,271-279,283-286,288-294
+  s_fde0542176aa51::t_d6842899d694a6 12-23
+  s_fde0542176aa51::t_b8adcfef72410e 105-109,113
+  s_fde0542176aa51::t_ebb31b4d7a8902 246-248,262-264,269-270,280-282,287
+  s_fde0542176aa51::t_5f84d3794835f1 55-60
+  s_fde0542176aa51::t_f7bded572ebc21 110-112
+  s_fde0542176aa51::t_afa93b8f66ecce 42-54,61-65
+  s_fde0542176aa51::t_2e2b7d240664bc 78-90
+__tests__/engine/progression/EndlessNight.test.ts
+  s_fde0542176aa51::t_3a0ed90d1ccf8a 197
+  s_fde0542176aa51::t_0e9211dca777ef 1-196,198-218
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "ef9b31eb657017df5d46f9de283f8b5d3bda27cb",
+  "prompts": {},
+  "sessions": {
+    "s_fde0542176aa51": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ses_01c75d825ffe73avX01TXhQRd1",
+        "model": "unknown"
+      },
+      "human_author": "Dagger <dagger@pixelated.love>"
+    }
+  }
+}
