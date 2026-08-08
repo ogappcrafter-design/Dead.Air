@@ -14,6 +14,7 @@ import { useStoreStore } from '@/store/useStoreStore';
 import { ATMOSPHERIC_FRAGMENTS } from '@/data/fragments';
 import { ATMOSPHERIC_PACKS } from '@/data/atmosphericPacks';
 import { ProceduralCallGenerator } from './ProceduralCallGenerator';
+import { ALL_DLC_CALLS } from '@/data/tapePacks';
 import type { Band } from '@/lib/constants';
 import type { CallData } from './types';
 
@@ -25,10 +26,12 @@ const _expansionEntries = getCallPool(CALLS as unknown as CallData[], true).map(
   (c) => [c.id, c] as const,
 );
 const _tutorialEntries = TUTORIAL_CALLS.map((c) => [c.id, c] as const);
+const _dlcEntries = ALL_DLC_CALLS.map((c) => [c.id, c] as const);
 const registry = new Map<number, CallData>([
   ..._sacredEntries,
   ..._expansionEntries,
   ..._tutorialEntries,
+  ..._dlcEntries,
 ]);
 
 // Generate today's daily call and add to registry (DEA-49).
@@ -155,6 +158,7 @@ export const callManager = initCallManager({
         dailyStreak: ds.streak, (feat(calls): DEA-49 daily mystery call system — seeded RNG, streak tracking, exclusive calls)
       };
     },
+    getOwnedTapePacks: () => useStoreStore.getState().ownedTapePacks,
   },
   radio: {
     getCurrentBand: () => useRadioStore.getState().currentBand,

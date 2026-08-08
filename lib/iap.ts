@@ -18,9 +18,18 @@ export const PRODUCT_IDS = {
   SKIN_MILITARY_GREEN: 'com.deadair.skin.military_green',
   SKIN_SPACE_AGE_BLUE: 'com.deadair.skin.space_age_blue',
   SKIN_DIGITAL_PIXEL: 'com.deadair.skin.digital_pixel',
+  TAPE_PACK_HOLIDAY: 'com.deadair.tape_pack_holiday',
+  TAPE_PACK_NUMBERS_STATION: 'com.deadair.tape_pack_numbers_station',
+  TAPE_PACK_VOICES_BEYOND: 'com.deadair.tape_pack_voices_beyond',
 } as const;
 
 export const SKIN_PRODUCT_IDS = PURCHASABLE_SKIN_IDS.map((skinId) => `com.deadair.skin.${skinId}`);
+
+export const TAPE_PACK_IDS = [
+  PRODUCT_IDS.TAPE_PACK_HOLIDAY,
+  PRODUCT_IDS.TAPE_PACK_NUMBERS_STATION,
+  PRODUCT_IDS.TAPE_PACK_VOICES_BEYOND,
+] as const;
 
 export const ALL_PRODUCT_IDS = [
   PRODUCT_IDS.BASE,
@@ -29,6 +38,7 @@ export const ALL_PRODUCT_IDS = [
   PRODUCT_IDS.ATMOS_WINTER_STATIC,
   PRODUCT_IDS.ATMOS_DEEP_SPACE,
   ...SKIN_PRODUCT_IDS,
+  ...TAPE_PACK_IDS,
 ];
 
 /** Map atmospheric product ID → pack ID for store.addOwnedAtmosphericPack. */
@@ -78,6 +88,8 @@ function applyPurchase(productId: string, purchase: InAppPurchases.InAppPurchase
     store.setInfiniteSignal(true);
   } else if (productId === PRODUCT_IDS.BASE) {
     store.setBase(true);
+  } else if (TAPE_PACK_IDS.includes(productId as (typeof TAPE_PACK_IDS)[number])) {
+    store.addOwnedTapePack(productId);
   } else {
     const packId = ATMOS_PACK_IDS[productId];
     if (packId !== undefined) {

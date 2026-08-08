@@ -44,6 +44,8 @@ export interface CallManagerStoreAccess {
   getPlayerStats(): PlayerStats;
   /** DEA-69: Record a player choice in ChoiceHistory (RIGHT_ANSWER, etc.). */
   recordChoice(callId: number, choiceKey: string, value: string | number): void;
+  /** DEA-32: Returns product IDs of tape packs the player owns (for DLC ownership filtering). */
+  getOwnedTapePacks(): string[];
 }
 
 /** Radio accessors — read current band for audio preset selection. */
@@ -161,6 +163,12 @@ export class CallManager {
       if (packId !== undefined && !this.isPackOwned(packId)) {
         return false;
       }
+    }
+    if (
+      call.sourcePackId !== undefined &&
+      !this.stores.getOwnedTapePacks().includes(call.sourcePackId)
+    ) {
+      return false;
     }
     this.transition('incoming', { call, state: 'incoming', startTime: 0 });
     // Brief: startCall transitions idle → incoming → active in one call.

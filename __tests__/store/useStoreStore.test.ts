@@ -14,6 +14,7 @@ describe('useStoreStore', () => {
       purchasing: false,
       lastError: null,
       lastMessage: null,
+      ownedTapePacks: [],
     });
   });
 
@@ -135,6 +136,37 @@ describe('useStoreStore', () => {
     expect(useStoreStore.getState().lastError).toBeNull();
     expect(useStoreStore.getState().lastMessage).toBeNull();
   });
+
+  it('initializes with empty ownedTapePacks', () => {
+    expect(useStoreStore.getState().ownedTapePacks).toEqual([]);
+  });
+
+  it('addOwnedTapePack adds a pack id', () => {
+    useStoreStore.getState().addOwnedTapePack('com.deadair.tape_pack_holiday');
+    expect(useStoreStore.getState().ownedTapePacks).toEqual([
+      'com.deadair.tape_pack_holiday',
+    ]);
+  });
+
+  it('addOwnedTapePack deduplicates', () => {
+    const packId = 'com.deadair.tape_pack_numbers_station';
+    useStoreStore.getState().addOwnedTapePack(packId);
+    useStoreStore.getState().addOwnedTapePack(packId);
+    expect(useStoreStore.getState().ownedTapePacks).toEqual([packId]);
+  });
+
+  it('addOwnedTapePack allows multiple different packs', () => {
+    useStoreStore.getState().addOwnedTapePack('com.deadair.tape_pack_holiday');
+    useStoreStore.getState().addOwnedTapePack('com.deadair.tape_pack_numbers_station');
+    useStoreStore.getState().addOwnedTapePack('com.deadair.tape_pack_voices_beyond');
+    expect(useStoreStore.getState().ownedTapePacks).toHaveLength(3);
+  });
+
+  it('resetPurchases clears ownedTapePacks', () => {
+    useStoreStore.setState({ ownedTapePacks: ['com.deadair.tape_pack_holiday'] });
+    useStoreStore.getState().resetPurchases();
+    expect(useStoreStore.getState().ownedTapePacks).toEqual([]);
+  });
 });
 
 describe('hasInfiniteSignal helper', () => {
@@ -167,5 +199,40 @@ describe('getCallPool', () => {
     const pool = getCallPool(input, false);
     expect(pool).not.toBe(input);
     expect(input.length).toBe(18);
+  });
+
+  it('includes DLC calls when ownedTapePacks is passed', () => {
+    const pool = getCallPool(sacredCalls, true, undefined, {
+      now: new Date(2026, 5, 15),
+      ownedTapePacks: ['com.deadair.tape_pack_holiday'],
+    });
+    const dlcIds = pool.filter((c) => c.sourcePackId !== undefined).map((c) => c.id);
+    expect(dlcIds).toContain(200);
+    expect(dlcIds).toContain(201);
+    expect(dlcIds).toContain(202);
+  });
+
+  it('excludes DLC calls when ownedTapePacks is empty', () => {
+    const pool = getCallPool(sacredCalls, true, undefined, {
+      now: new Date(2026, 5, 15),
+      ownedTapePacks: [],
+    });
+    const dlcCalls = pool.filter((c) => c.sourcePackId !== undefined);
+    expect(dlcCalls).toHaveLength(0);
+  });
+
+  it('includes DLC calls for all three packs when all owned', () => {
+    const pool = getCallPool(sacredCalls, true, undefined, {
+      now: new Date(2026, 5, 15),
+      ownedTapePacks: [
+        'com.deadair.tape_pack_holiday',
+        'com.deadair.tape_pack_numbers_station',
+        'com.deadair.tape_pack_voices_beyond',
+      ],
+    });
+    const dlcIds = pool.filter((c) => c.sourcePackId !== undefined).map((c) => c.id);
+    expect(dlcIds).toContain(200);
+    expect(dlcIds).toContain(300);
+    expect(dlcIds).toContain(400);
   });
 });

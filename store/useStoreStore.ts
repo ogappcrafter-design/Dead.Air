@@ -24,28 +24,25 @@ export interface IAPErrorState {
 }
 
 interface StoreState {
-  // Owned entitlements
   hasInfiniteSignal: boolean;
   hasBase: boolean;
   // Owned atmospheric DLC pack IDs (deduped)
   ownedAtmosphericPacks: string[];
   // Purchase records (audit trail, dedup by orderId)
   purchases: PurchaseRecord[];
-  // Connection state
+  ownedTapePacks: string[];
   isConnected: boolean;
-  // Purchasing UI state
   purchasing: boolean;
   purchasingProductId: string | null;
   // Non-blocking error state
   lastError: IAPErrorState | null;
-  // Info message (e.g. "Nothing to restore", "Already owned")
   lastMessage: string | null;
 
-  // Actions
   setInfiniteSignal: (owned: boolean) => void;
   setBase: (owned: boolean) => void;
   addOwnedAtmosphericPack: (packId: string) => void;
   addPurchase: (record: PurchaseRecord) => void;
+  addOwnedTapePack: (packId: string) => void;
   setConnected: (connected: boolean) => void;
   setPurchasing: (purchasing: boolean) => void;
   setPurchasingProductId: (productId: string | null) => void;
@@ -61,6 +58,7 @@ export const useStoreStore = create<StoreState>()(
       hasBase: false,
       ownedAtmosphericPacks: [],
       purchases: [],
+      ownedTapePacks: [],
       isConnected: false,
       purchasing: false,
       purchasingProductId: null,
@@ -81,11 +79,16 @@ export const useStoreStore = create<StoreState>()(
 
       addPurchase: (record) => {
         const existing = get().purchases;
-        // Dedup by orderId — restore can replay the same purchase.
         if (existing.some((p) => p.orderId === record.orderId)) {
           return;
         }
         set({ purchases: [...existing, record] });
+      },
+
+      addOwnedTapePack: (packId) => {
+        const existing = get().ownedTapePacks;
+        if (existing.includes(packId)) return;
+        set({ ownedTapePacks: [...existing, packId] });
       },
 
       setConnected: (connected) => set({ isConnected: connected }),
@@ -104,6 +107,7 @@ export const useStoreStore = create<StoreState>()(
           hasBase: false,
           ownedAtmosphericPacks: [],
           purchases: [],
+          ownedTapePacks: [],
           lastError: null,
           lastMessage: null,
         }),
@@ -116,6 +120,7 @@ export const useStoreStore = create<StoreState>()(
         hasBase: state.hasBase,
         ownedAtmosphericPacks: state.ownedAtmosphericPacks,
         purchases: state.purchases,
+        ownedTapePacks: state.ownedTapePacks,
       }),
     },
   ),

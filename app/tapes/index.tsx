@@ -1,5 +1,5 @@
 // app/tapes/index.tsx
-// Tape Collection screen — lists all 15 unlockable tapes, shows collected
+// Tape Collection screen — lists all unlockable tapes, shows collected
 // status, and invokes TapePlayer overlay for collected tapes.
 //
 // State wiring:
@@ -17,8 +17,9 @@
 import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
-import { ALL_TAPES, CALLS } from '../../data/calls';
-import { TAPES } from '../../data/tapes';
+import { ALL_TAPES as BASE_TAPE_NAMES, CALLS } from '../../data/calls';
+import { DLC_TAPE_NAMES, ALL_TAPES as ALL_TAPE_INFOS } from '../../data/tapes';
+import { ALL_DLC_CALLS } from '../../data/tapePacks';
 import { colors, fonts, spacing } from '../../lib/theme';
 import { BANDS } from '../../lib/constants';
 import type { Band } from '../../lib/constants';
@@ -39,6 +40,9 @@ import TapePlayer from '../../components/tapes/TapePlayer';
 import { useAmbientAudioBridge } from '../../hooks/useAmbientAudioBridge';
 
 const BAND_BY_INDEX: readonly Band[] = BANDS;
+
+const ALL_TAPE_NAMES: string[] = [...BASE_TAPE_NAMES, ...DLC_TAPE_NAMES];
+const ALL_CALLS: CallData[] = [...(CALLS as unknown as CallData[]), ...ALL_DLC_CALLS];
 
 const buildTranscript = (call: CallData): string[] => {
   const lines: string[] = [];
@@ -141,24 +145,24 @@ export default function TapesScreen() {
 
   const selectedTapeIndex = useMemo(() => {
     if (selectedTape === null) return -1;
-    return ALL_TAPES.indexOf(selectedTape);
+    return ALL_TAPE_NAMES.indexOf(selectedTape);
   }, [selectedTape]);
 
   const selectedDurationSec = useMemo(() => {
-    if (selectedTapeIndex < 0 || selectedTapeIndex >= TAPES.length) return 0;
-    const tape = TAPES[selectedTapeIndex]!;
+    if (selectedTapeIndex < 0 || selectedTapeIndex >= ALL_TAPE_INFOS.length) return 0;
+    const tape = ALL_TAPE_INFOS[selectedTapeIndex]!;
     return parseDuration(tape.duration);
   }, [selectedTapeIndex]);
 
   const selectedTranscript = useMemo(() => {
     if (selectedTape === null) return [] as string[];
-    const call = findCallByTape(selectedTape, CALLS as unknown as CallData[]);
+    const call = findCallByTape(selectedTape, ALL_CALLS);
     return call !== null ? buildTranscript(call) : [];
   }, [selectedTape]);
 
   const selectedBand = useMemo<Band>(() => {
     if (selectedTape === null) return 'LIVING';
-    const call = findCallByTape(selectedTape, CALLS as unknown as CallData[]);
+    const call = findCallByTape(selectedTape, ALL_CALLS);
     if (call === null) return 'LIVING';
     const idx = call.band;
     return idx >= 0 && idx < BAND_BY_INDEX.length ? BAND_BY_INDEX[idx]! : 'LIVING';
@@ -179,8 +183,9 @@ export default function TapesScreen() {
   const startDrone = useCallback(
     (tapeName: string, band: Band) => {
       stopDrone();
-      const idx = ALL_TAPES.indexOf(tapeName);
-      const tapeId = idx >= 0 && idx < TAPES.length ? TAPES[idx]!.id : `tape-${idx + 1}`;
+      const idx = ALL_TAPE_NAMES.indexOf(tapeName);
+      const tapeId =
+        idx >= 0 && idx < ALL_TAPE_INFOS.length ? ALL_TAPE_INFOS[idx]!.id : `tape-${idx + 1}`;
       const profile = buildTapeProfile(band, tapeId);
 
       const engine = ensureAudioEngine();
@@ -245,7 +250,7 @@ export default function TapesScreen() {
       setPlaybackState(playbackRef.current.getState());
     } else {
       // PLAY: start drone + tick.
-      const call = findCallByTape(selectedTape, CALLS as unknown as CallData[]);
+      const call = findCallByTape(selectedTape, ALL_CALLS);
       const band: Band =
         call !== null && call.band >= 0 && call.band < BAND_BY_INDEX.length
           ? BAND_BY_INDEX[call.band]!
@@ -329,12 +334,12 @@ export default function TapesScreen() {
           TAPES COLLECTED
         </Text>
         <Text style={styles.count}>
-          {collectedTapes.length} / {ALL_TAPES.length}
+          {collectedTapes.length} / {ALL_TAPE_NAMES.length}
         </Text>
       </View>
 
       <FlatList
-        data={ALL_TAPES}
+        data={ALL_TAPE_NAMES}
         keyExtractor={(item, _i) => item}
         renderItem={renderItem}
         contentContainerStyle={styles.listContent}

@@ -19,6 +19,7 @@ import type { FragmentLibrary, BandVariation } from '../../data/fragments/types'
 import { isCallUnlocked } from './UnlockGraph';
 import type { ChoiceHistorySnapshot } from '../../store/choiceHistoryStore';
 import { generateSeasonalCalls, getActiveSeason } from './SeasonalCallInjector';
+import { getDlcCallsForOwnedPacks, getDlcFragmentsForOwnedPacks } from '../../data/tapePacks';
 
 /**
  * Minimal subset of the store this module needs. The full useStoreStore
@@ -84,6 +85,7 @@ export const getCallPool = (
     proceduralCountPerBand?: number;
     now?: Date;
     choiceHistory?: ChoiceHistorySnapshot;
+    ownedTapePacks?: ReadonlyArray<string>;
   },
 ): CallData[] => {
   // DEA-62: filter sacred calls through unlock DAG before anything else.
@@ -101,7 +103,10 @@ export const getCallPool = (
   }
 
   // Owners: eligible sacred calls + procedural expansion.
-  const fragments = options?.fragments ?? ALL_FRAGMENTS;
+  const ownedPacks = [...(options?.ownedTapePacks ?? [])];
+  const dlcFragments = getDlcFragmentsForOwnedPacks(ownedPacks);
+  const baseFragments = options?.fragments ?? ALL_FRAGMENTS;
+  const fragments = [...baseFragments, ...dlcFragments];
   const proceduralCountPerBand =
     options?.proceduralCountPerBand ?? DEFAULT_PROCEDURAL_COUNT_PER_BAND;
 
@@ -115,5 +120,7 @@ export const getCallPool = (
   });
   const seasonal = generateSeasonalCalls(getActiveSeason(options?.now));
 
-  return [...eligibleSacred, ...procedural, ...seasonal];
+  const dlcCalls = getDlcCallsForOwnedPacks(ownedPacks);
+
+  return [...eligibleSacred, ...procedural, ...seasonal, ...dlcCalls];
 };

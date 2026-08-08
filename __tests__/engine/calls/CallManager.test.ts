@@ -44,6 +44,7 @@ const makeStores = (): CallManagerStoreAccess => ({
     shiftsCompleted: 0,
     longestCallSurvivedMs: 0,
   })),
+  getOwnedTapePacks: jest.fn(() => []),
 });
 
 const makeRadio = (band: Band = 'LIVING'): CallManagerRadioAccess => ({
@@ -119,6 +120,48 @@ describe('CallManager lifecycle', () => {
     const ok = cm.startCall(999);
     expect(ok).toBe(false);
     expect(cm.getCallState()).toBe('idle');
+  });
+
+  it('startCall returns false for DLC call when pack not owned', () => {
+    const dlcCall = makeCall({
+      id: 200,
+      band: 0,
+      sourcePackId: 'com.deadair.tape_pack_holiday',
+    });
+    const registry = new Map<number, CallData>([[200, dlcCall] as const]);
+    const stores = makeStores();
+    (stores.getOwnedTapePacks as jest.Mock).mockReturnValue([]);
+    const cm = new CallManager({ ...config, registry, stores });
+    const ok = cm.startCall(200);
+    expect(ok).toBe(false);
+    expect(cm.getCallState()).toBe('idle');
+  });
+
+  it('startCall succeeds for DLC call when pack is owned', () => {
+    const dlcCall = makeCall({
+      id: 200,
+      band: 0,
+      sourcePackId: 'com.deadair.tape_pack_holiday',
+    });
+    const registry = new Map<number, CallData>([[200, dlcCall] as const]);
+    const stores = makeStores();
+    (stores.getOwnedTapePacks as jest.Mock).mockReturnValue([
+      'com.deadair.tape_pack_holiday',
+    ]);
+    const cm = new CallManager({ ...config, registry, stores });
+    const ok = cm.startCall(200);
+    expect(ok).toBe(true);
+    expect(cm.getCallState()).toBe('active');
+    expect(cm.getCurrentCall()?.call.id).toBe(200);
+  });
+
+  it('startCall succeeds for non-DLC call regardless of owned packs', () => {
+    const stores = makeStores();
+    (stores.getOwnedTapePacks as jest.Mock).mockReturnValue([]);
+    const cm = new CallManager({ ...config, stores });
+    const ok = cm.startCall(1);
+    expect(ok).toBe(true);
+    expect(cm.getCallState()).toBe('active');
   });
 
   it('startCall returns false if a call is already active', () => {

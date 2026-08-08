@@ -130,10 +130,145 @@ export const TAPES: TapeInfo[] = [
   },
 ];
 
+// DLC Tape Packs — premium content unlocked via IAP
+export const DLC_TAPES: TapeInfo[] = [
+  // Holiday Pack
+  {
+    id: 'tape-016',
+    title: 'Christmas Eve Broadcast',
+    description: 'The midnight show that only plays for those who believe.',
+    band: 'LIVING',
+    duration: '5:21',
+    rarity: 'rare',
+  },
+  {
+    id: 'tape-017',
+    title: "New Year's Countdown",
+    description: 'Ten. Nine. Eight. The static grows louder with each number.',
+    band: 'LIVING',
+    duration: '3:45',
+    rarity: 'rare',
+  },
+  {
+    id: 'tape-018',
+    title: 'Halloween Séance',
+    description: 'The veil thins. Something comes through.',
+    band: 'LIVING',
+    duration: '7:13',
+    rarity: 'legendary',
+  },
+  {
+    id: 'tape-019',
+    title: "Valentine's Confession",
+    description: 'A love letter read on air. The sender never signed off.',
+    band: 'LIVING',
+    duration: '4:08',
+    rarity: 'rare',
+  },
+  {
+    id: 'tape-020',
+    title: 'Thanksgiving Family Hour',
+    description: 'Gather round. Everyone is here. Even those who passed.',
+    band: 'LIVING',
+    duration: '6:33',
+    rarity: 'rare',
+  },
+  // Numbers Station Pack
+  {
+    id: 'tape-021',
+    title: 'Station X-7',
+    description: "The frequency that shouldn't exist. It broadcasts anyway.",
+    band: 'CLASSIFIED',
+    duration: '8:44',
+    rarity: 'legendary',
+  },
+  {
+    id: 'tape-022',
+    title: 'The Lincolnshire Poacher',
+    description: 'A folk tune, then numbers. Always the same numbers.',
+    band: 'CLASSIFIED',
+    duration: '5:12',
+    rarity: 'rare',
+  },
+  {
+    id: 'tape-023',
+    title: 'Yosemite Sam',
+    description: 'A cartoon plays. Then the count begins.',
+    band: 'CLASSIFIED',
+    duration: '3:27',
+    rarity: 'rare',
+  },
+  {
+    id: 'tape-024',
+    title: 'Atención',
+    description: 'Atención. Atención. The Spanish voice has a message for you.',
+    band: 'CLASSIFIED',
+    duration: '4:55',
+    rarity: 'rare',
+  },
+  {
+    id: 'tape-025',
+    title: 'Magnetic Disk Defect',
+    description: 'The recording degrades. The message becomes clearer.',
+    band: 'CLASSIFIED',
+    duration: '6:18',
+    rarity: 'legendary',
+  },
+  // Voices From Beyond Pack
+  {
+    id: 'tape-026',
+    title: 'The Last Séance',
+    description: 'The table rattles. The spirit speaks through the radio.',
+    band: 'LOST',
+    duration: '7:44',
+    rarity: 'legendary',
+  },
+  {
+    id: 'tape-027',
+    title: 'Voices in the Static',
+    description: "They've been trying to reach you. The static is their voice.",
+    band: 'LOST',
+    duration: '5:33',
+    rarity: 'rare',
+  },
+  {
+    id: 'tape-028',
+    title: "The Medium's Confession",
+    description: "I made most of it up. The rest was real. You'll know which.",
+    band: 'LOST',
+    duration: '4:21',
+    rarity: 'rare',
+  },
+  {
+    id: 'tape-029',
+    title: 'Crossing Over',
+    description: 'The bridge between stations. Something walks across it.',
+    band: 'LOST',
+    duration: '6:09',
+    rarity: 'rare',
+  },
+  {
+    id: 'tape-030',
+    title: 'The Other Side',
+    description: "You've been listening from the wrong side. They've been listening back.",
+    band: 'LOST',
+    duration: '9:11',
+    rarity: 'legendary',
+  },
+];
+
+// Combined array for lookups across base + DLC
+export const ALL_TAPES: TapeInfo[] = [...TAPES, ...DLC_TAPES];
+
+export const DLC_TAPE_NAMES: string[] = DLC_TAPES.map((t) => {
+  const num = parseInt(t.id.replace('tape-', ''), 10);
+  return `Tape #${num} — ${t.title}`;
+});
+
 export const getTapeById = (id: string): TapeInfo | undefined => {
-  return TAPES.find((tape) => tape.id === id);
+  return ALL_TAPES.find((tape) => tape.id === id);
 };
 
 export const getTapesByBand = (band: string): TapeInfo[] => {
-  return TAPES.filter((tape) => tape.band === band);
+  return ALL_TAPES.filter((tape) => tape.band === band);
 };

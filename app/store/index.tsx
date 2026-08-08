@@ -10,6 +10,7 @@ import { colors, fonts, spacing } from '../../lib/theme';
 import { useStoreStore } from '../../store/useStoreStore';
 import { useAnalyticsStore } from '../../store/useAnalyticsStore';
 import { StoreCard } from '../../components/store/StoreCard';
+import { TapePackSection } from '../../components/store/TapePackSection';
 import { purchaseProduct, restorePurchases, PRODUCT_IDS } from '../../lib/iap';
 import { ATMOSPHERIC_PACKS } from '../../data/atmosphericPacks';
 
@@ -146,6 +147,7 @@ export default function StoreScreen() {
             />
           );
         })}
+        <TapePackSection />
 
         <Pressable
           testID="restore-purchases"

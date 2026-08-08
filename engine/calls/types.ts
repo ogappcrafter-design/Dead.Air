@@ -86,6 +86,10 @@ export interface CallData {
 
   /** DEA-47: Tutorial calls skip progression tracking (no receivedCalls, no band unlock, no achievements). */
   isTutorial?: boolean;
+
+  /** DEA-32: ID of the tape pack this call belongs to. Used to filter calls
+   *  from unowned DLC packs. Undefined for base-game calls. */
+  sourcePackId?: string;
 }
 
 /** Active call lifecycle state machine. */
