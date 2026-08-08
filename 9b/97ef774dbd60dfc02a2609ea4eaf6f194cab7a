@@ -1,0 +1,40 @@
+engine/audio/profiles/snow.ts
+  s_ed21360285eef0::t_4834ad85b231d6 1-21
+engine/audio/profiles/rain.ts
+  s_ed21360285eef0::t_5477bbbd4887dc 1-21
+engine/audio/profiles/fog.ts
+  s_ed21360285eef0::t_8ad893b543bd22 1-21
+engine/audio/profiles/storm.ts
+  s_ed21360285eef0::t_29d03359896eaf 1-21
+engine/audio/SanityAudioProcessor.ts
+  s_ed21360285eef0::t_f582509a61a1d1 1-13,23-94,97-182,185-198,200,203-210,213-265
+  s_ed21360285eef0::t_46fc6e2211e57a 183-184
+  s_ed21360285eef0::t_4def3562325e06 95-96
+  s_ed21360285eef0::t_cdc1b142cc95f3 14-22
+  s_ed21360285eef0::t_35f42ec457bc78 199,201-202
+  s_ed21360285eef0::t_89a5898eb13ae5 211-212
+engine/audio/profiles/clear.ts
+  s_ed21360285eef0::t_30083befc5573b 1-21
+engine/progression/WeatherSystem.ts
+  s_ed21360285eef0::t_cd5dfd6cdef85e 1-107
+engine/audio/profiles/wind.ts
+  s_ed21360285eef0::t_f67add978a3340 1-21
+engine/audio/profiles/roomTone.ts
+  s_ed21360285eef0::t_0deea9c52bab79 1-21
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "9b97ef774dbd60dfc02a2609ea4eaf6f194cab7a",
+  "prompts": {},
+  "sessions": {
+    "s_ed21360285eef0": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ses_01c75c193ffex3GftpJWDM1k6P",
+        "model": "unknown"
+      },
+      "human_author": "Dagger <dagger@pixelated.love>"
+    }
+  }
+}
