@@ -1,0 +1,19 @@
+components/settings/SkinPicker.tsx
+  s_6b5ce32826dace::t_a7b65ccceef607 41
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "f6ed83ec36d9bbaf9cb37c63c9f1a1c9b6f5efcd",
+  "prompts": {},
+  "sessions": {
+    "s_6b5ce32826dace": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ses_01d7bf355ffeJq0zNJlWYJdy4t",
+        "model": "unknown"
+      },
+      "human_author": "Dagger <dagger@pixelated.love>"
+    }
+  }
+}
