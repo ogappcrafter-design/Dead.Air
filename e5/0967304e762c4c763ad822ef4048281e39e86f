@@ -1,0 +1,30 @@
+data/tapes.ts
+  s_001d8556bf892f::t_dc89f6bf8d895a 263-267
+app/tapes/index.tsx
+  s_001d8556bf892f::t_7fbc611e3554d5 2
+  s_001d8556bf892f::t_d0b46d25adbaae 182-184
+  s_001d8556bf892f::t_9d8913d7f50d07 20-22
+  s_001d8556bf892f::t_c7a0f3d11e0512 249
+  s_001d8556bf892f::t_6db4dcb06b2b67 148-149
+  s_001d8556bf892f::t_975d162250d6be 333
+  s_001d8556bf892f::t_f5004530527a9e 338
+  s_001d8556bf892f::t_6ac152f9132eea 144
+  s_001d8556bf892f::t_7516a01f352827 43-45
+  s_001d8556bf892f::t_0bb39ceaa90472 155,161
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "e50967304e762c4c763ad822ef4048281e39e86f",
+  "prompts": {},
+  "sessions": {
+    "s_001d8556bf892f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ses_01d369f11ffeWS8KmubtSW1eS0",
+        "model": "unknown"
+      },
+      "human_author": "Dagger <dagger@pixelated.love>"
+    }
+  }
+}
