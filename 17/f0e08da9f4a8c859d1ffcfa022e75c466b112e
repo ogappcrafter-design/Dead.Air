@@ -1,0 +1,19 @@
+engine/calls/ProceduralCallGenerator.ts
+  s_a83cffb80037f9::t_46b1a75d27250b 247,249
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "17f0e08da9f4a8c859d1ffcfa022e75c466b112e",
+  "prompts": {},
+  "sessions": {
+    "s_a83cffb80037f9": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ses_0218babc2ffejHtLmnRwkRO6iP",
+        "model": "unknown"
+      },
+      "human_author": "Dagger <dagger@pixelated.love>"
+    }
+  }
+}
