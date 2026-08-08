@@ -1,0 +1,22 @@
+engine/calls/callManagerInstance.ts
+  s_70c23e846fa1ac::t_bfa382a293ab8b 27-30
+  s_70c23e846fa1ac::t_a5debd86a6f606 17
+  s_70c23e846fa1ac::t_467455a88559f5 45
+  s_70c23e846fa1ac::t_c2c587a55e9fe6 114
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "124fb4455c83d966e5238458c3ec07cabc7b6b88",
+  "prompts": {},
+  "sessions": {
+    "s_70c23e846fa1ac": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ses_01cb90b37ffe7un9aujjtFUi3s",
+        "model": "unknown"
+      },
+      "human_author": "Dagger <dagger@pixelated.love>"
+    }
+  }
+}
