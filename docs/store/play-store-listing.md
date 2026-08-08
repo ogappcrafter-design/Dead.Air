@@ -100,19 +100,19 @@ One price. One signal. Take the call.
 
 ## Content rating (IARC questionnaire selections)
 
-| Question area                   | Selection                                                                                  |
-| ------------------------------- | ------------------------------------------------------------------------------------------ |
-| Cartoon violence                | No                                                                                         |
-| Realistic violence              | No                                                                                         |
-| Horror / fear themes            | Yes                                                                                        |
-| Sexual content                  | No                                                                                         |
-| Profanity                       | Yes (mild)                                                                                 |
-| Controlled substances           | No                                                                                         |
-| Gambling                        | No                                                                                         |
-| User-generated content          | No                                                                                         |
-| Sharing location                | No                                                                                         |
-| Unrestricted internet           | No (only optional AI calls require network; not a social/Ugc surface)                      |
-| Personal information collection | No (Sentry crash data + opt-in local analytics — see [`app-privacy.md`](./app-privacy.md)) |
+| Question area                   | Selection                                                                                                                 |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| Cartoon violence                | No                                                                                                                        |
+| Realistic violence              | No                                                                                                                        |
+| Horror / fear themes            | Yes                                                                                                                       |
+| Sexual content                  | No                                                                                                                        |
+| Profanity                       | Yes (mild)                                                                                                                |
+| Controlled substances           | No                                                                                                                        |
+| Gambling                        | No                                                                                                                        |
+| User-generated content          | No                                                                                                                        |
+| Sharing location                | No                                                                                                                        |
+| Unrestricted internet           | No (only optional AI calls require network; local-only community features store data on-device, not a social/Ugc surface) |
+| Personal information collection | No (Sentry crash data + opt-in local analytics — see [`app-privacy.md`](./app-privacy.md))                                |
 
 Expected rating: **Teen** (Android) / **12+** (other stores via IARC).
 

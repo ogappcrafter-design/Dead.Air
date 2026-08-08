@@ -122,7 +122,7 @@ See [`review-notes.md`](./review-notes.md) for the full review brief. Summary:
 
 - This is a game, not a real radio or podcast player.
 - All audio is synthesized at runtime — no real broadcasts, no copyrighted audio.
-- No user-generated content, no social features, no chat.
+- No user-generated content, no networked social features, no chat. Local-only community features (leaderboard, friend codes, call-of-the-day) store data on-device only.
 - IAP products are: `dead_air_base` and `dead_air_infinite`, listed above.
 - No subscription, no consumables.
 

@@ -34,16 +34,16 @@ wired up". It does NOT probe for package presence. By task constraint,
 no new npm dependencies may be introduced by this layer; the predictor
 only knows roughly what each platform supports.
 
-| Feature        | web | native | Notes                                                                        |
-| -------------- | --- | ------ | ---------------------------------------------------------------------------- |
-| `audioContext` | ✓   | ✓      | Web: Web Audio API. Native: would-be `expo-av` (not installed).              |
-| `haptics`      | ✗   | ✓      | Web: no haptics API wired. Native: would-be `expo-haptics`.                  |
-| `fileSystem`   | ✗   | ✓      | Native: would-be `expo-file-system`.                                         |
-| `keepAwake`    | ✗   | ✓      | Native: would-be `expo-keep-awake`.                                          |
-| `clipboard`    | ✓   | ✓      | Web: Clipboard API. Native: would-be `expo-clipboard`.                       |
-| `share`        | ✓   | ✓      | Web: `navigator.share`. Native: would-be `expo-sharing`.                     |
-| `vibration`    | ✗   | ✓      | Native: `Vibration` API on supported devices.                                |
-| `blurBackdrop` | ✓   | ✓      | Web: CSS `backdrop-filter`. Native: would-be `@react-native-community/blur`. |
+| Feature        | web | native | Notes                                                                                |
+| -------------- | --- | ------ | ------------------------------------------------------------------------------------ |
+| `audioContext` | ✓   | ✓      | Web: Web Audio API. Native: would-be `expo-av` (not installed).                      |
+| `haptics`      | ✗   | ✓      | Web: no haptics API wired. Native: would-be `expo-haptics`.                          |
+| `fileSystem`   | ✗   | ✓      | Native: would-be `expo-file-system`.                                                 |
+| `keepAwake`    | ✗   | ✓      | Native: would-be `expo-keep-awake`.                                                  |
+| `clipboard`    | ✓   | ✓      | Web: Clipboard API. Native: `expo-clipboard` (installed; used by FriendCodeManager). |
+| `share`        | ✓   | ✓      | Web: `navigator.share`. Native: `expo-sharing` (installed; used by ShareTranscript). |
+| `vibration`    | ✗   | ✓      | Native: `Vibration` API on supported devices.                                        |
+| `blurBackdrop` | ✓   | ✓      | Web: CSS `backdrop-filter`. Native: would-be `@react-native-community/blur`.         |
 
 ### Caveats
 

@@ -28,10 +28,14 @@ This file is what we hand to Apple App Review and Google Play Policy reviewers w
 
 - The 18 caller scripts (`data/calls.js`) are **pre-written, fixed content**. No caller copy is generated from user input, except the **optional** Infinite Signal AI mode (see below), where a Claude API call generates new callers purely for the local player who unlocked it. The generated content is never shared, posted, or transmitted to other players.
 
-## No social features
+## Local-only community features (no network, no backend)
 
-- There is no friend list, no chat, no posting, no leaderboard, no profile sharing, no multiplayer server.
-- The Settings screen exposes an in-app Reset and an opt-out for analytics only. There is no way for one player to contact another player through the app.
+- The Settings screen includes four local-only community sections: an anonymous leaderboard, a call-of-the-day vote, a friend-code manager, and a transcript share button.
+- **Leaderboard**: seeded with fictitious call signs and scores at install time; stored on-device via AsyncStorage. No real player data is collected or transmitted.
+- **Call of the Day**: a daily featured call selected deterministically from the 18 hand-crafted calls via a seeded RNG. The vote count is local-only and never sent to a server.
+- **Friend codes**: generated locally and stored on-device. The player can copy a code to the clipboard to share it manually outside the app. No friend list is fetched from or sent to a backend.
+- **Transcript sharing**: the player can render a transcript as an image and share it via the OS share sheet (`expo-sharing`). The app does not post to any social network or in-app feed.
+- There is no chat, no posting surface, no multiplayer server, and no way for one player to contact another player through the app. All community data stays on the device.
 
 ## No payments beyond the two IAPs
 

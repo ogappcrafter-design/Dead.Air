@@ -57,19 +57,20 @@ Answer the call. Or don't. Either way, something heard you.
 
 ## 🎮 Features
 
-|     | Feature                           | Description                                                                   |
-| --- | --------------------------------- | ----------------------------------------------------------------------------- |
-| 📡  | **18 hand-crafted transmissions** | Five unlockable frequency bands, each with its own escalating dread           |
-| 📞  | **5 call types**                  | Just Listen · Dead Air · Right Answer · Signal Decode · Stay Calm             |
-| 🧠  | **Sanity + Static economy**       | Every choice shifts your sanity and earns static — your choices have weight   |
-| 🎵  | **Real-time audio synthesis**     | Web Audio API engine: static synth → distortion → reverb → spatial processing |
-| 📼  | **15 collectible tapes**          | Archive every transmission. Rarity tiers from `common` to `legendary`         |
-| 🏆  | **14 achievements**               | Track milestones from First Contact to No Rest for the Wicked, plus daily streaks | (no-mistakes(document): Fix stale achievement count in README for daily streak additions)
-| 🌙  | **Night Shift system**            | 4-hour in-game sessions compressed to ~20 minutes real-time                   |
-| ♾️  | **Infinite Signal mode**          | AI-generated calls — endless, never the same twice _(planned)_                |
-| 💾  | **Persistent saves**              | Pick up exactly where you left off, every single time                         |
-| 📱  | **Cross-platform**                | iOS · Android · Web PWA — single codebase                                     |
-| 🖥️  | **CRT aesthetic**                 | Amber and green on near-black, scanlines, glow text                           |
+|     | Feature                           | Description                                                                                        |
+| --- | --------------------------------- | -------------------------------------------------------------------------------------------------- |
+| 📡  | **18 hand-crafted transmissions** | Five unlockable frequency bands, each with its own escalating dread                                |
+| 📞  | **5 call types**                  | Just Listen · Dead Air · Right Answer · Signal Decode · Stay Calm                                  |
+| 🧠  | **Sanity + Static economy**       | Every choice shifts your sanity and earns static — your choices have weight                        |
+| 🎵  | **Real-time audio synthesis**     | Web Audio API engine: static synth → distortion → reverb → spatial processing                      |
+| 📼  | **15 collectible tapes**          | Archive every transmission. Rarity tiers from `common` to `legendary`                              |
+| 🏆  | **14 achievements**               | Track milestones from First Contact to No Rest for the Wicked, plus daily streaks                  | (no-mistakes(document): Fix stale achievement count in README for daily streak additions) |
+| 🌙  | **Night Shift system**            | 4-hour in-game sessions compressed to ~20 minutes real-time                                        |
+| ♾️  | **Infinite Signal mode**          | AI-generated calls — endless, never the same twice _(planned)_                                     |
+| 💾  | **Persistent saves**              | Pick up exactly where you left off, every single time                                              |
+| 📱  | **Cross-platform**                | iOS · Android · Web PWA — single codebase                                                          |
+| 🖥️  | **CRT aesthetic**                 | Amber and green on near-black, scanlines, glow text                                                |
+| 📤  | **Share & community**             | Share transcripts as images, anonymous leaderboard, call of the day, friend codes — all local-only |
 
 ---
 
@@ -151,6 +152,10 @@ deadair/
 │   ├── tapes/                  #   Tape player & collection
 │   ├── progression/            #   Achievements, band unlocks, shift status
 │   ├── store/                  #   Store cards
+│   ├── leaderboard/            #   Anonymous leaderboard (local-only)
+│   ├── callOfTheDay/           #   Call of the day vote (local-only)
+│   ├── friends/                #   Friend code manager (local-only)
+│   ├── share/                  #   Transcript sharing via OS share sheet
 │   └── shared/                 #   CRT effects, error boundaries
 ├── engine/                     # Framework-agnostic game logic
 │   ├── audio/                  #   Web Audio API: synth, effects, latency
@@ -163,13 +168,17 @@ deadair/
 │   ├── useStoreStore.ts        #   IAP entitlements
 │   ├── usePlayerStore.ts       #   Player name, DJ call sign, station name
 │   ├── useAchievementStore.ts  #   Unlocked achievements
-│   └── useAnalyticsStore.ts    #   Event tracking
+│   ├── useAnalyticsStore.ts    #   Event tracking
+│   ├── useLeaderboardStore.ts  #   Anonymous leaderboard (local-only)
+│   ├── useCallOfTheDayStore.ts #   Daily featured call + voting (local-only)
+│   └── useFriendCodeStore.ts   #   Friend code management (local-only)
 ├── data/                       # Game content
 │   ├── bands.ts                #   5 frequency bands
 │   ├── calls.js                #   18 hand-written transmissions
 │   └── tapes.ts                #   15 collectible tapes
 ├── hooks/                      # React hooks
 ├── lib/                        # Platform, theme, storage, analytics
+├── utils/                      # Friend code generation, transcript formatting
 ├── assets/                     # Icons, splash screen
 └── ...
 ```
@@ -337,4 +346,3 @@ _The frequency is open. Something is already waiting._
 `░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░`
 
 </div>
-

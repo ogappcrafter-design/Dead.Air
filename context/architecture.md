@@ -35,13 +35,17 @@ deadair/
 │   │   ├── LatencyProfiler.ts  # Audio latency measurement
 │   │   └── AudioPerformanceConfig.ts
 │   ├── calls/              # Call system
-│   │   └── CallManager.ts  # Manages incoming calls (has setAudioAccess method)
+│   │   ├── CallManager.ts  # Manages incoming calls (has setAudioAccess method)
+│   │   └── CallOfTheDayGenerator.ts  # Seeded daily featured call picker
 │   └── progression/        # Progression system
 │       └── InfiniteSignal.ts  # IAP-gated call pool (TODO at line 54)
 ├── store/                  # Zustand stores
 │   ├── useStoreStore.ts    # IAP store (MOCK ONLY — no real billing)
 │   ├── useRadioStore.ts    # Radio state (frequency, band, volume)
-│   └── useGameStore.ts     # Game state (sanity, static, tapes)
+│   ├── useGameStore.ts     # Game state (sanity, static, tapes)
+│   ├── useLeaderboardStore.ts  # Anonymous leaderboard (local-only, AsyncStorage)
+│   ├── useCallOfTheDayStore.ts # Call of the day + voting (local-only, AsyncStorage)
+│   └── useFriendCodeStore.ts   # Friend code management (local-only, AsyncStorage)
 ├── hooks/                  # React hooks
 │   ├── useNightShift.ts
 │   └── useSanityEffect.ts

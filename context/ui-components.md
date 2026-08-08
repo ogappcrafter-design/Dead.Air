@@ -13,6 +13,7 @@ CRT aesthetic — retro radio / analog horror vibe. Dark backgrounds, green/ambe
 ## Key UI Components
 
 ### Radio Screen (`app/radio/index.tsx` + `components/radio/RadioBody.tsx`)
+
 - Frequency tuner (dial control)
 - Band selector (5 bands: LIVING, LIMINAL, LOST, CLASSIFIED, ████████)
 - Volume control
@@ -21,16 +22,23 @@ CRT aesthetic — retro radio / analog horror vibe. Dark backgrounds, green/ambe
 - **CRITICAL:** Currently no audio playback — pure visual UI
 
 ### Store Screen (`app/store/index.tsx`)
+
 - StoreCard components for IAP products
 - Purchase button (currently mock)
 - "Mock store. Real billing arrives in a later phase." disclaimer
 
 ### Tape Detail (TBD — PIX-4262 adds player UI)
+
 - Will need: play/pause/stop controls, progress bar, visual feedback
 - Must integrate with CRT aesthetic
 
 ### Settings Screen (`app/settings/`)
+
 - Will need: "Restore Purchases" button (PIX-4264)
+- **Leaderboard** section — `components/leaderboard/Leaderboard.tsx`, powered by `useLeaderboardStore` (local-only, AsyncStorage)
+- **Call of the Day** section — `components/callOfTheDay/CallOfTheDay.tsx`, powered by `useCallOfTheDayStore` (local-only, AsyncStorage)
+- **Friend Codes** section — `components/friends/FriendCodeManager.tsx`, powered by `useFriendCodeStore` (local-only, AsyncStorage)
+- **Share** section — `components/share/ShareTranscript.tsx`, uses `react-native-view-shot` + `expo-sharing`
 
 ## Styling Patterns
 

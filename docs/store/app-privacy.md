@@ -24,7 +24,7 @@ This document supports both the App Store Connect _App Privacy_ form and the Goo
 - No email, name, phone number, or any direct identifier.
 - No IP address is retained server-side. Sentry redacts IP addresses at ingest.
 - No user-generated content is uploaded anywhere — see [`review-notes.md`](./review-notes.md).
-- No social features, no chat, no posting surfaces.
+- No network-based social features, no chat, no in-app posting surfaces. Local-only community features (leaderboard, friend codes, call-of-the-day vote) exist but store data on-device only — see [`review-notes.md`](./review-notes.md).
 
 ## Third parties
 
