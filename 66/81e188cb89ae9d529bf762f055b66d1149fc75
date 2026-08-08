@@ -1,0 +1,81 @@
+tests/store/useStoreStore.atmospheric.test.ts
+  s_cdf1f977bdec0c::t_7c08dc7f949123 1-59
+store/useStoreStore.ts
+  s_cdf1f977bdec0c::t_a9509a8c83c2c3 30-31,46
+  s_cdf1f977bdec0c::t_578f729bb21cb6 112
+  s_cdf1f977bdec0c::t_2c852e4aa65a20 100
+engine/audio/AudioEngine.ts
+  s_cdf1f977bdec0c::t_8c3d14f44a1159 48-49
+  s_cdf1f977bdec0c::t_8838b4723e5277 216-235
+tests/store/useAmbientStore.test.ts
+  s_cdf1f977bdec0c::t_c88d579563be79 1-36
+tests/engine/audioProfiles.test.ts
+  s_cdf1f977bdec0c::t_2cbb4fce90dc92 1-75
+data/fragments/deepSpace.ts
+  s_cdf1f977bdec0c::t_59fa64153dec45 1-83
+components/settings/AmbientPicker.tsx
+  s_cdf1f977bdec0c::t_f178d7fd7275d9 1-126
+engine/audio/profiles/winterStatic.ts
+  s_cdf1f977bdec0c::t_c2fe6b5de0e372 1-20
+tests/data/atmosphericPacks.test.ts
+  s_cdf1f977bdec0c::t_498d56bd042395 4-17
+  s_cdf1f977bdec0c::t_23c62184430f93 1-3,18-115
+tests/data/atmosphericFragments.test.ts
+  s_cdf1f977bdec0c::t_0012f28390bfc6 1-82,87-88
+  s_cdf1f977bdec0c::t_1e352979aba0e0 83-86
+tests/engine/CallManager.atmospheric.test.ts
+  s_cdf1f977bdec0c::t_07b1251dd0f332 1-63
+engine/audio/profiles/deepSpace.ts
+  s_cdf1f977bdec0c::t_bdcecc6418b4a3 1-20
+data/fragments/rainNight.ts
+  s_cdf1f977bdec0c::t_8d432f5d61400c 1-62
+tests/components/AmbientPicker.test.tsx
+  s_cdf1f977bdec0c::t_126de94558d531 1-14,18-19,23-24,27-31,33-35,40-41,43-46,51-52
+  s_cdf1f977bdec0c::t_204e29819e4dea 17,22,37-38,48-50
+  s_cdf1f977bdec0c::t_e416f38688be03 16,21,25-26,36,47
+  s_cdf1f977bdec0c::t_e5aeef35d73a6b 15,20,32,39,42
+app/settings/index.tsx
+  s_cdf1f977bdec0c::t_44c467b0c3665d 14
+  s_cdf1f977bdec0c::t_f730f7d027a362 325-328
+engine/audio/AmbientLayer.ts
+  s_cdf1f977bdec0c::t_016d5e116e576a 128
+  s_cdf1f977bdec0c::t_c7c8a9a5c798d8 90,95-96
+  s_cdf1f977bdec0c::t_ac83267853c022 153-187
+  s_cdf1f977bdec0c::t_1d6433a1e49bae 111
+  s_cdf1f977bdec0c::t_4d4628e6f8d000 11,14
+  s_cdf1f977bdec0c::t_c820161b9f2307 58
+engine/audio/profiles/types.ts
+  s_cdf1f977bdec0c::t_01bcb33b49e78e 1-13
+data/fragments/index.ts
+  s_cdf1f977bdec0c::t_1119d784922c98 17-19,31-33,45-49
+data/atmosphericPacks/index.ts
+  s_cdf1f977bdec0c::t_11c9c94c44a198 1-74
+lib/iap.ts
+  s_cdf1f977bdec0c::t_2f76c7125dd5b5 6-7,10-14,17-30,35,40,46,54-55,88-89,92,96-97,101-102,105,107,116,124-125,132-134,140,145-146,186-189,200-201,210-211,227-228,241-242,252,254,260,271,277
+  s_cdf1f977bdec0c::t_ab82a450ddec36 72-76
+store/useAmbientStore.ts
+  s_cdf1f977bdec0c::t_c15c312ea7e34b 1-28
+engine/audio/profiles/rainNight.ts
+  s_cdf1f977bdec0c::t_9a06f946f1f741 1-20
+data/fragments/winterStatic.ts
+  s_cdf1f977bdec0c::t_0381f2bdc7e950 1-64
+engine/calls/CallManager.ts
+  s_cdf1f977bdec0c::t_e347530af14c38 289-296
+  s_cdf1f977bdec0c::t_8af00b56ffbb8c 136
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "6681e188cb89ae9d529bf762f055b66d1149fc75",
+  "prompts": {},
+  "sessions": {
+    "s_cdf1f977bdec0c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ses_01da0fc7affeFCUugRjzlHsD3V",
+        "model": "unknown"
+      },
+      "human_author": "Dagger <dagger@pixelated.love>"
+    }
+  }
+}
