@@ -1,0 +1,27 @@
+engine/audio/worklets/voiceProcessor.worklet.js
+  s_0e7b5f9bbd2ee2::t_6723f170ef0d0c 29-32
+  s_0e7b5f9bbd2ee2::t_e5ead54d2c9969 53,59-64
+  s_0e7b5f9bbd2ee2::t_60bac99fd3b40f 102-105
+engine/audio/VoiceProcessorWorklet.ts
+  s_0e7b5f9bbd2ee2::t_3c9233e0433acc 134-136
+  s_0e7b5f9bbd2ee2::t_59251f982f0905 74,82-85,97-100,103-109,113
+  s_0e7b5f9bbd2ee2::t_60495c2e6e912e 28
+tests/components/CRTEffects.test.tsx
+  s_0e7b5f9bbd2ee2::t_6ae2fce9a2a88e 4
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "c03ff1efc5b6ba6f65693329366b179e7f86dd8d",
+  "prompts": {},
+  "sessions": {
+    "s_0e7b5f9bbd2ee2": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ses_01c36f06affe3DmUhM8pDB7hsc",
+        "model": "unknown"
+      },
+      "human_author": "Dagger <dagger@pixelated.love>"
+    }
+  }
+}
