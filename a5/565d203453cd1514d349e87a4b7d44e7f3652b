@@ -1,0 +1,27 @@
+hooks/useDlcFragmentCalls.ts
+  s_58247b52487a25::t_eb5701f55d5a4d 1-11
+tests/engine/InfiniteSignal.test.ts
+  s_58247b52487a25::t_2da7f3e8853b59 7
+  s_58247b52487a25::t_14d52789c5d5f3 69,77,90-94
+engine/calls/callManagerInstance.ts
+  s_58247b52487a25::t_5c63d3b27f1f66 95-117
+  s_58247b52487a25::t_5272806a0cee17 25-50
+app/radio/index.tsx
+  s_58247b52487a25::t_cdd61778ea7d89 24
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "a5565d203453cd1514d349e87a4b7d44e7f3652b",
+  "prompts": {},
+  "sessions": {
+    "s_58247b52487a25": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ses_01cecb78fffeILJlw7Zg562lIC",
+        "model": "unknown"
+      },
+      "human_author": "Dagger <dagger@pixelated.love>"
+    }
+  }
+}
