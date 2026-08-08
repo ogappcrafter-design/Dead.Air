@@ -1,0 +1,40 @@
+__tests__/engine/progression/Achievements.test.ts
+  s_ca7040e1ac1320::t_002c9dce96b3e0 183-184
+README.md
+  s_d0d0186f2957a8::t_ebbb6ad633d494 60-66,68-72,113-119,127-133,217-218,220,261-270,335,337
+tests/engine/DailyCallGenerator.test.ts
+  s_de47ca5a0ca845::t_5db44551c9eced 1-49,62-186,54-55,60
+  s_ca7040e1ac1320::t_e55e84fb058737 50-53,56-59,61
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "ca6c3c1f09107de3725a77381fb3eced0691349e",
+  "prompts": {},
+  "sessions": {
+    "s_ca7040e1ac1320": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ses_01ddccf7dffevIvlxfHi4LGlpE",
+        "model": "unknown"
+      },
+      "human_author": "Dagger <dagger@pixelated.love>"
+    },
+    "s_d0d0186f2957a8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ses_01dd5c6dcffeHRpn89lsukNSzw",
+        "model": "unknown"
+      },
+      "human_author": "Dagger <dagger@pixelated.love>"
+    },
+    "s_de47ca5a0ca845": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ses_01e18c358ffeTnLLw8zQRgbBD0",
+        "model": "unknown"
+      },
+      "human_author": "Dagger <dagger@pixelated.love>"
+    }
+  }
+}
