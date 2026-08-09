@@ -16,7 +16,12 @@ const BASE_STATS: PlayerStats = {
   longestCallSurvivedMs: 0,
   difficultyMode: 'insomniac',
   shiftsCompletedByDifficulty: {},
-  dailyStreak: 0, (no-mistakes(document): Fix stale achievement count in README for daily streak additions)
+  dailyStreak: 0,
+  ngPlusUnlocked: 0,
+  ngPlusCompleted: 0,
+  endlessShiftsSurvived: 0,
+  tapeMasteryDepthUnlocks: 0,
+  tapeMasteryAbyssUnlocks: 0,
 };
 
 const withStats = (over: Partial<PlayerStats>): PlayerStats => ({
@@ -182,7 +187,13 @@ describe('getAchievementStatus', () => {
       'no_rest_complete',
       'streak_7',
       'streak_30',
-      'streak_100', (no-mistakes(document): Fix stale achievement count in README for daily streak additions)
+      'streak_100',
+      'ng_plus_unlocked',
+      'ng_plus_complete',
+      'endless_survivor_10',
+      'endless_survivor_25',
+      'tape_mastery_depth',
+      'tape_mastery_abyss',
     ]);
   });
 
@@ -196,7 +207,12 @@ describe('getAchievementStatus', () => {
       longestCallSurvivedMs: 180000,
       difficultyMode: 'no_rest',
       shiftsCompletedByDifficulty: { no_rest: 5, insomniac: 5, night_owl: 5 },
-      dailyStreak: 100, (no-mistakes(document): Fix stale achievement count in README for daily streak additions)
+      dailyStreak: 100,
+      ngPlusUnlocked: 1,
+      ngPlusCompleted: 1,
+      endlessShiftsSurvived: 25,
+      tapeMasteryDepthUnlocks: 1,
+      tapeMasteryAbyssUnlocks: 1,
     });
     const result = getAchievementStatus(maxedStats, []);
     expect(result.every((r) => r.unlocked)).toBe(true);

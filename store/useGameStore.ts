@@ -9,6 +9,18 @@ import { useSettingsStore } from './useSettingsStore';
 import { useAchievementStore } from './useAchievementStore';
 import { useNarrativeStore } from './narrativeStore';
 import { useChoiceHistoryStore } from './choiceHistoryStore';
+import {
+  startNewGamePlus,
+  endNewGamePlus,
+  getNgPlusUnlockedBands,
+} from '../engine/progression/NewGamePlus';
+import {
+  startEndlessNight,
+  onShiftCompleted,
+  onGameOver,
+  endEndlessNight,
+} from '../engine/progression/EndlessNight';
+import { incrementListenCount } from '../engine/progression/TapeMastery';
 
 interface GameState {
   sanity: number;
@@ -27,6 +39,32 @@ interface GameState {
   /** Completed night shifts, bucketed by the difficulty they were played on. */
   shiftsCompletedByDifficulty: Partial<Record<DifficultyMode, number>>;
 
+  // NG+ state
+  /** Whether New Game+ has been unlocked (meta-ending reached). */
+  ngPlusUnlocked: boolean;
+  /** Whether a New Game+ run is currently active. */
+  ngPlusActive: boolean;
+  /** Number of New Game+ runs completed. */
+  ngPlusCompleted: number;
+
+  // Endless Night state
+  /** Whether Endless Night mode is currently active. */
+  endlessModeActive: boolean;
+  /** Current score (shifts survived) in the active Endless Night run. */
+  endlessScore: number;
+  /** All-time highest Endless Night score across runs. */
+  endlessHighScore: number;
+  /** Current Endless Night escalation level (derived from score). */
+  escalationLevel: number;
+  /** Current Endless Night weather descriptor. */
+  endlessWeather: string;
+  /** Whether Endless Night run ended (sanity hit 0). */
+  endlessGameOver: boolean;
+
+  // Tape Mastery state
+  /** Per-tape listen counts for Tape Mastery layer progression. */
+  tapeListenCounts: Record<string, number>;
+
   // Actions
   decreaseSanity: (amount: number) => void;
   increaseSanity: (amount: number) => void;
@@ -39,6 +77,19 @@ interface GameState {
   incrementShiftsCompleted: () => void;
   recordCallDuration: (durationMs: number) => void;
   resetGame: () => void;
+
+  // NG+ actions
+  startNgPlusRun: () => void;
+  endNgPlusRun: () => void;
+
+  // Endless Night actions
+  startEndlessNightMode: () => void;
+  endEndlessNightMode: () => void;
+  incrementEndlessScore: () => void;
+  setEndlessGameOver: () => void;
+
+  // Tape Mastery actions
+  recordTapeListen: (tapeId: string) => void;
 }
 
 const initialState = {
@@ -53,6 +104,16 @@ const initialState = {
   shiftsCompleted: 0,
   longestCallSurvivedMs: 0,
   shiftsCompletedByDifficulty: {} as Partial<Record<DifficultyMode, number>>,
+  ngPlusUnlocked: false,
+  ngPlusActive: false,
+  ngPlusCompleted: 0,
+  endlessModeActive: false,
+  endlessScore: 0,
+  endlessHighScore: 0,
+  escalationLevel: 0,
+  endlessWeather: 'Clear',
+  endlessGameOver: false,
+  tapeListenCounts: {} as Record<string, number>,
 };
 
 export const useGameStore = create<GameState>()(
@@ -134,6 +195,113 @@ export const useGameStore = create<GameState>()(
         })),
 
       resetGame: () => set(initialState),
+
+      startNgPlusRun: () =>
+        set((state) => {
+          const ngPlusState = startNewGamePlus({
+            ngPlusUnlocked: state.ngPlusUnlocked,
+            ngPlusActive: state.ngPlusActive,
+          });
+          return {
+            ...initialState,
+            ngPlusUnlocked: ngPlusState.ngPlusUnlocked,
+            ngPlusActive: ngPlusState.ngPlusActive,
+            ngPlusCompleted: state.ngPlusCompleted,
+            unlockedBands: [...getNgPlusUnlockedBands()] as Band[],
+            endlessHighScore: state.endlessHighScore,
+            tapeListenCounts: state.tapeListenCounts,
+          };
+        }),
+
+      endNgPlusRun: () =>
+        set((state) => {
+          const ngPlusState = endNewGamePlus({
+            ngPlusUnlocked: state.ngPlusUnlocked,
+            ngPlusActive: state.ngPlusActive,
+          });
+          return {
+            ...initialState,
+            ngPlusUnlocked: ngPlusState.ngPlusUnlocked,
+            ngPlusActive: ngPlusState.ngPlusActive,
+            ngPlusCompleted: state.ngPlusCompleted + 1,
+            endlessHighScore: state.endlessHighScore,
+            tapeListenCounts: state.tapeListenCounts,
+          };
+        }),
+
+      startEndlessNightMode: () =>
+        set((state) => {
+          const endless = startEndlessNight(state.endlessHighScore);
+          return {
+            ...initialState,
+            endlessModeActive: endless.endlessModeActive,
+            endlessScore: endless.endlessScore,
+            endlessHighScore: endless.endlessHighScore,
+            escalationLevel: endless.escalationLevel,
+            endlessWeather: endless.weather,
+            endlessGameOver: endless.isGameOver,
+            ngPlusUnlocked: state.ngPlusUnlocked,
+            ngPlusActive: state.ngPlusActive,
+            ngPlusCompleted: state.ngPlusCompleted,
+            tapeListenCounts: state.tapeListenCounts,
+          };
+        }),
+
+      endEndlessNightMode: () =>
+        set((state) => {
+          const endless = endEndlessNight({
+            endlessModeActive: state.endlessModeActive,
+            endlessScore: state.endlessScore,
+            endlessHighScore: state.endlessHighScore,
+            escalationLevel: state.escalationLevel,
+            weather: state.endlessWeather,
+            isGameOver: state.endlessGameOver,
+          });
+          return {
+            endlessModeActive: endless.endlessModeActive,
+            endlessHighScore: endless.endlessHighScore,
+          };
+        }),
+
+      incrementEndlessScore: () =>
+        set((state) => {
+          const endless = onShiftCompleted({
+            endlessModeActive: state.endlessModeActive,
+            endlessScore: state.endlessScore,
+            endlessHighScore: state.endlessHighScore,
+            escalationLevel: state.escalationLevel,
+            weather: state.endlessWeather,
+            isGameOver: state.endlessGameOver,
+          });
+          return {
+            endlessScore: endless.endlessScore,
+            endlessHighScore: endless.endlessHighScore,
+            escalationLevel: endless.escalationLevel,
+            endlessWeather: endless.weather,
+          };
+        }),
+
+      setEndlessGameOver: () =>
+        set((state) => {
+          const endless = onGameOver({
+            endlessModeActive: state.endlessModeActive,
+            endlessScore: state.endlessScore,
+            endlessHighScore: state.endlessHighScore,
+            escalationLevel: state.escalationLevel,
+            weather: state.endlessWeather,
+            isGameOver: state.endlessGameOver,
+          });
+          return {
+            endlessModeActive: endless.endlessModeActive,
+            endlessHighScore: endless.endlessHighScore,
+            endlessGameOver: endless.isGameOver,
+          };
+        }),
+
+      recordTapeListen: (tapeId) =>
+        set((state) => ({
+          tapeListenCounts: incrementListenCount(state.tapeListenCounts, tapeId),
+        })),
     }),
     {
       name: SAVE_KEY,

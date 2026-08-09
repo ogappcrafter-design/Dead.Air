@@ -64,7 +64,10 @@ Answer the call. Or don't. Either way, something heard you.
 | 🧠  | **Sanity + Static economy**       | Every choice shifts your sanity and earns static — your choices have weight                        |
 | 🎵  | **Real-time audio synthesis**     | Web Audio API engine: static synth → distortion → reverb → spatial processing                      |
 | 📼  | **15 collectible tapes**          | Archive every transmission. Rarity tiers from `common` to `legendary`                              |
-| 🏆  | **14 achievements**               | Track milestones from First Contact to No Rest for the Wicked, plus daily streaks                  | (no-mistakes(document): Fix stale achievement count in README for daily streak additions) |
+| 🔄  | **New Game+**                     | Unlocks after the meta-ending — harder difficulty modifiers and exclusive content                  |
+| 🌑  | **Endless Night**                 | Survival mode with escalating strangeness every 5 shifts                                           |
+| 🔊  | **Tape Mastery**                  | Re-listen to tapes to unlock hidden audio layers: Surface, Depth, and Abyss                        |
+| 🏆  | **20 achievements**               | Track milestones from First Contact to Into the Abyss, plus daily streaks                          |
 | 🌙  | **Night Shift system**            | 4-hour in-game sessions compressed to ~20 minutes real-time                                        |
 | ♾️  | **Infinite Signal mode**          | AI-generated calls — endless, never the same twice _(planned)_                                     |
 | 💾  | **Persistent saves**              | Pick up exactly where you left off, every single time                                              |
@@ -160,9 +163,9 @@ deadair/
 ├── engine/                     # Framework-agnostic game logic
 │   ├── audio/                  #   Web Audio API: synth, effects, latency
 │   ├── calls/                  #   Call manager, scheduler, variation engine
-│   └── progression/           #   Bands, tapes, achievements, night shift
+│   └── progression/           #   Bands, tapes, achievements, night shift, NG+, Endless Night, Tape Mastery
 ├── store/                      # Zustand state stores
-│   ├── useGameStore.ts         #   Sanity, static, tapes, bands
+│   ├── useGameStore.ts         #   Sanity, static, tapes, bands, NG+, Endless Night, Tape Mastery
 │   ├── useRadioStore.ts        #   Frequency, signal strength
 │   ├── useSettingsStore.ts     #   Volume, CRT effects toggles
 │   ├── useStoreStore.ts        #   IAP entitlements
@@ -175,7 +178,9 @@ deadair/
 ├── data/                       # Game content
 │   ├── bands.ts                #   5 frequency bands
 │   ├── calls.js                #   18 hand-written transmissions
-│   └── tapes.ts                #   15 collectible tapes
+│   ├── tapes.ts                #   15 collectible tapes
+│   ├── ngPlusContent.ts        #   NG+-exclusive tapes & calls
+│   └── tapeMasteryLayers.ts    #   Hidden audio layer data (Surface/Depth/Abyss)
 ├── hooks/                      # React hooks
 ├── lib/                        # Platform, theme, storage, analytics
 ├── utils/                      # Friend code generation, transcript formatting
@@ -292,6 +297,8 @@ pnpm run web            # Web browser
 pnpm test               # Run tests
 pnpm test:watch         # Watch mode
 pnpm test:coverage      # Coverage report
+pnpm lint               # Lint with ESLint
+pnpm lint:fix           # Lint and auto-fix
 pnpm run eas-build      # Production build (all platforms)
 ```
 

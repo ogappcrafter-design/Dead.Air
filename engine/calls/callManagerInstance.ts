@@ -2,14 +2,15 @@ import { initCallManager } from './CallManager';
 import { CALLS, BANDS as BANDS_DATA } from '@/data/calls';
 import { getCallPool } from '@/engine/progression/InfiniteSignal';
 import { TUTORIAL_CALLS } from '@/data/tutorialCalls';
-import { DailyCallGenerator, getTodayUTC } from './DailyCallGenerator'; (feat(calls): DEA-49 daily mystery call system — seeded RNG, streak tracking, exclusive calls)
+import { DailyCallGenerator, getTodayUTC } from './DailyCallGenerator';
 import { useGameStore } from '@/store/useGameStore';
 import { useRadioStore } from '@/store/useRadioStore';
 import { useAchievementStore } from '@/store/useAchievementStore';
 import { useAnalyticsStore } from '@/store/useAnalyticsStore';
 import { useChoiceHistoryStore } from '@/store/choiceHistoryStore';
 import { useSettingsStore } from '@/store/useSettingsStore';
-import { useDailyCallStore } from '@/store/useDailyCallStore'; (feat(calls): DEA-49 daily mystery call system — seeded RNG, streak tracking, exclusive calls)
+import { useDailyCallStore } from '@/store/useDailyCallStore';
+import { getTotalLayersUnlocked } from '@/engine/progression/TapeMastery';
 import { useStoreStore } from '@/store/useStoreStore';
 import { ATMOSPHERIC_FRAGMENTS } from '@/data/fragments';
 import { ATMOSPHERIC_PACKS } from '@/data/atmosphericPacks';
@@ -33,12 +34,7 @@ let _expansionCallIds = new Set<number>();
 function buildExpansionEntries(
   ownedTapePacks: ReadonlyArray<string>,
 ): readonly (readonly [number, CallData])[] {
-  const pool = getCallPool(
-    CALLS as unknown as CallData[],
-    true,
-    undefined,
-    { ownedTapePacks },
-  );
+  const pool = getCallPool(CALLS as unknown as CallData[], true, undefined, { ownedTapePacks });
   const entries: (readonly [number, CallData])[] = [];
   for (const c of pool) {
     entries.push([c.id, c] as const);
@@ -49,9 +45,7 @@ function buildExpansionEntries(
   return entries;
 }
 
-const _expansionEntries = buildExpansionEntries(
-  useStoreStore.getState().ownedTapePacks,
-);
+const _expansionEntries = buildExpansionEntries(useStoreStore.getState().ownedTapePacks);
 const _tutorialEntries = TUTORIAL_CALLS.map((c) => [c.id, c] as const);
 const _dlcEntries = ALL_DLC_CALLS.map((c) => [c.id, c] as const);
 const registry = new Map<number, CallData>([
@@ -95,20 +89,13 @@ export function registerDailyCall(call: CallData): void {
   registry.set(call.id, call);
 }
 
-export function refreshExpansionCalls(
-  ownedTapePacks: ReadonlyArray<string>,
-): void {
+export function refreshExpansionCalls(ownedTapePacks: ReadonlyArray<string>): void {
   for (const id of _expansionCallIds) {
     registry.delete(id);
   }
   _expansionCallIds = new Set();
 
-  const pool = getCallPool(
-    CALLS as unknown as CallData[],
-    true,
-    undefined,
-    { ownedTapePacks },
-  );
+  const pool = getCallPool(CALLS as unknown as CallData[], true, undefined, { ownedTapePacks });
 
   for (const c of pool) {
     if (c.id >= 1000 && c.id < SEASONAL_ID_BASE) {
@@ -195,7 +182,8 @@ export const callManager = initCallManager({
     getPlayerStats: () => {
       const s = useGameStore.getState();
       const difficulty = useSettingsStore.getState().difficulty;
-      const ds = useDailyCallStore.getState(); (feat(calls): DEA-49 daily mystery call system — seeded RNG, streak tracking, exclusive calls)
+      const ds = useDailyCallStore.getState();
+      const mastery = getTotalLayersUnlocked(s.tapeListenCounts);
       return {
         callsReceived: s.receivedCalls.length,
         bandsUnlocked: s.unlockedBands.length,
@@ -205,7 +193,12 @@ export const callManager = initCallManager({
         shiftsCompletedByDifficulty: s.shiftsCompletedByDifficulty,
         longestCallSurvivedMs: s.longestCallSurvivedMs,
         difficultyMode: difficulty,
-        dailyStreak: ds.streak, (feat(calls): DEA-49 daily mystery call system — seeded RNG, streak tracking, exclusive calls)
+        dailyStreak: ds.streak,
+        ngPlusUnlocked: s.ngPlusUnlocked ? 1 : 0,
+        ngPlusCompleted: s.ngPlusCompleted,
+        endlessShiftsSurvived: s.endlessHighScore,
+        tapeMasteryDepthUnlocks: mastery.depth,
+        tapeMasteryAbyssUnlocks: mastery.abyss,
       };
     },
     getOwnedTapePacks: () => useStoreStore.getState().ownedTapePacks,
@@ -215,8 +208,7 @@ export const callManager = initCallManager({
   },
   audio: null,
   bands,
-  ownsAtmosphericPack: (packId) =>
-    useStoreStore.getState().ownedAtmosphericPacks.includes(packId),
+  ownsAtmosphericPack: (packId) => useStoreStore.getState().ownedAtmosphericPacks.includes(packId),
   callPackMap: atmosphericCallPackMap,
   onAchievementsCheck: (stats) => useAchievementStore.getState().checkAndUnlock(stats),
   onCallReset: (activeCall) => {

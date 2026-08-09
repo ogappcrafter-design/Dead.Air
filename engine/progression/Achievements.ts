@@ -29,7 +29,17 @@ export interface PlayerStats {
   /** Completed night shifts, bucketed by the difficulty they were played on. */
   shiftsCompletedByDifficulty: Partial<Record<DifficultyMode, number>>;
   /** Current daily call streak (consecutive days completed). */
-  dailyStreak: number; (feat(calls): DEA-49 daily mystery call system — seeded RNG, streak tracking, exclusive calls)
+  dailyStreak: number;
+  /** Whether New Game+ has been unlocked (0 = locked, 1 = unlocked). */
+  ngPlusUnlocked: number;
+  /** Number of New Game+ runs completed. */
+  ngPlusCompleted: number;
+  /** Highest score (shifts survived) in Endless Night mode. */
+  endlessShiftsSurvived: number;
+  /** Count of tapes with Depth layer unlocked (listen count ≥ 5). */
+  tapeMasteryDepthUnlocks: number;
+  /** Count of tapes with Abyss layer unlocked (listen count ≥ 10). */
+  tapeMasteryAbyssUnlocks: number;
 }
 
 /**
@@ -147,7 +157,49 @@ export const ACHIEVEMENTS: Achievement[] = [
     name: 'Devoted',
     description: '100-day daily call streak',
     icon: ' ⟳',
-    check: (s) => s.dailyStreak >= 100, (feat(calls): DEA-49 daily mystery call system — seeded RNG, streak tracking, exclusive calls)
+    check: (s) => s.dailyStreak >= 100,
+  },
+  {
+    id: 'ng_plus_unlocked',
+    name: 'The Signal Returns',
+    description: 'Unlock New Game+',
+    icon: ' ↻',
+    check: (s) => s.ngPlusUnlocked >= 1,
+  },
+  {
+    id: 'ng_plus_complete',
+    name: 'Full Circle',
+    description: 'Complete a New Game+ run',
+    icon: ' ⊙',
+    check: (s) => s.ngPlusCompleted >= 1,
+  },
+  {
+    id: 'endless_survivor_10',
+    name: 'Long Dark Night',
+    description: 'Survive 10 shifts in Endless Night',
+    icon: ' ☾',
+    check: (s) => s.endlessShiftsSurvived >= 10,
+  },
+  {
+    id: 'endless_survivor_25',
+    name: 'The Night Never Ends',
+    description: 'Survive 25 shifts in Endless Night',
+    icon: ' ◑',
+    check: (s) => s.endlessShiftsSurvived >= 25,
+  },
+  {
+    id: 'tape_mastery_depth',
+    name: 'Below the Surface',
+    description: 'Unlock the Depth layer on any tape',
+    icon: ' ▾',
+    check: (s) => s.tapeMasteryDepthUnlocks >= 1,
+  },
+  {
+    id: 'tape_mastery_abyss',
+    name: 'Into the Abyss',
+    description: 'Unlock the Abyss layer on any tape',
+    icon: ' ▼',
+    check: (s) => s.tapeMasteryAbyssUnlocks >= 1,
   },
 ];
 

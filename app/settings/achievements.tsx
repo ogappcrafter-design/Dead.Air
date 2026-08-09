@@ -10,6 +10,7 @@ import { useSettingsStore } from '../../store/useSettingsStore';
 import { useAchievementStore } from '../../store/useAchievementStore';
 import { useDailyCallStore } from '../../store/useDailyCallStore';
 import { getAchievementStatus, type PlayerStats } from '../../engine/progression/Achievements';
+import { getTotalLayersUnlocked } from '../../engine/progression/TapeMastery';
 import { AchievementsGrid } from '../../components/progression/AchievementsGrid';
 import { colors, fonts, spacing } from '../../lib/theme';
 
@@ -26,8 +27,14 @@ function usePlayerStats(): PlayerStats {
   const sanityLowest = useGameStore((s) => s.sanityLowest);
   const shiftsCompleted = useGameStore((s) => s.shiftsCompleted);
   const longestCallSurvivedMs = useGameStore((s) => s.longestCallSurvivedMs);
+  const ngPlusUnlocked = useGameStore((s) => s.ngPlusUnlocked);
+  const ngPlusCompleted = useGameStore((s) => s.ngPlusCompleted);
+  const endlessHighScore = useGameStore((s) => s.endlessHighScore);
+  const tapeListenCounts = useGameStore((s) => s.tapeListenCounts);
   const difficultyMode = useSettingsStore((s) => s.difficulty);
-  const dailyStreak = useDailyCallStore((s) => s.streak); (feat(calls): DEA-49 daily mystery call system — seeded RNG, streak tracking, exclusive calls)
+  const dailyStreak = useDailyCallStore((s) => s.streak);
+
+  const mastery = getTotalLayersUnlocked(tapeListenCounts);
 
   return {
     callsReceived: receivedCalls.length,
@@ -37,7 +44,12 @@ function usePlayerStats(): PlayerStats {
     shiftsCompleted,
     longestCallSurvivedMs,
     difficultyMode,
-    dailyStreak, (feat(calls): DEA-49 daily mystery call system — seeded RNG, streak tracking, exclusive calls)
+    dailyStreak,
+    ngPlusUnlocked: ngPlusUnlocked ? 1 : 0,
+    ngPlusCompleted,
+    endlessShiftsSurvived: endlessHighScore,
+    tapeMasteryDepthUnlocks: mastery.depth,
+    tapeMasteryAbyssUnlocks: mastery.abyss,
   };
 }
 
