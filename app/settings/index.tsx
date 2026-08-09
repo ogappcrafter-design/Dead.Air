@@ -16,6 +16,7 @@ import { restorePurchases } from '../../lib/iap';
 import { DIFFICULTY_CONFIGS, DIFFICULTY_ORDER } from '../../lib/difficulty';
 import type { DifficultyMode } from '../../lib/difficulty';
 import { AmbientPicker } from '../../components/settings/AmbientPicker';
+import { PerformanceSettingsPanel } from '../../components/settings/PerformanceSettingsPanel';
 
 const CRT_INTENSITY_STEP = 0.1;
 const VOLUME_STEP = 0.1;
@@ -323,6 +324,11 @@ export default function SettingsScreen() {
             accessibilityHint="Toggle inter-band static noise"
           />
         </View>
+      </View>
+
+      <View style={styles.card}>
+        <Text style={styles.sectionLabel}>PERFORMANCE</Text>
+        <PerformanceSettingsPanel />
       </View>
 
       <View style={styles.card}>

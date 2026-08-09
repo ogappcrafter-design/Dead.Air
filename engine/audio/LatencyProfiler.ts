@@ -1,6 +1,9 @@
 // engine/audio/LatencyProfiler.ts
 // Measures end-to-end audio latency from call start to first audio output.
 // Provides rolling statistics and can be queried for performance budgets.
+// Extended with p50/p90/p99 percentiles and preset auto-suggestion.
+
+import type { LatencyHint } from './AudioPerformanceConfig';
 
 /**
  * LatencyProfiler — lightweight timing instrumentation for audio paths.
@@ -35,6 +38,31 @@ export interface LatencyStats {
   lastMs: number;
 }
 
+/**
+ * Extended latency stats with p50/p90/p99 percentiles.
+ * Returned by `getLatencyStats()`.
+ */
+export interface DetailedLatencyStats {
+  /** Number of completed calls measured. */
+  samples: number;
+  /** Average latency in ms. */
+  avg: number;
+  /** P50 (median) latency in ms. */
+  p50: number;
+  /** P90 latency in ms. */
+  p90: number;
+  /** P99 latency in ms. */
+  p99: number;
+  /** P95 latency in ms (carried from legacy stats). */
+  p95: number;
+  /** Minimum latency in ms. */
+  min: number;
+  /** Maximum latency in ms. */
+  max: number;
+  /** Last recorded latency in ms. */
+  last: number;
+}
+
 /** Initial empty stats. */
 export const EMPTY_STATS: LatencyStats = {
   count: 0,
@@ -43,6 +71,19 @@ export const EMPTY_STATS: LatencyStats = {
   maxMs: 0,
   p95Ms: 0,
   lastMs: 0,
+};
+
+/** Initial empty detailed stats. */
+export const EMPTY_DETAILED_STATS: DetailedLatencyStats = {
+  samples: 0,
+  avg: 0,
+  p50: 0,
+  p90: 0,
+  p99: 0,
+  p95: 0,
+  min: 0,
+  max: 0,
+  last: 0,
 };
 
 /**
@@ -54,7 +95,7 @@ export class LatencyProfiler {
   private firstOutputTime: number | null = null;
   private currentCallId: number | null = null;
   private stats: LatencyStats = { ...EMPTY_STATS };
-  // Ring buffer for p95 — keeps last 100 samples.
+  // Ring buffer for percentiles — keeps last 100 samples.
   private readonly samples: number[] = [];
   private static readonly MAX_SAMPLES = 100;
 
@@ -106,6 +147,27 @@ export class LatencyProfiler {
     return { ...this.stats };
   }
 
+  /**
+   * Detailed latency stats with p50/p90/p99 percentiles.
+   * Returns a snapshot computed from the samples ring buffer.
+   */
+  getLatencyStats(): DetailedLatencyStats {
+    if (this.samples.length === 0) {
+      return { ...EMPTY_DETAILED_STATS };
+    }
+    return {
+      samples: this.samples.length,
+      avg: this.stats.meanMs,
+      p50: this.percentile(50),
+      p90: this.percentile(90),
+      p99: this.percentile(99),
+      p95: this.stats.p95Ms,
+      min: this.stats.minMs === Infinity ? 0 : this.stats.minMs,
+      max: this.stats.maxMs,
+      last: this.stats.lastMs,
+    };
+  }
+
   /** True if a measurement is currently in progress. */
   isMeasuring(): boolean {
     return this.startTime !== null;
@@ -117,6 +179,28 @@ export class LatencyProfiler {
    */
   exceededBudget(budgetMs: number): boolean {
     return this.stats.count > 0 && this.stats.lastMs > budgetMs;
+  }
+
+  /**
+   * Auto-suggest a latency hint based on observed p90 latency.
+   * If p90 > 100ms, suggest 'playback' (prioritize stability over interactivity).
+   * If p90 > 50ms, suggest 'balanced'.
+   * Otherwise suggest 'interactive'.
+   *
+   * Returns null if not enough samples (<3) for a meaningful suggestion.
+   */
+  suggestLatencyHint(): LatencyHint | null {
+    if (this.samples.length < 3) {
+      return null;
+    }
+    const p90 = this.percentile(90);
+    if (p90 > 100) {
+      return 'playback';
+    }
+    if (p90 > 50) {
+      return 'balanced';
+    }
+    return 'interactive';
   }
 
   /** Reset all measurements (not stats). Called internally after endCall. */

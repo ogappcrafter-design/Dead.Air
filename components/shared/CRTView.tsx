@@ -21,6 +21,7 @@ import Animated, {
 import { colors } from '../../lib/theme';
 import { useSettingsStore } from '../../store/useSettingsStore';
 import { ScanlineOverlay, VignetteOverlay, PhosphorGlow } from './CRTEffects';
+import type { ScanlineMode } from './CRTEffects';
 
 export interface CRTViewProps extends ViewProps {
   /** 0..1 — 0 disables effects entirely (pass-through View). */
@@ -30,7 +31,6 @@ export interface CRTViewProps extends ViewProps {
 }
 
 const FLICKER_PERIOD_MS = 2800;
-const FLICKER_MIN = 0.95;
 const FLICKER_MAX = 1.0;
 
 /**
@@ -45,7 +45,9 @@ const FLICKER_MAX = 1.0;
 function CRTView({ intensity = 0, children, style, ...rest }: CRTViewProps): JSX.Element {
   const crtEnabled = useSettingsStore((s) => s.crtEnabled);
   const reducedMotion = useSettingsStore((s) => s.reducedMotion);
-  const active = intensity > 0 && crtEnabled;
+  const scanlineDensity = useSettingsStore((s) => s.scanlineDensity);
+  const particleEffects = useSettingsStore((s) => s.particleEffects);
+  const active = intensity > 0 && crtEnabled && scanlineDensity !== 'off';
 
   const flicker = useSharedValue(1);
   const flickerStyle = useAnimatedStyle(() => ({ opacity: flicker.value }));
@@ -77,14 +79,18 @@ function CRTView({ intensity = 0, children, style, ...rest }: CRTViewProps): JSX
     );
   }
 
+  // Determine overlay quality mode from scanlineDensity setting.
+  // When particleEffects is false, downgrade overlays to 'reduced'.
+  const overlayMode: ScanlineMode = particleEffects ? scanlineDensity : 'reduced';
+
   return (
     <View style={[styles.container, style]} {...rest}>
       <View style={styles.layer}>{children}</View>
 
       {/* Effect overlays — pointerEvents none so touches reach children. */}
-      <PhosphorGlow intensity={intensity} />
-      <ScanlineOverlay intensity={intensity} />
-      <VignetteOverlay intensity={intensity} />
+      {particleEffects && <PhosphorGlow intensity={intensity} mode={overlayMode} />}
+      <ScanlineOverlay intensity={intensity} mode={scanlineDensity} />
+      <VignetteOverlay intensity={intensity} mode={overlayMode} />
 
       {/* Flicker wraps the visual stack only; not touch targets underneath. */}
       <Animated.View style={[styles.flicker, flickerStyle]} pointerEvents="none" />

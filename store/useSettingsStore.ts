@@ -4,6 +4,9 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SAVE_KEY } from '../lib/constants';
 import type { DifficultyMode } from '../lib/difficulty';
+import type { ScanlineMode } from '../components/shared/CRTEffects';
+
+export type AudioQuality = 'low' | 'balanced' | 'high';
 
 interface SettingsState {
   // Audio
@@ -18,6 +21,12 @@ interface SettingsState {
   crtEnabled: boolean;
   crtIntensity: number;
   reducedMotion: boolean;
+
+  // Performance
+  scanlineDensity: ScanlineMode;
+  particleEffects: boolean;
+  audioQuality: AudioQuality;
+  autoDetectPerformance: boolean;
 
   // Gameplay
   autoSave: boolean;
@@ -38,6 +47,10 @@ interface SettingsState {
   setCrtEnabled: (enabled: boolean) => void;
   setCrtIntensity: (intensity: number) => void;
   setReducedMotion: (reduced: boolean) => void;
+  setScanlineDensity: (mode: ScanlineMode) => void;
+  setParticleEffects: (enabled: boolean) => void;
+  setAudioQuality: (quality: AudioQuality) => void;
+  setAutoDetectPerformance: (enabled: boolean) => void;
   setAutoSave: (enabled: boolean) => void;
   setCallFrequency: (freq: 'low' | 'medium' | 'high') => void;
   setDifficulty: (diff: DifficultyMode) => void;
@@ -56,6 +69,10 @@ const initialState = {
   crtEnabled: true,
   crtIntensity: 0.3,
   reducedMotion: false,
+  scanlineDensity: 'full' as ScanlineMode,
+  particleEffects: true,
+  audioQuality: 'balanced' as AudioQuality,
+  autoDetectPerformance: true,
   autoSave: true,
   callFrequency: 'medium' as const,
   difficulty: 'insomniac' as const,
@@ -89,6 +106,10 @@ export const useSettingsStore = create<SettingsState>()(
       setCrtEnabled: (enabled) => set({ crtEnabled: enabled }),
       setCrtIntensity: (intensity) => set({ crtIntensity: Math.max(0, Math.min(1, intensity)) }),
       setReducedMotion: (reduced) => set({ reducedMotion: reduced }),
+      setScanlineDensity: (mode) => set({ scanlineDensity: mode }),
+      setParticleEffects: (enabled) => set({ particleEffects: enabled }),
+      setAudioQuality: (quality) => set({ audioQuality: quality }),
+      setAutoDetectPerformance: (enabled) => set({ autoDetectPerformance: enabled }),
       setAutoSave: (enabled) => set({ autoSave: enabled }),
       setCallFrequency: (freq) => set({ callFrequency: freq }),
       setDifficulty: (diff) => set({ difficulty: diff }),
@@ -99,7 +120,7 @@ export const useSettingsStore = create<SettingsState>()(
     {
       name: `${SAVE_KEY}_settings`,
       storage: createJSONStorage(() => AsyncStorage),
-      version: 2,
+      version: 3,
       migrate: (persistedState: unknown, version: number) => {
         if (persistedState === null || typeof persistedState !== 'object') {
           return persistedState;
@@ -108,6 +129,13 @@ export const useSettingsStore = create<SettingsState>()(
         // Version <2 used 'easy'|'normal'|'hard'. Migrate to DifficultyMode.
         if (version < 2 && typeof s.difficulty === 'string') {
           s.difficulty = DIFFICULTY_MIGRATION[s.difficulty] ?? 'insomniac';
+        }
+        // Version <3: add performance settings with defaults.
+        if (version < 3) {
+          if (s.scanlineDensity === undefined) s.scanlineDensity = 'full';
+          if (s.particleEffects === undefined) s.particleEffects = true;
+          if (s.audioQuality === undefined) s.audioQuality = 'balanced';
+          if (s.autoDetectPerformance === undefined) s.autoDetectPerformance = true;
         }
         return s;
       },
