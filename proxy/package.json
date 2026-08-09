@@ -1,0 +1,17 @@
+{
+  "name": "dead-air-proxy",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Infinite Signal generation endpoint for Dead Air Radio.",
+  "main": "index.js",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.70.0",
+    "express": "^5.1.0"
+  }
+}

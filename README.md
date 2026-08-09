@@ -1,247 +1,193 @@
-# 📻 DEAD AIR RADIO
+# ◈ DEAD AIR
 
 > *Something is trying to reach you. The signal is forming.*
 
-A paranormal late-night radio game for Android. You are the DJ. The calls are real.
+A paranormal late-night radio game. You are the DJ. The calls are real.
 
 ---
 
-## Overview
+## What it is
 
-**Dead Air Radio** is an atmospheric horror mobile game built in React (via Expo/React Native Web). Players operate a late-night radio station that receives transmissions from the dead, classified sources, time loops, and things with no name.
+You run a radio station after midnight. Calls come in on five frequency bands —
+from the recently dead, from people stuck in a loop, from a government line that
+should not be reaching you, and eventually from the frequency itself. Each call
+plays out as one of five small interactions. Answering costs you something and
+pays you something. Some calls leave a tape behind.
 
-Answer the call. Or don't. Either way, something heard you.
+There is no combat, no timer pressure outside the calls that are *about*
+pressure, and no ads.
 
----
+## The loop
 
-## Features
+1. **Tune** to a band on the dial.
+2. **Answer** a waiting call. Its type decides how it plays:
 
-- **18 hand-crafted transmissions** across 5 unlockable frequency bands
-- **5 call types:** Just Listen, Dead Air, Right Answer, Signal Decode, Stay Calm
-- **Sanity + Static economy** — your choices have weight
-- **15-tape archive** to collect across a full playthrough
-- **Infinite Signal mode** — AI-generated calls via Claude API once the base game is complete
-- **Persistent save system** — picks up exactly where you left off
-- **Two-tier IAP:** base game ($0.99) and Infinite Signal expansion ($3.99)
-- Fully mobile-optimized, CRT scanline aesthetic, no ads
+   | Type | What you do |
+   |---|---|
+   | `JUST_LISTEN` | Nothing. The call plays itself out. |
+   | `DEAD_AIR` | Hold a near-silent line until the countdown ends. |
+   | `RIGHT_ANSWER` | Choose what to say. The ending changes. |
+   | `SIGNAL_DECODE` | Tap back a five-glyph sequence. |
+   | `STAY_CALM` | Keep the anxiety bar down until time runs out. |
 
----
+3. **Sign off** — the readout shows the static earned, the sanity moved, and
+   any tape recovered.
+4. Completed calls drop off the dial. Completed calls open new bands.
 
-## Frequency Bands
+**Static** (`◈`) is the score. **Sanity** runs 0–100 and drifts with your
+choices; the header shows it as `STABLE` / `FRAYED` / `CRITICAL` / `DEAD AIR`.
 
-| Band | Freq | Unlocks At |
+## Bands
+
+| Band | Frequency | Opens at |
 |---|---|---|
-| LIVING | 88.7 FM | Start |
+| LIVING | 88.7 FM | start (free) |
 | LIMINAL | 102.3 FM | 4 calls |
 | LOST | 117.8 AM | 8 calls |
 | CLASSIFIED | ███.█ FM | 12 calls |
 | ████████ | ???.? | 15 calls |
 
----
+LIVING is the free tier — four calls, plus three Infinite Signal generations.
+The other four bands are the base purchase **and** are gated on progress: buying
+the game does not hand you every frequency at once.
 
-## Tech Stack
+## Content
 
-| Layer | Technology |
-|---|---|
-| Frontend | React (Expo / React Native Web) |
-| AI (Infinite Mode) | Anthropic Claude API (`claude-sonnet-4-20250514`) |
-| Billing | Google Play Billing Library v6 |
-| Save / Storage | `window.storage` (persistent key-value) |
-| Hosting / Backend | Google Cloud Run (optional, for API key proxy) |
-| Distribution | Google Play Store |
+18 hand-authored transmissions and a 15-tape archive. Every tape is reachable in
+a single playthrough, but several are locked behind one specific branch of a
+`RIGHT_ANSWER` call — a full archive means choosing right, not just playing
+everything. `__tests__/content.test.js` enforces both of those properties.
 
----
+## Infinite Signal
 
-## Google Cloud Project Setup
+Once the authored calls run out, the frequency keeps going: Claude generates new
+calls in the voice of whichever band you are tuned to. Three are free; unlimited
+is a $0.99 unlock.
 
-### 1. Create Your Project
+The API key lives in [`proxy/`](proxy/README.md), never in the app bundle. The
+proxy exposes one narrow route that takes a band id and returns a call — it is
+**not** a passthrough for `/v1/messages`, so a leaked URL cannot be used to run
+arbitrary prompts on your account. The app clamps every field of the response
+before playing it (`src/engine/generation.js`), so a strange generation is a
+strange call rather than a crash.
 
-```bash
-gcloud projects create dead-air-radio --name="Dead Air Radio"
-gcloud config set project dead-air-radio
-```
-
-### 2. Enable Required APIs
-
-```bash
-gcloud services enable \
-  run.googleapis.com \
-  cloudbuild.googleapis.com \
-  secretmanager.googleapis.com
-```
-
-### 3. Store Your Anthropic API Key Securely
-
-```bash
-echo -n "YOUR_ANTHROPIC_API_KEY" | \
-  gcloud secrets create anthropic-api-key --data-file=-
-```
-
-### 4. Deploy API Proxy to Cloud Run (Recommended)
-
-Create a lightweight proxy so your API key never ships in the client bundle:
-
-```bash
-# /proxy/index.js — minimal Express proxy
-const express = require('express');
-const app = express();
-app.use(express.json());
-
-app.post('/v1/messages', async (req, res) => {
-  const response = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': process.env.ANTHROPIC_API_KEY,
-      'anthropic-version': '2023-06-01'
-    },
-    body: JSON.stringify(req.body)
-  });
-  const data = await response.json();
-  res.json(data);
-});
-
-app.listen(8080);
-```
-
-```bash
-gcloud run deploy dead-air-proxy \
-  --source ./proxy \
-  --region us-central1 \
-  --allow-unauthenticated \
-  --set-secrets ANTHROPIC_API_KEY=anthropic-api-key:latest
-```
-
-Then update the fetch URL in `DeadAirRadio.jsx`:
-```js
-// Change this line in generateAICall():
-const response = await fetch("https://YOUR-CLOUD-RUN-URL/v1/messages", {
-```
+Until `expo.extra.signalProxyUrl` is set in `app.json`, the Generate button
+reports that Infinite Signal is not configured.
 
 ---
 
-## Google Play Store Setup
+## Layout
 
-### In-App Products (Billing)
+```
+App.js                  root: save, purchases, which screen is up
+index.js                Expo entry point
+src/
+  content/              the writing — bands, 18 calls, 15 tapes, glyphs
+    calls/              one file per band
+  engine/               pure game logic, no React (this is what the tests cover)
+    save.js             save shape, v1→v2 migration, reward + sanity math
+    progression.js      band unlocks, available calls, generation credits
+    generation.js       clamping AI-generated calls into playable ones
+  services/             boundaries: storage, billing, the signal proxy client
+  calls/                the five call players + the type→player registry
+  screens/              boot, dial, call, sign-off, archive, store, settings
+  components/           CRT overlay, buttons, signal bars, transmission log
+  hooks/                line reveal, countdown
+  theme/                colors, type, spacing, safe-area top
+proxy/                  Cloud Run service holding the Anthropic key
+scripts/gen-assets.py   regenerates the icons and splash from geometry
+__tests__/              engine + content tests (no RN renderer needed)
+```
 
-Set up two one-time purchase products in the **Google Play Console → Monetize → Products → In-app products**:
+The engine is deliberately free of React and React Native imports, which is why
+its tests run on plain Jest with no native mocking.
+
+## Develop
+
+```bash
+npm install
+npm test          # 108 tests, engine + content
+npm run lint
+npm start         # Expo dev server
+npm run android
+```
+
+Node 22+. Assets are generated, not hand-drawn — `npm run assets` rebuilds
+`assets/*.png` from `scripts/gen-assets.py` (pure geometry plus a 5×7 bitmap
+font, no image libraries required).
+
+## Build
+
+```bash
+eas build --platform android --profile preview      # APK
+eas build --platform android --profile production   # AAB for Play
+```
+
+## Store products
+
+Wire real billing by replacing the two marked bodies in
+`src/services/billing.js`; nothing else in the UI needs to change.
 
 | Product ID | Title | Price |
 |---|---|---|
-| `dead_air_base` | Dead Air Radio | $0.99 |
-| `dead_air_infinite` | Infinite Signal | $3.99 |
+| `dead_air_base` | Base Transmission | $1.99 |
+| `dead_air_infinite` | Infinite Signal | $0.99 |
 
-### Connecting Google Play Billing
+## Saves
 
-The in-app store UI is fully built. To wire it to real Google Play Billing, replace the `buy()` simulation in the `Store` component with your `react-native-purchases` or `@react-native-google-play/billing` integration:
+`dead_air_save_v1` holds sanity, static, completed calls, tapes and generation
+count; `dead_air_purchases_v1` holds entitlements. Both load before the first
+frame renders.
 
-```js
-// Replace the simulated buy() in Store component:
-import Purchases from 'react-native-purchases';
+Saves are migrated on read (`migrateSave`). v1 stored completed calls as indices
+into one flat list, so reordering the content would have silently rewritten a
+player's history; v2 uses stable string ids and converts old files on load.
+Out-of-range values are clamped and unknown tapes dropped rather than trusted.
 
-const buy = async (product) => {
-  try {
-    const productId = product === 'base' ? 'dead_air_base' : 'dead_air_infinite';
-    await Purchases.purchaseProduct(productId);
-    onPurchase(product);
-  } catch (e) {
-    if (!e.userCancelled) console.error(e);
-  }
-};
-
-// And restore purchases:
-const restore = async () => {
-  await Purchases.restorePurchases();
-  onPurchase('restore');
-};
-```
+Erasing a save (Settings → Erase Station) keeps purchases. You never buy the
+game twice.
 
 ---
 
-## Local Development
+## What changed in this rebuild
 
-```bash
-# Install dependencies
-npm install
+The v1 tree was a single 544-line `game.js` plus two components. This is a
+rewrite against the same design, keeping every line of the writing intact.
+Behaviour that changed on purpose:
 
-# Run in browser (dev)
-npx expo start --web
+- **Buying the game no longer unlocks all five bands immediately.** v1
+  short-circuited the progression gate whenever `baseUnlocked` was set, which
+  made the unlock table above decorative. Both gates now apply.
+- **Store prices are one source of truth.** The v1 README advertised
+  $0.99 / $3.99 while the store UI charged $1.99 / $0.99. The UI's prices won;
+  they now live in `src/services/billing.js` and the README reads from there.
+- **`STAY_CALM` resolves ties deterministically.** Anxiety reaches 100 at
+  exactly the moment the countdown expires, so an untouched call was a race
+  between two independent timer chains. Losing is now checked first: if you
+  never breathe, you lose.
+- **A sign-off screen exists.** v1 computed payout, sanity drift and tape
+  awards and then returned straight to the dial, so the economy was invisible.
 
-# Build for Android
-npx expo build:android
-# or with EAS:
-eas build --platform android
-```
+Fixed along the way: the CRT scanlines the README had promised since v1 but
+which were never drawn; 1×1-pixel placeholder icons; a dangling `setTimeout` in
+the decode minigame that set state after unmount; hard-coded `paddingTop: 52`
+standing in for a safe area; timer drift from chained `setTimeout`s; and a
+corrupted file named `UPDATE FILE` sitting in the repo root, which turned out to
+be a mangled ESLint config that was never wired to anything.
 
----
+Still outstanding: there is nothing to spend static on — it is a score, not a
+currency, and the store sells unlocks rather than upgrades. Worth deciding
+before launch. There is also no audio, which for a radio game is a gap, but v1
+had none either and adding it is a content problem more than a code one.
 
-## Environment Variables
+## Content warning
 
-```env
-ANTHROPIC_API_KEY=your_key_here          # Only needed if NOT using Cloud Run proxy
-CLOUD_RUN_PROXY_URL=https://your-url     # Your deployed proxy endpoint
-```
-
----
-
-## Save System
-
-Game state saves automatically after every completed call via `window.storage` (persistent key-value):
-
-- `dead_air_save_v1` — sanity, static balance, completed calls, tapes, gen count
-- `dead_air_purchases_v1` — IAP unlock state
-
-On boot, save data loads before the first screen renders. Players resume exactly where they left off.
-
----
-
-## Project Structure
-
-```
-/
-├── DeadAirRadio.jsx       # Full game (single-component build)
-├── proxy/
-│   └── index.js           # Cloud Run API key proxy
-├── assets/
-│   └── icon.png           # App icon (1024x1024)
-├── app.json               # Expo config
-├── google-services.json   # Firebase/Play config (add yours)
-└── README.md
-```
-
----
-
-## Play Store Listing Copy
-
-**Short description (80 chars):**
-> A paranormal radio game. Answer the calls. Something is listening.
-
-**Full description:**
-> You are a late-night DJ. The calls are not normal.
->
-> DEAD AIR RADIO is an atmospheric horror game about the people — and things — that call in after midnight. The dead. The classified. The ones stuck in loops. And something older than radio itself.
->
-> Answer every call. Collect every tape. And whatever you do — don't hang up.
->
-> ◈ 18 hand-crafted transmissions
-> ◉ 5 unlockable frequency bands
-> ◇ Sanity system that responds to every choice
-> ◎ 15 collectible archive tapes
-> ◊ Infinite Signal mode — AI-generated calls, endless, never the same twice
->
-> No ads. No energy timers. Just the signal.
-
----
-
-## Content Warnings
-
-This game contains themes of grief, death, loss, the supernatural, and psychological horror. Some transmissions are based on emotionally real scenarios.
-
----
+Grief, death, loss, the supernatural, and psychological horror. Several
+transmissions are built on emotionally real scenarios.
 
 ## License
 
-All original content © Dead Air Radio. All rights reserved.  
+All original content © Dead Air Radio. All rights reserved.
 Not for redistribution without permission.
 
 ---

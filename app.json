@@ -1,21 +1,25 @@
 {
   "expo": {
-    "name": "Dead.Air",
+    "name": "Dead Air",
     "slug": "dead-air-opal",
-    "version": "1.0.0",
+    "version": "2.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
-
+    "backgroundColor": "#030303",
+    "primaryColor": "#FF8C00",
+    "assetBundlePatterns": ["**/*"],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.deadair.app"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#000000"
       },
-      "package": "com.deadair.app"
+      "package": "com.deadair.app",
+      "versionCode": 2
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -23,7 +27,8 @@
     "extra": {
       "eas": {
         "projectId": "c4d8ec91-b038-4fc5-83a8-af266aeca7ff"
-      }
+      },
+      "signalProxyUrl": null
     },
     "owner": "daggerstuffer",
     "plugins": [
