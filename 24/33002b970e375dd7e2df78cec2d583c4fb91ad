@@ -1,0 +1,23 @@
+tests/engine/environmentalProfiles.test.ts
+  s_c73e38b660b552::t_8e7e17768b1d34 1-112
+tests/engine/WeatherSystem.test.ts
+  s_c73e38b660b552::t_c30019656bc70a 1-108
+tests/engine/SanityAudioProcessor.test.ts
+  s_c73e38b660b552::t_95e691cd806ce4 1-355
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "2433002b970e375dd7e2df78cec2d583c4fb91ad",
+  "prompts": {},
+  "sessions": {
+    "s_c73e38b660b552": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ses_01c37f831ffeRsenfuPCFVJ202",
+        "model": "unknown"
+      },
+      "human_author": "Dagger <dagger@pixelated.love>"
+    }
+  }
+}
