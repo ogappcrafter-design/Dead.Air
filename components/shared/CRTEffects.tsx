@@ -9,6 +9,13 @@
 
 import React, { type JSX } from 'react';
 import { View, StyleSheet } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withRepeat,
+  withTiming,
+  Easing,
+} from 'react-native-reanimated';
 
 /** Scanline rendering mode for performance scaling. */
 export type ScanlineMode = 'full' | 'reduced' | 'off';
@@ -34,6 +41,9 @@ const REDUCED_SCANLINE_COUNT = 10;
  * - 'full': 20 scanlines (5% spacing) — original look at 1/4 the render cost
  * - 'reduced': 10 scanlines (10% spacing) — lighter for mid-tier devices
  * - 'off': renders nothing
+ *
+ * The whole set drifts slowly downward then wraps — like a loose broadcast
+ * signal. The drift is barely perceptible but registers as "something's off".
  */
 export function ScanlineOverlay({
   intensity,
@@ -46,21 +56,39 @@ export function ScanlineOverlay({
 
   const count = mode === 'reduced' ? REDUCED_SCANLINE_COUNT : FULL_SCANLINE_COUNT;
 
+  const drift = useSharedValue(0);
+  React.useEffect(() => {
+    drift.value = withRepeat(
+      withTiming(2, {
+        duration: 9000,
+        easing: Easing.linear,
+      }),
+      -1,
+      false,
+    );
+  }, [drift]);
+
+  const driftStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: drift.value }],
+  }));
+
   return (
     <View style={[styles.root, { opacity }]} pointerEvents="none">
-      {Array.from({ length: count }).map((_, i) => (
-        <View
-          key={i}
-          style={[
-            styles.line,
-            {
-              top: `${(i * 100) / count}%`,
-              height: mode === 'reduced' ? 3 : 2,
-              backgroundColor: 'rgba(0,0,0,0.25)',
-            },
-          ]}
-        />
-      ))}
+      <Animated.View style={[styles.layer, driftStyle]}>
+        {Array.from({ length: count }).map((_, i) => (
+          <View
+            key={i}
+            style={[
+              styles.line,
+              {
+                top: `${(i * 100) / count}%`,
+                height: mode === 'reduced' ? 3 : 2,
+                backgroundColor: 'rgba(0,0,0,0.25)',
+              },
+            ]}
+          />
+        ))}
+      </Animated.View>
     </View>
   );
 }
@@ -114,6 +142,9 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
   },
+  layer: {
+    flex: 1,
+  },
   line: {
     position: 'absolute',
     left: 0,
@@ -121,20 +152,20 @@ const styles = StyleSheet.create({
   },
   vignette: {
     backgroundColor: 'transparent',
-    borderWidth: 48,
-    borderColor: 'rgba(0,0,0,0.55)',
+    borderWidth: 56,
+    borderColor: 'rgba(0,0,0,0.65)',
     shadowColor: '#000000',
-    shadowOpacity: 0.9,
-    shadowRadius: 80,
+    shadowOpacity: 0.95,
+    shadowRadius: 100,
     shadowOffset: { width: 0, height: 0 },
   },
   vignetteReduced: {
     backgroundColor: 'transparent',
-    borderWidth: 24,
-    borderColor: 'rgba(0,0,0,0.45)',
+    borderWidth: 28,
+    borderColor: 'rgba(0,0,0,0.55)',
     shadowColor: '#000000',
-    shadowOpacity: 0.7,
-    shadowRadius: 40,
+    shadowOpacity: 0.8,
+    shadowRadius: 50,
     shadowOffset: { width: 0, height: 0 },
   },
   glow: {

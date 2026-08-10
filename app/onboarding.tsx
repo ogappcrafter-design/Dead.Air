@@ -2,7 +2,7 @@
 // Multi-step onboarding: (1) player name entry, (2) DJ call sign + station name.
 // Shows on first launch before the player can access the radio.
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -15,6 +15,9 @@ import {
 import { useRouter } from 'expo-router';
 import { colors, fonts, spacing } from '../lib/theme';
 import { usePlayerStore } from '../store/usePlayerStore';
+import { FlickeringText } from '../components/shared/FlickeringText';
+import { BreathingText } from '../components/shared/BreathingText';
+import { GlitchText } from '../components/shared/GlitchText';
 
 type Step = 0 | 1;
 
@@ -26,6 +29,17 @@ export default function OnboardingScreen() {
   const [playerName, setPlayerName] = useState('');
   const [djCallSign, setDjCallSign] = useState('');
   const [stationName, setStationName] = useState('');
+  const [promptText, setPromptText] = useState('What is your name?');
+
+  // After a few seconds on step 0, the prompt shifts — like the station itself
+  // is growing impatient. Subtle, not announced.
+  useEffect(() => {
+    if (step !== 0) return;
+    const timer = setTimeout(() => {
+      setPromptText('The line is open. What is your name?');
+    }, 4000);
+    return () => clearTimeout(timer);
+  }, [step]);
 
   const nameValid = playerName.trim().length > 0;
   const callSignValid = djCallSign.trim().length > 0;
@@ -53,13 +67,24 @@ export default function OnboardingScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <View style={styles.content}>
-        <Text style={styles.title}>DEAD AIR</Text>
-        <Text style={styles.subtitle}>Late Night Radio</Text>
+        <FlickeringText text="DEAD AIR" style={styles.title} letterSpacing={8} />
+        <BreathingText style={styles.subtitle}>Late Night Radio</BreathingText>
 
         {step === 0 ? (
           <>
-            <Text style={styles.prompt}>What is your name?</Text>
-            <Text style={styles.hint}>Your real name. Not a username.</Text>
+            <Text style={styles.prompt}>{promptText}</Text>
+            <GlitchText
+              base="Your real name. Not a username."
+              variants={[
+                'Your real name. Not a username.',
+                'Your real name. It already knows.',
+                'Your real name. Please.',
+                'Say your name. The line is open.',
+              ]}
+              style={styles.hint}
+              intervalMs={5000}
+              holdMs={120}
+            />
             <TextInput
               style={styles.input}
               value={playerName}

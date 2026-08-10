@@ -1,13 +1,32 @@
 import { View, Text, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { FlickeringText } from '../components/shared/FlickeringText';
 import { colors, fonts, spacing } from '../lib/theme';
-import { useGameStore } from '../store/useGameStore';
 import { usePlayerStore } from '../store/usePlayerStore';
+
+const TUNING_MESSAGES = [
+  'Tuning frequencies...',
+  'Scanning the dial...',
+  'Something is listening...',
+  'Finding your signal...',
+  'The line is open...',
+  'They know you\'re here...',
+  'Stay on the line...',
+  'Don\'t look behind you...',
+];
 
 export default function IndexScreen() {
   const router = useRouter();
-  const isPlaying = useGameStore((s) => s.isPlaying);
+  const [messageIdx, setMessageIdx] = useState(0);
+
+  // Cycle through unsettling "tuning" messages on the splash.
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setMessageIdx((i) => (i + 1) % TUNING_MESSAGES.length);
+    }, 1800);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -49,9 +68,9 @@ export default function IndexScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>DEAD AIR</Text>
+      <FlickeringText text="DEAD AIR" style={styles.title} letterSpacing={8} />
       <Text style={styles.subtitle}>Late Night Radio</Text>
-      <Text style={styles.loading}>Tuning frequencies...</Text>
+      <Text style={styles.loading}>{TUNING_MESSAGES[messageIdx]}</Text>
     </View>
   );
 }

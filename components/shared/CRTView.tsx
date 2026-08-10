@@ -33,6 +33,10 @@ export interface CRTViewProps extends ViewProps {
 const FLICKER_PERIOD_MS = 2800;
 const FLICKER_MAX = 0.12;
 
+// Signal tear: brief horizontal displacement. Rare, fast, subliminal.
+const TEAR_PERIOD_MS = 7000;
+const TEAR_DISPLACEMENT = 4;
+
 /**
  * CRTView wraps children with layered CRT effects:
  *   - ScanlineOverlay: alternating dark horizontal lines
@@ -51,6 +55,26 @@ function CRTView({ intensity = 0, children, style, ...rest }: CRTViewProps): JSX
 
   const flicker = useSharedValue(0);
   const flickerStyle = useAnimatedStyle(() => ({ opacity: flicker.value }));
+
+  // Signal tear — every ~7s, a 4px horizontal jog for ~80ms. Subliminal.
+  const tear = useSharedValue(0);
+  React.useEffect(() => {
+    if (!active || reducedMotion) return;
+    let timeout: ReturnType<typeof setTimeout>;
+    const tick = () => {
+      tear.value = withTiming(TEAR_DISPLACEMENT, { duration: 40 });
+      timeout = setTimeout(() => {
+        tear.value = withTiming(0, { duration: 40 });
+        timeout = setTimeout(tick, TEAR_PERIOD_MS * (0.6 + Math.random() * 0.8));
+      }, 80);
+    };
+    timeout = setTimeout(tick, 3000);
+    return () => clearTimeout(timeout);
+  }, [active, reducedMotion, tear]);
+
+  const tearStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: tear.value }],
+  }));
 
   React.useEffect(() => {
     if (!active || reducedMotion) {
@@ -85,7 +109,9 @@ function CRTView({ intensity = 0, children, style, ...rest }: CRTViewProps): JSX
 
   return (
     <View style={[styles.container, style]} {...rest}>
-      <View style={styles.layer}>{children}</View>
+      <Animated.View style={[styles.layer, tearStyle]}>
+        {children}
+      </Animated.View>
 
       {/* Effect overlays — pointerEvents none so touches reach children. */}
       {particleEffects && <PhosphorGlow intensity={intensity} mode={overlayMode} />}
