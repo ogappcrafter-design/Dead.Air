@@ -31,7 +31,6 @@ import { TapePlayback } from '../../engine/progression/TapePlayback';
 import {
   TapeDroneSynth,
   buildTapeProfile,
-  type TapeAudioProfile,
 } from '../../engine/audio/TapeDroneSynth';
 import { getAudioEngine, getOrCreateAudioEngine } from '../../engine/audio/AudioEngine';
 import { VoiceProcessor } from '../../engine/audio/VoiceProcessor';
@@ -184,9 +183,10 @@ export default function TapesScreen() {
     (tapeName: string, band: Band) => {
       stopDrone();
       const idx = ALL_TAPE_NAMES.indexOf(tapeName);
-      const tapeId =
-        idx >= 0 && idx < ALL_TAPE_INFOS.length ? ALL_TAPE_INFOS[idx]!.id : `tape-${idx + 1}`;
-      const profile = buildTapeProfile(band, tapeId);
+      const tapeInfo = idx >= 0 && idx < ALL_TAPE_INFOS.length ? ALL_TAPE_INFOS[idx] : null;
+      const tapeId = tapeInfo?.id ?? `tape-${idx + 1}`;
+      const rarity = tapeInfo?.rarity ?? 'common';
+      const profile = buildTapeProfile(band, tapeId, rarity);
 
       const engine = ensureAudioEngine();
       if (engine === null) return;

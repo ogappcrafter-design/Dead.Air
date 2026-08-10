@@ -229,10 +229,14 @@ export class VoiceProcessorWorklet {
   }
 
   /**
-   * Build a tape audio profile from band + tape id.
+   * Build a tape audio profile from band + tape id + rarity.
    */
-  buildTapeProfile(band: Band, tapeId: string): import('./TapeDroneSynth').TapeAudioProfile {
+  buildTapeProfile(
+    band: Band,
+    tapeId: string,
+    rarity: 'common' | 'uncommon' | 'rare' | 'legendary' = 'common',
+  ): import('./TapeDroneSynth').TapeAudioProfile {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    return require('./TapeDroneSynth').buildTapeProfile(band, tapeId);
+    return require('./TapeDroneSynth').buildTapeProfile(band, tapeId, rarity);
   }
 }

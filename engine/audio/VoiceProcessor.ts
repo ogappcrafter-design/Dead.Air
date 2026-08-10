@@ -6,7 +6,6 @@ import {
   PlatformBridge,
   BridgeAudioContext,
   BridgeAudioNode,
-  BridgeAudioBuffer,
   BridgeBiquadNode,
   BridgeDynamicsCompressorNode,
   BridgeWaveShaperNode,
@@ -239,11 +238,15 @@ export class VoiceProcessor {
   }
 
   /**
-   * Build a tape audio profile from band + tape id. Thin wrapper around
-   * `buildTapeProfile` from TapeDroneSynth — colocated here so callers can
-   * go from VoiceProcessor → synth + profile without importing two modules.
+   * Build a tape audio profile from band + tape id + rarity. Thin wrapper
+   * around `buildTapeProfile` from TapeDroneSynth — colocated here so callers
+   * can go from VoiceProcessor → synth + profile without importing two modules.
    */
-  buildTapeProfile(band: Band, tapeId: string): TapeAudioProfile {
-    return buildTapeProfile(band, tapeId);
+  buildTapeProfile(
+    band: Band,
+    tapeId: string,
+    rarity: 'common' | 'uncommon' | 'rare' | 'legendary' = 'common',
+  ): TapeAudioProfile {
+    return buildTapeProfile(band, tapeId, rarity);
   }
 }

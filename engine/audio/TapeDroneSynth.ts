@@ -140,12 +140,14 @@ export const BAND_VOICE_FRAGMENT: ReadonlyRecord<Band, BandVoiceFragmentParams> 
   HISTORICAL: { formantFreq: 500, formantQ: 4, avgIntervalSec: 8, durationSec: 0.6, gain: 0.05 },
 };
 
-/** Tape audio profile — derived from band + tape id. */
+/** Tape audio profile — derived from band + tape id + rarity. */
 export interface TapeAudioProfile {
   /** Band the tape belongs to. */
   band: Band;
   /** Tape id (e.g. "tape-001"). */
   tapeId: string;
+  /** Tape rarity — drives texture intensity. */
+  rarity: 'common' | 'uncommon' | 'rare' | 'legendary';
   /** Base drone frequency (Hz). */
   baseFreq: number;
   /** Harmonic overtones (multipliers of baseFreq + gain). */
@@ -186,11 +188,34 @@ export const mulberry32 = (seed: number): (() => number) => {
 };
 
 /**
- * Build an audio profile for a tape from its band + id.
- * Harmonics are slightly randomized per tape (detuned from base)
- * to distinguish tapes within the same band.
+ * Rarity-based texture multipliers. Rarer tapes get denser static,
+ * more frequent voice fragments, and longer loops for more variation.
  */
-export const buildTapeProfile = (band: Band, tapeId: string): TapeAudioProfile => {
+const RARITY_TEXTURE_MULT: Record<'common' | 'uncommon' | 'rare' | 'legendary', number> = {
+  common: 1,
+  uncommon: 1.4,
+  rare: 1.8,
+  legendary: 2.5,
+};
+
+const RARITY_FRAGMENT_INTERVAL_MULT: Record<'common' | 'uncommon' | 'rare' | 'legendary', number> = {
+  common: 1,
+  uncommon: 0.8,
+  rare: 0.6,
+  legendary: 0.4,
+};
+
+/**
+ * Build an audio profile for a tape from its band + id + rarity.
+ * Harmonics are slightly randomized per tape (detuned from base)
+ * to distinguish tapes within the same band. Rarity scales texture
+ * intensity and voice fragment density.
+ */
+export const buildTapeProfile = (
+  band: Band,
+  tapeId: string,
+  rarity: 'common' | 'uncommon' | 'rare' | 'legendary' = 'common',
+): TapeAudioProfile => {
   const seed = hashTapeId(tapeId);
   const rand = mulberry32(seed);
   // Slight detune: ±2% of base freq per tape.
@@ -203,14 +228,27 @@ export const buildTapeProfile = (band: Band, tapeId: string): TapeAudioProfile =
     { multiplier: 3, gain: 0.15 * harmonicGainVariance() },
     { multiplier: 5, gain: 0.05 * harmonicGainVariance() },
   ];
+  // Rarity scales texture gain — rarer tapes get denser static.
+  const baseTexture = BAND_TEXTURE[band];
+  const texture: BandTextureParams = {
+    ...baseTexture,
+    gain: baseTexture.gain * RARITY_TEXTURE_MULT[rarity],
+  };
+  // Rarity scales voice fragment frequency — rarer tapes get more fragments.
+  const baseFragment = BAND_VOICE_FRAGMENT[band];
+  const voiceFragment: BandVoiceFragmentParams = {
+    ...baseFragment,
+    avgIntervalSec: baseFragment.avgIntervalSec * RARITY_FRAGMENT_INTERVAL_MULT[rarity],
+  };
   return {
     band,
     tapeId,
+    rarity,
     baseFreq,
     harmonics,
-    texture: BAND_TEXTURE[band],
-    voiceFragment: BAND_VOICE_FRAGMENT[band],
-    loopDurationSec: 8,
+    texture,
+    voiceFragment,
+    loopDurationSec: rarity === 'legendary' ? 16 : rarity === 'rare' ? 12 : 8,
   };
 };
 
