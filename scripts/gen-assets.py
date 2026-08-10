@@ -15,18 +15,25 @@ def new(w, h, rgba=(0, 0, 0, 0)):
     return [[list(rgba) for _ in range(w)] for _ in range(h)]
 
 
-def write_png(path, px):
+def write_png(path, px, rgb=False):
+    """Write 8-bit PNG. `rgb=True` drops the alpha channel (colour type 2).
+
+    Play rejects a feature graphic that carries an alpha channel at all, even
+    a fully opaque one, so store graphics are written as true 24-bit.
+    """
     h, w = len(px), len(px[0])
     raw = bytearray()
     for row in px:
         raw.append(0)  # filter type 0
         for p in row:
-            raw += bytes(p)
+            raw += bytes(p[:3]) if rgb else bytes(p)
+
     def chunk(tag, data):
         c = struct.pack(">I", len(data)) + tag + data
         return c + struct.pack(">I", zlib.crc32(tag + data) & 0xFFFFFFFF)
+
     png = b"\x89PNG\r\n\x1a\n"
-    png += chunk(b"IHDR", struct.pack(">IIBBBBB", w, h, 8, 6, 0, 0, 0))
+    png += chunk(b"IHDR", struct.pack(">IIBBBBB", w, h, 8, 2 if rgb else 6, 0, 0, 0))
     png += chunk(b"IDAT", zlib.compress(bytes(raw), 9))
     png += chunk(b"IEND", b"")
     with open(path, "wb") as f:
@@ -169,6 +176,37 @@ F = 64
 fav = new(F, F, (*BG, 255))
 diamond(fav, F / 2, F / 2, F * 0.36, F * 0.075, AMBER, glow=False)
 write_png(f"{OUT}/favicon.png", fav)
+
+# ── Play Store graphics ───────────────────────────────────────────────────────
+# Play wants these at exact sizes and rejects anything else, so they are
+# generated rather than resized by hand. Both are opaque: Play composites the
+# store icon on backgrounds you do not control.
+STORE = os.path.join(OUT, "store")
+os.makedirs(STORE, exist_ok=True)
+
+# Store icon: 512x512, 32-bit PNG.
+S512 = 512
+store_icon = new(S512, S512, (*BG, 255))
+diamond(store_icon, S512 / 2, S512 / 2, S512 * 0.34, S512 * 0.055, AMBER)
+vignette(store_icon)
+scanlines(store_icon, period=4, strength=0.11)
+write_png(f"{STORE}/play-icon-512.png", store_icon)
+
+# Feature graphic: 1024x500, no alpha. The mark sits left of the wordmark so
+# the composition survives Play cropping the edges on some surfaces.
+FW, FH = 1024, 500
+feature = new(FW, FH, (*BG, 255))
+diamond(feature, FW * 0.24, FH * 0.5, FH * 0.30, FH * 0.052, AMBER)
+fscale = 6
+fword = "DEAD AIR"
+fw = text_width(fword, fscale)
+text(feature, fword, int(FW * 0.42), int(FH * 0.5 - 7 * fscale / 2), fscale, AMBER)
+rule_y = int(FH * 0.5 + 7 * fscale / 2) + 22
+for x in range(int(FW * 0.42), min(FW, int(FW * 0.42) + fw)):
+    blend(feature[rule_y][x], (0x66, 0x44, 0x11), 1.0)
+vignette(feature, strength=0.7)
+scanlines(feature, period=4, strength=0.13)
+write_png(f"{STORE}/play-feature-1024x500.png", feature, rgb=True)
 
 # ── static frames — tileable TV snow, cycled to make the noise "boil" ─────────
 # Three frames rather than one: a single tile held still reads as a texture,

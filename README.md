@@ -206,6 +206,27 @@ eas build --platform android --profile preview      # APK
 eas build --platform android --profile production   # AAB for Play
 ```
 
+## Publishing
+
+**[`docs/PLAY_CONSOLE.md`](docs/PLAY_CONSOLE.md)** has every field Play Console
+asks for, ready to paste — listing copy with character counts, categorisation,
+data safety answers, content-rating guidance, IAP SKUs, and the build/submit
+commands. The 512×512 store icon and 1024×500 feature graphic are generated
+into `assets/store/`; screenshots you have to capture yourself.
+
+`docs/privacy-policy.md` is the policy Play requires a public URL for; the
+guide explains hosting it on GitHub Pages.
+
+Two things to know before you start:
+
+- **Billing is not wired.** A release build refuses to unlock paid content
+  rather than granting it free — see `BILLING_WIRED` in
+  `src/services/billing.js`. Ship free first, or wire billing before creating
+  in-app products.
+- **`expo-audio` wants `RECORD_AUDIO` by default.** The plugin is configured in
+  `app.json` to drop it along with the foreground-service permissions, so the
+  listing does not claim microphone access for a game that never records.
+
 **Three native modules were added after v1** — `expo-audio`, `expo-haptics`
 and `expo-constants`. Native modules cannot ship over the air, so the next
 release needs a real EAS build rather than an `expo-updates` push.

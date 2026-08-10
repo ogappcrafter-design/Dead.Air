@@ -4,12 +4,13 @@ import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-nati
 import Button from '../components/Button';
 import CRT from '../components/CRT';
 import { MARK } from '../content/symbols';
-import { PRODUCT_LIST, isOwned } from '../services/billing';
+import { PRODUCT_LIST, isOwned, isStoreOpen } from '../services/billing';
 import { colors, mono, safeTop } from '../theme/theme';
 
 /** Two one-time purchases. Billing itself lives behind src/services/billing.js. */
 export default function StoreScreen({ purchases, onBuy, onRestore, onClose, busy, error }) {
   const [confirming, setConfirming] = useState(null);
+  const open = isStoreOpen();
 
   const press = (id) => {
     if (confirming === id) {
@@ -34,6 +35,14 @@ export default function StoreScreen({ purchases, onBuy, onRestore, onClose, busy
 
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 20, gap: 16, paddingBottom: 96 }}>
         <Text style={s.intro}>{'Some frequencies require a key.\nThese transmissions are waiting.'}</Text>
+
+        {!open && (
+          <View style={s.notice}>
+            <Text style={s.noticeText}>
+              THE STORE IS NOT OPEN YET. These transmissions cannot be unlocked in this build.
+            </Text>
+          </View>
+        )}
 
         {PRODUCT_LIST.map((product) => {
           const owned = isOwned(purchases, product.id);
@@ -68,9 +77,13 @@ export default function StoreScreen({ purchases, onBuy, onRestore, onClose, busy
               {!owned && (
                 <Button
                   label={
-                    isConfirming ? `CONFIRM PURCHASE — ${product.price}` : `UNLOCK — ${product.price}`
+                    !open
+                      ? 'UNAVAILABLE'
+                      : isConfirming
+                        ? `CONFIRM PURCHASE — ${product.price}`
+                        : `UNLOCK — ${product.price}`
                   }
-                  disabled={busy}
+                  disabled={busy || !open}
                   color={isConfirming ? colors.white : product.color}
                   style={{ marginTop: 8 }}
                   onPress={() => press(product.id)}
@@ -92,7 +105,7 @@ export default function StoreScreen({ purchases, onBuy, onRestore, onClose, busy
 
         {!!error && <Text style={s.error}>{error}</Text>}
 
-        <Button label="RESTORE PURCHASES" tone="quiet" disabled={busy} onPress={onRestore} />
+        <Button label="RESTORE PURCHASES" tone="quiet" disabled={busy || !open} onPress={onRestore} />
 
         <Text style={s.footer}>
           {'Purchases are permanent.\nNo subscriptions. No tracking.\nJust signal.'}
@@ -145,6 +158,13 @@ const s = StyleSheet.create({
   cancel: { padding: 10, alignItems: 'center' },
   cancelText: { fontFamily: mono, fontSize: 11, letterSpacing: 2, color: colors.textGhost },
   error: { fontFamily: mono, fontSize: 12, color: colors.red, textAlign: 'center' },
+  notice: {
+    borderWidth: 1,
+    borderColor: colors.red,
+    borderRadius: 2,
+    padding: 12,
+  },
+  noticeText: { fontFamily: mono, fontSize: 11, lineHeight: 18, color: colors.red },
   footer: {
     fontFamily: mono,
     fontSize: 11,

@@ -15,3 +15,7 @@ npm-debug.*
 .DS_Store
 coverage/
 proxy/node_modules/
+
+# Google Play service account key — never commit
+play-service-account.json
+*-service-account.json
