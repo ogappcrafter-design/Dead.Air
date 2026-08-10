@@ -4,6 +4,7 @@ import path from 'path';
 import { ASSETS } from '../src/audio/assets';
 import { AUDIO_MODE, CARRIER, SOUNDS, SOUND_NAMES } from '../src/audio/manifest';
 import { DEFAULT_SETTINGS, migrateSettings } from '../src/engine/settings';
+import { IMPACT, NOTIFICATION, PATTERNS, PATTERN_NAMES, SELECTION } from '../src/haptics/patterns';
 
 const AUDIO_DIR = path.join(__dirname, '..', 'assets', 'audio');
 
@@ -85,18 +86,59 @@ describe('audio session policy', () => {
 });
 
 describe('migrateSettings', () => {
-  it('defaults sound on', () => {
+  it('defaults every channel on', () => {
     expect(migrateSettings(null)).toEqual(DEFAULT_SETTINGS);
-    expect(migrateSettings({}).sound).toBe(true);
-    expect(migrateSettings('junk').sound).toBe(true);
+    expect(migrateSettings({})).toEqual({ sound: true, haptics: true });
+    expect(migrateSettings('junk')).toEqual(DEFAULT_SETTINGS);
   });
 
-  it('remembers an explicit opt-out', () => {
-    expect(migrateSettings({ sound: false }).sound).toBe(false);
+  it('remembers an explicit opt-out, per channel', () => {
+    expect(migrateSettings({ sound: false })).toEqual({ sound: false, haptics: true });
+    expect(migrateSettings({ haptics: false })).toEqual({ sound: true, haptics: false });
   });
 
-  it('treats anything unreadable as on rather than leaving a player muted', () => {
-    expect(migrateSettings({ sound: 'no' }).sound).toBe(true);
-    expect(migrateSettings({ sound: undefined }).sound).toBe(true);
+  it('treats anything unreadable as on rather than leaving a player without feedback', () => {
+    expect(migrateSettings({ sound: 'no', haptics: 0 })).toEqual({ sound: true, haptics: true });
+    expect(migrateSettings({ sound: undefined })).toEqual(DEFAULT_SETTINGS);
+  });
+
+  it('carries a save written before haptics existed', () => {
+    // A v1 settings file only had `sound`.
+    expect(migrateSettings({ sound: false })).toHaveProperty('haptics', true);
+  });
+});
+
+describe('haptics', () => {
+  it('covers every one-shot sound, and nothing that loops', () => {
+    // Sound and touch fire on the same moments; a new one-shot without a
+    // matching pattern would be silently half-wired.
+    const oneShots = SOUND_NAMES.filter((n) => !SOUNDS[n].loop).sort();
+    expect([...PATTERN_NAMES].sort()).toEqual(oneShots);
+    expect(PATTERN_NAMES).not.toContain(CARRIER);
+  });
+
+  it('uses a kind every platform mapping knows', () => {
+    PATTERN_NAMES.forEach((name) => {
+      expect([IMPACT, NOTIFICATION, SELECTION]).toContain(PATTERNS[name].kind);
+    });
+  });
+
+  it('gives impacts and notifications a style, and selection none', () => {
+    PATTERN_NAMES.forEach((name) => {
+      const { kind, style } = PATTERNS[name];
+      if (kind === SELECTION) expect(style).toBeUndefined();
+      else expect(typeof style).toBe('string');
+    });
+  });
+
+  it('reserves the success note for the archive and the warning for a refusal', () => {
+    const notifications = PATTERN_NAMES.filter((n) => PATTERNS[n].kind === NOTIFICATION);
+    expect(notifications.sort()).toEqual(['reject', 'tape']);
+    expect(PATTERNS.tape.style).toBe('success');
+    expect(PATTERNS.reject.style).toBe('warning');
+  });
+
+  it('keeps everything else light, so nothing outshouts the reward', () => {
+    ['key', 'hangup', 'breath'].forEach((name) => expect(PATTERNS[name].style).toBe('light'));
   });
 });

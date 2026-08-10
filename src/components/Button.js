@@ -1,6 +1,7 @@
-import React from 'react';
-import { Text, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useCallback, useRef } from 'react';
+import { Animated, Pressable, Text, StyleSheet } from 'react-native';
 
+import { DURATION, useReducedMotion } from '../motion';
 import { colors, mono } from '../theme/theme';
 
 const TONES = {
@@ -18,21 +19,49 @@ const TONES = {
 export default function Button({ label, onPress, tone = 'amber', color, disabled, style }) {
   const base = TONES[tone] || TONES.amber;
   const t = color ? { ...base, border: color, ink: color } : base;
+
+  const reduced = useReducedMotion();
+  const press = useRef(new Animated.Value(0)).current;
+
+  // A press should feel like it took the weight, not just changed opacity.
+  const to = useCallback(
+    (value) => {
+      if (reduced) return;
+      Animated.timing(press, {
+        toValue: value,
+        duration: DURATION.instant,
+        useNativeDriver: true,
+      }).start();
+    },
+    [press, reduced],
+  );
+
   return (
-    <TouchableOpacity
-      accessibilityRole="button"
-      accessibilityState={{ disabled: !!disabled }}
-      activeOpacity={0.7}
-      disabled={disabled}
-      onPress={onPress}
-      style={[
-        s.btn,
-        { borderColor: disabled ? colors.line : t.border, backgroundColor: disabled ? 'transparent' : t.fill },
-        style,
-      ]}
+    <Animated.View
+      style={{
+        transform: [{ scale: press.interpolate({ inputRange: [0, 1], outputRange: [1, 0.975] }) }],
+      }}
     >
-      <Text style={[s.text, { color: disabled ? colors.textGhost : t.ink }]}>{label}</Text>
-    </TouchableOpacity>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityState={{ disabled: !!disabled }}
+        disabled={disabled}
+        onPress={onPress}
+        onPressIn={() => to(1)}
+        onPressOut={() => to(0)}
+        style={({ pressed }) => [
+          s.btn,
+          {
+            borderColor: disabled ? colors.line : t.border,
+            backgroundColor: disabled ? 'transparent' : t.fill,
+            opacity: pressed && !disabled ? 0.85 : 1,
+          },
+          style,
+        ]}
+      >
+        <Text style={[s.text, { color: disabled ? colors.textGhost : t.ink }]}>{label}</Text>
+      </Pressable>
+    </Animated.View>
   );
 }
 

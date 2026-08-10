@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 
-import audio from '../audio';
+import feedback from '../feedback';
 import Button from '../components/Button';
 import CRT from '../components/CRT';
 import { MARK } from '../content/symbols';
@@ -19,7 +19,7 @@ export default function SignOffScreen({ call, gained, onDismiss }) {
   // sound like a glitch rather than a reward.
   useEffect(() => {
     if (!gained.tape) return undefined;
-    const t = setTimeout(() => audio.play('tape'), 420);
+    const t = setTimeout(() => feedback.fire('tape'), 420);
     return () => clearTimeout(t);
   }, [gained.tape]);
 

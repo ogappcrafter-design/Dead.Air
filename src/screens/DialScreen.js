@@ -9,8 +9,10 @@ import {
 } from 'react-native';
 
 import ArchiveScreen from './ArchiveScreen';
-import audio from '../audio';
+import feedback from '../feedback';
 import CRT from '../components/CRT';
+import Fade from '../components/Fade';
+import StaticBurst from '../components/StaticBurst';
 import SignalBars from '../components/SignalBars';
 import { BANDS, bandById } from '../content/bands';
 import { callTypeLabel } from '../content/callTypes';
@@ -98,7 +100,7 @@ export default function DialScreen({
               onPress={() => {
                 // Only when the dial actually moves — re-tapping the current
                 // band should not re-trigger the sweep.
-                if (b.id !== activeBandId) audio.play('tune');
+                if (b.id !== activeBandId) feedback.fire('tune');
                 onSelectBand(b.id);
               }}
               style={[s.band, active && { borderBottomColor: b.color }]}
@@ -139,23 +141,26 @@ export default function DialScreen({
             <Text style={s.empty}>— ALL CALLS LOGGED FOR THIS BAND —</Text>
           )}
 
-          {calls.map((call) => (
-            <TouchableOpacity
-              key={call.id}
-              accessibilityRole="button"
-              activeOpacity={0.7}
-              style={s.card}
-              onPress={() => onStartCall(call)}
-            >
-              <View style={s.cardTop}>
-                <Text style={[s.cardId, { color: band.color }]} numberOfLines={1}>
-                  {call.callerId}
-                </Text>
-                <SignalBars n={call.signal} color={band.color} />
-              </View>
-              <Text style={s.cardName}>{call.callerName}</Text>
-              <Text style={s.cardType}>{callTypeLabel(call.type)}</Text>
-            </TouchableOpacity>
+          {calls.map((call, i) => (
+            // Keyed by band so the list re-forms when the dial moves, arriving
+            // in sequence rather than all at once.
+            <Fade key={`${activeBandId}-${call.id}`} delay={Math.min(i, 6) * 55}>
+              <TouchableOpacity
+                accessibilityRole="button"
+                activeOpacity={0.7}
+                style={s.card}
+                onPress={() => onStartCall(call)}
+              >
+                <View style={s.cardTop}>
+                  <Text style={[s.cardId, { color: band.color }]} numberOfLines={1}>
+                    {call.callerId}
+                  </Text>
+                  <SignalBars n={call.signal} color={band.color} />
+                </View>
+                <Text style={s.cardName}>{call.callerName}</Text>
+                <Text style={s.cardType}>{callTypeLabel(call.type)}</Text>
+              </TouchableOpacity>
+            </Fade>
           ))}
 
           <TouchableOpacity
@@ -178,6 +183,8 @@ export default function DialScreen({
         </ScrollView>
       )}
 
+      {/* Lighter than a screen change — retuning within the same station. */}
+      <StaticBurst trigger={activeBandId} intensity={0.55} />
       <CRT />
     </View>
   );

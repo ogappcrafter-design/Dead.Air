@@ -51,6 +51,35 @@ LIVING is the free tier — four calls, plus three Infinite Signal generations.
 The other four bands are the base purchase **and** are gated on progress: buying
 the game does not hand you every frequency at once.
 
+## Feel
+
+The app opens on a title screen where **DEAD AIR** resolves out of an unlit
+dot-matrix panel — cells light in a ragged left-to-right sweep, so the word
+forms out of noise rather than wiping in. It is the same 5×7 bitmap font the
+icon generator uses, rendered as blocks. The whole ~300-cell display is driven
+by one shared animated value, so it costs two animated nodes and runs entirely
+on the native driver.
+
+Moving between screens fires a **burst of TV snow** — three noise frames cycled
+while the burst is up, because one tile held still reads as a texture and
+swapping between them reads as live static. Changing band fires a lighter one.
+Getting around the app should feel like retuning, not like swapping views.
+
+Everything else is restrained: transmission lines fade and lift in as they
+arrive, call cards form in sequence when the dial moves, buttons take the weight
+on press, the anxiety bar glides instead of stepping, and the signal meter
+wavers on an open line. The CRT layer breathes and drops a frame every ten
+seconds or so.
+
+All motion is opacity and transform only, so it runs on the native driver and
+never competes with the JS thread while a call is ticking — and all of it
+honours the OS **reduce-motion** setting, which skips straight to the settled
+state.
+
+**Haptics** fire on exactly the moments that make a sound, routed through one
+`src/feedback` facade so the two cannot drift apart. Both have their own toggle
+in Settings.
+
 ## Sound
 
 Eight sounds, and they only fire where the game already treats something as
@@ -92,12 +121,29 @@ is a $0.99 unlock.
 The API key lives in [`proxy/`](proxy/README.md), never in the app bundle. The
 proxy exposes one narrow route that takes a band id and returns a call — it is
 **not** a passthrough for `/v1/messages`, so a leaked URL cannot be used to run
-arbitrary prompts on your account. The app clamps every field of the response
-before playing it (`src/engine/generation.js`), so a strange generation is a
-strange call rather than a crash.
+arbitrary prompts on your account. The model is asked for a
+[structured output](proxy/prompt.js) rather than "reply with only JSON", so the
+response is parseable by construction, and the app clamps every field again
+before playing it (`src/engine/generation.js`) — a strange generation is a
+strange call, not a crash.
 
-Until `expo.extra.signalProxyUrl` is set in `app.json`, the Generate button
-reports that Infinite Signal is not configured.
+### Pointing the app at your proxy
+
+Deploy `proxy/`, then set one environment variable — no tracked file to edit:
+
+```bash
+SIGNAL_PROXY_URL=https://dead-air-proxy-xxxx.run.app npx expo start
+```
+
+`app.config.js` folds it into the Expo config at build time and the app reads it
+back through `expo-constants`. For EAS, set it per profile in `eas.json` under
+`env`, or as an EAS environment variable.
+
+The URL is vetted before use: plaintext `http` is refused anywhere but a local
+dev host, so a shipped build cannot end up talking to the proxy in the clear.
+Settings reports the outcome — `CONNECTED`, `NOT CONFIGURED`, `BAD PROXY URL` or
+`PROXY MUST USE HTTPS` — because an unset proxy and a misconfigured one need
+different fixes.
 
 ---
 
@@ -105,6 +151,7 @@ reports that Infinite Signal is not configured.
 
 ```
 App.js                  root: save, purchases, which screen is up
+app.config.js           folds SIGNAL_PROXY_URL into the Expo config
 index.js                Expo entry point
 src/
   content/              the writing — bands, 18 calls, 15 tapes, glyphs
@@ -113,28 +160,36 @@ src/
     save.js             save shape, v1→v2 migration, reward + sanity math
     progression.js      band unlocks, available calls, generation credits
     generation.js       clamping AI-generated calls into playable ones
+    proxyUrl.js         resolving and vetting the Infinite Signal endpoint
     settings.js         player preferences, kept apart from progress
+  feedback/             the one facade screens use for sound + haptics
   audio/                the sound bus — manifest (data), assets, player
+  haptics/              patterns (data) + the expo-haptics adapter
+  motion/               shared durations/easings, reduce-motion hook
   services/             boundaries: storage, billing, the signal proxy client
   calls/                the five call players + the type→player registry
-  screens/              boot, dial, call, sign-off, archive, store, settings
-  components/           CRT overlay, buttons, signal bars, transmission log
+  screens/              title, boot, dial, call, sign-off, archive, store, settings
+  components/           wordmark, static burst, CRT, fade, buttons, log
   hooks/                line reveal, countdown
   theme/                colors, type, spacing, safe-area top
-proxy/                  Cloud Run service holding the Anthropic key
-scripts/gen-assets.py   regenerates the icons and splash from geometry
+proxy/
+  app.js                createApp({client}) — injectable, so it can be tested
+  prompt.js             system prompt + structured-output schema
+scripts/gen-assets.py   icons, splash and static frames, from geometry
 scripts/gen-audio.py    synthesizes the sound set
-__tests__/              engine, content and audio tests (no RN renderer needed)
+__tests__/              engine, content, audio and proxy tests
 ```
 
-The engine is deliberately free of React and React Native imports, which is why
-its tests run on plain Jest with no native mocking.
+The engine is free of React and React Native imports, and the proxy takes its
+Anthropic client as a parameter — which is why the whole suite runs on plain
+Jest with no renderer and no native mocking, and why the proxy's routes can be
+driven over real HTTP against a stub.
 
 ## Develop
 
 ```bash
 npm install
-npm test          # 122 tests: engine, content, audio
+npm test          # 157 tests: engine, content, audio, proxy
 npm run lint
 npm start         # Expo dev server
 npm run android
@@ -151,9 +206,9 @@ eas build --platform android --profile preview      # APK
 eas build --platform android --profile production   # AAB for Play
 ```
 
-**Sound added a native module.** `expo-audio` is the first runtime dependency
-added since v1, and native modules cannot ship over the air — the next release
-needs a real EAS build, not an `expo-updates` push.
+**Three native modules were added after v1** — `expo-audio`, `expo-haptics`
+and `expo-constants`. Native modules cannot ship over the air, so the next
+release needs a real EAS build rather than an `expo-updates` push.
 
 ## Store products
 
@@ -207,7 +262,8 @@ standing in for a safe area; timer drift from chained `setTimeout`s; and a
 corrupted file named `UPDATE FILE` sitting in the repo root, which turned out to
 be a mangled ESLint config that was never wired to anything.
 
-Sound arrived after the rebuild — see **Sound** above. v1 had none.
+Sound, haptics, motion and the title screen all arrived after the rebuild —
+see **Feel** and **Sound** above. v1 had none of them.
 
 Still outstanding: there is nothing to spend static on — it is a score, not a
 currency, and the store sells unlocks rather than upgrades. Worth deciding

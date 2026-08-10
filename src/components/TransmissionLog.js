@@ -1,6 +1,7 @@
 import React, { useRef } from 'react';
 import { ScrollView, Text, StyleSheet } from 'react-native';
 
+import Fade from './Fade';
 import { colors, mono } from '../theme/theme';
 
 /** A line that opens with a quote is the caller talking; anything else narrates. */
@@ -10,6 +11,9 @@ const isBeat = (line) => line.trim() === '...';
 /**
  * The shared transcript view. Every call type renders its lines through this,
  * so speech/narration/beat styling stays consistent across all five.
+ *
+ * Lines fade up as they arrive rather than appearing instantly — at one line
+ * every couple of seconds, the arrival is most of the pacing.
  */
 export default function TransmissionLog({ lines, upTo, dim = false }) {
   const ref = useRef(null);
@@ -22,18 +26,20 @@ export default function TransmissionLog({ lines, upTo, dim = false }) {
       onContentSizeChange={() => ref.current?.scrollToEnd({ animated: true })}
     >
       {visible.map((line, i) => (
-        <Text
-          key={i}
-          style={[
-            s.line,
-            isBeat(line) ? s.beat : isSpeech(line) ? s.speech : s.narration,
-            dim && s.dim,
-            // Everything but the newest line settles back slightly.
-            { opacity: i < upTo ? 0.85 : 1 },
-          ]}
-        >
-          {line}
-        </Text>
+        // Keyed by index so only the newest line mounts — the ones already on
+        // screen keep their position instead of re-animating.
+        <Fade key={i}>
+          <Text
+            style={[
+              s.line,
+              isBeat(line) ? s.beat : isSpeech(line) ? s.speech : s.narration,
+              dim && s.dim,
+              { opacity: i < upTo ? 0.85 : 1 },
+            ]}
+          >
+            {line}
+          </Text>
+        </Fade>
       ))}
     </ScrollView>
   );

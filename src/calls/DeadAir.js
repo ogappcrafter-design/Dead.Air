@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 
 import Button from '../components/Button';
+import Fade from '../components/Fade';
 import TransmissionLog from '../components/TransmissionLog';
 import useCountdown from '../hooks/useCountdown';
 import useLineReveal from '../hooks/useLineReveal';
@@ -24,18 +25,19 @@ export default function DeadAir({ call, onComplete }) {
       <TransmissionLog lines={call.lines} upTo={index} dim />
 
       {expired && (
-        <Button
-          label="CONTINUE"
-          style={{ marginTop: 12 }}
-          onPress={() =>
-            onComplete({
-              sanityDelta: call.sanityDelta || 0,
-              staticMult: 1,
-              tape: call.tape || null,
-              outcome: null,
-            })
-          }
-        />
+        <Fade style={{ marginTop: 12 }}>
+          <Button
+            label="CONTINUE"
+            onPress={() =>
+              onComplete({
+                sanityDelta: call.sanityDelta || 0,
+                staticMult: 1,
+                tape: call.tape || null,
+                outcome: null,
+              })
+            }
+          />
+        </Fade>
       )}
     </View>
   );

@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 
-import audio from '../audio';
+import feedback from '../feedback';
 import CRT from '../components/CRT';
 import SignalBars from '../components/SignalBars';
 import { playerFor } from '../calls';
@@ -17,14 +17,14 @@ export default function CallScreen({ call, onComplete }) {
   // rather than in each player means all five call types get it for free, and
   // the bed is guaranteed to stop however the screen goes away.
   useEffect(() => {
-    audio.play('answer');
-    audio.startCarrier();
-    return () => audio.stopCarrier();
+    feedback.fire('answer');
+    feedback.startCarrier();
+    return () => feedback.stopCarrier();
   }, [call.id]);
 
   const complete = useCallback(
     (result) => {
-      audio.play('hangup');
+      feedback.fire('hangup');
       onComplete(result);
     },
     [onComplete],

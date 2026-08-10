@@ -7,8 +7,11 @@ import DialScreen from './src/screens/DialScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
 import SignOffScreen from './src/screens/SignOffScreen';
 import StoreScreen from './src/screens/StoreScreen';
+import TitleScreen from './src/screens/TitleScreen';
 
-import audio from './src/audio';
+import StaticBurst from './src/components/StaticBurst';
+
+import feedback from './src/feedback';
 import { bandById } from './src/content/bands';
 import { applyCallResult, DEFAULT_SAVE, migratePurchases, migrateSave } from './src/engine/save';
 import { DEFAULT_SETTINGS, migrateSettings } from './src/engine/settings';
@@ -36,7 +39,7 @@ export default function App() {
   const [purchases, setPurchases] = useState(migratePurchases(null));
   const [settings, setSettings] = useState(DEFAULT_SETTINGS);
 
-  const [screen, setScreen] = useState('dial');
+  const [screen, setScreen] = useState('title');
   const [activeCall, setActiveCall] = useState(null);
   const [signOff, setSignOff] = useState(null);
   const [activeBandId, setActiveBandId] = useState(0);
@@ -62,8 +65,8 @@ export default function App() {
       const owned = migratePurchases(rawPurchases);
       const prefs = migrateSettings(rawSettings);
 
-      audio.setEnabled(prefs.sound);
-      await audio.prime();
+      feedback.applySettings(prefs);
+      await feedback.prime();
       if (cancelled) return;
 
       setSave(migrated);
@@ -87,14 +90,17 @@ export default function App() {
     await writeJson(PURCHASE_KEY, next);
   }, []);
 
-  const handleToggleSound = useCallback(async () => {
-    const next = { ...settings, sound: !settings.sound };
-    // Flip the bus before the write so the change is heard immediately rather
-    // than after storage comes back.
-    audio.setEnabled(next.sound);
-    setSettings(next);
-    await writeJson(SETTINGS_KEY, next);
-  }, [settings]);
+  const handleToggleSetting = useCallback(
+    async (key) => {
+      const next = { ...settings, [key]: !settings[key] };
+      // Apply before the write so the change lands on the next touch rather
+      // than after storage comes back.
+      feedback.applySettings(next);
+      setSettings(next);
+      await writeJson(SETTINGS_KEY, next);
+    },
+    [settings],
+  );
 
   const handleCallComplete = useCallback(
     async (result) => {
@@ -196,7 +202,9 @@ export default function App() {
   return (
     <>
       <StatusBar barStyle="light-content" backgroundColor="#030303" />
-      {screen === 'call' && activeCall ? (
+      {screen === 'title' ? (
+        <TitleScreen save={save} purchases={purchases} onEnter={() => setScreen('dial')} />
+      ) : screen === 'call' && activeCall ? (
         <CallScreen call={activeCall} onComplete={handleCallComplete} />
       ) : screen === 'signoff' && signOff ? (
         <SignOffScreen
@@ -221,13 +229,17 @@ export default function App() {
           save={save}
           purchases={purchases}
           settings={settings}
-          onToggleSound={handleToggleSound}
+          onToggle={handleToggleSetting}
           onErase={handleErase}
           onClose={() => setScreen('dial')}
         />
       ) : (
         dial
       )}
+
+      {/* Retuning between screens, not swapping views. Sits above everything
+          and never takes touches. */}
+      <StaticBurst trigger={screen} />
     </>
   );
 }

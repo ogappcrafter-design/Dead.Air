@@ -4,13 +4,17 @@
  */
 export const DEFAULT_SETTINGS = Object.freeze({
   sound: true,
+  haptics: true,
 });
+
+// Only an explicit `false` switches a channel off; anything unreadable falls
+// back to on rather than leaving a player mysteriously without feedback.
+const onUnless = (value) => value !== false;
 
 export function migrateSettings(raw) {
   if (!raw || typeof raw !== 'object') return { ...DEFAULT_SETTINGS };
   return {
-    // Only an explicit `false` turns sound off; anything unreadable falls back
-    // to the default rather than leaving a player mysteriously muted.
-    sound: raw.sound === false ? false : true,
+    sound: onUnless(raw.sound),
+    haptics: onUnless(raw.haptics),
   };
 }

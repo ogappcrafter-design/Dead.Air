@@ -170,10 +170,27 @@ fav = new(F, F, (*BG, 255))
 diamond(fav, F / 2, F / 2, F * 0.36, F * 0.075, AMBER, glow=False)
 write_png(f"{OUT}/favicon.png", fav)
 
+# ── static frames — tileable TV snow, cycled to make the noise "boil" ─────────
+# Three frames rather than one: a single tile held still reads as a texture,
+# but swapping between them every few frames reads as live static.
+import random as _random
+
+for frame in (1, 2, 3):
+    _random.seed(400 + frame)
+    N = 64
+    snow = new(N, N)
+    for y in range(N):
+        for x in range(N):
+            if _random.random() < 0.34:
+                level = _random.randint(150, 255)
+                snow[y][x] = [level, level, level, _random.randint(40, 220)]
+    write_png(f"{OUT}/static-{frame}.png", snow)
+
 # ── scanline tile — 1x3 px, one dark row; RN repeats this for the CRT overlay ─
 tile = new(1, 3)
 tile[0][0] = [0, 0, 0, 46]
 b64 = base64.b64encode(open(write_png("/tmp/_scan.png", tile), "rb").read()).decode()
 print("SCANLINE_B64=" + b64)
-for f in ("icon.png", "adaptive-icon.png", "splash.png", "favicon.png"):
+for f in ("icon.png", "adaptive-icon.png", "splash.png", "favicon.png",
+          "static-1.png", "static-2.png", "static-3.png"):
     print(f"{f}: {os.path.getsize(f'{OUT}/{f}')} bytes")

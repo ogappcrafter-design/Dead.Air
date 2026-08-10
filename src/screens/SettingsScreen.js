@@ -5,14 +5,34 @@ import Button from '../components/Button';
 import CRT from '../components/CRT';
 import { MARK } from '../content/symbols';
 import { progressSummary } from '../engine/progression';
-import { isConfigured } from '../services/signal';
+import { proxyStatus } from '../services/signal';
 import { colors, mono, safeTop } from '../theme/theme';
 
 /**
  * Progress readout, the content warning the store listing promises, and the
  * erase-save escape hatch v1 had no way to reach.
  */
-export default function SettingsScreen({ save, purchases, settings, onToggleSound, onErase, onClose }) {
+/** Declared at module scope: defining it inside the screen would remount both
+ *  rows on every render. */
+function Toggle({ label, on, onPress }) {
+  return (
+    <TouchableOpacity
+      accessibilityRole="switch"
+      accessibilityState={{ checked: on }}
+      accessibilityLabel={label}
+      activeOpacity={0.7}
+      onPress={onPress}
+      style={s.toggle}
+    >
+      <Text style={s.toggleLabel}>{label}</Text>
+      <Text style={[s.toggleValue, { color: on ? colors.amber : colors.textGhost }]}>
+        {on ? `${MARK} ON` : '─ OFF'}
+      </Text>
+    </TouchableOpacity>
+  );
+}
+
+export default function SettingsScreen({ save, purchases, settings, onToggle, onErase, onClose }) {
   const [armed, setArmed] = useState(false);
   const progress = progressSummary(save, purchases);
 
@@ -22,7 +42,9 @@ export default function SettingsScreen({ save, purchases, settings, onToggleSoun
     ['BANDS OPEN', `${progress.bandsOpen} / ${progress.bandsTotal}`],
     ['STATIC', `${save.bal}`],
     ['SANITY', `${save.sanity}`],
-    ['INFINITE SIGNAL', isConfigured() ? 'CONNECTED' : 'NOT CONFIGURED'],
+    // Report why it is unavailable, not just that it is — an unset proxy and a
+    // misconfigured one need different fixes.
+    ['INFINITE SIGNAL', proxyStatus().reason || 'CONNECTED'],
   ];
 
   return (
@@ -45,23 +67,13 @@ export default function SettingsScreen({ save, purchases, settings, onToggleSoun
           </View>
         ))}
 
-        <Text style={s.heading}>SOUND</Text>
-        <TouchableOpacity
-          accessibilityRole="switch"
-          accessibilityState={{ checked: settings.sound }}
-          accessibilityLabel="Station sound"
-          activeOpacity={0.7}
-          onPress={onToggleSound}
-          style={s.toggle}
-        >
-          <Text style={s.toggleLabel}>STATION SOUND</Text>
-          <Text style={[s.toggleValue, { color: settings.sound ? colors.amber : colors.textGhost }]}>
-            {settings.sound ? `${MARK} ON` : '─ OFF'}
-          </Text>
-        </TouchableOpacity>
+        <Text style={s.heading}>FEEDBACK</Text>
+        <Toggle label="STATION SOUND" on={settings.sound} onPress={() => onToggle('sound')} />
+        <Toggle label="HAPTICS" on={settings.haptics} onPress={() => onToggle('haptics')} />
         <Text style={s.body}>
-          Carrier hiss, relays, and the archive bell. The station follows your device&apos;s silent
-          switch and mixes with whatever else you are playing.
+          Carrier hiss, relays, and the archive bell, with a touch of feedback on the same moments.
+          The station follows your device&apos;s silent switch and mixes with whatever else you are
+          playing. Motion follows your device&apos;s reduce-motion setting.
         </Text>
 
         <Text style={s.heading}>CONTENT</Text>

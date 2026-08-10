@@ -1,26 +1,25 @@
-import appConfig from '../../app.json';
+import Constants from 'expo-constants';
 
 import { normalizeGeneratedCall } from '../engine/generation';
 import { recentCallerNames } from '../engine/progression';
+import { resolveProxyUrl } from '../engine/proxyUrl';
 
 /**
  * Client half of Infinite Signal.
  *
  * The proxy holds the API key and builds the prompt (see proxy/README.md).
- * This module only knows the endpoint, and treats everything it returns as
- * untrusted input to be clamped by the engine.
+ * This module knows the endpoint and nothing else, and treats everything that
+ * comes back as untrusted input for the engine to clamp.
  */
 
 const TIMEOUT_MS = 45_000;
 
-// Read straight from app.json rather than expo-constants: same value, and it
-// keeps the app's runtime dependency list unchanged from v1.
-export const proxyUrl = () => {
-  const configured = appConfig?.expo?.extra?.signalProxyUrl;
-  return typeof configured === 'string' && configured.length ? configured.replace(/\/$/, '') : null;
-};
+/** Resolved from app.config.js, which reads SIGNAL_PROXY_URL at build time. */
+const configured = () => Constants.expoConfig?.extra?.signalProxyUrl ?? null;
 
-export const isConfigured = () => proxyUrl() !== null;
+export const proxyStatus = () => resolveProxyUrl(configured());
+export const proxyUrl = () => proxyStatus().url;
+export const isConfigured = () => proxyStatus().url !== null;
 
 export class SignalError extends Error {
   constructor(message, code) {
@@ -30,20 +29,25 @@ export class SignalError extends Error {
   }
 }
 
-export async function generateCall(band) {
-  const base = proxyUrl();
-  if (!base) {
-    throw new SignalError('INFINITE SIGNAL NOT CONFIGURED', 'unconfigured');
-  }
+/** Server-side failures, phrased for a player rather than an operator. */
+const HTTP_MESSAGES = {
+  429: ['TOO MANY TRANSMISSIONS. WAIT.', 'rate_limited'],
+  422: ['THE FREQUENCY REFUSED. TRY AGAIN.', 'refused'],
+  400: ['SIGNAL LOST', 'bad_request'],
+};
 
-  // AbortController rather than Promise.race: a stalled request should be torn
+export async function generateCall(band) {
+  const { url, reason } = proxyStatus();
+  if (!url) throw new SignalError(reason, 'unconfigured');
+
+  // AbortController rather than a raced timer: a stalled request should be torn
   // down, not merely ignored while it holds the connection open.
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
 
   let response;
   try {
-    response = await fetch(`${base}/v1/signal`, {
+    response = await fetch(`${url}/v1/signal`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -55,17 +59,15 @@ export async function generateCall(band) {
   } catch (err) {
     throw new SignalError(
       err?.name === 'AbortError' ? 'SIGNAL TIMED OUT' : 'NO CARRIER',
-      'network',
+      err?.name === 'AbortError' ? 'timeout' : 'network',
     );
   } finally {
     clearTimeout(timer);
   }
 
-  if (response.status === 429) {
-    throw new SignalError('TOO MANY TRANSMISSIONS. WAIT.', 'rate_limited');
-  }
   if (!response.ok) {
-    throw new SignalError('SIGNAL LOST', 'upstream');
+    const [message, code] = HTTP_MESSAGES[response.status] || ['SIGNAL LOST', 'upstream'];
+    throw new SignalError(message, code);
   }
 
   let body;

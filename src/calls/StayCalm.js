@@ -1,8 +1,10 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { Animated, Easing, View, Text, StyleSheet } from 'react-native';
 
-import audio from '../audio';
+import feedback from '../feedback';
 import Button from '../components/Button';
+import Fade from '../components/Fade';
+import { useReducedMotion } from '../motion';
 import { colors, mono, type } from '../theme/theme';
 
 const TICK_MS = 100;
@@ -28,9 +30,36 @@ export default function StayCalm({ call, onComplete }) {
   const startedAt = useRef(null);
   const lastTick = useRef(null);
 
+  // The bar is driven separately from the logic: the tick is the source of
+  // truth at 10 Hz, and each tick hands the native driver a short linear leg to
+  // the next value, so the fill glides instead of stepping.
+  const [trackWidth, setTrackWidth] = useState(0);
+  const fill = useRef(new Animated.Value(0)).current;
+  const reduced = useReducedMotion();
+
+  const drive = useCallback(
+    (value) => {
+      const to = value / 100;
+      if (reduced) {
+        fill.setValue(to);
+        return;
+      }
+      Animated.timing(fill, {
+        toValue: to,
+        duration: TICK_MS,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      }).start();
+    },
+    [fill, reduced],
+  );
+
   useEffect(() => {
     const ratePerSecond = 100 / call.duration;
-    startedAt.current = Date.now();
+    // Anchor the clock once. If this effect ever re-runs mid-call (the
+    // reduce-motion setting changing, say) restarting the countdown would hand
+    // the player free seconds.
+    if (startedAt.current === null) startedAt.current = Date.now();
     lastTick.current = Date.now();
 
     const id = setInterval(() => {
@@ -43,6 +72,7 @@ export default function StayCalm({ call, onComplete }) {
       const next = Math.min(100, anxietyRef.current + delta * ratePerSecond);
       anxietyRef.current = next;
       setAnxiety(next);
+      drive(next);
 
       const elapsed = (now - startedAt.current) / 1000;
       setRemaining(Math.max(0, Math.ceil(call.duration - elapsed)));
@@ -58,15 +88,16 @@ export default function StayCalm({ call, onComplete }) {
     }, TICK_MS);
 
     return () => clearInterval(id);
-  }, [call.duration]);
+  }, [call.duration, drive]);
 
   const breathe = useCallback(() => {
     if (statusRef.current !== 'live') return;
-    audio.play('breath');
+    feedback.fire('breath');
     const next = Math.max(0, anxietyRef.current - BREATH_RELIEF);
     anxietyRef.current = next;
     setAnxiety(next);
-  }, []);
+    drive(next);
+  }, [drive]);
 
   const barColor = anxiety < 40 ? colors.green : anxiety < 70 ? colors.amber : colors.red;
   const caption = status === 'live' ? 'STAY CALM' : status === 'won' ? 'SIGNAL HELD' : 'SIGNAL LOST';
@@ -84,40 +115,63 @@ export default function StayCalm({ call, onComplete }) {
         accessibilityRole="progressbar"
         accessibilityValue={{ min: 0, max: 100, now: Math.round(anxiety) }}
         style={s.track}
+        onLayout={(e) => setTrackWidth(e.nativeEvent.layout.width)}
       >
-        <View style={[s.fill, { width: `${anxiety}%`, backgroundColor: barColor }]} />
+        {/* Full-width fill slid in from the left, so the motion is a transform
+            the native driver can own rather than a re-laid-out width. */}
+        <Animated.View
+          style={[
+            s.fill,
+            {
+              width: trackWidth,
+              backgroundColor: barColor,
+              transform: [
+                {
+                  translateX: fill.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [-trackWidth, 0],
+                  }),
+                },
+              ],
+            },
+          ]}
+        />
       </View>
       <Text style={[s.sub, { marginBottom: 16 }]}>ANXIETY LEVEL</Text>
 
       {status === 'live' && <Button label="◈ BREATHE" tone="green" onPress={breathe} />}
 
       {status === 'won' && (
-        <Button
-          label="END CALL"
-          onPress={() =>
-            onComplete({
-              sanityDelta: call.sanityDelta || 0,
-              staticMult: 1,
-              tape: call.tape || null,
-              outcome: 'You held your nerve.',
-            })
-          }
-        />
+        <Fade>
+          <Button
+            label="END CALL"
+            onPress={() =>
+              onComplete({
+                sanityDelta: call.sanityDelta || 0,
+                staticMult: 1,
+                tape: call.tape || null,
+                outcome: 'You held your nerve.',
+              })
+            }
+          />
+        </Fade>
       )}
 
       {status === 'lost' && (
-        <Button
-          label="END CALL"
-          tone="red"
-          onPress={() =>
-            onComplete({
-              sanityDelta: -(call.sanityPenalty || 18),
-              staticMult: 0.5,
-              tape: null,
-              outcome: 'You lost control.',
-            })
-          }
-        />
+        <Fade>
+          <Button
+            label="END CALL"
+            tone="red"
+            onPress={() =>
+              onComplete({
+                sanityDelta: -(call.sanityPenalty || 18),
+                staticMult: 0.5,
+                tape: null,
+                outcome: 'You lost control.',
+              })
+            }
+          />
+        </Fade>
       )}
     </View>
   );

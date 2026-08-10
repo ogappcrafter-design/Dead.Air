@@ -67,7 +67,13 @@ module.exports = [
   },
   {
     // CommonJS: the proxy service, the Jest mocks, and the configs themselves.
-    files: ['proxy/**/*.js', '__tests__/__mocks__/**/*.js', 'eslint.config.js', 'babel.config.js'],
+    files: [
+      'proxy/**/*.js',
+      '__tests__/__mocks__/**/*.js',
+      'eslint.config.js',
+      'babel.config.js',
+      'app.config.js',
+    ],
     languageOptions: {
       sourceType: 'commonjs',
       globals: { ...RUNTIME_GLOBALS, module: 'writable', require: 'readonly', __dirname: 'readonly' },
