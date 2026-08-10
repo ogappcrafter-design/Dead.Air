@@ -3,10 +3,25 @@
 // Connects to expo-in-app-purchases, manages purchase lifecycle, and updates useStoreStore.
 // State lives in useStoreStore; this module is the service layer.
 
-import * as InAppPurchases from 'expo-in-app-purchases';
-import { useStoreStore, IAPErrorKind, IAPErrorState, PurchaseRecord } from '../store/useStoreStore';
+import { Platform } from 'react-native';
+import { useStoreStore, IAPErrorState, PurchaseRecord } from '../store/useStoreStore';
 import { useSkinStore, skinIdFromProductId } from '../store/useSkinStore';
 import { PURCHASABLE_SKIN_IDS } from './skins';
+
+// Type-only import: erased at compile time, never crashes on web.
+import type * as IAPTypes from 'expo-in-app-purchases';
+
+// expo-in-app-purchases is a native-only module. On web it throws
+// "Cannot find native module 'ExpoInAppPurchases'" at import time, which
+// crashes the whole bundle. Lazy-load it only on native platforms.
+let iap: typeof import('expo-in-app-purchases') | null = null;
+function getIAP(): typeof import('expo-in-app-purchases') | null {
+  if (iap) return iap;
+  if (Platform.OS === 'web') return null;
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  iap = require('expo-in-app-purchases');
+  return iap;
+}
 
 export const PRODUCT_IDS = {
   BASE: 'com.deadair.base',
@@ -51,18 +66,18 @@ const ATMOS_PACK_IDS: Record<string, string> = {
 // ---- Module-level state (not exported) ----
 
 let purchaseListener:
-  ((result: InAppPurchases.IAPQueryResponse<InAppPurchases.InAppPurchase>) => void) | null = null;
+  ((result: IAPTypes.IAPQueryResponse<IAPTypes.InAppPurchase>) => void) | null = null;
 // Resolvers for in-flight purchaseItemAsync calls, keyed by product id so concurrent
 // purchases each get their own promise resolved by the matching purchase event.
 const pendingResolvers = new Map<
   string,
-  (result: InAppPurchases.IAPQueryResponse<InAppPurchases.InAppPurchase>) => void
+  (result: IAPTypes.IAPQueryResponse<IAPTypes.InAppPurchase>) => void
 >();
 let initialized = false;
 
 // ---- Helpers ----
 
-function applyPurchase(productId: string, purchase: InAppPurchases.InAppPurchase): boolean {
+function applyPurchase(productId: string, purchase: IAPTypes.InAppPurchase): boolean {
   const store = useStoreStore.getState();
 
   // Only treat a purchase as valid when the store returned a transaction receipt.
@@ -104,30 +119,32 @@ function applyPurchase(productId: string, purchase: InAppPurchases.InAppPurchase
   return true;
 }
 
-function classifyError(errorCode?: InAppPurchases.IAPErrorCode): IAPErrorState {
+function classifyError(errorCode?: IAPTypes.IAPErrorCode): IAPErrorState {
+  const IAP = getIAP();
+  if (!IAP) return { kind: 'unknown', message: 'IAP not available on web.' };
   switch (errorCode) {
-    case InAppPurchases.IAPErrorCode.SERVICE_DISCONNECTED:
-    case InAppPurchases.IAPErrorCode.SERVICE_UNAVAILABLE:
-    case InAppPurchases.IAPErrorCode.SERVICE_TIMEOUT:
-    case InAppPurchases.IAPErrorCode.CLOUD_SERVICE:
+    case IAP.IAPErrorCode.SERVICE_DISCONNECTED:
+    case IAP.IAPErrorCode.SERVICE_UNAVAILABLE:
+    case IAP.IAPErrorCode.SERVICE_TIMEOUT:
+    case IAP.IAPErrorCode.CLOUD_SERVICE:
       return {
         kind: 'service_unavailable',
         message: 'Store service unavailable. Check your connection and try again.',
       };
-    case InAppPurchases.IAPErrorCode.ITEM_ALREADY_OWNED:
+    case IAP.IAPErrorCode.ITEM_ALREADY_OWNED:
       return { kind: 'already_owned', message: 'You already own this item.' };
-    case InAppPurchases.IAPErrorCode.ITEM_UNAVAILABLE:
-    case InAppPurchases.IAPErrorCode.INVALID_IDENTIFIER:
+    case IAP.IAPErrorCode.ITEM_UNAVAILABLE:
+    case IAP.IAPErrorCode.INVALID_IDENTIFIER:
       return {
         kind: 'unknown',
         message: 'This item is not available for purchase.',
       };
-    case InAppPurchases.IAPErrorCode.BILLING_UNAVAILABLE:
+    case IAP.IAPErrorCode.BILLING_UNAVAILABLE:
       return {
         kind: 'service_unavailable',
         message: 'Billing is not available on this device.',
       };
-    case InAppPurchases.IAPErrorCode.PAYMENT_INVALID:
+    case IAP.IAPErrorCode.PAYMENT_INVALID:
       return { kind: 'declined', message: 'Payment was declined.' };
     default:
       return { kind: 'unknown', message: 'An unexpected error occurred.' };
@@ -138,42 +155,44 @@ function classifyError(errorCode?: InAppPurchases.IAPErrorCode): IAPErrorState {
 
 export async function initIAP(): Promise<void> {
   if (initialized) return;
+  const IAP = getIAP();
+  if (!IAP) return; // web: skip native IAP init
 
-  purchaseListener = (result: InAppPurchases.IAPQueryResponse<InAppPurchases.InAppPurchase>) => {
+  purchaseListener = (result: IAPTypes.IAPQueryResponse<IAPTypes.InAppPurchase>): void => {
     const store = useStoreStore.getState();
     const purchase = result.results?.[0];
 
     switch (result.responseCode) {
-      case InAppPurchases.IAPResponseCode.OK: {
+      case IAP.IAPResponseCode.OK: {
         if (
           purchase &&
-          (purchase.purchaseState === InAppPurchases.InAppPurchaseState.PURCHASED ||
-            purchase.purchaseState === InAppPurchases.InAppPurchaseState.RESTORED)
+          (purchase.purchaseState === IAP.InAppPurchaseState.PURCHASED ||
+            purchase.purchaseState === IAP.InAppPurchaseState.RESTORED)
         ) {
           applyPurchase(purchase.productId, purchase);
-          InAppPurchases.finishTransactionAsync(purchase, false).catch(() => {
+          IAP.finishTransactionAsync(purchase, false).catch(() => {
             // Best-effort finish; the purchase is already recorded.
           });
           store.setMessage(
-            purchase.purchaseState === InAppPurchases.InAppPurchaseState.RESTORED
+            purchase.purchaseState === IAP.InAppPurchaseState.RESTORED
               ? 'Purchase restored.'
               : 'Purchase complete.',
           );
         }
         break;
       }
-      case InAppPurchases.IAPResponseCode.USER_CANCELED: {
+      case IAP.IAPResponseCode.USER_CANCELED: {
         store.setError({ kind: 'declined', message: 'Purchase canceled.' });
         break;
       }
-      case InAppPurchases.IAPResponseCode.DEFERRED: {
+      case IAP.IAPResponseCode.DEFERRED: {
         store.setError({
           kind: 'interrupted',
           message: 'Purchase deferred (e.g. Ask to Buy). It will complete later.',
         });
         break;
       }
-      case InAppPurchases.IAPResponseCode.ERROR: {
+      case IAP.IAPResponseCode.ERROR: {
         store.setError(classifyError(result.errorCode));
         break;
       }
@@ -198,10 +217,10 @@ export async function initIAP(): Promise<void> {
     store.setPurchasingProductId(null);
   };
 
-  InAppPurchases.setPurchaseListener(purchaseListener);
+  IAP.setPurchaseListener(purchaseListener);
 
   try {
-    await InAppPurchases.connectAsync();
+    await IAP.connectAsync();
     // Mark initialized only after the connection succeeds so a failed first
     // attempt can be retried on a later initIAP() call.
     initialized = true;
@@ -219,8 +238,14 @@ export async function initIAP(): Promise<void> {
 
 export async function purchaseProduct(
   productId: string,
-): Promise<InAppPurchases.IAPQueryResponse<InAppPurchases.InAppPurchase> | null> {
+): Promise<IAPTypes.IAPQueryResponse<IAPTypes.InAppPurchase> | null> {
   const store = useStoreStore.getState();
+  const IAP = getIAP();
+
+  if (!IAP) {
+    store.setError({ kind: 'unknown', message: 'Purchases are not available on web.' });
+    return null;
+  }
 
   if (!store.isConnected) {
     store.setError({
@@ -245,10 +270,10 @@ export async function purchaseProduct(
   store.setError(null);
   store.setMessage(null);
 
-  return new Promise<InAppPurchases.IAPQueryResponse<InAppPurchases.InAppPurchase> | null>(
+  return new Promise<IAPTypes.IAPQueryResponse<IAPTypes.InAppPurchase> | null>(
     (resolve) => {
       pendingResolvers.set(productId, resolve);
-      InAppPurchases.purchaseItemAsync(productId).catch((err: unknown) => {
+      IAP.purchaseItemAsync(productId).catch(() => {
         pendingResolvers.delete(productId);
         store.setPurchasing(false);
         store.setPurchasingProductId(null);
@@ -264,6 +289,12 @@ export async function purchaseProduct(
 
 export async function restorePurchases(): Promise<void> {
   const store = useStoreStore.getState();
+  const IAP = getIAP();
+
+  if (!IAP) {
+    store.setError({ kind: 'unknown', message: 'Purchases are not available on web.' });
+    return;
+  }
 
   if (!store.isConnected) {
     store.setError({
@@ -277,8 +308,8 @@ export async function restorePurchases(): Promise<void> {
   store.setMessage(null);
 
   try {
-    const result = await InAppPurchases.getPurchaseHistoryAsync();
-    if (result.responseCode === InAppPurchases.IAPResponseCode.OK && result.results) {
+    const result = await IAP.getPurchaseHistoryAsync();
+    if (result.responseCode === IAP.IAPResponseCode.OK && result.results) {
       if (result.results.length === 0) {
         store.setMessage('No purchases to restore.');
         return;
@@ -286,8 +317,8 @@ export async function restorePurchases(): Promise<void> {
       let restoredCount = 0;
       for (const purchase of result.results) {
         if (
-          purchase.purchaseState === InAppPurchases.InAppPurchaseState.PURCHASED ||
-          purchase.purchaseState === InAppPurchases.InAppPurchaseState.RESTORED
+          purchase.purchaseState === IAP.InAppPurchaseState.PURCHASED ||
+          purchase.purchaseState === IAP.InAppPurchaseState.RESTORED
         ) {
           if (applyPurchase(purchase.productId, purchase)) {
             restoredCount++;
@@ -299,7 +330,7 @@ export async function restorePurchases(): Promise<void> {
           ? `Restored ${restoredCount} purchase(s).`
           : 'No new purchases to restore.',
       );
-    } else if (result.responseCode === InAppPurchases.IAPResponseCode.ERROR) {
+    } else if (result.responseCode === IAP.IAPResponseCode.ERROR) {
       store.setError(classifyError(result.errorCode));
     }
   } catch {
@@ -308,20 +339,13 @@ export async function restorePurchases(): Promise<void> {
 }
 
 export async function disconnectIAP(): Promise<void> {
+  const IAP = getIAP();
   try {
-    await InAppPurchases.disconnectAsync();
+    if (IAP) await IAP.disconnectAsync();
   } catch {
     // Best-effort disconnect
   }
   useStoreStore.getState().setConnected(false);
   initialized = false;
   purchaseListener = null;
-  pendingResolvers.clear();
-}
-
-// Test helper: reset module state between tests
-export function __resetIAPModule(): void {
-  initialized = false;
-  purchaseListener = null;
-  pendingResolvers.clear();
 }
