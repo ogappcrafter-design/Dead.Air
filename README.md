@@ -1,6 +1,6 @@
 <div align="center">
 
-```
+<pre align="center" style="background: none; border: none; padding: 0; margin: 0;">
 ▓█████▄ ▓█████ ▄▄▄      ▓█████▄  ▄▄▄       ██▓ ██▀███  
 ▒██▀ ██▌▓█   ▀▒████▄    ▒██▀ ██▌▒████▄    ▓██▒▓██ ▒ ██▒
 ░██   █▌▒███  ▒██  ▀█▄  ░██   █▌▒██  ▀█▄  ▒██▒▓██ ░▄█ ▒
@@ -11,7 +11,7 @@
  ░ ░  ░    ░    ░   ▒    ░ ░  ░   ░   ▒    ▒ ░  ░░   ░ 
    ░       ░  ░     ░  ░   ░          ░  ░ ░     ░     
  ░                       ░
-```
+</pre>
 
 ### A paranormal late-night radio game. You are the DJ. The calls are real.
 
