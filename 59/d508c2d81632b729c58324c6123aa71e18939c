@@ -1,0 +1,21 @@
+index.html
+  s_d2395825851767::t_ac00835b33913f 34-36
+  s_d2395825851767::t_a33b74a1b98f8a 1-33,37-458,461-2027
+  s_d2395825851767::t_5894b3d10f9d8e 459-460
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "59d508c2d81632b729c58324c6123aa71e18939c",
+  "prompts": {},
+  "sessions": {
+    "s_d2395825851767": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ses_018fa804bffeI05zmLu3QfM3VM",
+        "model": "unknown"
+      },
+      "human_author": "Dagger <dagger@pixelated.love>"
+    }
+  }
+}
