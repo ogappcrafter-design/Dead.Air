@@ -57,6 +57,7 @@ tsbuildinfo/
 .claude/
 .omo/
 .omc/
+.lavish/
 .autobots-state/
 
 # Project-local config (user-specific)
@@ -65,11 +66,12 @@ autobots.toml
 skills-lock.json
 pnpm-workspace.yaml
 
-# Project docs (user-specific)
-HANDOFF.md
-GRAND_PLAN.md
-
-# Misc
+# Tool-specific config
 .nvmrc
 .lintstagedrc.json
 .prettierrc
+
+# Project docs (user-specific)
+HANDOFF.md
+GRAND_PLAN.md
+DESIGN.md

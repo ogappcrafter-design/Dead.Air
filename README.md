@@ -1,21 +1,21 @@
 <div align="center">
 
 ```
- ╔═══════════════════════════════════════════════════════════════╗
- ║                                                               ║
- ║          ░██████╗░██╗░░░░░░██╗████████╗░█████╗░██╗            ║
- ║          ██╔════╝░██║░░░░░░██║╚══██╔══╝██╔══██╗██║            ║
- ║          ██║░░╚██╗██║░░██╔╝██║░░░██║░░██║░░██║██║            ║
- ║          ██║░░╚██║██║░░╚██═╝██║░░░██║░░██║░░██║██║            ║
- ║          ╚██████╔╝██████╗░░░╚██████╔╝░╚█████╔╝██████╗           ║
- ║          ░╚═════╝░╚═════╝░░░░╚═════╝░░░╚════╝░╚═════╝           ║
- ║                                                               ║
- ║                   ░░ A I R ░░                                 ║
- ║                                                               ║
- ║         Something is trying to reach you.                     ║
- ║         The signal is forming.                                ║
- ║                                                               ║
- ╚═══════════════════════════════════════════════════════════════╝
+╔═══════════════════════════════════════════════════════════════╗
+║                                                               ║
+║          ░██████╗░██╗░░░░░░██╗████████╗░█████╗░██╗            ║
+║          ██╔════╝░██║░░░░░░██║╚══██╔══╝██╔══██╗██║            ║
+║          ██║░░╚██╗██║░░██╔╝██║░░░██║░░██║░░██║██║            ║
+║          ██║░░╚██║██║░░╚██═╝██║░░░██║░░██║░░██║██║            ║
+║          ╚██████╔╝██████╗░░░╚██████╔╝░╚█████╔╝██████╗           ║
+║          ░╚═════╝░╚═════╝░░░░╚═════╝░░░╚════╝░╚═════╝           ║
+║                                                               ║
+║                         ░░ A I R ░░                           ║
+║                                                               ║
+║              Something is trying to reach you.                ║
+║              The signal is forming.                           ║
+║                                                               ║
+╚═══════════════════════════════════════════════════════════════╝
 ```
 
 ### A paranormal late-night radio game. You are the DJ. The calls are real.
@@ -68,8 +68,7 @@ Answer the call. Or don't. Either way, something heard you.
 | 🌑  | **Endless Night**                 | Survival mode with escalating strangeness every 5 shifts                                           |
 | 🔊  | **Tape Mastery**                  | Re-listen to tapes to unlock hidden audio layers: Surface, Depth, and Abyss                        |
 | 🏆  | **20 achievements**               | Track milestones from First Contact to Into the Abyss, plus daily streaks                          |
-| 🌙  | **Night Shift system**            | 4-hour in-game sessions compressed to ~20 minutes real-time                                        |
-| ♾️  | **Infinite Signal mode**          | AI-generated calls — endless, never the same twice _(planned)_                                     |
+| ♾️  | **Infinite Signal mode**          | Procedural calls — endless, never the same twice                                                   |
 | 💾  | **Persistent saves**              | Pick up exactly where you left off, every single time                                              |
 | 📱  | **Cross-platform**                | iOS · Android · Web PWA — single codebase                                                          |
 | 🖥️  | **CRT aesthetic**                 | Amber and green on near-black, scanlines, glow text                                                |
@@ -82,31 +81,26 @@ Answer the call. Or don't. Either way, something heard you.
 ### Prerequisites
 
 - **Node.js** 24+
-- **pnpm** (preferred) or npm
-- [Expo CLI](https://docs.expo.dev/get-started/installation/) (`npm i -g expo-cli`)
+- **pnpm**
+- [Expo CLI](https://docs.expo.dev/get-started/installation/)
 - For iOS: macOS with Xcode & CocoaPods
 - For Android: Android Studio with SDK
 
 ### Install & Run
 
 ```bash
-# clone
 git clone https://github.com/daggerstuff/deadair.git
 cd deadair
 
-# install dependencies
 pnpm install
-
-# start the dev server
 pnpm start
+```
 
-# run on a specific platform
+```bash
 pnpm run android    # Android emulator or device
 pnpm run ios        # iOS simulator or device
 pnpm run web        # browser
 ```
-
-That's it. The Expo dev server launches and you're tuning in.
 
 ---
 
@@ -163,7 +157,7 @@ deadair/
 ├── engine/                     # Framework-agnostic game logic
 │   ├── audio/                  #   Web Audio API: synth, effects, latency
 │   ├── calls/                  #   Call manager, scheduler, variation engine
-│   └── progression/           #   Bands, tapes, achievements, night shift, NG+, Endless Night, Tape Mastery
+│   └── progression/            #   Bands, tapes, achievements, NG+, Endless Night, Tape Mastery
 ├── store/                      # Zustand state stores
 │   ├── useGameStore.ts         #   Sanity, static, tapes, bands, NG+, Endless Night, Tape Mastery
 │   ├── useRadioStore.ts        #   Frequency, signal strength
@@ -206,19 +200,6 @@ StaticSynth → Distortion → Reverb → Spatial → Master Gain → Output
 - **Latency profiling** — adaptive performance config per platform
 - **Platform bridge** — Web Audio API (web) / expo-av (native)
 - **Graceful degradation** — enters `closed` state if audio unavailable
-
-</details>
-
-<details>
-<summary><b>🌙 Night Shift Engine</b></summary>
-<br>
-
-A shift is a 4-hour in-game block compressed to ~20 minutes real-time. Calls are pre-computed at shift start and triggered at scheduled in-game minutes.
-
-- Framework-agnostic — pure DI, no store imports, no React
-- Driven by `useNightShift` hook via `tick(deltaMs)` on each animation frame
-- Phases: `off-air` → `on-air` → `break` → `sign-off`
-- Fully testable in isolation
 
 </details>
 
@@ -290,16 +271,16 @@ Saves automatically after every completed call. Loads before the first screen re
 ### Commands
 
 ```bash
-pnpm start              # Expo dev server
-pnpm run android        # Android emulator/device
-pnpm run ios            # iOS simulator/device
-pnpm run web            # Web browser
-pnpm test               # Run tests
-pnpm test:watch         # Watch mode
-pnpm test:coverage      # Coverage report
-pnpm lint               # Lint with ESLint
-pnpm lint:fix           # Lint and auto-fix
-pnpm run eas-build      # Production build (all platforms)
+pnpm start          # Expo dev server
+pnpm run android    # Android emulator/device
+pnpm run ios        # iOS simulator/device
+pnpm run web        # Web browser
+pnpm test           # Run tests
+pnpm test:watch     # Watch mode
+pnpm test:coverage  # Coverage report
+pnpm lint           # Lint with ESLint
+pnpm lint:fix       # Lint and auto-fix
+pnpm run eas-build  # Production build (all platforms)
 ```
 
 ### Project Conventions
@@ -341,7 +322,7 @@ This game contains themes of grief, death, loss, the supernatural, and psycholog
 
 ## 📄 License
 
-All original content © Dead Air. All rights reserved.  
+All original content © Dead Air. All rights reserved.
 Not for redistribution without permission.
 
 ---
