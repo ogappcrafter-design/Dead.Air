@@ -1,23 +1,75 @@
+# Dependencies
 node_modules/
+
+# Expo / React Native build
 .expo/
 .expo-shared/
 dist/
+web-build/
+
+# Lockfiles (only pnpm is used)
+package-lock.json
+yarn.lock
+
+# Env & secrets
+.env
+.env.local
+.env.*.local
+
+# IDE / editor
+.vscode/
+.idea/
+.cursor/
+.sublime-project
+.sublime-workspace
+*.swp
+*.swo
+*~
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
 npm-debug.*
+yarn-debug.*
+yarn-error.*
+pnpm-debug.*
+
+# Build artifacts
 *.jks
 *.p8
 *.p12
 *.key
 *.mobileprovision
 *.orig.*
-web-build/
-.env
-.env.local
-.DS_Store
-.omo/
-.omc/
+tsbuildinfo/
+*.tsbuildinfo
+
+# Cache
+.cache/
+.eslintcache
+.parcel-cache/
+
+# Local agent / AI config (not project code)
 .agents/
 .claude/
+.omo/
+.omc/
+.autobots-state/
+
+# Project-local config (user-specific)
+autobots-model-registry.json
+autobots.toml
+skills-lock.json
+pnpm-workspace.yaml
+
+# Project docs (user-specific)
 HANDOFF.md
 GRAND_PLAN.md
-__mocks__/
-__tests__/
+
+# Misc
+.nvmrc
+.lintstagedrc.json
+.prettierrc
