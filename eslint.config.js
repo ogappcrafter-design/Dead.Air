@@ -73,6 +73,7 @@ module.exports = [
       'eslint.config.js',
       'babel.config.js',
       'app.config.js',
+      'plugins/**/*.js',
     ],
     languageOptions: {
       sourceType: 'commonjs',

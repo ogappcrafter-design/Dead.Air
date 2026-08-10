@@ -172,6 +172,7 @@ src/
   components/           wordmark, static burst, CRT, fade, buttons, log
   hooks/                line reveal, countdown
   theme/                colors, type, spacing, safe-area top
+plugins/                Expo config plugins (native debug symbols)
 proxy/
   app.js                createApp({client}) — injectable, so it can be tested
   prompt.js             system prompt + structured-output schema
@@ -189,7 +190,7 @@ driven over real HTTP against a stub.
 
 ```bash
 npm install
-npm test          # 157 tests: engine, content, audio, proxy
+npm test          # 162 tests: engine, content, audio, proxy, build plugin
 npm run lint
 npm start         # Expo dev server
 npm run android
@@ -226,6 +227,11 @@ Two things to know before you start:
 - **`expo-audio` wants `RECORD_AUDIO` by default.** The plugin is configured in
   `app.json` to drop it along with the foreground-service permissions, so the
   listing does not claim microphone access for a game that never records.
+
+Crash reporting needs no manual step: `plugins/withNativeDebugSymbols.js`
+embeds native debug symbols in the AAB, so Play symbolicates crashes in the
+React Native and Hermes libraries automatically and never asks for an upload.
+There is no ProGuard mapping file to go with it — minification is off.
 
 **Three native modules were added after v1** — `expo-audio`, `expo-haptics`
 and `expo-constants`. Native modules cannot ship over the air, so the next

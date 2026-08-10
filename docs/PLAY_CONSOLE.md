@@ -348,7 +348,59 @@ the whole chain works before anything is public.
 
 ---
 
-## 11. Pre-flight checklist
+## 11. Crash reports — deobfuscation and native symbols
+
+Play asks for two different files here, and for this project **both are handled
+automatically**. There is nothing to attach by hand.
+
+### Native debug symbols — already embedded ✔
+
+The AAB is mostly native code: React Native, Hermes and the Expo modules all
+ship as `.so` libraries. Without symbols, a crash inside any of them shows up
+in Android Vitals as bare memory addresses, and Play puts *"This App Bundle
+contains native code, and you've not uploaded debug symbols"* on every release.
+
+`plugins/withNativeDebugSymbols.js` sets `ndk.debugSymbolLevel 'SYMBOL_TABLE'`,
+so AGP packages the symbols into the bundle's metadata and Play ingests them at
+upload time. **You should not see that warning.** If you do, the plugin did not
+run — check it is still listed in `app.json` under `plugins`.
+
+The symbols are stripped from what users download, so this costs upload size,
+not install size. If you ever need file-and-line numbers rather than just
+function names, change `SYMBOL_TABLE` to `FULL` in that file — considerably
+larger, so only worth it while chasing a specific crash.
+
+### Deobfuscation file (`mapping.txt`) — not applicable ✔
+
+Minification is **off** by default in the Expo Android template, so the Java
+and Kotlin frames in a crash are already readable. There is no ProGuard/R8
+mapping file, and nothing to upload.
+
+If you turn minification on later:
+
+```bash
+npx expo install expo-build-properties
+```
+
+```json
+["expo-build-properties", { "android": { "enableMinifyInReleaseBuilds": true } }]
+```
+
+AGP then embeds `mapping.txt` in the bundle exactly the way it embeds the
+native symbols, so Play still picks it up automatically. Test a release build
+properly before shipping it — R8 can strip classes that React Native modules
+reach by reflection, and that class of bug only appears in release. Add keep
+rules through `extraProguardRules` if something breaks.
+
+### If you ever need to upload one by hand
+
+**Release → App bundle explorer → select the version → Downloads tab →
+"Upload deobfuscation file / native debug symbols"**. Only relevant for an APK
+build, or if the bundle metadata got stripped somewhere in your pipeline.
+
+---
+
+## 12. Pre-flight checklist
 
 - [ ] `versionCode` handled by EAS `autoIncrement` — nothing to set by hand
 - [ ] `applicationId` is `com.deadair.app` — **permanent once published; you cannot change it**
@@ -358,4 +410,5 @@ the whole chain works before anything is public.
 - [ ] Privacy policy URL resolves publicly
 - [ ] 2+ real screenshots, no alpha channel
 - [ ] Content rating questionnaire submitted
+- [ ] No "missing debug symbols" warning on the release — §11 handles it
 - [ ] Decided Path A (free, no IAP) or Path B (billing wired first)
