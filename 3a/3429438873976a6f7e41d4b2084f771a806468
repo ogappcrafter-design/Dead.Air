@@ -1,0 +1,19 @@
+README.md
+  s_d2395825851767::t_99d4d2cab5f6f2 3-5
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "3a3429438873976a6f7e41d4b2084f771a806468",
+  "prompts": {},
+  "sessions": {
+    "s_d2395825851767": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ses_018fa804bffeI05zmLu3QfM3VM",
+        "model": "unknown"
+      },
+      "human_author": "Dagger <dagger@pixelated.love>"
+    }
+  }
+}
