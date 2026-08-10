@@ -31,7 +31,7 @@ export interface CRTViewProps extends ViewProps {
 }
 
 const FLICKER_PERIOD_MS = 2800;
-const FLICKER_MAX = 1.0;
+const FLICKER_MAX = 0.12;
 
 /**
  * CRTView wraps children with layered CRT effects:
@@ -49,7 +49,7 @@ function CRTView({ intensity = 0, children, style, ...rest }: CRTViewProps): JSX
   const particleEffects = useSettingsStore((s) => s.particleEffects);
   const active = intensity > 0 && crtEnabled && scanlineDensity !== 'off';
 
-  const flicker = useSharedValue(1);
+  const flicker = useSharedValue(0);
   const flickerStyle = useAnimatedStyle(() => ({ opacity: flicker.value }));
 
   React.useEffect(() => {
