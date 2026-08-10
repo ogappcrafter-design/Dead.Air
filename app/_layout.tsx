@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { View, StyleSheet } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { CRTView } from '../components/shared/CRTView';
 import { ErrorBoundary } from '../components/shared/ErrorBoundary';
 import { colors } from '../lib/theme';
@@ -25,26 +26,28 @@ export default function RootLayout() {
   }, []);
 
   return (
-    <ErrorBoundary>
-      <CRTView intensity={crtEnabled ? 0.1 : 0}>
-        <View style={styles.container}>
-          <Stack
-            screenOptions={{
-              headerShown: false,
-              contentStyle: { backgroundColor: colors.background },
-            }}
-          >
-            <Stack.Screen name="index" />
-            <Stack.Screen name="onboarding" />
-            <Stack.Screen name="radio" />
-            <Stack.Screen name="tapes" />
-            <Stack.Screen name="store" />
-            <Stack.Screen name="settings" />
-          </Stack>
-          <StatusBar style="light" />
-        </View>
-      </CRTView>
-    </ErrorBoundary>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <ErrorBoundary>
+        <CRTView intensity={crtEnabled ? 0.1 : 0}>
+          <View style={styles.container}>
+            <Stack
+              screenOptions={{
+                headerShown: false,
+                contentStyle: { backgroundColor: colors.background },
+              }}
+            >
+              <Stack.Screen name="index" />
+              <Stack.Screen name="onboarding" />
+              <Stack.Screen name="radio" />
+              <Stack.Screen name="tapes" />
+              <Stack.Screen name="store" />
+              <Stack.Screen name="settings" />
+            </Stack>
+            <StatusBar style="light" />
+          </View>
+        </CRTView>
+      </ErrorBoundary>
+    </GestureHandlerRootView>
   );
 }
 
