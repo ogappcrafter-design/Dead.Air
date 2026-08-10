@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 
+import audio from '../audio';
 import Button from '../components/Button';
 import CRT from '../components/CRT';
 import { MARK } from '../content/symbols';
@@ -13,6 +14,15 @@ import { colors, mono, safeTop } from '../theme/theme';
  * to the dial, so the whole economy was invisible while you played it.
  */
 export default function SignOffScreen({ call, gained, onDismiss }) {
+  // Let the line finish closing before the bell — the hangup click is still
+  // ringing out when this screen mounts, and the two on top of each other
+  // sound like a glitch rather than a reward.
+  useEffect(() => {
+    if (!gained.tape) return undefined;
+    const t = setTimeout(() => audio.play('tape'), 420);
+    return () => clearTimeout(t);
+  }, [gained.tape]);
+
   const sanitySign = gained.sanityDelta > 0 ? '+' : '';
   const sanityColor =
     gained.sanityDelta > 0 ? colors.green : gained.sanityDelta < 0 ? colors.red : colors.textFaint;

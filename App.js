@@ -8,12 +8,20 @@ import SettingsScreen from './src/screens/SettingsScreen';
 import SignOffScreen from './src/screens/SignOffScreen';
 import StoreScreen from './src/screens/StoreScreen';
 
+import audio from './src/audio';
 import { bandById } from './src/content/bands';
 import { applyCallResult, DEFAULT_SAVE, migratePurchases, migrateSave } from './src/engine/save';
+import { DEFAULT_SETTINGS, migrateSettings } from './src/engine/settings';
 import { defaultBandId, generationStatus } from './src/engine/progression';
 import { applyEntitlements, purchase, restore } from './src/services/billing';
 import { generateCall } from './src/services/signal';
-import { PURCHASE_KEY, SAVE_KEY, readJson, writeJson } from './src/services/storage';
+import {
+  PURCHASE_KEY,
+  SAVE_KEY,
+  SETTINGS_KEY,
+  readJson,
+  writeJson,
+} from './src/services/storage';
 
 /**
  * Root. Holds the save, the purchases, and which screen is up.
@@ -26,6 +34,7 @@ export default function App() {
   const [loaded, setLoaded] = useState(false);
   const [save, setSave] = useState(DEFAULT_SAVE);
   const [purchases, setPurchases] = useState(migratePurchases(null));
+  const [settings, setSettings] = useState(DEFAULT_SETTINGS);
 
   const [screen, setScreen] = useState('dial');
   const [activeCall, setActiveCall] = useState(null);
@@ -37,20 +46,29 @@ export default function App() {
   const [storeBusy, setStoreBusy] = useState(false);
   const [storeError, setStoreError] = useState(null);
 
-  // Boot: load and migrate before the first real frame renders.
+  // Boot: load and migrate before the first real frame renders, and build the
+  // audio players behind the loading screen so the first sound is instant.
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const [rawSave, rawPurchases] = await Promise.all([
+      const [rawSave, rawPurchases, rawSettings] = await Promise.all([
         readJson(SAVE_KEY),
         readJson(PURCHASE_KEY),
+        readJson(SETTINGS_KEY),
       ]);
       if (cancelled) return;
 
       const migrated = migrateSave(rawSave);
       const owned = migratePurchases(rawPurchases);
+      const prefs = migrateSettings(rawSettings);
+
+      audio.setEnabled(prefs.sound);
+      await audio.prime();
+      if (cancelled) return;
+
       setSave(migrated);
       setPurchases(owned);
+      setSettings(prefs);
       setActiveBandId(defaultBandId(migrated, owned));
       setLoaded(true);
     })();
@@ -68,6 +86,15 @@ export default function App() {
     setPurchases(next);
     await writeJson(PURCHASE_KEY, next);
   }, []);
+
+  const handleToggleSound = useCallback(async () => {
+    const next = { ...settings, sound: !settings.sound };
+    // Flip the bus before the write so the change is heard immediately rather
+    // than after storage comes back.
+    audio.setEnabled(next.sound);
+    setSettings(next);
+    await writeJson(SETTINGS_KEY, next);
+  }, [settings]);
 
   const handleCallComplete = useCallback(
     async (result) => {
@@ -193,6 +220,8 @@ export default function App() {
         <SettingsScreen
           save={save}
           purchases={purchases}
+          settings={settings}
+          onToggleSound={handleToggleSound}
           onErase={handleErase}
           onClose={() => setScreen('dial')}
         />

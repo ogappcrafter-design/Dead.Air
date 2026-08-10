@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export const SAVE_KEY = 'dead_air_save_v1';
 export const PURCHASE_KEY = 'dead_air_purchases_v1';
+export const SETTINGS_KEY = 'dead_air_settings_v1';
 
 /**
  * Storage is best-effort: a game that cannot write its save should keep

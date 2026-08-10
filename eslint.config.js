@@ -32,6 +32,8 @@ const RUNTIME_GLOBALS = {
   Error: 'readonly',
   process: 'readonly',
   __DEV__: 'readonly',
+  // Metro resolves require() for static assets even in ES modules.
+  require: 'readonly',
 };
 
 module.exports = [
@@ -64,8 +66,8 @@ module.exports = [
     },
   },
   {
-    // CommonJS: the proxy service, and this config itself.
-    files: ['proxy/**/*.js', 'eslint.config.js', 'babel.config.js'],
+    // CommonJS: the proxy service, the Jest mocks, and the configs themselves.
+    files: ['proxy/**/*.js', '__tests__/__mocks__/**/*.js', 'eslint.config.js', 'babel.config.js'],
     languageOptions: {
       sourceType: 'commonjs',
       globals: { ...RUNTIME_GLOBALS, module: 'writable', require: 'readonly', __dirname: 'readonly' },
@@ -76,6 +78,7 @@ module.exports = [
     languageOptions: {
       globals: {
         ...RUNTIME_GLOBALS,
+        __dirname: 'readonly',
         describe: 'readonly',
         it: 'readonly',
         expect: 'readonly',

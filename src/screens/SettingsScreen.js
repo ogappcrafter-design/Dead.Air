@@ -12,7 +12,7 @@ import { colors, mono, safeTop } from '../theme/theme';
  * Progress readout, the content warning the store listing promises, and the
  * erase-save escape hatch v1 had no way to reach.
  */
-export default function SettingsScreen({ save, purchases, onErase, onClose }) {
+export default function SettingsScreen({ save, purchases, settings, onToggleSound, onErase, onClose }) {
   const [armed, setArmed] = useState(false);
   const progress = progressSummary(save, purchases);
 
@@ -44,6 +44,25 @@ export default function SettingsScreen({ save, purchases, onErase, onClose }) {
             <Text style={s.rowValue}>{value}</Text>
           </View>
         ))}
+
+        <Text style={s.heading}>SOUND</Text>
+        <TouchableOpacity
+          accessibilityRole="switch"
+          accessibilityState={{ checked: settings.sound }}
+          accessibilityLabel="Station sound"
+          activeOpacity={0.7}
+          onPress={onToggleSound}
+          style={s.toggle}
+        >
+          <Text style={s.toggleLabel}>STATION SOUND</Text>
+          <Text style={[s.toggleValue, { color: settings.sound ? colors.amber : colors.textGhost }]}>
+            {settings.sound ? `${MARK} ON` : '─ OFF'}
+          </Text>
+        </TouchableOpacity>
+        <Text style={s.body}>
+          Carrier hiss, relays, and the archive bell. The station follows your device&apos;s silent
+          switch and mixes with whatever else you are playing.
+        </Text>
 
         <Text style={s.heading}>CONTENT</Text>
         <Text style={s.body}>
@@ -124,6 +143,19 @@ const s = StyleSheet.create({
     marginBottom: 8,
   },
   body: { fontFamily: mono, fontSize: 12, lineHeight: 20, color: '#666' },
+  toggle: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.line,
+    borderRadius: 2,
+    paddingHorizontal: 14,
+    paddingVertical: 14,
+    marginBottom: 12,
+  },
+  toggleLabel: { fontFamily: mono, fontSize: 12, letterSpacing: 2, color: colors.text },
+  toggleValue: { fontFamily: mono, fontSize: 13, letterSpacing: 2 },
   cancel: { padding: 10, alignItems: 'center' },
   cancelText: { fontFamily: mono, fontSize: 11, letterSpacing: 2, color: colors.textGhost },
   footer: {

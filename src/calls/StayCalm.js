@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 
+import audio from '../audio';
 import Button from '../components/Button';
 import { colors, mono, type } from '../theme/theme';
 
@@ -61,6 +62,7 @@ export default function StayCalm({ call, onComplete }) {
 
   const breathe = useCallback(() => {
     if (statusRef.current !== 'live') return;
+    audio.play('breath');
     const next = Math.max(0, anxietyRef.current - BREATH_RELIEF);
     anxietyRef.current = next;
     setAnxiety(next);

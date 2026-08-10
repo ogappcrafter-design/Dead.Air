@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 
+import audio from '../audio';
 import Button from '../components/Button';
 import { SYM } from '../content/symbols';
 import { colors, mono } from '../theme/theme';
@@ -20,9 +21,11 @@ export default function SignalDecode({ call, onComplete }) {
   const tap = (symbolIndex) => {
     if (solved) return;
     if (symbolIndex === target[progress]) {
+      audio.play('key');
       setProgress((p) => p + 1);
       return;
     }
+    audio.play('reject');
     setWrong(symbolIndex);
     clearTimeout(errorTimer.current);
     errorTimer.current = setTimeout(() => setWrong(null), 400);

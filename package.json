@@ -2,7 +2,7 @@
   "name": "dead-air",
   "version": "2.0.0",
   "private": true,
-  "description": "Dead Air Radio — a paranormal late-night radio game.",
+  "description": "Dead Air Radio \u2014 a paranormal late-night radio game.",
   "main": "index.js",
   "engines": {
     "node": ">=22"
@@ -15,11 +15,13 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "lint": "eslint .",
-    "assets": "python3 scripts/gen-assets.py"
+    "assets": "python3 scripts/gen-assets.py",
+    "audio": "python3 scripts/gen-audio.py"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "2.2.0",
     "expo": "~56.0.0",
+    "expo-audio": "~56.0.13",
     "expo-font": "~56.0.5",
     "expo-insights": "~56.0.16",
     "expo-splash-screen": "~56.0.10",
@@ -43,6 +45,12 @@
     "testEnvironment": "node",
     "testMatch": [
       "<rootDir>/__tests__/**/*.test.js"
+    ],
+    "moduleNameMapper": {
+      "\\.(wav|png|jpg)$": "<rootDir>/__tests__/__mocks__/asset.js"
+    },
+    "testPathIgnorePatterns": [
+      "<rootDir>/__tests__/__mocks__/"
     ]
   }
 }

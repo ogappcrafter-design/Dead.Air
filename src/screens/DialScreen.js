@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 
 import ArchiveScreen from './ArchiveScreen';
+import audio from '../audio';
 import CRT from '../components/CRT';
 import SignalBars from '../components/SignalBars';
 import { BANDS, bandById } from '../content/bands';
@@ -94,7 +95,12 @@ export default function DialScreen({
               accessibilityRole="tab"
               accessibilityState={{ selected: active, disabled: !unlocked }}
               disabled={!unlocked}
-              onPress={() => onSelectBand(b.id)}
+              onPress={() => {
+                // Only when the dial actually moves — re-tapping the current
+                // band should not re-trigger the sweep.
+                if (b.id !== activeBandId) audio.play('tune');
+                onSelectBand(b.id);
+              }}
               style={[s.band, active && { borderBottomColor: b.color }]}
             >
               <Text style={[s.bandName, { color: unlocked ? b.color : colors.textGhost }]}>

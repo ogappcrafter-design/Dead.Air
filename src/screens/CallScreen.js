@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useCallback, useEffect } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 
+import audio from '../audio';
 import CRT from '../components/CRT';
 import SignalBars from '../components/SignalBars';
 import { playerFor } from '../calls';
@@ -11,6 +12,23 @@ import { colors, mono, safeTop } from '../theme/theme';
 export default function CallScreen({ call, onComplete }) {
   const band = bandById(call.band);
   const Player = playerFor(call.type);
+
+  // The line opens, and the station bed comes up under it. Doing this here
+  // rather than in each player means all five call types get it for free, and
+  // the bed is guaranteed to stop however the screen goes away.
+  useEffect(() => {
+    audio.play('answer');
+    audio.startCarrier();
+    return () => audio.stopCarrier();
+  }, [call.id]);
+
+  const complete = useCallback(
+    (result) => {
+      audio.play('hangup');
+      onComplete(result);
+    },
+    [onComplete],
+  );
 
   return (
     <View style={s.screen}>
@@ -27,7 +45,7 @@ export default function CallScreen({ call, onComplete }) {
       </View>
 
       <View style={s.body}>
-        <Player call={call} onComplete={onComplete} />
+        <Player call={call} onComplete={complete} />
       </View>
 
       <CRT />

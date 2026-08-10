@@ -51,6 +51,31 @@ LIVING is the free tier — four calls, plus three Infinite Signal generations.
 The other four bands are the base purchase **and** are gated on progress: buying
 the game does not hand you every frequency at once.
 
+## Sound
+
+Eight sounds, and they only fire where the game already treats something as
+significant: the dial moving, a line opening and closing, the two decode
+responses, the BREATHE control, and a tape reaching the archive. Ordinary
+buttons, tabs and scrolling stay silent — a station that chirps at every touch
+stops sounding like a station.
+
+The one continuous element is a station bed: hiss, mains hum and a faint
+drifting whistle, sitting well under everything and playing only while a call
+is live. It loops sample-perfectly rather than crossfading — the noise is
+filtered *circularly* and the tonal parts sit at exact multiples of the loop
+frequency, so the wrap is a smaller step than the average gap between adjacent
+samples.
+
+Everything is synthesized by `scripts/gen-audio.py` from noise, sines and
+one-pole/state-variable filters — no audio libraries and no licensed samples.
+The whole palette is bandlimited on purpose; it should sound like it came down
+a wire. `npm run audio` rebuilds it (~480 KB total, 32 kHz mono 16-bit).
+
+The station honours the device silent switch and mixes with other audio rather
+than interrupting it, so answering a call will not stop the player's music.
+Sound can be switched off in Settings and the choice is remembered separately
+from the save, so erasing progress does not turn it back on.
+
 ## Content
 
 18 hand-authored transmissions and a 15-tape archive. Every tape is reachable in
@@ -88,6 +113,8 @@ src/
     save.js             save shape, v1→v2 migration, reward + sanity math
     progression.js      band unlocks, available calls, generation credits
     generation.js       clamping AI-generated calls into playable ones
+    settings.js         player preferences, kept apart from progress
+  audio/                the sound bus — manifest (data), assets, player
   services/             boundaries: storage, billing, the signal proxy client
   calls/                the five call players + the type→player registry
   screens/              boot, dial, call, sign-off, archive, store, settings
@@ -96,7 +123,8 @@ src/
   theme/                colors, type, spacing, safe-area top
 proxy/                  Cloud Run service holding the Anthropic key
 scripts/gen-assets.py   regenerates the icons and splash from geometry
-__tests__/              engine + content tests (no RN renderer needed)
+scripts/gen-audio.py    synthesizes the sound set
+__tests__/              engine, content and audio tests (no RN renderer needed)
 ```
 
 The engine is deliberately free of React and React Native imports, which is why
@@ -106,15 +134,15 @@ its tests run on plain Jest with no native mocking.
 
 ```bash
 npm install
-npm test          # 108 tests, engine + content
+npm test          # 122 tests: engine, content, audio
 npm run lint
 npm start         # Expo dev server
 npm run android
 ```
 
-Node 22+. Assets are generated, not hand-drawn — `npm run assets` rebuilds
-`assets/*.png` from `scripts/gen-assets.py` (pure geometry plus a 5×7 bitmap
-font, no image libraries required).
+Node 22+. Both asset sets are generated rather than authored — `npm run assets`
+rebuilds the icons and splash from geometry plus a 5×7 bitmap font, and
+`npm run audio` rebuilds the sound set. Neither needs an image or audio library.
 
 ## Build
 
@@ -122,6 +150,10 @@ font, no image libraries required).
 eas build --platform android --profile preview      # APK
 eas build --platform android --profile production   # AAB for Play
 ```
+
+**Sound added a native module.** `expo-audio` is the first runtime dependency
+added since v1, and native modules cannot ship over the air — the next release
+needs a real EAS build, not an `expo-updates` push.
 
 ## Store products
 
@@ -136,8 +168,8 @@ Wire real billing by replacing the two marked bodies in
 ## Saves
 
 `dead_air_save_v1` holds sanity, static, completed calls, tapes and generation
-count; `dead_air_purchases_v1` holds entitlements. Both load before the first
-frame renders.
+count; `dead_air_purchases_v1` holds entitlements; `dead_air_settings_v1` holds
+preferences. All three load before the first frame renders.
 
 Saves are migrated on read (`migrateSave`). v1 stored completed calls as indices
 into one flat list, so reordering the content would have silently rewritten a
@@ -175,10 +207,11 @@ standing in for a safe area; timer drift from chained `setTimeout`s; and a
 corrupted file named `UPDATE FILE` sitting in the repo root, which turned out to
 be a mangled ESLint config that was never wired to anything.
 
+Sound arrived after the rebuild — see **Sound** above. v1 had none.
+
 Still outstanding: there is nothing to spend static on — it is a score, not a
 currency, and the store sells unlocks rather than upgrades. Worth deciding
-before launch. There is also no audio, which for a radio game is a gap, but v1
-had none either and adding it is a content problem more than a code one.
+before launch.
 
 ## Content warning
 
