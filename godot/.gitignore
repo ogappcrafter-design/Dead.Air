@@ -1,0 +1,11 @@
+# Godot 4 editor cache and import artifacts
+.godot/
+*.import
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor-specific
+*.tmp
+~tmp.*
