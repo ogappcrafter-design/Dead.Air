@@ -1,0 +1,76 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Dead Air Sacred Calls",
+  "description": "Schema for the 18 sacred calls migrated verbatim from data/calls.js (DEA-149)",
+  "type": "array",
+  "minItems": 18,
+  "maxItems": 18,
+  "items": {
+    "type": "object",
+    "required": [
+      "id",
+      "band",
+      "callerId",
+      "callerName",
+      "signal",
+      "type",
+      "staticReward"
+    ],
+    "properties": {
+      "id": { "type": "integer", "minimum": 0 },
+      "band": { "type": "integer", "minimum": 0, "maximum": 4 },
+      "callerId": { "type": "string" },
+      "callerName": { "type": "string" },
+      "signal": { "type": "integer", "minimum": 0, "maximum": 5 },
+      "type": {
+        "type": "string",
+        "enum": [
+          "RIGHT_ANSWER",
+          "DEAD_AIR",
+          "JUST_LISTEN",
+          "SIGNAL_DECODE",
+          "STAY_CALM",
+          "RECORDING",
+          "MULTI_CALLER",
+          "TIMING",
+          "PUZZLE",
+          "CONVERSATION"
+        ]
+      },
+      "staticReward": { "type": "integer" },
+      "waitSeconds": { "type": "integer", "minimum": 0 },
+      "sanityDelta": { "type": "integer" },
+      "sanityPenalty": { "type": "integer" },
+      "duration": { "type": "number" },
+      "tape": { "type": "boolean" },
+      "tapeName": { "type": "string" },
+      "lines": {
+        "type": "array",
+        "items": { "type": "string" }
+      },
+      "choices": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": ["text", "outcome", "sanityDelta", "staticMult", "tape"],
+          "properties": {
+            "text": { "type": "string" },
+            "outcome": { "type": "string" },
+            "sanityDelta": { "type": "integer" },
+            "staticMult": { "type": "number" },
+            "tape": { "type": "boolean" },
+            "tapeName": { "type": "string" }
+          },
+          "additionalProperties": false
+        }
+      },
+      "intro": { "type": "string" },
+      "sequence": {
+        "type": "array",
+        "items": { "type": "integer", "minimum": 0 }
+      },
+      "decodedMessage": { "type": "string" }
+    },
+    "additionalProperties": false
+  }
+}

@@ -1,0 +1,56 @@
+; band_config.tres — All 5 sacred bands (DEA-149)
+; Source: data/calls.js BANDS + BAND_VIBES (verbatim)
+; Godot 4 / format=3
+[gd_resource type="Resource" script_class="BandConfig" load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://src/data/band_config.gd" id="1"]
+[ext_resource type="Script" path="res://src/data/band_data.gd" id="2"]
+
+[sub_resource type="Resource" id="Band_0"]
+script = ExtResource("2")
+id = 0
+name = "LIVING"
+freq = "88.7 FM"
+color = 1, 0.549, 0, 1
+unlock_at = 0
+vibe = "Eerily normal callers. Mundane conversations that reveal something deeply wrong in the last line. Suburban horror. The banal made sinister."
+
+[sub_resource type="Resource" id="Band_1"]
+script = ExtResource("2")
+id = 1
+name = "LIMINAL"
+freq = "102.3 FM"
+color = 0.8, 1, 0, 1
+unlock_at = 4
+vibe = "Time loops, echoes, callers from repeated moments or wrong timelines. Liminal spaces between was and is."
+
+[sub_resource type="Resource" id="Band_2"]
+script = ExtResource("2")
+id = 2
+name = "LOST"
+freq = "117.8 AM"
+color = 0, 1, 0.816, 1
+unlock_at = 8
+vibe = "The dead. The missing. Those who needed to say one last thing before they couldn't. Emotional, devastating, and real."
+
+[sub_resource type="Resource" id="Band_3"]
+script = ExtResource("2")
+id = 3
+name = "CLASSIFIED"
+freq = "███.█ FM"
+color = 1, 0.2, 0.4, 1
+unlock_at = 12
+vibe = "Government black sites, rogue AI, whistleblowers, classified transmissions intercepted by accident."
+
+[sub_resource type="Resource" id="Band_4"]
+script = ExtResource("2")
+id = 4
+name = "████████"
+freq = "???.?"
+color = 1, 1, 1, 1
+unlock_at = 15
+vibe = "Something ancient. The frequency itself gaining awareness. Transmissions from the dawn of radio. Things with no name."
+
+[resource]
+script = ExtResource("1")
+bands = [SubResource("Band_0"), SubResource("Band_1"), SubResource("Band_2"), SubResource("Band_3"), SubResource("Band_4")]

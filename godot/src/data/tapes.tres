@@ -1,0 +1,177 @@
+; tapes.tres — All 15 base tapes (DEA-149)
+; Source: data/calls.js ALL_TAPES (display names) + data/tapes.ts TAPES (metadata)
+; Tape↔call linkages derived from CALLS where tape=true
+; Godot 4 / format=3
+[gd_resource type="Resource" script_class="TapeLibrary" load_steps=18 format=3]
+
+[ext_resource type="Script" path="res://src/data/tape_library.gd" id="1"]
+[ext_resource type="Script" path="res://src/data/tape_data.gd" id="2"]
+
+[sub_resource type="Resource" id="Tape_0"]
+script = ExtResource("2")
+tape_id = "tape-001"
+display_name = "Tape #1 — The Wrong Number"
+title = "First Night"
+description = "Your first shift. Everything seems normal."
+band = "LIVING"
+duration = "4:32"
+rarity = "common"
+linked_call_id = 0
+
+[sub_resource type="Resource" id="Tape_1"]
+script = ExtResource("2")
+tape_id = "tape-002"
+display_name = "Tape #2 — The Collector's Archive"
+title = "Static Lullaby"
+description = "A child hums through the interference."
+band = "LIMINAL"
+duration = "3:18"
+rarity = "common"
+linked_call_id = 2
+
+[sub_resource type="Resource" id="Tape_2"]
+script = ExtResource("2")
+tape_id = "tape-003"
+display_name = "Tape #3 — The 3:47 Sessions"
+title = "The Last Broadcast"
+description = "They signed off. They didn't come back."
+band = "LIVING"
+duration = "6:45"
+rarity = "uncommon"
+linked_call_id = 5
+
+[sub_resource type="Resource" id="Tape_3"]
+script = ExtResource("2")
+tape_id = "tape-004"
+display_name = "Tape #4 — Yesterday's Frequency"
+title = "Numbers"
+description = "Seven. Seven. Seven. Seven."
+band = "CLASSIFIED"
+duration = "2:14"
+rarity = "rare"
+linked_call_id = 6
+
+[sub_resource type="Resource" id="Tape_4"]
+script = ExtResource("2")
+tape_id = "tape-005"
+display_name = "Tape #5 — Echo Chamber"
+title = "Dead Air"
+description = "The silence between stations."
+band = "LOST"
+duration = "5:00"
+rarity = "uncommon"
+linked_call_id = 7
+
+[sub_resource type="Resource" id="Tape_5"]
+script = ExtResource("2")
+tape_id = "tape-006"
+display_name = "Tape #6 — Signal From Guardian"
+title = "Emergency"
+description = "This is not a test."
+band = "CLASSIFIED"
+duration = "1:58"
+rarity = "rare"
+linked_call_id = 8
+
+[sub_resource type="Resource" id="Tape_6"]
+script = ExtResource("2")
+tape_id = "tape-007"
+display_name = "Tape #7 — Found Signal"
+title = "Lullaby"
+description = "Go to sleep. Go to sleep. Go to sleep."
+band = "LIMINAL"
+duration = "4:12"
+rarity = "uncommon"
+linked_call_id = 9
+
+[sub_resource type="Resource" id="Tape_7"]
+script = ExtResource("2")
+tape_id = "tape-008"
+display_name = "Tape #8 — Her Voice"
+title = "The Signal"
+description = "You found it. Now it found you."
+band = "████████"
+duration = "13:33"
+rarity = "legendary"
+linked_call_id = 10
+
+[sub_resource type="Resource" id="Tape_8"]
+script = ExtResource("2")
+tape_id = "tape-009"
+display_name = "Tape #9 — Open Sky"
+title = "Frequencies"
+description = "Every number has a name."
+band = "CLASSIFIED"
+duration = "3:44"
+rarity = "rare"
+linked_call_id = 11
+
+[sub_resource type="Resource" id="Tape_9"]
+script = ExtResource("2")
+tape_id = "tape-010"
+display_name = "Tape #10 — Courtesy Call"
+title = "Whispers"
+description = "They're talking about you."
+band = "LIMINAL"
+duration = "2:56"
+rarity = "uncommon"
+linked_call_id = 12
+
+[sub_resource type="Resource" id="Tape_10"]
+script = ExtResource("2")
+tape_id = "tape-011"
+display_name = "Tape #11 — ARIA-9 Transcript"
+title = "The Void"
+description = "Listen too long and it listens back."
+band = "LOST"
+duration = "7:21"
+rarity = "rare"
+linked_call_id = 13
+
+[sub_resource type="Resource" id="Tape_11"]
+script = ExtResource("2")
+tape_id = "tape-012"
+display_name = "Tape #12 — The Network"
+title = "Broadcast"
+description = "One final transmission."
+band = "LIVING"
+duration = "5:33"
+rarity = "common"
+linked_call_id = 14
+
+[sub_resource type="Resource" id="Tape_12"]
+script = ExtResource("2")
+tape_id = "tape-013"
+display_name = "Tape #13 — First Transmission"
+title = "Static"
+description = "White noise. Pure. Perfect."
+band = "LOST"
+duration = "4:00"
+rarity = "uncommon"
+linked_call_id = 15
+
+[sub_resource type="Resource" id="Tape_13"]
+script = ExtResource("2")
+tape_id = "tape-014"
+display_name = "Tape #14 — The Choice"
+title = "Protocol"
+description = "Follow instructions. Do not deviate."
+band = "CLASSIFIED"
+duration = "3:12"
+rarity = "rare"
+linked_call_id = 16
+
+[sub_resource type="Resource" id="Tape_14"]
+script = ExtResource("2")
+tape_id = "tape-015"
+display_name = "Tape #15 — What Answered"
+title = "███████"
+description = "[CORRUPTED]"
+band = "████████"
+duration = "9:99"
+rarity = "legendary"
+linked_call_id = 17
+
+[resource]
+script = ExtResource("1")
+tapes = [SubResource("Tape_0"), SubResource("Tape_1"), SubResource("Tape_2"), SubResource("Tape_3"), SubResource("Tape_4"), SubResource("Tape_5"), SubResource("Tape_6"), SubResource("Tape_7"), SubResource("Tape_8"), SubResource("Tape_9"), SubResource("Tape_10"), SubResource("Tape_11"), SubResource("Tape_12"), SubResource("Tape_13"), SubResource("Tape_14")]
