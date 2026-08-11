@@ -175,7 +175,8 @@ export const callManager = initCallManager({
       useChoiceHistoryStore.getState().addChoice({
         callId,
         choiceIndex,
-        tag: choiceKey,
+        choiceKey,
+        value,
         sanityDelta: typeof value === 'number' ? value : 0,
       });
     },

@@ -32,6 +32,7 @@ function usePlayerStats(): PlayerStats {
   const endlessHighScore = useGameStore((s) => s.endlessHighScore);
   const tapeListenCounts = useGameStore((s) => s.tapeListenCounts);
   const difficultyMode = useSettingsStore((s) => s.difficulty);
+  const shiftsCompletedByDifficulty = useGameStore((s) => s.shiftsCompletedByDifficulty);
   const dailyStreak = useDailyCallStore((s) => s.streak);
 
   const mastery = getTotalLayersUnlocked(tapeListenCounts);
@@ -44,6 +45,7 @@ function usePlayerStats(): PlayerStats {
     shiftsCompleted,
     longestCallSurvivedMs,
     difficultyMode,
+    shiftsCompletedByDifficulty,
     dailyStreak,
     ngPlusUnlocked: ngPlusUnlocked ? 1 : 0,
     ngPlusCompleted,

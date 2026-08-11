@@ -13,10 +13,25 @@ import { initIAP } from '../lib/iap';
 
 initErrorTracking();
 
+// Google Fonts: Eater (text consumed by static) + VT323 (phosphor terminal)
+const FONT_URL =
+  'https://fonts.googleapis.com/css2?family=Eater&family=VT323&display=swap';
+
+function injectFonts() {
+  if (typeof document === 'undefined') return;
+  if (document.getElementById('dar-fonts')) return;
+  const link = document.createElement('link');
+  link.id = 'dar-fonts';
+  link.rel = 'stylesheet';
+  link.href = FONT_URL;
+  document.head.appendChild(link);
+}
+
 export default function RootLayout() {
   const crtEnabled = useSettingsStore((s) => s.crtEnabled);
 
   useEffect(() => {
+    injectFonts();
     initErrorTracking();
     AnalyticsEngine.init();
     initIAP().catch(() => {});

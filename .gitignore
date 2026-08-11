@@ -75,3 +75,4 @@ pnpm-workspace.yaml
 HANDOFF.md
 GRAND_PLAN.md
 DESIGN.md
+dist-check/

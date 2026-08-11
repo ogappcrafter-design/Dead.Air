@@ -2,6 +2,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { FlickeringText } from '../components/shared/FlickeringText';
+import { BreathingText } from '../components/shared/BreathingText';
 import { colors, fonts, spacing } from '../lib/theme';
 import { usePlayerStore } from '../store/usePlayerStore';
 
@@ -24,7 +25,7 @@ export default function IndexScreen() {
   useEffect(() => {
     const interval = setInterval(() => {
       setMessageIdx((i) => (i + 1) % TUNING_MESSAGES.length);
-    }, 1800);
+    }, 900);
     return () => clearInterval(interval);
   }, []);
 
@@ -49,10 +50,12 @@ export default function IndexScreen() {
     // finished rehydrating from AsyncStorage. Routing on the default
     // `hasOnboarded: false` sends returning players back to /onboarding
     // when persistence hydration is slower than this timer.
+    // Hold the splash long enough for the atmosphere to register.
+    // Was 2000ms — too fast for the flicker and message cycle to land.
     const timer = setTimeout(() => {
       minSplashElapsed = true;
       navigate();
-    }, 2000);
+    }, 4500);
 
     const unsubscribe = usePlayerStore.persist.onFinishHydration(() => {
       hydrated = true;
@@ -69,7 +72,7 @@ export default function IndexScreen() {
   return (
     <View style={styles.container}>
       <FlickeringText text="DEAD AIR" style={styles.title} letterSpacing={8} />
-      <Text style={styles.subtitle}>Late Night Radio</Text>
+      <BreathingText style={styles.subtitle}>Late Night Radio</BreathingText>
       <Text style={styles.loading}>{TUNING_MESSAGES[messageIdx]}</Text>
     </View>
   );
@@ -88,16 +91,25 @@ const styles = StyleSheet.create({
     color: colors.amber,
     letterSpacing: 8,
     marginBottom: spacing.md,
+    textShadowColor: 'rgba(255, 140, 0, 0.7)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 12,
   },
   subtitle: {
     fontFamily: fonts.mono,
-    fontSize: 16,
+    fontSize: 22,
     color: colors.green,
     marginBottom: spacing.xxl,
+    textShadowColor: 'rgba(57, 255, 20, 0.6)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 8,
   },
   loading: {
     fontFamily: fonts.mono,
-    fontSize: 12,
+    fontSize: 16,
     color: colors.textMuted,
+    textShadowColor: 'rgba(102, 102, 102, 0.4)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 4,
   },
 });

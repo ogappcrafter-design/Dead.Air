@@ -15,8 +15,10 @@ export const colors = {
 } as const;
 
 export const fonts = {
-  mono: 'Courier',
-  display: 'Courier New',
+  // Eater = text consumed by static/dead air, VT323 = green phosphor terminal
+  // Loaded via Google Fonts (see app/_layout.tsx injectFonts)
+  mono: 'VT323, Courier, monospace',
+  display: 'Eater, Courier New, serif',
 } as const;
 
 export const spacing = {
