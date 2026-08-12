@@ -12,6 +12,11 @@ run/main_scene=""
 config/features=4.3
 config/icon="res://icon.svg"
 
+[autoload]
+
+; DEA-152: Central input coordinator (singleton)
+InputManager="*res://src/core/input_manager.gd"
+
 [display]
 
 window/size/viewport_width=1920
@@ -40,28 +45,97 @@ AudioBusManager="*res://src/audio/audio_bus_manager.gd"
 
 [input]
 
-; Radio actions (GDD §Controls / DEA-152)
-radio_tune={
+; DEA-152 Control Scheme — Issue #115 (authoritative)
+; Gamepad: DualSense / Xbox button indices per Godot 4 JoyButton enum
+
+; Movement — Left Stick (analog) + WASD (digital)
+move_left={
 "deadzone": 0.5,
-"events": [Object(InputEventJoypadMotion,"axis":0,"axis_value":1.0,"deadzone":0.5), Object(InputEventJoypadMotion,"axis":0,"axis_value":-1.0,"deadzone":0.5), Object(InputEventKey,"keycode":68,"unicode":100,"echo":false), Object(InputEventKey,"keycode":65,"unicode":97,"echo":false)]
+"events": [Object(InputEventJoypadMotion,"axis":0,"axis_value":-1.0,"deadzone":0.5), Object(InputEventKey,"keycode":65,"unicode":97,"echo":false)]
 }
-radio_band_up={
+move_right={
 "deadzone": 0.5,
-"events": [Object(InputEventJoypadButton,"button_index":7,"pressed":true), Object(InputEventKey,"keycode":69,"unicode":101,"echo":false)]
+"events": [Object(InputEventJoypadMotion,"axis":0,"axis_value":1.0,"deadzone":0.5), Object(InputEventKey,"keycode":68,"unicode":100,"echo":false)]
 }
-radio_band_down={
+move_up={
 "deadzone": 0.5,
-"events": [Object(InputEventJoypadButton,"button_index":6,"pressed":true), Object(InputEventKey,"keycode":81,"unicode":113,"echo":false)]
+"events": [Object(InputEventJoypadMotion,"axis":1,"axis_value":-1.0,"deadzone":0.5), Object(InputEventKey,"keycode":87,"unicode":119,"echo":false)]
 }
-radio_record={
+move_down={
 "deadzone": 0.5,
-"events": [Object(InputEventJoypadButton,"button_index":0,"pressed":true), Object(InputEventKey,"keycode":82,"unicode":114,"echo":false)]
+"events": [Object(InputEventJoypadMotion,"axis":1,"axis_value":1.0,"deadzone":0.5), Object(InputEventKey,"keycode":83,"unicode":115,"echo":false)]
 }
+
+; Radio tuning — Right Stick X (analog). Mouse handled in InputManager code.
+radio_tune_left={
+"deadzone": 0.5,
+"events": [Object(InputEventJoypadMotion,"axis":2,"axis_value":-1.0,"deadzone":0.5)]
+}
+radio_tune_right={
+"deadzone": 0.5,
+"events": [Object(InputEventJoypadMotion,"axis":2,"axis_value":1.0,"deadzone":0.5)]
+}
+
+; Fine tune — L2/LT (axis 4) / Shift (hold modifier)
+fine_tune={
+"deadzone": 0.5,
+"events": [Object(InputEventJoypadMotion,"axis":4,"axis_value":1.0,"deadzone":0.5), Object(InputEventKey,"keycode":4194305,"unicode":0,"echo":false)]
+}
+
+; Interact — Cross/A (button 0) / E
 interact={
 "deadzone": 0.5,
-"events": [Object(InputEventJoypadButton,"button_index":2,"pressed":true), Object(InputEventKey,"keycode":69,"unicode":101,"echo":false), Object(InputEventKey,"keycode":32,"unicode":32,"echo":false)]
+"events": [Object(InputEventJoypadButton,"button_index":0,"pressed":true), Object(InputEventKey,"keycode":69,"unicode":101,"echo":false)]
 }
-move={
+
+; Record — Triangle/Y (button 3) / R (hold)
+record={
 "deadzone": 0.5,
-"events": [Object(InputEventJoypadMotion,"axis":0,"axis_value":1.0,"deadzone":0.5), Object(InputEventJoypadMotion,"axis":0,"axis_value":-1.0,"deadzone":0.5), Object(InputEventJoypadMotion,"axis":1,"axis_value":1.0,"deadzone":0.5), Object(InputEventJoypadMotion,"axis":1,"axis_value":-1.0,"deadzone":0.5), Object(InputEventKey,"keycode":87,"unicode":119,"echo":false), Object(InputEventKey,"keycode":83,"unicode":115,"echo":false), Object(InputEventKey,"keycode":65,"unicode":97,"echo":false), Object(InputEventKey,"keycode":68,"unicode":100,"echo":false)]
+"events": [Object(InputEventJoypadButton,"button_index":3,"pressed":true), Object(InputEventKey,"keycode":82,"unicode":114,"echo":false)]
+}
+
+; Play Tape — Square/X (button 2) / Q
+play_tape={
+"deadzone": 0.5,
+"events": [Object(InputEventJoypadButton,"button_index":2,"pressed":true), Object(InputEventKey,"keycode":81,"unicode":113,"echo":false)]
+}
+
+; Hide — Circle/B (button 1) / Space (hold)
+hide={
+"deadzone": 0.5,
+"events": [Object(InputEventJoypadButton,"button_index":1,"pressed":true), Object(InputEventKey,"keycode":32,"unicode":32,"echo":false)]
+}
+
+; Hold Breath — L2/LT (axis 4) / Ctrl (hold, while hiding)
+hold_breath={
+"deadzone": 0.5,
+"events": [Object(InputEventJoypadMotion,"axis":4,"axis_value":1.0,"deadzone":0.5), Object(InputEventKey,"keycode":4194306,"unicode":0,"echo":false)]
+}
+
+; Band Switch — L1 (button 9) / R1 (button 10)
+band_prev={
+"deadzone": 0.5,
+"events": [Object(InputEventJoypadButton,"button_index":9,"pressed":true)]
+}
+band_next={
+"deadzone": 0.5,
+"events": [Object(InputEventJoypadButton,"button_index":10,"pressed":true)]
+}
+
+; Band Cycle — Tab
+band_cycle={
+"deadzone": 0.5,
+"events": [Object(InputEventKey,"keycode":258,"unicode":0,"echo":false)]
+}
+
+; Pause — Options/Start (button 6) / Esc
+pause={
+"deadzone": 0.5,
+"events": [Object(InputEventJoypadButton,"button_index":6,"pressed":true), Object(InputEventKey,"keycode":27,"unicode":0,"echo":false)]
+}
+
+; Skip Call Text — Cross/A (button 0) / E (tap during call mode)
+skip_call={
+"deadzone": 0.5,
+"events": [Object(InputEventJoypadButton,"button_index":0,"pressed":true), Object(InputEventKey,"keycode":69,"unicode":101,"echo":false)]
 }
