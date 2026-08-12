@@ -139,3 +139,9 @@ skip_call={
 "deadzone": 0.5,
 "events": [Object(InputEventJoypadButton,"button_index":0,"pressed":true), Object(InputEventKey,"keycode":69,"unicode":101,"echo":false)]
 }
+
+[autoload]
+
+; DEA-153: Save system autoloads
+SaveManager="*res://src/core/save_manager.gd"
+TapeInventory="*res://src/core/tape_inventory.gd"
