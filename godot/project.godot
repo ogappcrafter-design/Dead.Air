@@ -33,6 +33,11 @@ anti_aliasing/quality/use_taa=true
 ; Default bus layout file: res://default_bus_layout.tres
 bus/default_bus_layout="res://default_bus_layout.tres"
 
+[autoload]
+
+; AudioBusManager — runtime bus volume control + ducking (DEA-134)
+AudioBusManager="*res://src/audio/audio_bus_manager.gd"
+
 [input]
 
 ; Radio actions (GDD §Controls / DEA-152)
