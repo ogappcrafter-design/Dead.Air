@@ -111,6 +111,23 @@ func _init() -> void:
 			print("  [FAIL] %s::%s" % ["RadioStatic", test_name])
 
 	print("")
+
+	# Run BandSystem tests
+	print("Running BandSystem tests...")
+	var band_system_tests := preload("res://tests/test_band_system.gd").new()
+	var bs_results: Dictionary = band_system_tests.run_tests()
+	for test_name in bs_results.keys():
+		total_tests += 1
+		var passed: bool = bs_results[test_name]
+		if passed:
+			total_passed += 1
+			print("  [PASS] %s::%s" % [band_system_tests.test_name, test_name])
+		else:
+			total_failed += 1
+			all_passed = false
+			print("  [FAIL] %s::%s" % [band_system_tests.test_name, test_name])
+
+	print("")
 	print("=== Results ===")
 	print("Total: %d | Passed: %d | Failed: %d" % [total_tests, total_passed, total_failed])
 	print("ALL TESTS PASSED" if all_passed else "SOME TESTS FAILED")

@@ -155,6 +155,7 @@ func test_fine_tuning_halves_sensitivity() -> bool:
 
 func test_band_switch_sets_center_freq() -> bool:
 	var tuner := _make_tuner()
+	tuner.set_phase(1)  # Phase 1 → LIMINAL is native, avoids cross-pollination penalty
 	tuner.set_band(1)  # LIMINAL, center=94.0
 	var sig: float = tuner.get_signal()
 	# Should be at center, signal=100
@@ -186,7 +187,7 @@ func test_frequency_clamped_to_range() -> bool:
 	if tuner.current_frequency != RadioTuner.FREQ_MIN:
 		return false
 	# Try to set above maximum
-	tuner.set_frequency(200.0)
+	tuner.set_frequency(2000.0)
 	return abs(tuner.current_frequency - RadioTuner.FREQ_MAX) < 0.01
 
 

@@ -36,6 +36,10 @@ extends Resource
 @export var tapes_consumed: Array[String] = []
 @export var bands_unlocked: Array[String] = []
 
+# --- Band Tuning Progress (DEA-99) ---
+# Accumulated seconds per band id for TIME_TUNING unlocks (int band_id → float seconds)
+@export var tuning_time: Dictionary = {}
+
 # --- Call History ---
 @export var call_history: Array[Dictionary] = []
 
@@ -82,6 +86,7 @@ static func from_dict(data: Dictionary) -> SaveData:
 	sd.tapes_collected = _to_string_array(data.get("tapes_collected", []))
 	sd.tapes_consumed = _to_string_array(data.get("tapes_consumed", []))
 	sd.bands_unlocked = _to_string_array(data.get("bands_unlocked", []))
+	sd.tuning_time = _to_tuning_time_dict(data.get("tuning_time", {}))
 	sd.call_history = data.get("call_history", [])
 	sd.station_degradation = data.get("station_degradation", 0)
 	sd.ending_flags = data.get("ending_flags", {})
@@ -118,6 +123,7 @@ func to_dict() -> Dictionary:
 		"tapes_collected": tapes_collected,
 		"tapes_consumed": tapes_consumed,
 		"bands_unlocked": bands_unlocked,
+		"tuning_time": tuning_time,
 		"call_history": call_history,
 		"station_degradation": station_degradation,
 		"ending_flags": ending_flags,
@@ -163,4 +169,13 @@ static func _to_string_array(arr: Array) -> Array[String]:
 	var result: Array[String] = []
 	for item in arr:
 		result.append(str(item))
+	return result
+
+
+## Convert a Dictionary from JSON (string keys) to int keys for tuning_time.
+static func _to_tuning_time_dict(d: Dictionary) -> Dictionary:
+	var result: Dictionary = {}
+	for key in d.keys():
+		var ikey: int = int(key)
+		result[ikey] = float(d[key])
 	return result

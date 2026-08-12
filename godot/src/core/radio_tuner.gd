@@ -1,5 +1,6 @@
 # radio_tuner.gd — Core radio frequency tuning system
 # DEA-97: Radio Tuning System
+# DEA-99: Band system, cross-pollination, PIRATE always-drift, ████████ reveal
 # Source: GDD radio tuning spec (docs/plans/redesign-gdd.md lines 850-1020)
 class_name RadioTuner
 extends Node
@@ -16,6 +17,9 @@ signal signal_changed(signal_value: float)
 ## Emitted when fine tuning is enabled or disabled.
 signal fine_tune_changed(active: bool)
 
+## Emitted when the ████████ (redacted) band becomes active (DEA-99).
+signal redacted_band_revealed()
+
 ## Signal quality tiers based on GDD thresholds.
 enum SignalQuality {
 	DEAD_AIR,   ## signal < 20
@@ -24,14 +28,23 @@ enum SignalQuality {
 	CLEAR,      ## signal > 80
 }
 
+## Band id for the ████████ (redacted) band.
+const REDACTED_BAND_ID: int = 4
+
+## Band id for PIRATE band (always-drifts).
+const PIRATE_BAND_ID: int = 6
+
+## Cross-pollination multiplier for non-native bands.
+const NON_NATIVE_MULTIPLIER: float = 0.4
+
 ## Band configuration resource containing all 8 bands.
 @export var band_config: BandConfig
 
-## Minimum tunable frequency in MHz.
-const FREQ_MIN: float = 87.5
+## Minimum tunable frequency in MHz (LIMINAL min).
+const FREQ_MIN: float = 76.0
 
-## Maximum tunable frequency in MHz.
-const FREQ_MAX: float = 173.0
+## Maximum tunable frequency in MHz (HISTORICAL max).
+const FREQ_MAX: float = 1700.0
 
 ## Frequency change per tuning tick (MHz).
 const TUNE_STEP: float = 0.05
@@ -48,10 +61,18 @@ var current_band_id: int = 0
 ## Whether fine tuning is active (L2/LT held).
 var fine_tuning: bool = false
 
-# --- Internal drift state (PIRATE band) ---
+## Current phase for cross-pollination (0=P1→LIVING, 1=P2→LIMINAL, 2=P3→LOST, 3=P4→████████)
+var current_phase: int = 0
+
+# --- Internal drift state ---
 
 var _drift_offset: float = 0.0
 var _drift_timer: float = 0.0
+
+# --- PIRATE always-drift state (updates regardless of active band) ---
+
+var _pirate_drift_offset: float = 0.0
+var _pirate_drift_timer: float = 0.0
 
 
 func _ready() -> void:
@@ -65,6 +86,7 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	if band_config == null:
 		return
+	_update_pirate_drift(delta)
 	_update_drift(delta)
 
 
@@ -95,8 +117,9 @@ func set_band(band_id: int) -> void:
 	var count: int = band_config.get_band_count()
 	if band_id < 0 or band_id >= count:
 		return
+	var prev_band: int = current_band_id
 	current_band_id = band_id
-	# Reset drift state when switching bands.
+	# Reset drift state when switching bands (PIRATE uses its own always-drift).
 	_drift_offset = 0.0
 	_drift_timer = 0.0
 	# Set frequency to the band's center.
@@ -105,6 +128,9 @@ func set_band(band_id: int) -> void:
 		current_frequency = clamp(band.center_frequency, FREQ_MIN, FREQ_MAX)
 		frequency_changed.emit(current_frequency)
 	band_changed.emit(band_id)
+	# Emit ████████ reveal signal when switching to the redacted band.
+	if band_id == REDACTED_BAND_ID and prev_band != REDACTED_BAND_ID:
+		redacted_band_revealed.emit()
 	_emit_signal_if_changed()
 
 
@@ -134,6 +160,7 @@ func set_fine_tuning(active: bool) -> void:
 ## Calculate the current signal strength (0-100) based on frequency offset from center.
 ## Formula: signal = max(0, 100 - (abs(currentFreq - centerFreq) * sensitivity))
 ## When fine tuning, sensitivity is multiplied by FINE_TUNE_MULTIPLIER (wider sweet spot).
+## Cross-pollination: non-native bands get signal × 0.4 (DEA-99).
 func get_signal() -> float:
 	if band_config == null:
 		return 0.0
@@ -143,7 +170,11 @@ func get_signal() -> float:
 	var center: float = get_current_center()
 	var sens: float = get_current_sensitivity()
 	var offset: float = abs(current_frequency - center)
-	return max(0.0, 100.0 - (offset * sens))
+	var raw_signal: float = max(0.0, 100.0 - (offset * sens))
+	# Apply cross-pollination multiplier for non-native bands.
+	if not _is_native_band(current_band_id):
+		raw_signal *= NON_NATIVE_MULTIPLIER
+	return raw_signal
 
 
 ## Get the current band's center frequency, including drift offset if applicable.
@@ -153,6 +184,9 @@ func get_current_center() -> float:
 	var band: BandData = band_config.get_band(current_band_id)
 	if band == null:
 		return 0.0
+	# PIRATE band uses the always-drift offset.
+	if current_band_id == PIRATE_BAND_ID:
+		return band.center_frequency + _pirate_drift_offset
 	return band.center_frequency + _drift_offset
 
 
@@ -199,18 +233,64 @@ func is_in_band_range() -> bool:
 	return current_frequency >= band.freq_range_min and current_frequency <= band.freq_range_max
 
 
-# --- Internal: Drift handling for PIRATE band ---
+## Check if the ████████ (redacted) band is currently active (DEA-99).
+func is_redacted_band_active() -> bool:
+	return current_band_id == REDACTED_BAND_ID
 
+
+## Set the current phase for cross-pollination calculations.
+func set_phase(phase: int) -> void:
+	current_phase = phase
+
+
+# --- Internal: Cross-pollination ---
+
+## Map phase to native band id: P1→LIVING(0), P2→LIMINAL(1), P3→LOST(2), P4→████████(4).
+func _get_native_band_id(phase: int) -> int:
+	match phase:
+		0: return 0  # PHASE_1_STATION → LIVING
+		1: return 1  # PHASE_2_BREAK → LIMINAL
+		2: return 2  # PHASE_3_JOURNEY → LOST
+		3: return 4  # PHASE_4_DESCENT → ████████
+		_: return 0
+
+
+## Check if the current band is the native band for the current phase.
+func _is_native_band(band_id: int) -> bool:
+	return band_id == _get_native_band_id(current_phase)
+
+
+# --- Internal: Drift handling ---
+
+## PIRATE band drifts ±0.3 MHz every 30 seconds, regardless of which band is active.
+func _update_pirate_drift(delta: float) -> void:
+	if band_config == null:
+		return
+	var pirate: BandData = band_config.get_band(PIRATE_BAND_ID)
+	if pirate == null or not pirate.drifts:
+		return
+	_pirate_drift_timer += delta
+	if _pirate_drift_timer >= pirate.drift_interval:
+		_pirate_drift_timer = 0.0
+		_pirate_drift_offset = randf_range(-pirate.drift_amount, pirate.drift_amount)
+		# If PIRATE is currently active, emit signal change.
+		if current_band_id == PIRATE_BAND_ID:
+			_emit_signal_if_changed()
+
+
+## Regular drift for the current active band (if it drifts and isn't PIRATE).
 func _update_drift(delta: float) -> void:
 	var band: BandData = band_config.get_band(current_band_id)
 	if band == null or not band.drifts:
 		_drift_offset = 0.0
 		_drift_timer = 0.0
 		return
+	# PIRATE band uses the always-drift system, not this one.
+	if current_band_id == PIRATE_BAND_ID:
+		return
 	_drift_timer += delta
 	if _drift_timer >= band.drift_interval:
 		_drift_timer = 0.0
-		# Random drift: ±drift_amount
 		_drift_offset = randf_range(-band.drift_amount, band.drift_amount)
 		_emit_signal_if_changed()
 
