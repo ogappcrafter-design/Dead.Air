@@ -94,6 +94,23 @@ func _init() -> void:
 			print("  [FAIL] %s::%s" % [signal_decay_tests.test_name, test_name])
 
 	print("")
+
+	# Run RadioStatic tests
+	print("Running RadioStatic tests...")
+	var radio_static_tests := preload("res://tests/test_radio_static.gd").new()
+	var rs_results: Dictionary = radio_static_tests.run_tests()
+	for test_name in rs_results.keys():
+		total_tests += 1
+		var passed: bool = rs_results[test_name]
+		if passed:
+			total_passed += 1
+			print("  [PASS] %s::%s" % ["RadioStatic", test_name])
+		else:
+			total_failed += 1
+			all_passed = false
+			print("  [FAIL] %s::%s" % ["RadioStatic", test_name])
+
+	print("")
 	print("=== Results ===")
 	print("Total: %d | Passed: %d | Failed: %d" % [total_tests, total_passed, total_failed])
 	print("ALL TESTS PASSED" if all_passed else "SOME TESTS FAILED")
