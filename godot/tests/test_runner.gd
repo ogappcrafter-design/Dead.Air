@@ -62,11 +62,24 @@ func _init() -> void:
 
 	print("")
 
+	# Run PhaseManager tests
+	print("Running PhaseManager tests...")
+	var phase_manager_tests := preload("res://tests/test_phase_manager.gd").new()
+	var pm_results: Dictionary = phase_manager_tests.run_tests()
+	for test_name in pm_results.keys():
+		total_tests += 1
+		var passed: bool = pm_results[test_name]
+		if passed:
+			total_passed += 1
+			print("  [PASS] %s::%s" % [phase_manager_tests.test_name, test_name])
+		else:
+			total_failed += 1
+			all_passed = false
+			print("  [FAIL] %s::%s" % [phase_manager_tests.test_name, test_name])
+
+	print("")
 	print("=== Results ===")
 	print("Total: %d | Passed: %d | Failed: %d" % [total_tests, total_passed, total_failed])
-	if all_passed:
-		print("ALL TESTS PASSED")
-	else:
-		print("SOME TESTS FAILED")
+	print("ALL TESTS PASSED" if all_passed else "SOME TESTS FAILED")
 
 	quit(0 if all_passed else 1)

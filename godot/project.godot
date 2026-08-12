@@ -16,6 +16,8 @@ config/icon="res://icon.svg"
 
 ; DEA-152: Central input coordinator (singleton)
 InputManager="*res://src/core/input_manager.gd"
+; DEA-106: Phase state machine (singleton) — syncs with InputManager
+PhaseManager="*res://src/core/phase_manager.gd"
 
 [display]
 
