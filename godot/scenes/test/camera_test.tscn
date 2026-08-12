@@ -1,0 +1,103 @@
+[gd_scene load_steps=14 format=3 uid="uid://dea108cameratest"]
+
+[ext_resource type="Script" path="res://src/visual/camera_rig.gd" id="1_rig"]
+[ext_resource type="Script" path="res://src/visual/camera_zone.gd" id="2_zone"]
+[ext_resource type="Script" path="res://src/visual/camera_angle.gd" id="3_angle"]
+[ext_resource type="Script" path="res://src/entities/player.gd" id="4_player"]
+[ext_resource type="Script" path="res://src/visual/screen_relative_movement.gd" id="5_move"]
+
+[sub_resource type="Resource" id="angle_a"]
+script = ExtResource("3_angle")
+position = Vector3(0, 5, 10)
+rotation_degrees = Vector3(-35, 0, 0)
+fov = 65.0
+max_pan_degrees = 15.0
+max_tilt_degrees = 5.0
+tracking_strength = 0.5
+tracking_lerp_speed = 4.0
+use_dof = false
+angle_id = "TEST_A"
+
+[sub_resource type="Resource" id="angle_b"]
+script = ExtResource("3_angle")
+position = Vector3(10, 5, 0)
+rotation_degrees = Vector3(-35, -90, 0)
+fov = 55.0
+max_pan_degrees = 10.0
+max_tilt_degrees = 3.0
+tracking_strength = 0.7
+tracking_lerp_speed = 5.0
+use_dof = false
+angle_id = "TEST_B"
+
+[sub_resource type="BoxShape3D" id="shape_a"]
+size = Vector3(10, 4, 10)
+
+[sub_resource type="BoxShape3D" id="shape_b"]
+size = Vector3(10, 4, 10)
+
+[sub_resource type="CapsuleShape3D" id="player_col"]
+radius = 0.3
+height = 1.0
+
+[sub_resource type="CapsuleMesh" id="player_mesh"]
+radius = 0.3
+height = 1.0
+
+[sub_resource type="StandardMaterial3D" id="floor_mat"]
+albedo_color = Color(0.3, 0.3, 0.3, 1)
+
+[sub_resource type="BoxMesh" id="floor_mesh"]
+size = Vector3(20, 0.1, 20)
+
+[node name="CameraTest" type="Node3D"]
+
+[node name="Floor" type="MeshInstance3D" parent="."]
+mesh = SubResource("floor_mesh")
+material_override = SubResource("floor_mat")
+
+[node name="FloorBody" type="StaticBody3D" parent="Floor"]
+collision_layer = 1
+collision_mask = 1
+
+[node name="FloorCollision" type="CollisionShape3D" parent="Floor/FloorBody"]
+shape = SubResource("floor_mesh")
+
+[node name="CameraRig" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.819, 0.574, 0, -0.574, 0.819, 0, 5, 10)
+script = ExtResource("1_rig")
+
+[node name="ZoneA" type="Area3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -5)
+script = ExtResource("2_zone")
+camera_angle = SubResource("angle_a")
+use_transition = true
+zone_priority = 1
+
+[node name="CollisionShapeA" type="CollisionShape3D" parent="ZoneA"]
+shape = SubResource("shape_a")
+
+[node name="ZoneB" type="Area3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0, 0)
+script = ExtResource("2_zone")
+camera_angle = SubResource("angle_b")
+use_transition = true
+zone_priority = 1
+
+[node name="CollisionShapeB" type="CollisionShape3D" parent="ZoneB"]
+shape = SubResource("shape_b")
+
+[node name="Player" type="CharacterBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+script = ExtResource("4_player")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Player"]
+mesh = SubResource("player_mesh")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Player"]
+shape = SubResource("player_col")
+
+[node name="ScreenRelativeMovement" type="Node" parent="Player"]
+script = ExtResource("5_move")
+move_speed = 3.0
+acceleration = 10.0

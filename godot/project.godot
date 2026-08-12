@@ -146,3 +146,6 @@ skip_call={
 ; DEA-153: Save system autoloads
 SaveManager="*res://src/core/save_manager.gd"
 TapeInventory="*res://src/core/tape_inventory.gd"
+
+; DEA-108: Camera system coordinator (singleton)
+CameraManager="*res://src/visual/camera_manager.gd"
