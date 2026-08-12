@@ -76,6 +76,22 @@ func _init() -> void:
 			total_failed += 1
 			all_passed = false
 			print("  [FAIL] %s::%s" % [phase_manager_tests.test_name, test_name])
+	print("")
+
+	# Run SignalDecay tests
+	print("Running SignalDecay tests...")
+	var signal_decay_tests := preload("res://tests/test_signal_decay.gd").new()
+	var sig_results: Dictionary = signal_decay_tests.run_tests()
+	for test_name in sig_results.keys():
+		total_tests += 1
+		var passed: bool = sig_results[test_name]
+		if passed:
+			total_passed += 1
+			print("  [PASS] %s::%s" % [signal_decay_tests.test_name, test_name])
+		else:
+			total_failed += 1
+			all_passed = false
+			print("  [FAIL] %s::%s" % [signal_decay_tests.test_name, test_name])
 
 	print("")
 	print("=== Results ===")
