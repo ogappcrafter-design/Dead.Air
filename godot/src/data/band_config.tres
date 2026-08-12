@@ -1,7 +1,7 @@
-; band_config.tres — All 5 sacred bands (DEA-149)
-; Source: data/calls.js BANDS + BAND_VIBES (verbatim)
+; band_config.tres — All 8 bands: 5 sacred + 3 extended (DEA-149, DEA-97)
+; Source: data/calls.js BANDS + BAND_VIBES + GDD radio tuning spec
 ; Godot 4 / format=3
-[gd_resource type="Resource" script_class="BandConfig" load_steps=8 format=3]
+[gd_resource type="Resource" script_class="BandConfig" load_steps=11 format=3]
 
 [ext_resource type="Script" path="res://src/data/band_config.gd" id="1"]
 [ext_resource type="Script" path="res://src/data/band_data.gd" id="2"]
@@ -14,33 +14,61 @@ freq = "88.7 FM"
 color = 1, 0.549, 0, 1
 unlock_at = 0
 vibe = "Eerily normal callers. Mundane conversations that reveal something deeply wrong in the last line. Suburban horror. The banal made sinister."
+center_frequency = 88.7
+sensitivity = 8.0
+freq_range_min = 87.5
+freq_range_max = 92.0
+drifts = false
+drift_amount = 0.3
+drift_interval = 30.0
 
 [sub_resource type="Resource" id="Band_1"]
 script = ExtResource("2")
 id = 1
 name = "LIMINAL"
-freq = "102.3 FM"
+freq = "94.0 FM"
 color = 0.8, 1, 0, 1
 unlock_at = 4
 vibe = "Time loops, echoes, callers from repeated moments or wrong timelines. Liminal spaces between was and is."
+center_frequency = 94.0
+sensitivity = 6.0
+freq_range_min = 92.0
+freq_range_max = 96.5
+drifts = false
+drift_amount = 0.3
+drift_interval = 30.0
 
 [sub_resource type="Resource" id="Band_2"]
 script = ExtResource("2")
 id = 2
 name = "LOST"
-freq = "117.8 AM"
+freq = "98.5 FM"
 color = 0, 1, 0.816, 1
 unlock_at = 8
 vibe = "The dead. The missing. Those who needed to say one last thing before they couldn't. Emotional, devastating, and real."
+center_frequency = 98.5
+sensitivity = 4.0
+freq_range_min = 96.5
+freq_range_max = 101.0
+drifts = false
+drift_amount = 0.3
+drift_interval = 30.0
 
 [sub_resource type="Resource" id="Band_3"]
 script = ExtResource("2")
 id = 3
 name = "CLASSIFIED"
-freq = "███.█ FM"
+freq = "103.0 FM"
 color = 1, 0.2, 0.4, 1
 unlock_at = 12
 vibe = "Government black sites, rogue AI, whistleblowers, classified transmissions intercepted by accident."
+center_frequency = 103.0
+sensitivity = 3.0
+freq_range_min = 101.0
+freq_range_max = 105.5
+drifts = false
+drift_amount = 0.3
+drift_interval = 30.0
 
 [sub_resource type="Resource" id="Band_4"]
 script = ExtResource("2")
@@ -50,7 +78,62 @@ freq = "???.?"
 color = 1, 1, 1, 1
 unlock_at = 15
 vibe = "Something ancient. The frequency itself gaining awareness. Transmissions from the dawn of radio. Things with no name."
+center_frequency = 106.5
+sensitivity = 1.5
+freq_range_min = 105.5
+freq_range_max = 108.0
+drifts = false
+drift_amount = 0.3
+drift_interval = 30.0
+
+[sub_resource type="Resource" id="Band_5"]
+script = ExtResource("2")
+id = 5
+name = "WEATHER"
+freq = "162.0 FM"
+color = 0.267, 0.533, 1, 1
+unlock_at = 8
+vibe = "Automated weather broadcasts. Static-laced forecasts. Numbers stations masquerading as weather."
+center_frequency = 162.0
+sensitivity = 5.0
+freq_range_min = 160.0
+freq_range_max = 164.0
+drifts = false
+drift_amount = 0.3
+drift_interval = 30.0
+
+[sub_resource type="Resource" id="Band_6"]
+script = ExtResource("2")
+id = 6
+name = "PIRATE"
+freq = "166.0 FM"
+color = 1, 0.267, 1, 1
+unlock_at = 10
+vibe = "Rogue broadcasters. Underground signals. Voices from the margins. The center is never where you left it."
+center_frequency = 166.0
+sensitivity = 2.5
+freq_range_min = 164.0
+freq_range_max = 168.0
+drifts = true
+drift_amount = 0.3
+drift_interval = 30.0
+
+[sub_resource type="Resource" id="Band_7"]
+script = ExtResource("2")
+id = 7
+name = "HISTORICAL"
+freq = "170.0 AM"
+color = 0.533, 0.533, 0.533, 1
+unlock_at = 100
+vibe = "Echoes from the past. Old broadcasts trapped in the static. Voices that should have faded long ago."
+center_frequency = 170.0
+sensitivity = 4.0
+freq_range_min = 168.0
+freq_range_max = 172.0
+drifts = false
+drift_amount = 0.3
+drift_interval = 30.0
 
 [resource]
 script = ExtResource("1")
-bands = [SubResource("Band_0"), SubResource("Band_1"), SubResource("Band_2"), SubResource("Band_3"), SubResource("Band_4")]
+bands = [SubResource("Band_0"), SubResource("Band_1"), SubResource("Band_2"), SubResource("Band_3"), SubResource("Band_4"), SubResource("Band_5"), SubResource("Band_6"), SubResource("Band_7")]

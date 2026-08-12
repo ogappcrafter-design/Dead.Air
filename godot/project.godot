@@ -66,14 +66,15 @@ move_down={
 "events": [Object(InputEventJoypadMotion,"axis":1,"axis_value":1.0,"deadzone":0.5), Object(InputEventKey,"keycode":83,"unicode":115,"echo":false)]
 }
 
-; Radio tuning — Right Stick X (analog). Mouse handled in InputManager code.
+; Radio tuning — Right Stick X (explore mode) + Left Stick X (radio mode) + A/D keys
+; DEA-97: Added Left Stick X and A,D keyboard for radio mode tuning per GDD spec
 radio_tune_left={
 "deadzone": 0.5,
-"events": [Object(InputEventJoypadMotion,"axis":2,"axis_value":-1.0,"deadzone":0.5)]
+"events": [Object(InputEventJoypadMotion,"axis":2,"axis_value":-1.0,"deadzone":0.5), Object(InputEventJoypadMotion,"axis":0,"axis_value":-1.0,"deadzone":0.5), Object(InputEventKey,"keycode":65,"unicode":97,"echo":false)]
 }
 radio_tune_right={
 "deadzone": 0.5,
-"events": [Object(InputEventJoypadMotion,"axis":2,"axis_value":1.0,"deadzone":0.5)]
+"events": [Object(InputEventJoypadMotion,"axis":2,"axis_value":1.0,"deadzone":0.5), Object(InputEventJoypadMotion,"axis":0,"axis_value":1.0,"deadzone":0.5), Object(InputEventKey,"keycode":68,"unicode":100,"echo":false)]
 }
 
 ; Fine tune — L2/LT (axis 4) / Shift (hold modifier)

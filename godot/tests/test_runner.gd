@@ -43,10 +43,30 @@ func _init() -> void:
 			total_failed += 1
 			all_passed = false
 			print("  [FAIL] %s::%s" % [save_manager_tests.test_name, test_name])
+	print("")
+
+	# Run RadioTuner tests
+	print("Running RadioTuner tests...")
+	var radio_tuner_tests := preload("res://tests/test_radio_tuner.gd").new()
+	var rt_results: Dictionary = radio_tuner_tests.run_tests()
+	for test_name in rt_results.keys():
+		total_tests += 1
+		var passed: bool = rt_results[test_name]
+		if passed:
+			total_passed += 1
+			print("  [PASS] %s::%s" % ["RadioTuner", test_name])
+		else:
+			total_failed += 1
+			all_passed = false
+			print("  [FAIL] %s::%s" % ["RadioTuner", test_name])
 
 	print("")
+
 	print("=== Results ===")
 	print("Total: %d | Passed: %d | Failed: %d" % [total_tests, total_passed, total_failed])
-	print(all_passed ? "ALL TESTS PASSED" : "SOME TESTS FAILED")
+	if all_passed:
+		print("ALL TESTS PASSED")
+	else:
+		print("SOME TESTS FAILED")
 
 	quit(0 if all_passed else 1)
