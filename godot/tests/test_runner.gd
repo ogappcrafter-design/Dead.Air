@@ -28,6 +28,7 @@ func _run_tests() -> void:
 		["SaveManager", "res://tests/test_save_manager.gd"],
 		["RadioTuner", "res://tests/test_radio_tuner.gd"],
 		["DreadComposure", "res://tests/test_dread_composure.gd"],
+		["DreadAudio", "res://tests/test_dread_audio.gd"],
 		["DifficultyManager", "res://tests/test_difficulty_manager.gd"],
 		["StingerSystem", "res://tests/test_stinger_system.gd"],
 	]
