@@ -62,6 +62,8 @@ The shipped React Native palette (theme.ts) differs from the GDD palette:
 
 **Resolution**: GDD is source truth per task spec. Band colors in `band_config.tres` use calls.js values (matching theme.ts), as those are the shipped originals. Godot rendering code should use GDD palette for UI/post-processing. This discrepancy is noted for downstream tasks (DEA-97, DEA-99, DEA-107) to resolve.
 
+**DEA-107 update:** The CRT post-processing shader (`assets/shaders/crt_postprocess.gdshader`) and controller (`src/visual/crt_postprocess.gd`) use the GDD palette (amber #FFA500, green #00FF41, red #FF3300, background #0A0A0A). The post-processing color palette discrepancy is resolved; remaining UI palette work tracked under DEA-97 and DEA-99.
+
 ### No Tailwind Config
 
 No `tailwind.config.js` or `tailwind.config.ts` was found in the repository. The React Native app uses theme.ts directly.

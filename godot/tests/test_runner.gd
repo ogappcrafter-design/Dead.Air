@@ -31,6 +31,7 @@ func _run_tests() -> void:
 		["DreadAudio", "res://tests/test_dread_audio.gd"],
 		["DifficultyManager", "res://tests/test_difficulty_manager.gd"],
 		["StingerSystem", "res://tests/test_stinger_system.gd"],
+		["CRTShader", "res://tests/test_crt_shader.gd"],
 	]
 
 	for suite in test_suites:
