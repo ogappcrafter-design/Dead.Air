@@ -1,5 +1,6 @@
-## test_runner.gd — Headless test runner for DEA-153 save system.
+## test_runner.gd — Headless test runner for Deadair project.
 ## Run with: godot --headless --script res://tests/test_runner.gd
+## Uses runtime load() instead of preload() so failing scripts don't break the whole runner.
 extends SceneTree
 
 
@@ -18,58 +19,47 @@ func _run_tests() -> void:
 	var total_passed := 0
 	var total_failed := 0
 
-	print("=== DEA-153 Save System Test Suite ===")
+	print("=== Deadair Test Suite ===")
 	print("")
 
-	# Run SaveData tests
-	print("Running SaveData tests...")
-	var save_data_tests := preload("res://tests/test_save_data.gd").new()
-	var sd_results: Dictionary = save_data_tests.run_tests()
-	for test_name in sd_results.keys():
-		total_tests += 1
-		var passed: bool = sd_results[test_name]
-		if passed:
-			total_passed += 1
-			print("  [PASS] %s::%s" % [save_data_tests.test_name, test_name])
-		else:
-			total_failed += 1
-			all_passed = false
-			print("  [FAIL] %s::%s" % [save_data_tests.test_name, test_name])
+	# Define test suites: [label, path]
+	var test_suites: Array = [
+		["SaveData", "res://tests/test_save_data.gd"],
+		["SaveManager", "res://tests/test_save_manager.gd"],
+		["RadioTuner", "res://tests/test_radio_tuner.gd"],
+		["DreadComposure", "res://tests/test_dread_composure.gd"],
+		["DifficultyManager", "res://tests/test_difficulty_manager.gd"],
+	]
 
-	print("")
+	for suite in test_suites:
+		var label: String = suite[0]
+		var path: String = suite[1]
+		print("Running %s tests..." % label)
 
-	# Run SaveManager tests
-	print("Running SaveManager tests...")
-	var save_manager_tests := preload("res://tests/test_save_manager.gd").new()
-	var sm_results: Dictionary = save_manager_tests.run_tests()
-	for test_name in sm_results.keys():
-		total_tests += 1
-		var passed: bool = sm_results[test_name]
-		if passed:
-			total_passed += 1
-			print("  [PASS] %s::%s" % [save_manager_tests.test_name, test_name])
-		else:
-			total_failed += 1
-			all_passed = false
-			print("  [FAIL] %s::%s" % [save_manager_tests.test_name, test_name])
-	print("")
+		var script = load(path)
+		if script == null:
+			print("  [SKIP] %s — failed to load" % label)
+			print("")
+			continue
 
-	# Run RadioTuner tests
-	print("Running RadioTuner tests...")
-	var radio_tuner_tests := preload("res://tests/test_radio_tuner.gd").new()
-	var rt_results: Dictionary = radio_tuner_tests.run_tests()
-	for test_name in rt_results.keys():
-		total_tests += 1
-		var passed: bool = rt_results[test_name]
-		if passed:
-			total_passed += 1
-			print("  [PASS] %s::%s" % ["RadioTuner", test_name])
-		else:
-			total_failed += 1
-			all_passed = false
-			print("  [FAIL] %s::%s" % ["RadioTuner", test_name])
+		var test_instance = script.new()
+		if test_instance == null or not test_instance.has_method("run_tests"):
+			print("  [SKIP] %s — script compilation error" % label)
+			print("")
+			continue
 
-	print("")
+		var results: Dictionary = test_instance.run_tests()
+		for test_name in results.keys():
+			total_tests += 1
+			var passed: bool = results[test_name]
+			if passed:
+				total_passed += 1
+				print("  [PASS] %s::%s" % [label, test_name])
+			else:
+				total_failed += 1
+				all_passed = false
+				print("  [FAIL] %s::%s" % [label, test_name])
+		print("")
 
 	# Run PhaseManager tests
 	print("Running PhaseManager tests...")

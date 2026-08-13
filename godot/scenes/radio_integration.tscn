@@ -1,0 +1,37 @@
+[gd_scene load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://src/core/radio_integration.gd" id="1_integration"]
+[ext_resource type="Script" path="res://src/core/radio_tuner.gd" id="2_tuner"]
+[ext_resource type="Script" path="res://src/core/signal_strength.gd" id="3_signal"]
+[ext_resource type="Script" path="res://src/core/dread_composure.gd" id="4_dread"]
+[ext_resource type="Script" path="res://src/core/difficulty_manager.gd" id="5_diff"]
+[ext_resource type="Resource" path="res://src/data/band_config.tres" id="6_band"]
+[ext_resource type="Script" path="res://src/ui/frequency_dial.gd" id="7_dial"]
+
+[node name="RadioIntegration" type="Node"]
+script = ExtResource("1_integration")
+radio_tuner = NodePath("RadioTuner")
+signal_strength = NodePath("SignalStrength")
+frequency_dial = NodePath("FrequencyDial")
+dread_composure = NodePath("DreadComposure")
+difficulty_manager = NodePath("DifficultyManager")
+
+[node name="RadioTuner" type="Node" parent="."]
+script = ExtResource("2_tuner")
+band_config = ExtResource("6_band")
+
+[node name="SignalStrength" type="Node" parent="."]
+script = ExtResource("3_signal")
+radio_tuner = NodePath("../RadioTuner")
+
+[node name="DreadComposure" type="Node" parent="."]
+script = ExtResource("4_dread")
+signal_strength = NodePath("../SignalStrength")
+radio_tuner = NodePath("../RadioTuner")
+
+[node name="DifficultyManager" type="Node" parent="."]
+script = ExtResource("5_diff")
+
+[node name="FrequencyDial" type="Control" parent="."]
+script = ExtResource("7_dial")
+radio_tuner = NodePath("../RadioTuner")

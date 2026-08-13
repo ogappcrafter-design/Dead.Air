@@ -91,11 +91,11 @@ func _process(delta: float) -> void:
 
 
 ## Tune the frequency by a direction (-1.0 for down, +1.0 for up, fractional for analog stick).
-## Steps by TUNE_STEP increments. Clamps to FREQ_MIN..FREQ_MAX.
+## Steps by TUNE_STEP scaled by the magnitude of direction. Clamps to FREQ_MIN..FREQ_MAX.
 func tune(direction: float) -> void:
 	if band_config == null:
 		return
-	var step: float = TUNE_STEP * sign(direction)
+	var step: float = TUNE_STEP * clampf(direction, -1.0, 1.0)
 	current_frequency = clamp(current_frequency + step, FREQ_MIN, FREQ_MAX)
 	frequency_changed.emit(current_frequency)
 	_emit_signal_if_changed()

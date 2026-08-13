@@ -346,7 +346,7 @@ func get_tune_value() -> float:
 
 	# Fine tune modifier reduces tuning speed
 	if is_action_held("fine_tune") and _mode != ControlEnums.ControlMode.HIDE:
-		tune *= 0.25  # Fine tune = 25% speed
+		tune *= 0.5  # Fine tune = 50% speed (GDD: sensitivity ×0.5)
 
 	return tune
 
