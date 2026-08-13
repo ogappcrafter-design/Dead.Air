@@ -35,6 +35,8 @@ StingerSystem="*res://src/audio/stinger_system.gd"
 CallData="*res://src/data/call_data.gd"
 CallManager="*res://src/core/call_manager.gd"
 CallPlayer="*res://src/core/call_player.gd"
+; StationState — shift tracking, degradation, wrongness events (singleton)
+StationState="*res://src/core/station_state.gd"
 
 [display]
 

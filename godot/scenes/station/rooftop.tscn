@@ -1,0 +1,129 @@
+[gd_scene load_steps=11 format=3 uid="uid://bstation05roof"]
+
+[ext_resource type="Script" path="res://src/visual/camera_zone.gd" id="1_zone"]
+[ext_resource type="Script" path="res://src/visual/camera_angle.gd" id="2_angle"]
+[ext_resource type="Script" path="res://src/core/door_trigger.gd" id="3_door"]
+
+[sub_resource type="StandardMaterial3D" id="floor_mat"]
+albedo_color = Color(0.08, 0.08, 0.09, 1)
+
+[sub_resource type="StandardMaterial3D" id="railing_mat"]
+albedo_color = Color(0.1, 0.1, 0.1, 1)
+
+[sub_resource type="StandardMaterial3D" id="antenna_mat"]
+albedo_color = Color(0.15, 0.15, 0.17, 1)
+
+[sub_resource type="StandardMaterial3D" id="building_mat"]
+albedo_color = Color(0.05, 0.06, 0.1, 1)
+
+[sub_resource type="Resource" id="angle_r1"]
+script = ExtResource("2_angle")
+position = Vector3(82, 8, 0)
+rotation_degrees = Vector3(-30, 90, 0)
+fov = 65.0
+max_pan_degrees = 15.0
+max_tilt_degrees = 5.0
+tracking_strength = 0.5
+tracking_lerp_speed = 4.0
+angle_id = "R1"
+
+[sub_resource type="BoxShape3D" id="zone_r1_shape"]
+size = Vector3(5, 4, 5)
+
+[sub_resource type="BoxShape3D" id="door_shape"]
+size = Vector3(0.5, 2, 1)
+
+[node name="Rooftop" type="Node3D"]
+
+[node name="Floor" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+size = Vector3(5, 0.1, 5)
+material = SubResource("floor_mat")
+use_collision = true
+
+[node name="NorthRailing" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, -2.5)
+size = Vector3(5, 1, 0.1)
+material = SubResource("railing_mat")
+use_collision = true
+
+[node name="SouthRailing" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 2.5)
+size = Vector3(5, 1, 0.1)
+material = SubResource("railing_mat")
+use_collision = true
+
+[node name="EastRailing" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.5, 0.5, 0)
+size = Vector3(0.1, 1, 5)
+material = SubResource("railing_mat")
+use_collision = true
+
+[node name="WestRailingNorth" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.5, 0.5, -1.5)
+size = Vector3(0.1, 1, 2)
+material = SubResource("railing_mat")
+use_collision = true
+
+[node name="WestRailingSouth" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.5, 0.5, 1.5)
+size = Vector3(0.1, 1, 2)
+material = SubResource("railing_mat")
+use_collision = true
+
+[node name="AntennaMast" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5, 1.5, -1.5)
+size = Vector3(0.1, 3, 0.1)
+material = SubResource("antenna_mat")
+use_collision = true
+
+[node name="AntennaCrossbar" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5, 3.5, -1.5)
+size = Vector3(0.8, 0.05, 0.05)
+material = SubResource("antenna_mat")
+use_collision = true
+
+[node name="Skyline1" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 1.5, -1)
+size = Vector3(1, 3, 0.1)
+material = SubResource("building_mat")
+
+[node name="Skyline2" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 2.5, 0.5)
+size = Vector3(1.5, 5, 0.1)
+material = SubResource("building_mat")
+
+[node name="Skyline3" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.5, 1, 1.5)
+size = Vector3(0.8, 2, 0.1)
+material = SubResource("building_mat")
+
+[node name="Moonlight" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.866, 0.25, 0.433, 0, 0.866, -0.5, -0.5, 0.433, 0.75, 0, 10, 5)
+light_color = Color(0.4, 0.5, 0.7, 1)
+light_energy = 0.5
+
+[node name="AmbientLight" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 0)
+light_color = Color(0.3, 0.4, 0.6, 1)
+light_energy = 0.3
+light_range = 10.0
+
+[node name="ZoneR1" type="Area3D" parent="." groups=["camera_zone"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+script = ExtResource("1_zone")
+camera_angle = SubResource("angle_r1")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ZoneR1"]
+shape = SubResource("zone_r1_shape")
+
+[node name="DoorToBackOffice" type="Area3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.3, 0.5, 0)
+script = ExtResource("3_door")
+target_position = Vector3(60.3, 0.5, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="DoorToBackOffice"]
+shape = SubResource("door_shape")
+
+[node name="AntennaMarker" type="Marker3D" parent="." groups=["interactable"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5, 1.5, -1.5)

@@ -1,0 +1,149 @@
+[gd_scene load_steps=12 format=3 uid="uid://bstation02hall"]
+
+[ext_resource type="Script" path="res://src/visual/camera_zone.gd" id="1_zone"]
+[ext_resource type="Script" path="res://src/visual/camera_angle.gd" id="2_angle"]
+[ext_resource type="Script" path="res://src/core/door_trigger.gd" id="3_door"]
+
+[sub_resource type="StandardMaterial3D" id="floor_mat"]
+albedo_color = Color(0.1, 0.1, 0.09, 1)
+
+[sub_resource type="StandardMaterial3D" id="wall_mat"]
+albedo_color = Color(0.18, 0.18, 0.2, 1)
+
+[sub_resource type="StandardMaterial3D" id="ceiling_mat"]
+albedo_color = Color(0.22, 0.22, 0.24, 1)
+
+[sub_resource type="Resource" id="angle_h1"]
+script = ExtResource("2_angle")
+position = Vector3(22, 2.5, 0)
+rotation_degrees = Vector3(-20, 90, 0)
+fov = 65.0
+max_pan_degrees = 15.0
+max_tilt_degrees = 5.0
+tracking_strength = 0.5
+tracking_lerp_speed = 4.0
+angle_id = "H1"
+
+[sub_resource type="BoxShape3D" id="zone_h1_shape"]
+size = Vector3(4, 3, 1.5)
+
+[sub_resource type="BoxShape3D" id="door_booth_shape"]
+size = Vector3(0.5, 2, 1)
+
+[sub_resource type="BoxShape3D" id="door_bathroom_shape"]
+size = Vector3(0.8, 2, 0.5)
+
+[sub_resource type="BoxShape3D" id="door_office_shape"]
+size = Vector3(0.8, 2, 0.5)
+
+[node name="Hallway" type="Node3D"]
+
+[node name="Floor" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+size = Vector3(4, 0.1, 1.5)
+material = SubResource("floor_mat")
+use_collision = true
+
+[node name="Ceiling" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, 0)
+size = Vector3(4, 0.1, 1.5)
+material = SubResource("ceiling_mat")
+use_collision = true
+
+[node name="WestWallNorth" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 1.25, -0.625)
+size = Vector3(0.1, 2.5, 0.25)
+material = SubResource("wall_mat")
+use_collision = true
+
+[node name="WestWallSouth" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 1.25, 0.625)
+size = Vector3(0.1, 2.5, 0.25)
+material = SubResource("wall_mat")
+use_collision = true
+
+[node name="WestWallHeader" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 2.25, 0)
+size = Vector3(0.1, 0.5, 1)
+material = SubResource("wall_mat")
+use_collision = true
+
+[node name="EastWall" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 1.25, 0)
+size = Vector3(0.1, 2.5, 1.5)
+material = SubResource("wall_mat")
+use_collision = true
+
+[node name="NorthWallWest" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.7, 1.25, -0.75)
+size = Vector3(2.6, 2.5, 0.1)
+material = SubResource("wall_mat")
+use_collision = true
+
+[node name="NorthWallEast" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.7, 1.25, -0.75)
+size = Vector3(0.6, 2.5, 0.1)
+material = SubResource("wall_mat")
+use_collision = true
+
+[node name="NorthWallHeader" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 2.25, -0.75)
+size = Vector3(0.8, 0.5, 0.1)
+material = SubResource("wall_mat")
+use_collision = true
+
+[node name="SouthWallWest" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.7, 1.25, 0.75)
+size = Vector3(0.6, 2.5, 0.1)
+material = SubResource("wall_mat")
+use_collision = true
+
+[node name="SouthWallEast" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.7, 1.25, 0.75)
+size = Vector3(2.6, 2.5, 0.1)
+material = SubResource("wall_mat")
+use_collision = true
+
+[node name="SouthWallHeader" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 2.25, 0.75)
+size = Vector3(0.8, 0.5, 0.1)
+material = SubResource("wall_mat")
+use_collision = true
+
+[node name="HallwayLight" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.4, 0)
+light_color = Color(0.8, 0.9, 1, 1)
+light_energy = 1.0
+light_range = 5.0
+
+[node name="ZoneH1" type="Area3D" parent="." groups=["camera_zone"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+script = ExtResource("1_zone")
+camera_angle = SubResource("angle_h1")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ZoneH1"]
+shape = SubResource("zone_h1_shape")
+
+[node name="DoorToBooth" type="Area3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5, 0.5, 0)
+script = ExtResource("3_door")
+target_position = Vector3(0.5, 0.5, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="DoorToBooth"]
+shape = SubResource("door_booth_shape")
+
+[node name="DoorToBathroom" type="Area3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0.5, -0.5)
+script = ExtResource("3_door")
+target_position = Vector3(40, 0.5, 0.5)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="DoorToBathroom"]
+shape = SubResource("door_bathroom_shape")
+
+[node name="DoorToBackOffice" type="Area3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 0.5, 0.5)
+script = ExtResource("3_door")
+target_position = Vector3(60, 0.5, 0.5)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="DoorToBackOffice"]
+shape = SubResource("door_office_shape")

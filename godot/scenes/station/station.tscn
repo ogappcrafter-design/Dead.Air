@@ -1,0 +1,61 @@
+[gd_scene load_steps=14 format=3 uid="uid://bstation00root"]
+
+[ext_resource type="Script" path="res://src/core/station.gd" id="1_station"]
+[ext_resource type="Script" path="res://src/entities/player.gd" id="2_player"]
+[ext_resource type="Script" path="res://src/visual/camera_rig.gd" id="3_rig"]
+[ext_resource type="Script" path="res://src/visual/screen_relative_movement.gd" id="4_movement"]
+[ext_resource type="Script" path="res://src/visual/crt_postprocess.gd" id="5_crt"]
+[ext_resource type="PackedScene" path="res://scenes/station/booth.tscn" id="6_booth"]
+[ext_resource type="PackedScene" path="res://scenes/station/hallway.tscn" id="7_hallway"]
+[ext_resource type="PackedScene" path="res://scenes/station/bathroom.tscn" id="8_bathroom"]
+[ext_resource type="PackedScene" path="res://scenes/station/back_office.tscn" id="9_office"]
+[ext_resource type="PackedScene" path="res://scenes/station/rooftop.tscn" id="10_rooftop"]
+
+[sub_resource type="CapsuleShape3D" id="capsule_shape"]
+radius = 0.3
+height = 1.4
+
+[sub_resource type="StandardMaterial3D" id="player_mat"]
+albedo_color = Color(0.6, 0.6, 0.65, 1)
+
+[sub_resource type="CapsuleMesh" id="capsule_mesh"]
+radius = 0.3
+height = 1.4
+material = SubResource("player_mat")
+
+[node name="Station" type="Node3D"]
+script = ExtResource("1_station")
+
+[node name="Booth" parent="." instance=ExtResource("6_booth")]
+
+[node name="Hallway" parent="." instance=ExtResource("7_hallway")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 0, 0)
+
+[node name="Bathroom" parent="." instance=ExtResource("8_bathroom")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40, 0, 0)
+
+[node name="BackOffice" parent="." instance=ExtResource("9_office")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 60, 0, 0)
+
+[node name="Rooftop" parent="." instance=ExtResource("10_rooftop")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 80, 5, 0)
+
+[node name="Player" type="CharacterBody3D" parent="." groups=["player"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+script = ExtResource("2_player")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Player"]
+shape = SubResource("capsule_shape")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Player"]
+mesh = SubResource("capsule_mesh")
+
+[node name="ScreenRelativeMovement" type="Node" parent="Player"]
+script = ExtResource("4_movement")
+
+[node name="CameraRig" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 3)
+script = ExtResource("3_rig")
+
+[node name="CRTPostProcess" type="CanvasLayer" parent="."]
+script = ExtResource("5_crt")

@@ -1,0 +1,133 @@
+[gd_scene load_steps=13 format=3 uid="uid://bstation03bath"]
+
+[ext_resource type="Script" path="res://src/visual/camera_zone.gd" id="1_zone"]
+[ext_resource type="Script" path="res://src/visual/camera_angle.gd" id="2_angle"]
+[ext_resource type="Script" path="res://src/core/door_trigger.gd" id="3_door"]
+
+[sub_resource type="StandardMaterial3D" id="floor_mat"]
+albedo_color = Color(0.15, 0.15, 0.16, 1)
+
+[sub_resource type="StandardMaterial3D" id="wall_mat"]
+albedo_color = Color(0.2, 0.22, 0.24, 1)
+
+[sub_resource type="StandardMaterial3D" id="ceiling_mat"]
+albedo_color = Color(0.24, 0.24, 0.26, 1)
+
+[sub_resource type="StandardMaterial3D" id="sink_mat"]
+albedo_color = Color(0.7, 0.7, 0.72, 1)
+
+[sub_resource type="StandardMaterial3D" id="mirror_mat"]
+albedo_color = Color(0.1, 0.15, 0.25, 1)
+
+[sub_resource type="StandardMaterial3D" id="toilet_mat"]
+albedo_color = Color(0.85, 0.85, 0.85, 1)
+
+[sub_resource type="Resource" id="angle_br1"]
+script = ExtResource("2_angle")
+position = Vector3(40, 1.6, 1)
+rotation_degrees = Vector3(-15, 0, 0)
+fov = 65.0
+max_pan_degrees = 15.0
+max_tilt_degrees = 5.0
+tracking_strength = 0.5
+tracking_lerp_speed = 4.0
+angle_id = "BR1"
+
+[sub_resource type="BoxShape3D" id="zone_br1_shape"]
+size = Vector3(2, 3, 2)
+
+[sub_resource type="BoxShape3D" id="door_shape"]
+size = Vector3(0.5, 2, 1)
+
+[node name="Bathroom" type="Node3D"]
+
+[node name="Floor" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+size = Vector3(2, 0.1, 2)
+material = SubResource("floor_mat")
+use_collision = true
+
+[node name="Ceiling" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, 0)
+size = Vector3(2, 0.1, 2)
+material = SubResource("ceiling_mat")
+use_collision = true
+
+[node name="NorthWall" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, -1)
+size = Vector3(2, 2.5, 0.1)
+material = SubResource("wall_mat")
+use_collision = true
+
+[node name="SouthWall" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, 1)
+size = Vector3(2, 2.5, 0.1)
+material = SubResource("wall_mat")
+use_collision = true
+
+[node name="WestWall" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 1.25, 0)
+size = Vector3(0.1, 2.5, 2)
+material = SubResource("wall_mat")
+use_collision = true
+
+[node name="EastWallNorth" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1.25, -0.75)
+size = Vector3(0.1, 2.5, 0.5)
+material = SubResource("wall_mat")
+use_collision = true
+
+[node name="EastWallSouth" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1.25, 0.75)
+size = Vector3(0.1, 2.5, 0.5)
+material = SubResource("wall_mat")
+use_collision = true
+
+[node name="EastWallHeader" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 2.25, 0)
+size = Vector3(0.1, 0.5, 1)
+material = SubResource("wall_mat")
+use_collision = true
+
+[node name="Sink" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, -0.85)
+size = Vector3(0.4, 0.1, 0.3)
+material = SubResource("sink_mat")
+use_collision = true
+
+[node name="Mirror" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, -0.95)
+size = Vector3(0.6, 0.4, 0.02)
+material = SubResource("mirror_mat")
+use_collision = true
+
+[node name="Toilet" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.7, 0.25, 0.7)
+size = Vector3(0.4, 0.4, 0.3)
+material = SubResource("toilet_mat")
+use_collision = true
+
+[node name="FluorescentLight" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.4, 0)
+light_color = Color(0.8, 0.9, 1, 1)
+light_energy = 1.0
+light_range = 4.0
+
+[node name="ZoneBR1" type="Area3D" parent="." groups=["camera_zone"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+script = ExtResource("1_zone")
+camera_angle = SubResource("angle_br1")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ZoneBR1"]
+shape = SubResource("zone_br1_shape")
+
+[node name="DoorToHallway" type="Area3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.8, 0.5, 0)
+script = ExtResource("3_door")
+target_position = Vector3(21, 0.5, 0.5)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="DoorToHallway"]
+shape = SubResource("door_shape")
+
+[node name="MirrorMarker" type="Marker3D" parent="." groups=["interactable"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, -0.85)
