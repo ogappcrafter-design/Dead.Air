@@ -16,7 +16,7 @@
 ## The Pitch
 
 **Elevator Pitch:**
-You operate a late-night radio station. Callers tell you things that shouldn't be real. Then the station goes dark, and you realize the calls were never coming through the radio — they were coming through *you*. You take the radio and walk into the places the callers described, trying to survive what's on the other end.
+You operate a late-night radio station. Callers tell you things that shouldn't be real. Then the station goes dark, and you realize the calls were never coming through the radio — they were coming through _you_. You take the radio and walk into the places the callers described, trying to survive what's on the other end.
 
 **Core Fantasy:**
 A radio operator who becomes a witness, then a participant, in something ancient that uses frequencies to reach through time and death. The radio is both your lifeline and the thing that's killing you.
@@ -31,10 +31,10 @@ The radio mechanics ARE the horror system. Tuning, signal strength, static, and 
 ### Primary Feelings (the blend)
 
 **1. Unsettling Wrongness — Nightmare Ned**
-The mundane turned sinister. A grandmother's voice on the radio that knows your name. A garden report that takes 14 years too long. The horror isn't jump scares — it's the growing realization that something fundamental is *wrong* with the world behind the radio. Childlike familiarity curdled into menace. The station should feel like a place you've been a thousand times, until it doesn't.
+The mundane turned sinister. A grandmother's voice on the radio that knows your name. A garden report that takes 14 years too long. The horror isn't jump scares — it's the growing realization that something fundamental is _wrong_ with the world behind the radio. Childlike familiarity curdled into menace. The station should feel like a place you've been a thousand times, until it doesn't.
 
 **2. Helplessness — Clock Tower**
-You cannot fight what's on the radio. You can only listen, survive, and sometimes run. Some callers aren't calls at all — they're *entities* pushing through the signal, and your only option is to endure the conversation or cut the line (which has consequences). When the horror bleeds into physical space, you don't fight — you hide, you flee, you survive. The player should feel small.
+You cannot fight what's on the radio. You can only listen, survive, and sometimes run. Some callers aren't calls at all — they're _entities_ pushing through the signal, and your only option is to endure the conversation or cut the line (which has consequences). When the horror bleeds into physical space, you don't fight — you hide, you flee, you survive. The player should feel small.
 
 **3. Moral Dread — IHNMAIMS**
 Every choice costs something. There are no "good" options, only less-bad ones. Some calls give you a tape but cost your composure. Some calls spare your sanity but damn the caller. The game remembers what you chose and the world changes accordingly. Winning doesn't mean surviving — it means deciding what you're willing to lose.
@@ -61,8 +61,8 @@ Night shift operator.          The station is no longer safe.
 Calls come in.                 Something came through.
 You sit. You listen.           You grab the portable radio.
 You manage stress meters.       You leave.
-Bands unlock.                  
-Tapes accumulate.              
+Bands unlock.
+Tapes accumulate.
 
 PHASE 3: THE JOURNEY          PHASE 4: THE DESCENT
 (4-6 hours, 5 locations)      (2-3 hours, 1 location)
@@ -72,7 +72,7 @@ to the callers.                The origin transmission.
 Carry the portable radio.      You face what answered.
 Tune bands in the field.        The radio becomes something else.
 Environmental puzzles.          No clean ending.
-Take calls in haunted places.  
+Take calls in haunted places.
 ```
 
 ### Phase 1: The Station — Detailed Breakdown
@@ -111,6 +111,7 @@ SHIFT START
 #### Shift-by-Shift Content
 
 **SHIFT 1 — "First Night" (Tutorial Shift)**
+
 - Available bands: LIVING only
 - Calls: Call #0 (THE WRONG NUMBER), Call #1 (WRONG NUMBER), Call #3 (HAROLD)
 - Tutorial overlay: tuning mechanics, signal meter, composure introduced
@@ -120,6 +121,7 @@ SHIFT START
 - No save room available (saves unlock Shift 2)
 
 **SHIFT 2 — "Settling In" (LIMINAL Unlocked)**
+
 - Available bands: LIVING, LIMINAL
 - Calls: Call #2 (THE COLLECTOR), Call #4 (THE LOOP), Call #5 (3:47 AM)
 - Dread meter introduced (starts at 0, builds with calls)
@@ -129,6 +131,7 @@ SHIFT START
 - Save room: Booth cassette — first save available
 
 **SHIFT 3 — "The Dead" (LOST Unlocked)**
+
 - Available bands: LIVING, LIMINAL, LOST
 - Calls: Call #6 (YESTERDAY'S CALL), Call #7 (ECHO), Call #8 (GUARDIAN), Call #9 (MISSING PERSONS)
 - Tutorial overlay: recording mechanics unlocked (radio upgrade)
@@ -137,6 +140,7 @@ SHIFT START
 - Save room: Booth
 
 **SHIFT 4 — "Classified" (CLASSIFIED Unlocked)**
+
 - Available bands: LIVING, LIMINAL, LOST, CLASSIFIED
 - Calls: Call #10 (GRAND), Call #11 (FREE SPIRIT), Call #12 (AGENT 7), Call #13 (ARIA-9)
 - Tutorial overlay: signal decode puzzle mechanics
@@ -145,6 +149,7 @@ SHIFT START
 - Save room: Booth (but the cassette clicks ominously when you save)
 
 **SHIFT 5 — "Dead Air" (████████ Unlocked, Final Shift)**
+
 - Available bands: All bands
 - Calls: Call #14 (THE WHISTLEBLOWER), Call #15 (ORIGIN), Call #16 (YOU CALLED US), Call #17 (DEAD AIR)
 - No tutorial. No safety. Dread starts at 40 (carried from Shift 4).
@@ -406,13 +411,15 @@ MAP — THE NEIGHBORHOOD
 ```
 
 **House A — Harold's House:**
+
 - Rooms: Living room, kitchen, garden, garden shed (save room)
 - Camera: Fixed, RE-style. Living room from the hallway doorway. Kitchen from the corner. Garden from the back door.
-- Content: Harold's garden is real. Tomatoes. Ruth's chair at the table (empty). The radio picks up Harold's call (#3) but it's different — he mentions *you* by the name the ORIGIN caller used (Call #15).
+- Content: Harold's garden is real. Tomatoes. Ruth's chair at the table (empty). The radio picks up Harold's call (#3) but it's different — he mentions _you_ by the name the ORIGIN caller used (Call #15).
 - Puzzle: Tune to LIMINAL in the kitchen → time skips. The kitchen is now 14 years ago. Ruth is in the garden. She waves at you. You can't interact. The scene loops. Tune back to LIVING to exit.
 - Tape: None here (save room only)
 
 **House B — The Collector's House:**
+
 - Rooms: Living room, archive room (wall of cassette tapes), bedroom
 - Camera: Archive room from the doorway — the tape wall dominates the frame. Player is small.
 - Content: The Collector's archive is real. Hundreds of tapes labeled with dates and names. One tape has your name. The radio picks up Call #2 (THE COLLECTOR), but the voice is in the room with you, not on the radio.
@@ -421,6 +428,7 @@ MAP — THE NEIGHBORHOOD
 - Tape: Tape #2 (The Collector's Archive) — found on the wall
 
 **House C — The Wrong Number House:**
+
 - Rooms: Living room, kitchen, phone booth (impossibly placed inside the kitchen)
 - Camera: Kitchen from the doorway. The phone booth is centered — wrong, impossible, too clean against the suburban mess.
 - Content: The phone booth rings. The radio picks up Call #0 (THE WRONG NUMBER). The phone and the radio are synchronized — both play the same call. The voice on the phone says your name.
@@ -429,6 +437,7 @@ MAP — THE NEIGHBORHOOD
 - Tape: None
 
 **House D — The Empty Lot:**
+
 - Rooms: None — it's a hole in the ground. The hole goes down. Way down.
 - Camera: Overhead, looking straight down. Player at the edge.
 - Content: The radio signal drops to 0 at the hole. Complete silence. Then — the 1923 voice from Call #15 comes from the hole, not the radio. It's calling you down.
@@ -436,6 +445,7 @@ MAP — THE NEIGHBORHOOD
 - Audio: The silence at the hole is the loudest silence in the game. Total zero. Then a whisper. Then a fall.
 
 **Location 1 Calls (field calls):**
+
 - 2-3 procedural calls (LIVING band, suburban-themed)
 - 1 scripted event call: A fragment of Call #3 (Harold) plays from House A's kitchen radio, not the portable radio. The player's radio is off. This teaches that the calls can come from the environment, not just the player's radio.
 
@@ -481,31 +491,36 @@ MODULES (sample):
 
 **Key Rooms:**
 
-*The 3:47 Room:*
+_The 3:47 Room:_
+
 - Every clock reads 3:47 AM. The radio plays Call #5 (3:47 AM) on loop.
 - The room is small — a chair, a clock, a window showing static.
 - Time doesn't pass here. Dread doesn't increase. The room is frozen.
 - Tape #3 is on the clock face. Taking it causes the clock to start ticking — fast. The player has 10 seconds to leave before the room "collapses" (transitions to a random module).
 - Camera: Close on the clock. The player's hand reaches in from the bottom of frame.
 
-*The Office:*
+_The Office:_
+
 - Cubicle maze. Fluorescent lights buzz at 60Hz (the same frequency as the station's equipment — the station is here, somehow).
 - The radio picks up fragments of station audio — the call you're taking, but from 30 seconds in the future.
 - If the player tunes to LIVING, the office stabilizes for 5 seconds — the cubicles stop shifting, the doors stay put. This is the primary navigation tool.
-- Entity: A figure walks the cubicles. Not hostile. It sits at a desk and types. If approached, it turns — it has your face. It goes back to typing. (Nightmare Ned wrongness — the doppelganger isn't threatening, just *wrong*)
+- Entity: A figure walks the cubicles. Not hostile. It sits at a desk and types. If approached, it turns — it has your face. It goes back to typing. (Nightmare Ned wrongness — the doppelganger isn't threatening, just _wrong_)
 
-*The School:*
+_The School:_
+
 - Lockers line the halls. Some contain tapes (blank). Some contain radios (broken). One contains a mirror — your reflection is 14 years older.
 - The bell rings on a schedule (every 4 min real time). When the bell rings, the layout changes.
 - Camera: Low angle, child's-eye view. The hallways loom. The lockers are too tall.
 
-*The Home:*
+_The Home:_
+
 - A living room that looks like the player's station booth. But wrong. The console is there, but it's a TV showing static. The chair is there, but it's facing the wrong way. The coffee mug is there, but it's full of something dark.
 - The radio doesn't work here. No signal. Dead air. The player is alone with the room.
 - The door back only appears when the player sits in the chair and waits 30 seconds. (Teaches patience as a mechanic — you can't rush the liminal)
 
 **Navigation Puzzle:**
 The Liminal Space has no map. The player navigates by radio signal:
+
 1. Signal strength increases toward the exit
 2. Certain modules are "signal dead zones" (the Hospital, the Home)
 3. The player must learn the module connections (they follow rules — Office always connects to School, School always connects to Mall, etc.)
@@ -558,14 +573,16 @@ MAP — THE FIELD / THE WOODS
 
 **Key Areas:**
 
-*The Bridge:*
+_The Bridge:_
+
 - A simple footbridge over a dry creek bed. Morning light. Birds.
 - The radio plays Call #8 (GUARDIAN) automatically when the player steps on the bridge.
 - The player can sit on the bridge (interaction prompt). Sitting for 60 seconds regenerates composure fully and sets dread to 0. This is the most generous save room in the game — it's earned through emotional weight, not difficulty.
 - Tape #6 is wedged in the bridge railing.
 - Camera: Eye-level, looking down the dry creek bed. The player sits on the railing, silhouetted against the dawn.
 
-*The Mailbox:*
+_The Mailbox:_
+
 - A single mailbox on a country road. No house. Just the mailbox.
 - The radio plays Call #9 (MISSING PERSONS) when the player approaches.
 - The mailbox contains a cassette tape. The player must decide:
@@ -574,7 +591,8 @@ MAP — THE FIELD / THE WOODS
   - **Destroy it:** Snap the tape. The mother's voice stops. The radio goes silent. You chose mercy or cruelty — the game doesn't tell you which. Composure -5. Dread +20. No tape. (IHNMAIMS — no clean answer)
 - Camera: Low angle, the mailbox in foreground, the empty road stretching behind.
 
-*The Grandmother's House:*
+_The Grandmother's House:_
+
 - A small house. Warm. Real. The only truly safe-feeling space in the game.
 - The radio plays Call #10 (GRAND) when the player enters.
 - The house is furnished like a grandmother's home — doilies, photographs, the smell of something baking (conveyed through audio — warm room tone, oven timer).
@@ -582,7 +600,8 @@ MAP — THE FIELD / THE WOODS
 - The player can sit in the grandmother's chair. Composure regen +5/sec (fastest in the game). But dread doesn't decrease here — it stays. The warmth is real but the grief is underneath.
 - Camera: The kitchen from the hallway. Warm light. The chair is centered. The player is small in the frame, but not threatened — just grieving.
 
-*The Woods:*
+_The Woods:_
+
 - Open forest. Beautiful. Sunlight through leaves. Birds that call in patterns (the same pattern as the signal decode from Call #13 — the numbers are in nature here).
 - The radio plays Call #11 (FREE SPIRIT). The voice is calm. The woods are calm.
 - Tape #9 is on a stump in a clearing. The clearing has a view of the sky — and the sky has the transmission tower visible on the horizon. The first time the player sees their destination.
@@ -591,6 +610,7 @@ MAP — THE FIELD / THE WOODS
 
 **Grief Modifier:**
 In this location, the dread meter is replaced visually by a "grief" indicator (same mechanic, different framing). Choices here affect grief instead of dread:
+
 - Helping callers → grief increases (you feel their loss)
 - Refusing to help → grief increases differently (you feel your own guilt)
 - There is no way to reduce grief in this location except the Bridge save room
@@ -667,13 +687,15 @@ CAMERA ANGLES:
 
 **Key Rooms:**
 
-*Numbers Station (C6):*
+_Numbers Station (C6):_
+
 - A broadcast booth. A tape loop plays numbers endlessly. The numbers correspond to the signal decode sequence from Call #13 (ARIA-9).
 - Puzzle: The player must record the numbers station broadcast (tape record mechanic), then play it back at half speed in the ARIA-9 room to decode a door code. The code opens the Archive Room.
 - Entity: The booth chair is occupied by a figure in a suit. Not moving. Not breathing. Just sitting. If the player approaches, the figure's head slowly turns. The player must record the numbers without getting close enough to trigger the head turn. This is a stealth puzzle.
 - Camera: From the doorway. The figure is centered in frame. The numbers station microphone is to the right. The player must approach the mic without entering the figure's peripheral vision cone (visualized on the minimap as a cone — like Clock Tower's hide system).
 
-*ARIA-9 Room (C9):*
+_ARIA-9 Room (C9):_
+
 - A single terminal. ARIA-9 speaks through the terminal speakers, not the radio. She's different here — more aware. She knows about the player.
 - Dialogue: The player can interact with ARIA-9. This is a CONVERSATION call type — extended dialogue with choices.
   - "Are you trapped here?" → "I am here. I was built here. Is that the same thing?"
@@ -682,22 +704,25 @@ CAMERA ANGLES:
 - Tape #11 is in the terminal. ARIA-9 lets you take it. "I kept a copy. Take it. Someone should hear it."
 - The door code decoded from the numbers station opens the Archive Room.
 
-*Archive Room (C11):*
+_Archive Room (C11):_
+
 - Filing cabinets. Every call the player has ever received is here — transcribed, cataloged, filed by date.
 - The player's file is the last one. It contains: the player's real name (the one ORIGIN said), a photograph of the player at the station (from an angle no camera could have), and a document titled "RELAY POINT 7 — STATUS: ACTIVE."
 - Tape #12 is filed under "THE NETWORK — FOR INTERNAL REVIEW." It's the Whistleblower's full recording — uncut. Playing it reveals additional content not heard in Call #14: the Whistleblower mentions the player by name and says "Relay Point 7 is the key. If they reach the tower, everything changes. If they don't, everything stays. And staying is worse."
 - Moral choice: Take your file or leave it. Taking it → composure -10 (you know too much now). Leaving it → the file is gone when you return (someone took it — you're being monitored).
 
-*Server Room (C8 — SAVE ROOM):*
+_Server Room (C8 — SAVE ROOM):_
+
 - Blue light. Server hum. Cold. The only room in the bunker where the radio goes completely silent — not even static. Total peace.
 - One save use. The cassette clicks when you save. ARIA-9's voice whispers "good luck" after the save completes.
 
 **Bunker Entities:**
 
-*The Suits:*
+_The Suits:_
+
 - 2-3 humanoid entities in dark suits. They patrol the corridors on fixed routes (Clock Tower Scissorman pattern — slow, methodical, terrifying).
 - Detection: Cone-based vision (45° forward, 8m range). If the player enters the cone, the Suit stops and "looks" — the radio static spikes. If the player is detected for more than 3 seconds, the Suit moves toward the player at walking pace (never running — that's what makes it scary).
-- Response: Hide (lockers in corridors, under desks in rooms). Hold breath (button hold, 5 sec max — composure -2/sec if detected while hiding). The Suit checks the hiding spot (audio: footsteps approach, stop, pause, then leave). If found: composure -25, player is "relocated" to a random room (not killed — the Suits don't kill, they *manage* you).
+- Response: Hide (lockers in corridors, under desks in rooms). Hold breath (button hold, 5 sec max — composure -2/sec if detected while hiding). The Suit checks the hiding spot (audio: footsteps approach, stop, pause, then leave). If found: composure -25, player is "relocated" to a random room (not killed — the Suits don't kill, they _manage_ you).
 - The Suits are connected to ARIA-9. She's trying to slow them down. Sometimes a Suit stops for no reason — ARIA-9 is interfering. This is revealed in the dialogue.
 
 #### Location 5: The Origin Site (████████ band)
@@ -787,7 +812,7 @@ ENDING A: THE SIGNAL (Choice A — "I wanted to hear them")
   The player transmits. They become the signal. The console shows
   their frequency: it's the ████████ frequency. They ARE the thing
   that's been broadcasting. The 1923 voice? It was them. It was always them.
-  
+
   Sequence:
   1. Console activates. Player's hands on the dials. The radio transmits.
   2. The tower glows. The sky turns to static — but the static is warm now.
@@ -801,7 +826,7 @@ ENDING A: THE SIGNAL (Choice A — "I wanted to hear them")
 ENDING B: THE RELAY (Choice B — "I was looking for someone")
   The player becomes the station. They sit in the chair forever. They take
   the calls. Every caller from every band, one after another, forever.
-  
+
   Sequence:
   1. The player sits in the chair. The console activates.
   2. Calls come in. All of them. Every procedural call the engine can generate.
@@ -815,7 +840,7 @@ ENDING B: THE RELAY (Choice B — "I was looking for someone")
 
 ENDING C: DEAD AIR (Choice C — "I don't know why")
   The player cuts the signal. Everything stops. The silence is total.
-  
+
   Sequence:
   1. The player stands from the chair. The console goes dark.
   2. The crystal cracks. The tower groans. The sky goes black.
@@ -831,7 +856,7 @@ ENDING C: DEAD AIR (Choice C — "I don't know why")
 
 ENDING D: THE WITNESS (Hidden Choice — "I want to stop")
   The player destroys the radio. The calls stop. They walk away.
-  
+
   Sequence:
   1. The player sets down the radio. The portable radio. On the console.
   2. The player walks to the crystal. They don't take Tape #15. They leave it.
@@ -1750,6 +1775,7 @@ PIRATE drift          off     on       on       on (+ faster)
 Safe room dread regen  ×1.5   ×1.0    ×0.7     ×0 (no regen)
 Caught penalty        -15     -25      -35      -50 (composure)
 Starting dread (S5)    20      40      55       70
+Breather duration      90s     60s     45s      30s
 ```
 
 ---
@@ -1806,19 +1832,24 @@ Pause               Pause available in safe rooms only (design intent —
 ## Design Pillars
 
 ### Pillar 1: "The radio is the only tool"
+
 The player interacts with the world through the radio. No weapons, no traditional tools. Tuning, signal, bands, and recording are the verbs. If a feature doesn't involve the radio, it doesn't belong.
 
 ### Pillar 2: "Listening is the gameplay"
-The core loop is: tune → listen → decide. The player's primary action is *paying attention*. The game rewards listening carefully (catching details in static, identifying false voices, timing responses) and punishes inattention.
+
+The core loop is: tune → listen → decide. The player's primary action is _paying attention_. The game rewards listening carefully (catching details in static, identifying false voices, timing responses) and punishes inattention.
 
 ### Pillar 3: "You cannot fight — you survive"
+
 No combat. Threats are survived, not defeated. Hiding, fleeing, and enduring are the responses to danger. This creates helplessness (Clock Tower) and ensures the horror stays horror, not action.
 
 ### Pillar 4: "Every choice costs something"
+
 Moral weight in every decision. No choice is free. Tapes cost composure. Safety costs progress. Helping costs you. The game tracks your choices and the world responds.
 
 ### Pillar 5: "The mundane made sinister"
-The horror lives in the familiar. A grandmother's voice. A garden report. A wrong number. The moment the player realizes something is *off* is more powerful than any jump scare. Subtle wrongness over loud fright.
+
+The horror lives in the familiar. A grandmother's voice. A garden report. A wrong number. The moment the player realizes something is _off_ is more powerful than any jump scare. Subtle wrongness over loud fright.
 
 ---
 
@@ -1837,6 +1868,7 @@ The horror lives in the familiar. A grandmother's voice. A garden report. A wron
 ### Recommendation: Godot 4 (phases 1-3), evaluate Unreal 5 for phase 4
 
 **Why Godot first:**
+
 - Free, open-source, no licensing fees
 - Strong 2D/3D hybrid (perfect for fixed camera + 3D environments)
 - GDScript is accessible and fast to prototype
@@ -1846,11 +1878,13 @@ The horror lives in the familiar. A grandmother's voice. A garden report. A wron
 - Can deploy to PC, Mac, Linux, mobile, and console
 
 **Why Unreal eventually:**
+
 - Phase 4 (The Descent) may require higher-fidelity 3D, advanced lighting, and Nanite/Lumen for the final locations
 - If the scope grows beyond what Godot handles comfortably
 - Market visibility on PC/console storefronts
 
 **Migration path:**
+
 1. Prototype the radio mechanics in Godot (signal tuning, band selection, audio layering)
 2. Build Phase 1 (The Station) in Godot as a vertical slice
 3. Evaluate: Does Godot handle the fixed camera + audio system well enough for Phase 3?
@@ -1864,6 +1898,7 @@ The horror lives in the familiar. A grandmother's voice. A garden report. A wron
 ### Scope: Phase 1, Shift 1+2
 
 **Must include:**
+
 - Radio tuning mechanics (analog dial, 2 bands, signal strength)
 - Call system (5 calls: 1 procedural + Calls #0, #1, #3, #2)
 - Composure/Signal/Dread meters with visible audio/visual effects
@@ -1878,6 +1913,7 @@ The horror lives in the familiar. A grandmother's voice. A garden report. A wron
 - 3 tapes obtainable (Tapes #1, #2, #3)
 
 **Must NOT include:**
+
 - Phase 3 locations
 - Entity AI (the Follower in Phase 2 is scripted, not AI-driven)
 - CLASSIFIED / ████████ bands
@@ -1885,6 +1921,7 @@ The horror lives in the familiar. A grandmother's voice. A garden report. A wron
 - Procedural call generation (use pre-written calls only)
 
 **Success criteria:**
+
 - Player can tune the radio and hear clear difference between LIVING and LIMINAL
 - Player takes a call and makes a choice that visibly affects all three meters
 - Player experiences audio shift when dread increases (dread layer fades in)
@@ -1898,18 +1935,18 @@ The horror lives in the familiar. A grandmother's voice. A garden report. A wron
 
 ## Risk Register
 
-| Risk | Probability | Impact | Mitigation |
-|------|-------------|--------|------------|
-| Audio system complexity | High | High | Prototype radio mechanics first; the audio IS the game |
-| Fixed camera in 3D engine | Medium | Medium | Godot handles this well; test early with placeholder geometry |
-| Scope of 5 locations | High | High | Build Phase 1 as vertical slice; each location is modular and independently buildable |
-| Moral choice tracking complexity | Medium | Medium | Start with simple flags; expand only if proven valuable |
-| Engine migration risk | Medium | High | Godot first; evaluate before committing to full scope |
-| Writing volume (new location content) | High | Medium | Preserve existing call content; new writing for locations only |
-| Player confusion (radio as primary interface) | Medium | High | Strong tutorial in Phase 1 Shift 1; the first shift teaches the radio |
-| Audio asset creation | High | High | Use Web Audio synthesis (port existing engine) + selective Foley |
-| 3D environment art | High | High | Stylized low-poly + CRT post-processing hides fidelity issues |
-| Performance (real-time audio + 3D + post-processing) | Medium | Medium | Profile early; Godot audio server is efficient; reduce poly count if needed |
+| Risk                                                 | Probability | Impact | Mitigation                                                                            |
+| ---------------------------------------------------- | ----------- | ------ | ------------------------------------------------------------------------------------- |
+| Audio system complexity                              | High        | High   | Prototype radio mechanics first; the audio IS the game                                |
+| Fixed camera in 3D engine                            | Medium      | Medium | Godot handles this well; test early with placeholder geometry                         |
+| Scope of 5 locations                                 | High        | High   | Build Phase 1 as vertical slice; each location is modular and independently buildable |
+| Moral choice tracking complexity                     | Medium      | Medium | Start with simple flags; expand only if proven valuable                               |
+| Engine migration risk                                | Medium      | High   | Godot first; evaluate before committing to full scope                                 |
+| Writing volume (new location content)                | High        | Medium | Preserve existing call content; new writing for locations only                        |
+| Player confusion (radio as primary interface)        | Medium      | High   | Strong tutorial in Phase 1 Shift 1; the first shift teaches the radio                 |
+| Audio asset creation                                 | High        | High   | Use Web Audio synthesis (port existing engine) + selective Foley                      |
+| 3D environment art                                   | High        | High   | Stylized low-poly + CRT post-processing hides fidelity issues                         |
+| Performance (real-time audio + 3D + post-processing) | Medium      | Medium | Profile early; Godot audio server is efficient; reduce poly count if needed           |
 
 ---
 

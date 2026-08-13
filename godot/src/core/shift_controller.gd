@@ -16,6 +16,7 @@ signal shift_phase_changed(phase: String)
 signal call_sequence_complete
 signal shift_complete(shift_number: int)
 signal band_unlocked(band_name: String)
+signal final_call_starting
 
 # ─── Enums ──────────────────────────────────────────────────────────────────
 
@@ -74,6 +75,7 @@ var _band_unlock_manager: Node = null
 
 # Testing helpers
 var _testing_mode: bool = false
+var _call_count: int = 0
 
 # ─── Lifecycle ───────────────────────────────────────────────────────────────
 
@@ -82,6 +84,7 @@ func _ready() -> void:
 	_create_band_unlock_manager()
 	if CallManager:
 		CallManager.shift_ended.connect(_on_call_manager_shift_ended)
+		CallManager.call_started.connect(_on_call_manager_call_started)
 
 
 func _process(delta: float) -> void:
@@ -159,6 +162,7 @@ func start_shift(shift_number: int = 1) -> void:
 
 	_current_shift = shift_number
 	_shift_active = true
+	_call_count = 0
 
 	var data: Dictionary = get_shift_data(shift_number)
 
@@ -259,6 +263,14 @@ func _on_call_manager_shift_ended(_cm_shift_number: int) -> void:
 	_enter_post_shift()
 
 
+func _on_call_manager_call_started(_call_data: Dictionary) -> void:
+	_call_count += 1
+	var data: Dictionary = get_shift_data(_current_shift)
+	var expected_calls: int = data.get("calls", []).size()
+	if expected_calls > 0 and _call_count == expected_calls:
+		final_call_starting.emit()
+
+
 # ─── Internal: Band Unlock ───────────────────────────────────────────────────
 
 
@@ -341,6 +353,7 @@ func _reset_for_testing() -> void:
 	_save_available = false
 	_unlocked_bands.clear()
 	_testing_mode = false
+	_call_count = 0
 	if CallManager:
 		CallManager._reset_for_testing()
 

@@ -45,6 +45,7 @@ const OPTIONAL_FIELDS: Array[String] = [
 	"intro",
 	"sequence",
 	"decodedMessage",
+	"is_sacred",
 ]
 
 ## Required fields for each choice object

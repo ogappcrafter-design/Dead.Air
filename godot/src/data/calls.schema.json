@@ -69,7 +69,8 @@
         "type": "array",
         "items": { "type": "integer", "minimum": 0 }
       },
-      "decodedMessage": { "type": "string" }
+      "decodedMessage": { "type": "string" },
+      "is_sacred": { "type": "boolean" }
     },
     "additionalProperties": false
   }

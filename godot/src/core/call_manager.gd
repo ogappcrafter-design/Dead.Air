@@ -14,6 +14,7 @@ signal choice_resolved(choice_index: int, choice: Dictionary)
 signal static_rewarded(amount: int)
 signal sanity_changed(delta: float, new_value: float)
 signal tape_awarded(tape_id: String, tape_name: String)
+signal sacred_call_started(call_data: Dictionary)
 
 enum CallState {
 	IDLE,
@@ -34,6 +35,9 @@ var _shift_in_progress: bool = false
 var _cooldown_timer: float = 0.0
 var _incoming_timer: float = 0.0
 var _resolving_timer: float = 0.0
+var _breather_active: bool = false
+var _is_last_call_in_shift: bool = false
+var _skip_breather: bool = false
 
 # --- Config ---
 const COOLDOWN_DURATION: float = 5.0
@@ -120,6 +124,8 @@ const SHIFT_DEFINITIONS: Array = [
 func _ready() -> void:
 	_create_sub_systems()
 	_connectautoload_signals()
+	if BreatherSystem:
+		BreatherSystem.breather_ended.connect(_on_breather_ended)
 
 func _process(delta: float) -> void:
 	match _state:
@@ -128,9 +134,12 @@ func _process(delta: float) -> void:
 			if _incoming_timer <= 0.0:
 				_enter_state(CallState.ACTIVE)
 		CallState.COOLDOWN:
-			_cooldown_timer -= delta
-			if _cooldown_timer <= 0.0:
-				_advance_queue()
+			if _breather_active:
+				pass  # BreatherSystem handles timing; wait for breather_ended signal
+			else:
+				_cooldown_timer -= delta
+				if _cooldown_timer <= 0.0:
+					_advance_queue()
 		CallState.RESOLVING:
 			_resolving_timer -= delta
 			if _resolving_timer <= 0.0:
@@ -202,7 +211,9 @@ func start_shift(shift_num: int = -1) -> void:
 	if _signal_strength:
 		_signal_strength.start_shift()
 
-	# Begin first call after brief cooldown
+	# Begin first call after brief cooldown (not a breather)
+	_skip_breather = true
+	_is_last_call_in_shift = false
 	_enter_state(CallState.COOLDOWN)
 	_cooldown_timer = 1.0  # short initial delay
 
@@ -262,6 +273,11 @@ func _enter_state(new_state: CallState) -> void:
 				AudioBusManager.duck_for_call(true)
 		CallState.ACTIVE:
 			call_started.emit(_current_call)
+			# Sacred call detection
+			if _current_call.get("is_sacred", false):
+				sacred_call_started.emit(_current_call)
+				if _dread_composure:
+					_dread_composure.add_dread(5.0)
 			# Notify CallPlayer to present
 			if CallPlayer:
 				CallPlayer.present_call(_current_call)
@@ -278,6 +294,19 @@ func _enter_state(new_state: CallState) -> void:
 				PhaseManager.exit_call_mode()
 			if AudioBusManager:
 				AudioBusManager.duck_for_call(false)
+			# Determine breather vs short cooldown
+			if _skip_breather:
+				_skip_breather = false
+				_breather_active = false
+			elif _is_last_call_in_shift:
+				_cooldown_timer = COOLDOWN_DURATION
+				_breather_active = false
+			elif BreatherSystem:
+				_breather_active = true
+				BreatherSystem.start_breather()
+			else:
+				_cooldown_timer = COOLDOWN_DURATION
+				_breather_active = false
 
 func _advance_queue() -> void:
 	if not _shift_in_progress:
@@ -293,6 +322,11 @@ func _advance_queue() -> void:
 	_current_call = _shift_queue[_current_call_index]
 	_enter_state(CallState.INCOMING)
 
+func _on_breather_ended() -> void:
+	if _state == CallState.COOLDOWN and _breather_active:
+		_breather_active = false
+		_advance_queue()
+
 # ---------------------------------------------------------------------------
 # Call resolution
 # ---------------------------------------------------------------------------
@@ -302,6 +336,9 @@ func _resolve_call(outcome: String) -> void:
 
 	# Trigger stingers based on call type / outcome
 	_trigger_call_stingers(_current_call, outcome)
+
+	# Check if this was the last call in the shift
+	_is_last_call_in_shift = (_current_call_index >= _shift_queue.size() - 1)
 
 	_enter_state(CallState.RESOLVING)
 
@@ -401,6 +438,11 @@ func _reset_for_testing() -> void:
 	_cooldown_timer = 0.0
 	_incoming_timer = 0.0
 	_resolving_timer = 0.0
+	_breather_active = false
+	_is_last_call_in_shift = false
+	_skip_breather = false
+	if BreatherSystem:
+		BreatherSystem._reset_for_testing()
 	if _dread_composure:
 		_dread_composure.reset()
 	if _signal_strength:

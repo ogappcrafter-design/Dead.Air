@@ -41,6 +41,8 @@ StationState="*res://src/core/station_state.gd"
 StationDegradation="*res://src/core/station_degradation.gd"
 ; ShiftController — shift lifecycle and progression (singleton)
 ShiftController="*res://src/core/shift_controller.gd"
+; BreatherSystem — breather events between calls (singleton)
+BreatherSystem="*res://src/core/breather_system.gd"
 
 [display]
 

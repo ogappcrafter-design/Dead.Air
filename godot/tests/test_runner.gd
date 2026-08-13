@@ -43,6 +43,7 @@ func _run_tests() -> void:
 		["ShiftSummary", "res://tests/test_shift_summary.gd"],
 		["StationDegradation", "res://tests/test_station_degradation.gd"],
 		["ShiftController", "res://tests/test_shift_controller.gd"],
+		["BreatherSystem", "res://tests/test_breather_system.gd"],
 	]
 
 	for suite in test_suites:
