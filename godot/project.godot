@@ -37,6 +37,8 @@ CallManager="*res://src/core/call_manager.gd"
 CallPlayer="*res://src/core/call_player.gd"
 ; StationState — shift tracking, degradation, wrongness events (singleton)
 StationState="*res://src/core/station_state.gd"
+; StationDegradation — degradation/wrongness schedule for shifts 1-2 (singleton)
+StationDegradation="*res://src/core/station_degradation.gd"
 
 [display]
 

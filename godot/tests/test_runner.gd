@@ -41,6 +41,7 @@ func _run_tests() -> void:
 		["MainMenu", "res://tests/test_main_menu.gd"],
 		["NightTransition", "res://tests/test_night_transition.gd"],
 		["ShiftSummary", "res://tests/test_shift_summary.gd"],
+		["StationDegradation", "res://tests/test_station_degradation.gd"],
 	]
 
 	for suite in test_suites:
