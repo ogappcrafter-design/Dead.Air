@@ -1,0 +1,86 @@
+[gd_scene load_steps=8 format=3 uid="uid://bnightshift01"]
+
+[ext_resource type="PackedScene" path="res://scenes/station/station.tscn" id="1_station"]
+[ext_resource type="PackedScene" path="res://scenes/radio_integration.tscn" id="2_radio"]
+[ext_resource type="Script" path="res://src/ui/hud_layout.gd" id="3_hud"]
+[ext_resource type="Script" path="res://src/ui/interact_prompt.gd" id="4_prompt"]
+[ext_resource type="Script" path="res://src/core/game_director.gd" id="5_director"]
+[ext_resource type="Script" path="res://src/core/shift_stub.gd" id="6_shift"]
+[ext_resource type="Script" path="res://src/core/degradation_stub.gd" id="7_degradation"]
+
+[sub_resource type="GDScript" id="8_test_runner"]
+script/source = "extends Node
+
+func _ready() -> void:
+	if not OS.is_debug_build():
+		return
+	var test_script := load(\"res://tests/test_night_integration.gd\")
+	if test_script == null:
+		print(\"[TestRunner] test_night_integration.gd not found\")
+		return
+	var test_instance := test_script.new()
+	if not test_instance.has_method(\"run_tests\"):
+		print(\"[TestRunner] test script missing run_tests()\")
+		return
+	var results := test_instance.run_tests()
+	var passed := 0
+	var total := 0
+	for test_name in results:
+		total += 1
+		if results[test_name]:
+			passed += 1
+			print(\"[TestRunner] PASS: %s\" % test_name)
+		else:
+			print(\"[TestRunner] FAIL: %s\" % test_name)
+	print(\"[TestRunner] Results: %d/%d passed\" % [passed, total])
+	if passed == total:
+		print(\"[TestRunner] All integration tests PASSED\")
+	else:
+		push_warning(\"[TestRunner] %d tests FAILED\" % (total - passed))
+"
+
+[node name="NightShift" type="Node3D"]
+
+[node name="StationEnvironment" parent="." instance=ExtResource("1_station")]
+
+[node name="RadioConsole" parent="." instance=ExtResource("2_radio")]
+
+[node name="HUD" type="Control" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+script = ExtResource("3_hud")
+radio_tuner = NodePath("../RadioConsole/RadioTuner")
+signal_strength = NodePath("../RadioConsole/SignalStrength")
+dread_composure = NodePath("../RadioConsole/DreadComposure")
+tape_inventory = NodePath("/root/TapeInventory")
+
+[node name="InteractionUI" type="CanvasLayer" parent="."]
+
+[node name="InteractPrompt" type="Control" parent="InteractionUI"]
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -200.0
+offset_top = -120.0
+offset_right = 200.0
+offset_bottom = -60.0
+grow_horizontal = 2
+grow_vertical = 0
+script = ExtResource("4_prompt")
+fade_duration = 0.3
+offset_from_bottom = 120.0
+offset_from_left = 0.0
+
+[node name="ShiftController" type="Node" parent="."]
+script = ExtResource("6_shift")
+
+[node name="StationDegradation" type="Node" parent="."]
+script = ExtResource("7_degradation")
+
+[node name="GameDirector" type="Node" parent="."]
+script = ExtResource("5_director")
+
+[node name="TestRunner" type="Node" parent="."]
+script = SubResource("8_test_runner")
