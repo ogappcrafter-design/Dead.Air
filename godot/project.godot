@@ -39,6 +39,8 @@ CallPlayer="*res://src/core/call_player.gd"
 StationState="*res://src/core/station_state.gd"
 ; StationDegradation — degradation/wrongness schedule for shifts 1-2 (singleton)
 StationDegradation="*res://src/core/station_degradation.gd"
+; ShiftController — shift lifecycle and progression (singleton)
+ShiftController="*res://src/core/shift_controller.gd"
 
 [display]
 
