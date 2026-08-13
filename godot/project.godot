@@ -29,6 +29,10 @@ CameraManager="*res://src/visual/camera_manager.gd"
 SilenceSystem="*res://src/audio/silence_system.gd"
 ; DEA-101: Stinger audio system (singleton)
 StingerSystem="*res://src/audio/stinger_system.gd"
+; Call/Transmission System autoloads
+CallData="*res://src/data/call_data.gd"
+CallManager="*res://src/core/call_manager.gd"
+CallPlayer="*res://src/core/call_player.gd"
 
 [display]
 

@@ -85,7 +85,7 @@ func load_and_validate() -> void:
 		assert(false, "CallData: FATAL — calls.json is not valid JSON")
 		return
 
-	var data := json.data
+	var data = json.data
 	if data == null:
 		push_error("CallData: calls.json parsed to null")
 		assert(false, "CallData: FATAL — calls.json is null")
