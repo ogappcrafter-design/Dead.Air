@@ -3,7 +3,16 @@
 extends SceneTree
 
 
+## Autoloads are added to root AFTER the first frame, not during SceneTree._init().
+## Deferring test execution ensures autoload-dependent tests (SilenceSystem,
+## PhaseManager) can find their singletons via /root/<AutoloadName>.
 func _init() -> void:
+	_run_tests.call_deferred()
+
+
+func _run_tests() -> void:
+	await process_frame
+
 	var all_passed := true
 	var total_tests := 0
 	var total_passed := 0
@@ -126,6 +135,23 @@ func _init() -> void:
 			total_failed += 1
 			all_passed = false
 			print("  [FAIL] %s::%s" % [band_system_tests.test_name, test_name])
+
+	print("")
+
+	# Run SilenceSystem tests
+	print("Running SilenceSystem tests...")
+	var silence_system_tests := preload("res://tests/test_silence_system.gd").new()
+	var ss_results: Dictionary = silence_system_tests.run_tests()
+	for test_name in ss_results.keys():
+		total_tests += 1
+		var passed: bool = ss_results[test_name]
+		if passed:
+			total_passed += 1
+			print("  [PASS] %s::%s" % [silence_system_tests.test_name, test_name])
+		else:
+			total_failed += 1
+			all_passed = false
+			print("  [FAIL] %s::%s" % [silence_system_tests.test_name, test_name])
 
 	print("")
 	print("=== Results ===")

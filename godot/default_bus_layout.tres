@@ -22,9 +22,8 @@ lowpass = 1.0
 cutoff_hz = 1850.0
 resonance = 0.6
 
-; RADIO_AMBIENT — Gain (signal strength, adjusted at runtime)
-[sub_resource type="AudioEffectGain" id="Gain_RadioAmbient"]
-volume_db = 0.0
+; RADIO_AMBIENT — Gain removed (AudioEffectGain not available in Godot 4.7.1)
+; Signal strength is now controlled via bus volume (see AudioBusManager.set_bus_volume)
 
 ; CALL_AUDIO — Compressor (3:1, -20 dB threshold)
 [sub_resource type="AudioEffectCompressor" id="Compressor_CallAudio"]
@@ -83,8 +82,7 @@ bus/2/volume_db = -8.0
 bus/2/send = &"Master"
 bus/2/effect/0/effect = SubResource("BandPass_RadioAmbient")
 bus/2/effect/0/enabled = true
-bus/2/effect/1/effect = SubResource("Gain_RadioAmbient")
-bus/2/effect/1/enabled = true
+; Gain effect removed (AudioEffectGain not available in Godot 4.7.1)
 
 ; Bus 3: CALL_AUDIO (-3 dB)
 bus/3/name = &"CALL_AUDIO"

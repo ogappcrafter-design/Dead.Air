@@ -1270,8 +1270,8 @@ MASTER BUS (0 dB)
 │   └── EQ (room-specific)
 ├── RADIO_AMBIENT (-8 dB)
 │   └── BandPass (center freq = current band center)
-│   └── Gain (modulated by signal strength)
 │   └── Noise generator (white/pink/brown per band)
+│   └── Signal strength via bus volume (AudioBusManager.set_bus_volume)
 ├── CALL_AUDIO (-3 dB)
 │   └── Compressor (3:1 ratio, -20 dB threshold)
 │   └── EQ (telephone band, 300-3400 Hz)
@@ -1285,8 +1285,11 @@ MASTER BUS (0 dB)
 ├── STINGER (-3 dB)
 │   └── No effects — raw, loud, brief
 │   └── Sidechain to duck all other buses during stinger (-6 dB duck)
-├── SILENCE (0 dB — this bus is a controller, not audio)
-│   └── When active, mutes all other buses except STINGER
+├── SILENCE (0 dB — hosts breathing AudioStreamPlayer; controller bus)
+│   └── Dead air events (8-20s, game-triggered): phase-dependent muting
+│       Phase 1-3: mutes RADIO_AMBIENT + CALL_AUDIO + STINGER
+│       Phase 4: mutes ALL non-SILENCE/non-UI buses (breathing only)
+│   └── Breathing volume: -24 dB (composure 100) → -6 dB (composure 0)
 │   └── Automated by game events (not player-controlled)
 └── UI (-6 dB)
     └── Button clicks, menu sounds (CRT-style bleeps)
