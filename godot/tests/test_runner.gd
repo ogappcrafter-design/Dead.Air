@@ -33,6 +33,9 @@ func _run_tests() -> void:
 		["StingerSystem", "res://tests/test_stinger_system.gd"],
 		["CRTShader", "res://tests/test_crt_shader.gd"],
 		["CallManager", "res://tests/test_call_manager.gd"],
+		["TapePickup", "res://tests/test_tape_pickup.gd"],
+		["TapeInventoryUI", "res://tests/test_tape_inventory_ui.gd"],
+		["TapePlayer", "res://tests/test_tape_player.gd"],
 	]
 
 	for suite in test_suites:

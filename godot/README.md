@@ -20,7 +20,7 @@ The React Native / Expo app in the repository root (`../`) is the shipped predec
 ```
 godot/
 ├── project.godot              # Godot 4 project config (Forward+, 1920x1080, vsync)
-├── default_bus_layout.tres    # 8-bus audio layout (GDD §Audio Architecture)
+├── default_bus_layout.tres    # 9-bus audio layout (GDD §Audio Architecture + TAPE)
 ├── src/
 │   ├── core/                  # Core systems (radio, stress, save, state machine)
 │   ├── audio/                 # Audio engine, bus layout, call pipeline
@@ -46,7 +46,7 @@ godot/
 
 ## Audio Buses
 
-Per GDD §Audio Architecture, the project defines 8 buses:
+Per GDD §Audio Architecture, the project defines 9 buses:
 
 | Bus             | Purpose                                       |
 | --------------- | --------------------------------------------- |
@@ -58,6 +58,7 @@ Per GDD §Audio Architecture, the project defines 8 buses:
 | `STINGER`       | Horror stings and accent hits                 |
 | `SILENCE`       | Deliberate silence channel (dead air moments) |
 | `UI`            | UI sounds (button clicks, menu navigation)    |
+| `TAPE`          | Tape playback (collectible tape player)       |
 
 All buses route to `MASTER` and support real-time parameter control via GDScript.
 

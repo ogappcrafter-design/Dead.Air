@@ -23,6 +23,8 @@ AudioBusManager="*res://src/audio/audio_bus_manager.gd"
 ; DEA-153: Save system autoloads
 SaveManager="*res://src/core/save_manager.gd"
 TapeInventory="*res://src/core/tape_inventory.gd"
+; TapeSaveBridge — syncs TapeInventory with SaveData (tape collection system)
+TapeSaveBridge="*res://src/core/tape_save_bridge.gd"
 ; DEA-108: Camera system coordinator (singleton)
 CameraManager="*res://src/visual/camera_manager.gd"
 ; DEA-140: Silence & dead air event manager (singleton)
@@ -50,8 +52,8 @@ anti_aliasing/quality/use_taa=true
 
 [audio]
 
-; 8-bus layout per GDD §Audio Architecture
-; Buses: MASTER, ROOM_TONE, RADIO_AMBIENT, CALL_AUDIO, DREAD_LAYER, STINGER, SILENCE, UI
+; 9-bus layout per GDD §Audio Architecture + TAPE bus for tape playback
+; Buses: MASTER, ROOM_TONE, RADIO_AMBIENT, CALL_AUDIO, DREAD_LAYER, STINGER, SILENCE, UI, TAPE
 ; Default bus layout file: res://default_bus_layout.tres
 bus/default_bus_layout="res://default_bus_layout.tres"
 

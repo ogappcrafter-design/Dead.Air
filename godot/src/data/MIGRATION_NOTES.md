@@ -95,7 +95,7 @@ The GDD specifies tracking these variables:
 
 **No audio files found in repository.** Searched for .ogg, .mp3, .wav extensions across entire repo. No audio assets exist to migrate.
 
-The GDD specifies an 8-bus audio layout (MASTER, ROOM_TONE, RADIO_AMBIENT, CALL_AUDIO, DREAD_LAYER, STINGER, SILENCE, UI) which is already configured in `godot/default_bus_layout.tres`. Audio assets will need to be created or sourced separately.
+The GDD specifies an 8-bus audio layout (MASTER, ROOM_TONE, RADIO_AMBIENT, CALL_AUDIO, DREAD_LAYER, STINGER, SILENCE, UI) which is already configured in `godot/default_bus_layout.tres`. The Godot project adds a 9th bus, `TAPE`, for the collectible tape playback system. Audio assets will need to be created or sourced separately.
 
 ## Out-of-Scope Items (Flagged: needs-decision)
 

@@ -1,0 +1,8 @@
+[gd_scene load_steps=2 format=3 uid="uid://bvtapeplayerscene"]
+
+[ext_resource type="Script" path="res://src/ui/tape_player.gd" id="1_tape_player"]
+
+[node name="TapePlayer" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+script = ExtResource("1_tape_player")
