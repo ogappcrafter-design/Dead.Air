@@ -145,6 +145,23 @@ func _run_tests() -> void:
 			print("  [FAIL] %s::%s" % [silence_system_tests.test_name, test_name])
 
 	print("")
+
+	# Run HUDLayout tests
+	print("Running HUDLayout tests...")
+	var hud_layout_tests := preload("res://tests/test_hud_layout.gd").new()
+	var hud_results: Dictionary = hud_layout_tests.run_tests()
+	for test_name in hud_results.keys():
+		total_tests += 1
+		var passed: bool = hud_results[test_name]
+		if passed:
+			total_passed += 1
+			print("  [PASS] %s::%s" % [hud_layout_tests.test_name, test_name])
+		else:
+			total_failed += 1
+			all_passed = false
+			print("  [FAIL] %s::%s" % [hud_layout_tests.test_name, test_name])
+
+	print("")
 	print("=== Results ===")
 	print("Total: %d | Passed: %d | Failed: %d" % [total_tests, total_passed, total_failed])
 	print("ALL TESTS PASSED" if all_passed else "SOME TESTS FAILED")
