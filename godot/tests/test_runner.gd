@@ -36,6 +36,8 @@ func _run_tests() -> void:
 		["TapePickup", "res://tests/test_tape_pickup.gd"],
 		["TapeInventoryUI", "res://tests/test_tape_inventory_ui.gd"],
 		["TapePlayer", "res://tests/test_tape_player.gd"],
+		["Interactable", "res://tests/test_interactable.gd"],
+		["InteractionRaycast", "res://tests/test_interaction_raycast.gd"],
 	]
 
 	for suite in test_suites:

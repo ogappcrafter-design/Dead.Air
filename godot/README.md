@@ -28,7 +28,8 @@ godot/
 │   ├── audio/                 # Audio engine, bus layout, call pipeline
 │   ├── visual/                # CRT shader, camera system, UI
 │   ├── entities/              # Player, The Suits, environmental
-│   ├── levels/                # Phase 2-4 level scenes (station scenes in scenes/station/)
+│   ├── interactables/          # Concrete interactable objects (door, switch, tape, etc.)
+│   ├── levels/                # Station, Phase 2-4 level scenes
 │   ├── data/                  # Sacred calls data, band configs, tape data
 │   └── ui/                    # Menus, HUD, settings
 ├── assets/
@@ -75,6 +76,7 @@ Custom actions defined in `project.godot` (remappable; remapping UI is DEA-152):
 | `radio_band_down` | D-pad Left      | Q         |
 | `radio_record`    | Face Button (A) | R         |
 | `interact`        | Face Button (X) | E / Space |
+| `examine`         | D-pad Up        | F (hold)  |
 | `move`            | Left Stick      | W/A/S/D   |
 
 Godot default UI actions (`ui_accept`, `ui_cancel`, `ui_left/right/up/down`) are included by the engine.

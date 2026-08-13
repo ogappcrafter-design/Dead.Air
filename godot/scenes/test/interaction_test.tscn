@@ -1,0 +1,150 @@
+[gd_scene load_steps=23 format=3 uid="uid://dea108interacttest"]
+
+[ext_resource type="Script" path="res://src/entities/player.gd" id="1_player"]
+[ext_resource type="Script" path="res://src/visual/screen_relative_movement.gd" id="2_move"]
+[ext_resource type="Script" path="res://src/core/interaction_raycast.gd" id="3_raycast"]
+[ext_resource type="Script" path="res://src/ui/interact_prompt.gd" id="4_prompt"]
+[ext_resource type="Script" path="res://src/ui/examine_display.gd" id="5_examine"]
+[ext_resource type="Script" path="res://src/interactables/cassette_tape.gd" id="6_tape"]
+[ext_resource type="Script" path="res://src/interactables/radio_interactable.gd" id="7_radio"]
+[ext_resource type="Script" path="res://src/interactables/note_interactable.gd" id="8_note"]
+[ext_resource type="Script" path="res://src/interactables/door_interactable.gd" id="9_door"]
+[ext_resource type="Script" path="res://src/interactables/switch_interactable.gd" id="10_switch"]
+[ext_resource type="Script" path="res://src/interactables/item_interactable.gd" id="11_item"]
+[ext_resource type="Script" path="res://scenes/test/interaction_test.gd" id="12_test"]
+
+[sub_resource type="CapsuleShape3D" id="player_col"]
+radius = 0.3
+height = 1.0
+
+[sub_resource type="CapsuleMesh" id="player_mesh"]
+radius = 0.3
+height = 1.0
+
+[sub_resource type="StandardMaterial3D" id="floor_mat"]
+albedo_color = Color(0.3, 0.3, 0.3, 1)
+
+[sub_resource type="BoxMesh" id="floor_mesh"]
+size = Vector3(20, 0.1, 20)
+
+[sub_resource type="BoxShape3D" id="floor_shape"]
+size = Vector3(20, 0.1, 20)
+
+[sub_resource type="BoxShape3D" id="shape_tape"]
+size = Vector3(0.3, 0.2, 0.5)
+
+[sub_resource type="BoxShape3D" id="shape_note"]
+size = Vector3(0.3, 0.4, 0.01)
+
+[sub_resource type="BoxShape3D" id="shape_door"]
+size = Vector3(1.0, 2.0, 0.1)
+
+[sub_resource type="BoxShape3D" id="shape_switch"]
+size = Vector3(0.2, 0.2, 0.1)
+
+[sub_resource type="BoxShape3D" id="shape_radio"]
+size = Vector3(0.6, 0.4, 0.3)
+
+[sub_resource type="BoxShape3D" id="shape_item"]
+size = Vector3(0.3, 0.3, 0.3)
+
+[node name="InteractionTest" type="Node3D"]
+script = ExtResource("12_test")
+
+[node name="Floor" type="MeshInstance3D" parent="."]
+mesh = SubResource("floor_mesh")
+material_override = SubResource("floor_mat")
+
+[node name="FloorBody" type="StaticBody3D" parent="Floor"]
+collision_layer = 1
+collision_mask = 1
+
+[node name="FloorCollision" type="CollisionShape3D" parent="Floor/FloorBody"]
+shape = SubResource("floor_shape")
+
+[node name="Player" type="CharacterBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+script = ExtResource("1_player")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Player"]
+mesh = SubResource("player_mesh")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Player"]
+shape = SubResource("player_col")
+
+[node name="ScreenRelativeMovement" type="Node" parent="Player"]
+script = ExtResource("2_move")
+move_speed = 3.0
+acceleration = 10.0
+
+[node name="InteractionRaycast" type="RayCast3D" parent="Player"]
+script = ExtResource("3_raycast")
+interaction_range = 2.0
+
+[node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.707, -0.707, 0, 0.707, 0.707, 0, 8, 8)
+current = true
+
+[node name="UI" type="CanvasLayer" parent="."]
+
+[node name="InteractPrompt" type="Control" parent="UI"]
+script = ExtResource("4_prompt")
+fade_duration = 0.2
+offset_from_bottom = 80
+offset_from_left = 40
+
+[node name="ExamineDisplay" type="Control" parent="UI"]
+script = ExtResource("5_examine")
+typewriter_speed = 30.0
+fade_duration = 0.15
+
+[node name="CassetteTape" type="Area3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, -2)
+script = ExtResource("6_tape")
+tape_id = "tape_001"
+tape_label = "Test Tape"
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="CassetteTape"]
+shape = SubResource("shape_tape")
+
+[node name="Radio" type="Area3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0.5, 0)
+script = ExtResource("7_radio")
+station_name = "Test Station"
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Radio"]
+shape = SubResource("shape_radio")
+
+[node name="Note" type="Area3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0.5, -2)
+script = ExtResource("8_note")
+note_title = "Test Note"
+note_content = "This is a test note for the interaction system."
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Note"]
+shape = SubResource("shape_note")
+
+[node name="Door" type="Area3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 1.0, -2)
+script = ExtResource("9_door")
+door_name = "Test Door"
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Door"]
+shape = SubResource("shape_door")
+
+[node name="Switch" type="Area3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 1.0, 0)
+script = ExtResource("10_switch")
+switch_name = "Test Switch"
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Switch"]
+shape = SubResource("shape_switch")
+
+[node name="Item" type="Area3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 2)
+script = ExtResource("11_item")
+item_id = "item_001"
+item_name = "Test Item"
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Item"]
+shape = SubResource("shape_item")

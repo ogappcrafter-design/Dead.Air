@@ -156,3 +156,9 @@ skip_call={
 "deadzone": 0.5,
 "events": [Object(InputEventJoypadButton,"button_index":0,"pressed":true), Object(InputEventKey,"keycode":69,"unicode":101,"echo":false)]
 }
+
+; Examine — D-pad Up (button 12) / F (hold to examine interactable)
+examine={
+"deadzone": 0.5,
+"events": [Object(InputEventJoypadButton,"button_index":12,"pressed":true), Object(InputEventKey,"keycode":70,"unicode":102,"echo":false)]
+}
