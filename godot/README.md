@@ -69,15 +69,17 @@ All buses route to `MASTER` and support real-time parameter control via GDScript
 
 Custom actions defined in `project.godot` (remappable; remapping UI is DEA-152):
 
-| Action            | Gamepad         | Keyboard  |
-| ----------------- | --------------- | --------- |
-| `radio_tune`      | Left Stick X    | A / D     |
-| `radio_band_up`   | D-pad Right     | E         |
-| `radio_band_down` | D-pad Left      | Q         |
-| `radio_record`    | Face Button (A) | R         |
-| `interact`        | Face Button (X) | E / Space |
-| `examine`         | D-pad Up        | F (hold)  |
-| `move`            | Left Stick      | W/A/S/D   |
+| Action             | Gamepad         | Keyboard  |
+| ------------------ | --------------- | --------- |
+| `radio_tune`       | Left Stick X    | A / D     |
+| `radio_band_up`    | D-pad Right     | E         |
+| `radio_band_down`  | D-pad Left      | Q         |
+| `radio_record`     | Face Button (A) | R         |
+| `interact`         | Face Button (X) | E / Space |
+| `examine`          | D-pad Up        | F (hold)  |
+| `switch_tape_prev` | D-pad Left      | Left      |
+| `switch_tape_next` | D-pad Right     | Right     |
+| `move`             | Left Stick      | W/A/S/D   |
 
 Godot default UI actions (`ui_accept`, `ui_cancel`, `ui_left/right/up/down`) are included by the engine.
 

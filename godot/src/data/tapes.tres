@@ -2,7 +2,7 @@
 ; Source: data/calls.js ALL_TAPES (display names) + data/tapes.ts TAPES (metadata)
 ; Tape↔call linkages derived from CALLS where tape=true
 ; Godot 4 / format=3
-[gd_resource type="Resource" script_class="TapeLibrary" load_steps=18 format=3]
+[gd_resource type="Resource" script_class="TapeLibrary" load_steps=21 format=3]
 
 [ext_resource type="Script" path="res://src/data/tape_library.gd" id="1"]
 [ext_resource type="Script" path="res://src/data/tape_data.gd" id="2"]
@@ -172,6 +172,57 @@ duration = "9:99"
 rarity = "legendary"
 linked_call_id = 17
 
+[sub_resource type="Resource" id="Tape_15"]
+script = ExtResource("2")
+tape_id = "tape-danger-001"
+display_name = "Recording — The Hum"
+title = "The Hum"
+description = "A low droning that settles behind your eyes. Playing it makes you uneasy."
+band = "LIMINAL"
+duration = "0:30"
+rarity = "uncommon"
+linked_call_id = -1
+is_recording = true
+recorded_band_id = 1
+recorded_frequency = 104.7
+is_dangerous = true
+composure_penalty = -20
+spawns_entity = false
+
+[sub_resource type="Resource" id="Tape_16"]
+script = ExtResource("2")
+tape_id = "tape-danger-002"
+display_name = "DO NOT PLAY — The Breathing"
+title = "The Breathing"
+description = "You can hear it breathing on the other end. Do not play this tape."
+band = "████████"
+duration = "0:30"
+rarity = "rare"
+linked_call_id = -1
+is_recording = true
+recorded_band_id = 3
+recorded_frequency = 66.6
+is_dangerous = true
+composure_penalty = -50
+spawns_entity = true
+
+[sub_resource type="Resource" id="Tape_17"]
+script = ExtResource("2")
+tape_id = "tape-danger-003"
+display_name = "Recording — Cross-Talk"
+title = "Cross-Talk"
+description = "Two signals bleeding into each other. Something on the other line responds."
+band = "LOST"
+duration = "0:30"
+rarity = "uncommon"
+linked_call_id = -1
+is_recording = true
+recorded_band_id = 2
+recorded_frequency = 88.8
+is_dangerous = true
+composure_penalty = -20
+spawns_entity = false
+
 [resource]
 script = ExtResource("1")
-tapes = [SubResource("Tape_0"), SubResource("Tape_1"), SubResource("Tape_2"), SubResource("Tape_3"), SubResource("Tape_4"), SubResource("Tape_5"), SubResource("Tape_6"), SubResource("Tape_7"), SubResource("Tape_8"), SubResource("Tape_9"), SubResource("Tape_10"), SubResource("Tape_11"), SubResource("Tape_12"), SubResource("Tape_13"), SubResource("Tape_14")]
+tapes = [SubResource("Tape_0"), SubResource("Tape_1"), SubResource("Tape_2"), SubResource("Tape_3"), SubResource("Tape_4"), SubResource("Tape_5"), SubResource("Tape_6"), SubResource("Tape_7"), SubResource("Tape_8"), SubResource("Tape_9"), SubResource("Tape_10"), SubResource("Tape_11"), SubResource("Tape_12"), SubResource("Tape_13"), SubResource("Tape_14"), SubResource("Tape_15"), SubResource("Tape_16"), SubResource("Tape_17")]

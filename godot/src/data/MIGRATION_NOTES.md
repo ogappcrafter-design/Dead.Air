@@ -144,6 +144,6 @@ These are **not** in `data/calls.js` BANDS and are not part of the GDD sacred ba
 | `godot/src/data/band_config.tres`   | 5 sacred bands resource file                                                                        |
 | `godot/src/data/tape_data.gd`       | TapeData resource class                                                                             |
 | `godot/src/data/tape_library.gd`    | TapeLibrary container resource                                                                      |
-| `godot/src/data/tapes.tres`         | 15 base tapes resource file                                                                         |
+| `godot/src/data/tapes.tres`         | 15 base tapes + 3 recording tapes (18 total, DEA-98 added recording tapes)                          |
 | `godot/src/data/MIGRATION_NOTES.md` | This file                                                                                           |
 | `godot/src/data/validation.gd`      | Validation script                                                                                   |

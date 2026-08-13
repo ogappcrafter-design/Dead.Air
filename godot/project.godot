@@ -43,6 +43,8 @@ StationDegradation="*res://src/core/station_degradation.gd"
 ShiftController="*res://src/core/shift_controller.gd"
 ; BreatherSystem — breather events between calls (singleton)
 BreatherSystem="*res://src/core/breather_system.gd"
+; RecordingManager — radio tape recording, playback, and dangerous tape effects (singleton)
+RecordingManager="*res://src/core/recording_manager.gd"
 
 [display]
 
@@ -167,4 +169,14 @@ skip_call={
 examine={
 "deadzone": 0.5,
 "events": [Object(InputEventJoypadButton,"button_index":12,"pressed":true), Object(InputEventKey,"keycode":70,"unicode":102,"echo":false)]
+}
+
+; Switch Tape — D-pad Left (button 14) / D-pad Right (button 15)
+switch_tape_prev={
+"deadzone": 0.5,
+"events": [Object(InputEventJoypadButton,"button_index":14,"pressed":true), Object(InputEventKey,"keycode":4194319,"unicode":0,"echo":false)]
+}
+switch_tape_next={
+"deadzone": 0.5,
+"events": [Object(InputEventJoypadButton,"button_index":15,"pressed":true), Object(InputEventKey,"keycode":4194321,"unicode":0,"echo":false)]
 }
