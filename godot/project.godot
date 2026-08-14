@@ -45,8 +45,8 @@ ShiftController="*res://src/core/shift_controller.gd"
 BreatherSystem="*res://src/core/breather_system.gd"
 ; RecordingManager — radio tape recording, playback, and dangerous tape effects (singleton)
 RecordingManager="*res://src/core/recording_manager.gd"
-; DEA-98: Moral choice tracking (empathy/self-preservation/curiosity) — singleton
-MoralChoiceTracker="*res://src/core/moral_choice_tracker.gd"
+; BandController — band system controller (singleton)
+BandController="*res://src/core/band_controller.gd"
 
 [display]
 

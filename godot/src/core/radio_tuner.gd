@@ -34,17 +34,14 @@ const REDACTED_BAND_ID: int = 4
 ## Band id for PIRATE band (always-drifts).
 const PIRATE_BAND_ID: int = 6
 
-## Cross-pollination multiplier for non-native bands.
-const NON_NATIVE_MULTIPLIER: float = 0.4
-
 ## Band configuration resource containing all 8 bands.
 @export var band_config: BandConfig
 
-## Minimum tunable frequency in MHz (LIMINAL min).
-const FREQ_MIN: float = 76.0
+## Minimum tunable frequency in MHz (LIVING min, GDD v2).
+const FREQ_MIN: float = 87.5
 
-## Maximum tunable frequency in MHz (HISTORICAL max).
-const FREQ_MAX: float = 1700.0
+## Maximum tunable frequency in MHz (HISTORICAL max, GDD v2).
+const FREQ_MAX: float = 173.0
 
 ## Frequency change per tuning tick (MHz).
 const TUNE_STEP: float = 0.05
@@ -69,11 +66,6 @@ var current_phase: int = 0
 var _drift_offset: float = 0.0
 var _drift_timer: float = 0.0
 
-# --- PIRATE always-drift state (updates regardless of active band) ---
-
-var _pirate_drift_offset: float = 0.0
-var _pirate_drift_timer: float = 0.0
-
 
 func _ready() -> void:
 	if band_config == null:
@@ -86,7 +78,6 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	if band_config == null:
 		return
-	_update_pirate_drift(delta)
 	_update_drift(delta)
 
 
@@ -98,6 +89,7 @@ func tune(direction: float) -> void:
 	var step: float = TUNE_STEP * clampf(direction, -1.0, 1.0)
 	current_frequency = clamp(current_frequency + step, FREQ_MIN, FREQ_MAX)
 	frequency_changed.emit(current_frequency)
+	BandController.on_frequency_changed(current_frequency, current_band_id)
 	_emit_signal_if_changed()
 
 
@@ -107,6 +99,7 @@ func set_frequency(freq: float) -> void:
 		return
 	current_frequency = clamp(freq, FREQ_MIN, FREQ_MAX)
 	frequency_changed.emit(current_frequency)
+	BandController.on_frequency_changed(current_frequency, current_band_id)
 	_emit_signal_if_changed()
 
 
@@ -119,6 +112,7 @@ func set_band(band_id: int) -> void:
 		return
 	var prev_band: int = current_band_id
 	current_band_id = band_id
+	BandController.on_band_changed(band_id)
 	# Reset drift state when switching bands (PIRATE uses its own always-drift).
 	_drift_offset = 0.0
 	_drift_timer = 0.0
@@ -160,7 +154,7 @@ func set_fine_tuning(active: bool) -> void:
 ## Calculate the current signal strength (0-100) based on frequency offset from center.
 ## Formula: signal = max(0, 100 - (abs(currentFreq - centerFreq) * sensitivity))
 ## When fine tuning, sensitivity is multiplied by FINE_TUNE_MULTIPLIER (wider sweet spot).
-## Cross-pollination: non-native bands get signal × 0.4 (DEA-99).
+## Cross-pollination (non-native ×0.4, DEA-99) is applied by SignalStrength.
 func get_signal() -> float:
 	if band_config == null:
 		return 0.0
@@ -171,9 +165,7 @@ func get_signal() -> float:
 	var sens: float = get_current_sensitivity()
 	var offset: float = abs(current_frequency - center)
 	var raw_signal: float = max(0.0, 100.0 - (offset * sens))
-	# Apply cross-pollination multiplier for non-native bands.
-	if not _is_native_band(current_band_id):
-		raw_signal *= NON_NATIVE_MULTIPLIER
+	# Cross-pollination is now handled by BandController via SignalStrength.
 	return raw_signal
 
 
@@ -184,9 +176,9 @@ func get_current_center() -> float:
 	var band: BandData = band_config.get_band(current_band_id)
 	if band == null:
 		return 0.0
-	# PIRATE band uses the always-drift offset.
+	# PIRATE band delegates to BandController for drift.
 	if current_band_id == PIRATE_BAND_ID:
-		return band.center_frequency + _pirate_drift_offset
+		return BandController.get_pirate_center_frequency()
 	return band.center_frequency + _drift_offset
 
 
@@ -243,40 +235,7 @@ func set_phase(phase: int) -> void:
 	current_phase = phase
 
 
-# --- Internal: Cross-pollination ---
-
-## Map phase to native band id: P1→LIVING(0), P2→LIMINAL(1), P3→LOST(2), P4→████████(4).
-func _get_native_band_id(phase: int) -> int:
-	match phase:
-		0: return 0  # PHASE_1_STATION → LIVING
-		1: return 1  # PHASE_2_BREAK → LIMINAL
-		2: return 2  # PHASE_3_JOURNEY → LOST
-		3: return 4  # PHASE_4_DESCENT → ████████
-		_: return 0
-
-
-## Check if the current band is the native band for the current phase.
-func _is_native_band(band_id: int) -> bool:
-	return band_id == _get_native_band_id(current_phase)
-
-
 # --- Internal: Drift handling ---
-
-## PIRATE band drifts ±0.3 MHz every 30 seconds, regardless of which band is active.
-func _update_pirate_drift(delta: float) -> void:
-	if band_config == null:
-		return
-	var pirate: BandData = band_config.get_band(PIRATE_BAND_ID)
-	if pirate == null or not pirate.drifts:
-		return
-	_pirate_drift_timer += delta
-	if _pirate_drift_timer >= pirate.drift_interval:
-		_pirate_drift_timer = 0.0
-		_pirate_drift_offset = randf_range(-pirate.drift_amount, pirate.drift_amount)
-		# If PIRATE is currently active, emit signal change.
-		if current_band_id == PIRATE_BAND_ID:
-			_emit_signal_if_changed()
-
 
 ## Regular drift for the current active band (if it drifts and isn't PIRATE).
 func _update_drift(delta: float) -> void:

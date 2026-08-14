@@ -1,20 +1,21 @@
-# test_band_system.gd — Tests for DEA-99 Band System & Unlock Logic
+# test_band_system.gd — Tests for DEA-99 Band System & Unlock Logic (GDD v2)
 # Run via: godot --headless --script res://tests/test_runner.gd
 extends RefCounted
 
 var test_name: String = "BandSystem"
 
-# DEA-99 spec band values
+# GDD v2 spec band values
 const BAND_SPECS = [
 	# [name, center, sens, min, max, color_r, color_g, color_b, unlock_type, unlock_shift, unlock_time_band, unlock_time_sec, unlock_event]
-	["LIVING", 98.0, 8.0, 88.0, 108.0, 0.0, 1.0, 0.0, 0, 0, -1, 0.0, ""],
-	["LIMINAL", 82.0, 6.0, 76.0, 88.0, 0.0, 1.0, 1.0, 1, 2, -1, 0.0, ""],
-	["LOST", 114.0, 4.0, 108.0, 120.0, 0.5, 0.0, 0.5, 2, 0, 1, 30.0, ""],
-	["CLASSIFIED", 130.0, 3.0, 120.0, 140.0, 1.0, 0.0, 0.0, 3, 0, -1, 0.0, "frequency_clue"],
-	["████████", 150.0, 1.5, 140.0, 160.0, 0.0, 0.0, 0.0, 3, 0, -1, 0.0, "classified_event"],
-	["WEATHER", 168.0, 5.0, 162.0, 174.0, 0.0, 0.0, 1.0, 0, 0, -1, 0.0, ""],
-	["PIRATE", 98.0, 2.5, 87.5, 108.0, 1.0, 0.5, 0.0, 1, 3, -1, 0.0, ""],
-	["HISTORICAL", 1000.0, 4.0, 530.0, 1700.0, 1.0, 0.75, 0.0, 3, 0, -1, 0.0, "antique_radio"],
+	# unlock_type: 0=START, 1=SHIFT, 2=TIME_TUNING, 3=EVENT
+	["LIVING", 88.7, 8.0, 87.5, 92.0, 1.0, 0.55, 0.0, 0, 0, -1, 0.0, ""],
+	["LIMINAL", 102.3, 6.0, 92.0, 96.5, 0.8, 1.0, 0.0, 1, 2, -1, 0.0, ""],
+	["LOST", 117.8, 4.0, 96.5, 101.0, 0.0, 1.0, 0.82, 1, 3, -1, 0.0, ""],
+	["CLASSIFIED", 0.0, 3.0, 101.0, 105.5, 1.0, 0.2, 0.4, 1, 4, -1, 0.0, ""],
+	["████████", 0.0, 1.5, 105.5, 108.0, 1.0, 1.0, 1.0, 1, 5, -1, 0.0, ""],
+	["WEATHER", 162.0, 5.0, 160.0, 164.0, 0.27, 0.53, 1.0, 1, 3, -1, 0.0, ""],
+	["PIRATE", 166.0, 2.5, 164.0, 168.0, 1.0, 0.27, 1.0, 3, 0, -1, 0.0, "find_10_tapes"],
+	["HISTORICAL", 170.0, 4.0, 168.0, 172.0, 0.53, 0.53, 0.53, 3, 0, -1, 0.0, "reach_100_static"],
 ]
 
 
@@ -24,7 +25,6 @@ func run_tests() -> Dictionary:
 	results["test_band_switching"] = test_band_switching()
 	results["test_unlock_conditions"] = test_unlock_conditions()
 	results["test_unlock_manager_shift"] = test_unlock_manager_shift()
-	results["test_unlock_manager_tuning"] = test_unlock_manager_tuning()
 	results["test_unlock_manager_event"] = test_unlock_manager_event()
 	results["test_unlock_manager_persistence"] = test_unlock_manager_persistence()
 	results["test_cross_pollination"] = test_cross_pollination()
@@ -118,72 +118,73 @@ func test_band_switching() -> bool:
 	return true
 
 
-# AC3: Unlock conditions check correctly (shift-based, time-based, event-based)
+# AC3: Unlock conditions check correctly (shift-based, event-based)
 func test_unlock_conditions() -> bool:
 	var config: BandConfig = _make_band_config()
 
 	# Test unlock types and conditions by checking band data fields.
-	# Start bands: LIVING(0), WEATHER(5)
+	# Start bands: LIVING(0) only in GDD v2.
 	var band0: BandData = config.get_band(0)
-	var band5: BandData = config.get_band(5)
 	if band0.unlock_type != BandData.UnlockType.START:
 		print("    FAIL: LIVING unlock_type should be START, got %d" % band0.unlock_type)
 		return false
-	if band5.unlock_type != BandData.UnlockType.START:
-		print("    FAIL: WEATHER unlock_type should be START, got %d" % band5.unlock_type)
-		return false
 
-	# Check SHIFT unlock: LIMINAL=shift 2, PIRATE=shift 3
+	# Check SHIFT unlock: LIMINAL=shift 2, LOST=shift 3, CLASSIFIED=shift 4, ████████=shift 5, WEATHER=shift 3
 	var band1: BandData = config.get_band(1)
-	var band6: BandData = config.get_band(6)
 	if band1.unlock_type != BandData.UnlockType.SHIFT:
 		print("    FAIL: LIMINAL unlock_type should be SHIFT, got %d" % band1.unlock_type)
 		return false
 	if band1.unlock_shift != 2:
 		print("    FAIL: LIMINAL unlock_shift should be 2, got %d" % band1.unlock_shift)
 		return false
-	if band6.unlock_type != BandData.UnlockType.SHIFT:
-		print("    FAIL: PIRATE unlock_type should be SHIFT, got %d" % band6.unlock_type)
-		return false
-	if band6.unlock_shift != 3:
-		print("    FAIL: PIRATE unlock_shift should be 3, got %d" % band6.unlock_shift)
-		return false
 
-	# Check TIME_TUNING unlock: LOST = tune LIMINAL(1) for 30s
 	var band2: BandData = config.get_band(2)
-	if band2.unlock_type != BandData.UnlockType.TIME_TUNING:
-		print("    FAIL: LOST unlock_type should be TIME_TUNING, got %d" % band2.unlock_type)
+	if band2.unlock_type != BandData.UnlockType.SHIFT:
+		print("    FAIL: LOST unlock_type should be SHIFT, got %d" % band2.unlock_type)
 		return false
-	if band2.unlock_time_tuning_band != 1:
-		print("    FAIL: LOST unlock_time_tuning_band should be 1, got %d" % band2.unlock_time_tuning_band)
-		return false
-	if abs(band2.unlock_time_seconds - 30.0) > 0.01:
-		print("    FAIL: LOST unlock_time_seconds should be 30.0, got %s" % band2.unlock_time_seconds)
+	if band2.unlock_shift != 3:
+		print("    FAIL: LOST unlock_shift should be 3, got %d" % band2.unlock_shift)
 		return false
 
-	# Check EVENT unlock: CLASSIFIED, ████████, HISTORICAL
 	var band3: BandData = config.get_band(3)
-	if band3.unlock_type != BandData.UnlockType.EVENT:
-		print("    FAIL: CLASSIFIED unlock_type should be EVENT, got %d" % band3.unlock_type)
+	if band3.unlock_type != BandData.UnlockType.SHIFT:
+		print("    FAIL: CLASSIFIED unlock_type should be SHIFT, got %d" % band3.unlock_type)
 		return false
-	if band3.unlock_event_id != "frequency_clue":
-		print("    FAIL: CLASSIFIED unlock_event_id should be frequency_clue, got %s" % band3.unlock_event_id)
+	if band3.unlock_shift != 4:
+		print("    FAIL: CLASSIFIED unlock_shift should be 4, got %d" % band3.unlock_shift)
 		return false
 
 	var band4: BandData = config.get_band(4)
-	if band4.unlock_type != BandData.UnlockType.EVENT:
-		print("    FAIL: ████████ unlock_type should be EVENT, got %d" % band4.unlock_type)
+	if band4.unlock_type != BandData.UnlockType.SHIFT:
+		print("    FAIL: ████████ unlock_type should be SHIFT, got %d" % band4.unlock_type)
 		return false
-	if band4.unlock_event_id != "classified_event":
-		print("    FAIL: ████████ unlock_event_id should be classified_event, got %s" % band4.unlock_event_id)
+	if band4.unlock_shift != 5:
+		print("    FAIL: ████████ unlock_shift should be 5, got %d" % band4.unlock_shift)
+		return false
+
+	var band5: BandData = config.get_band(5)
+	if band5.unlock_type != BandData.UnlockType.SHIFT:
+		print("    FAIL: WEATHER unlock_type should be SHIFT, got %d" % band5.unlock_type)
+		return false
+	if band5.unlock_shift != 3:
+		print("    FAIL: WEATHER unlock_shift should be 3, got %d" % band5.unlock_shift)
+		return false
+
+	# Check EVENT unlock: PIRATE = "find_10_tapes", HISTORICAL = "reach_100_static"
+	var band6: BandData = config.get_band(6)
+	if band6.unlock_type != BandData.UnlockType.EVENT:
+		print("    FAIL: PIRATE unlock_type should be EVENT, got %d" % band6.unlock_type)
+		return false
+	if band6.unlock_event_id != "find_10_tapes":
+		print("    FAIL: PIRATE unlock_event_id should be find_10_tapes, got %s" % band6.unlock_event_id)
 		return false
 
 	var band7: BandData = config.get_band(7)
 	if band7.unlock_type != BandData.UnlockType.EVENT:
 		print("    FAIL: HISTORICAL unlock_type should be EVENT, got %d" % band7.unlock_type)
 		return false
-	if band7.unlock_event_id != "antique_radio":
-		print("    FAIL: HISTORICAL unlock_event_id should be antique_radio, got %s" % band7.unlock_event_id)
+	if band7.unlock_event_id != "reach_100_static":
+		print("    FAIL: HISTORICAL unlock_event_id should be reach_100_static, got %s" % band7.unlock_event_id)
 		return false
 
 	return true
@@ -196,58 +197,52 @@ func test_unlock_manager_shift() -> bool:
 		print("    FAIL: Could not create BandUnlockManager")
 		return false
 
-	# At shift 1, LIMINAL(1, shift 2) and PIRATE(6, shift 3) should be locked.
+	# At shift 1, all SHIFT bands should be locked (LIMINAL=2, LOST=3, WEATHER=3, CLASSIFIED=4, ████████=5).
 	mgr.on_shift_changed(1)
 	if mgr.is_band_unlocked(1):
 		print("    FAIL: LIMINAL should NOT be unlocked at shift 1")
 		return false
-	if mgr.is_band_unlocked(6):
-		print("    FAIL: PIRATE should NOT be unlocked at shift 1")
+	if mgr.is_band_unlocked(2):
+		print("    FAIL: LOST should NOT be unlocked at shift 1")
 		return false
 
-	# At shift 2, LIMINAL unlocks but PIRATE stays locked.
+	# At shift 2, LIMINAL unlocks but LOST stays locked.
 	mgr.on_shift_changed(2)
 	if not mgr.is_band_unlocked(1):
 		print("    FAIL: LIMINAL should be unlocked at shift 2")
 		return false
-	if mgr.is_band_unlocked(6):
-		print("    FAIL: PIRATE should NOT be unlocked at shift 2")
-		return false
-
-	# At shift 3, PIRATE unlocks.
-	mgr.on_shift_changed(3)
-	if not mgr.is_band_unlocked(6):
-		print("    FAIL: PIRATE should be unlocked at shift 3")
-		return false
-
-	return true
-
-
-# AC3c: BandUnlockManager.on_tuning_tick() accumulates time and unlocks at threshold
-func test_unlock_manager_tuning() -> bool:
-	var mgr: BandUnlockManager = _make_unlock_manager()
-	if mgr == null:
-		print("    FAIL: Could not create BandUnlockManager")
-		return false
-
-	# LOST(2) unlocks when LIMINAL(1) is tuned for 30s.
-	# Tick 29 seconds — should NOT unlock.
-	mgr.on_tuning_tick(1, 29.0)
 	if mgr.is_band_unlocked(2):
-		print("    FAIL: LOST should NOT be unlocked after 29s of tuning LIMINAL")
+		print("    FAIL: LOST should NOT be unlocked at shift 2")
 		return false
 
-	# Tick 1 more second (total 30) — should unlock.
-	mgr.on_tuning_tick(1, 1.0)
+	# At shift 3, LOST and WEATHER unlock. CLASSIFIED(4) and ████████(5) stay locked.
+	mgr.on_shift_changed(3)
 	if not mgr.is_band_unlocked(2):
-		print("    FAIL: LOST should be unlocked after 30s of tuning LIMINAL")
+		print("    FAIL: LOST should be unlocked at shift 3")
+		return false
+	if not mgr.is_band_unlocked(5):
+		print("    FAIL: WEATHER should be unlocked at shift 3")
+		return false
+	if mgr.is_band_unlocked(3):
+		print("    FAIL: CLASSIFIED should NOT be unlocked at shift 3")
+		return false
+	if mgr.is_band_unlocked(4):
+		print("    FAIL: ████████ should NOT be unlocked at shift 3")
 		return false
 
-	# Ticking a different band should not affect LOST progress.
-	var mgr2: BandUnlockManager = _make_unlock_manager()
-	mgr2.on_tuning_tick(0, 29.0)
-	if mgr2.is_band_unlocked(2):
-		print("    FAIL: LOST should NOT unlock from tuning LIVING(0)")
+	# At shift 4, CLASSIFIED unlocks. ████████(5) stays locked.
+	mgr.on_shift_changed(4)
+	if not mgr.is_band_unlocked(3):
+		print("    FAIL: CLASSIFIED should be unlocked at shift 4")
+		return false
+	if mgr.is_band_unlocked(4):
+		print("    FAIL: ████████ should NOT be unlocked at shift 4")
+		return false
+
+	# At shift 5, ████████ unlocks.
+	mgr.on_shift_changed(5)
+	if not mgr.is_band_unlocked(4):
+		print("    FAIL: ████████ should be unlocked at shift 5")
 		return false
 
 	return true
@@ -260,129 +255,91 @@ func test_unlock_manager_event() -> bool:
 		print("    FAIL: Could not create BandUnlockManager")
 		return false
 
-	# CLASSIFIED(3) → "frequency_clue"
-	mgr.on_event("frequency_clue")
-	if not mgr.is_band_unlocked(3):
-		print("    FAIL: CLASSIFIED should be unlocked by frequency_clue event")
+	# PIRATE(6) → "find_10_tapes"
+	mgr.on_event("find_10_tapes")
+	if not mgr.is_band_unlocked(6):
+		print("    FAIL: PIRATE should be unlocked by find_10_tapes event")
 		return false
 
-	# ████████(4) → "classified_event"
-	mgr.on_event("classified_event")
-	if not mgr.is_band_unlocked(4):
-		print("    FAIL: ████████ should be unlocked by classified_event event")
-		return false
-
-	# HISTORICAL(7) → "antique_radio"
-	mgr.on_event("antique_radio")
+	# HISTORICAL(7) → "reach_100_static"
+	mgr.on_event("reach_100_static")
 	if not mgr.is_band_unlocked(7):
-		print("    FAIL: HISTORICAL should be unlocked by antique_radio event")
+		print("    FAIL: HISTORICAL should be unlocked by reach_100_static event")
 		return false
 
 	# Unknown event should not unlock anything new.
 	mgr.on_event("nonexistent_event")
 	# Only verify no crash and no spurious unlocks of still-locked bands.
-	# All EVENT bands already unlocked, so just ensure no exception.
 
 	return true
 
 
-# AC3e: BandUnlockManager tuning_time persists across save/load round-trip
+# AC3e: BandUnlockManager state persists across save/load round-trip
 func test_unlock_manager_persistence() -> bool:
 	var mgr: BandUnlockManager = _make_unlock_manager()
 	if mgr == null:
 		print("    FAIL: Could not create BandUnlockManager")
 		return false
 
-	# Tune LIMINAL for 15 seconds (halfway to LOST unlock at 30s).
-	mgr.on_tuning_tick(1, 15.0)
-	if mgr.is_band_unlocked(2):
-		print("    FAIL: LOST should NOT be unlocked at 15s")
+	# Unlock LIMINAL via shift 2.
+	mgr.on_shift_changed(2)
+	if not mgr.is_band_unlocked(1):
+		print("    FAIL: LIMINAL should be unlocked at shift 2")
 		return false
 
 	# Save state.
 	var save_data: SaveData = SaveData.new()
 	mgr.save_to(save_data)
 
-	# Verify tuning_time was persisted.
-	if not save_data.tuning_time.has(2):
-		print("    FAIL: tuning_time should contain band 2 after tuning")
-		return false
-	if abs(float(save_data.tuning_time[2]) - 15.0) > 0.01:
-		print("    FAIL: tuning_time[2] should be 15.0, got %s" % save_data.tuning_time[2])
-		return false
-
-	# Load into a fresh manager.
+	# Load into a fresh manager — LIMINAL should still be unlocked.
 	var mgr2: BandUnlockManager = _make_unlock_manager()
 	mgr2.load_from_save(save_data)
-
-	# Tune 15 more seconds (total 30) — should now unlock LOST.
-	mgr2.on_tuning_tick(1, 15.0)
-	if not mgr2.is_band_unlocked(2):
-		print("    FAIL: LOST should be unlocked after 15s+15s with save/load in between")
+	if not mgr2.is_band_unlocked(1):
+		print("    FAIL: LIMINAL should still be unlocked after save/load")
 		return false
 
-	# Verify a manager with no saved tuning_time starts fresh.
+	# Verify a manager with no saved state starts fresh.
 	var save_empty: SaveData = SaveData.new()
 	var mgr3: BandUnlockManager = _make_unlock_manager()
 	mgr3.load_from_save(save_empty)
-	mgr3.on_tuning_tick(1, 29.0)
-	if mgr3.is_band_unlocked(2):
-		print("    FAIL: LOST should NOT unlock from 29s with empty tuning_time")
+	if mgr3.is_band_unlocked(1):
+		print("    FAIL: LIMINAL should NOT be unlocked with empty save")
 		return false
 
 	return true
 
 
-# AC4: Cross-pollination multiplier (×0.4 for non-native bands) applies to signal strength
+# AC4: Cross-pollination multiplier (×1.0 native, ×0.4 non-native) via BandController
 func test_cross_pollination() -> bool:
-	var tuner: RadioTuner = _make_tuner()
-	if tuner == null:
-		print("    FAIL: Could not create RadioTuner")
-		return false
-
+	# Test BandController.get_cross_pollination_multiplier() directly.
 	# Phase 0 (PHASE_1_STATION) → LIVING(0) is native.
-	tuner.set_phase(0)
-	tuner.set_band(0)
-	tuner.set_frequency(98.0)  # LIVING center
-	var native_signal: float = tuner.get_signal()
-	# At center, signal should be 100 (no offset).
-	if abs(native_signal - 100.0) > 0.5:
-		print("    FAIL: Native band at center should be ~100, got %s" % native_signal)
+	var native_mult: float = BandController.get_cross_pollination_multiplier(0, 0)
+	if abs(native_mult - 1.0) > 0.01:
+		print("    FAIL: Native band (LIVING at phase 0) multiplier should be 1.0, got %s" % native_mult)
 		return false
 
-	# Switch to WEATHER(5) — non-native for phase 0.
-	tuner.set_band(5)
-	tuner.set_frequency(168.0)  # WEATHER center
-	var non_native_signal: float = tuner.get_signal()
-	# Non-native at center should be 100 * 0.4 = 40.
-	if abs(non_native_signal - 40.0) > 0.5:
-		print("    FAIL: Non-native band at center should be ~40 (100*0.4), got %s" % non_native_signal)
+	# WEATHER(5) is non-native for phase 0.
+	var non_native_mult: float = BandController.get_cross_pollination_multiplier(5, 0)
+	if abs(non_native_mult - 0.4) > 0.01:
+		print("    FAIL: Non-native band (WEATHER at phase 0) multiplier should be 0.4, got %s" % non_native_mult)
 		return false
 
 	# Phase 1 (PHASE_2_BREAK) → LIMINAL(1) is native.
-	tuner.set_phase(1)
-	tuner.set_band(1)
-	tuner.set_frequency(82.0)  # LIMINAL center
-	var liminal_signal: float = tuner.get_signal()
-	if abs(liminal_signal - 100.0) > 0.5:
-		print("    FAIL: LIMINAL as native at center should be ~100, got %s" % liminal_signal)
+	var liminal_native: float = BandController.get_cross_pollination_multiplier(1, 1)
+	if abs(liminal_native - 1.0) > 0.01:
+		print("    FAIL: LIMINAL as native (phase 1) multiplier should be 1.0, got %s" % liminal_native)
 		return false
 
 	# LIVING(0) is now non-native for phase 1.
-	tuner.set_band(0)
-	tuner.set_frequency(98.0)
-	var living_non_native: float = tuner.get_signal()
-	if abs(living_non_native - 40.0) > 0.5:
-		print("    FAIL: LIVING as non-native at center should be ~40, got %s" % living_non_native)
+	var living_non_native: float = BandController.get_cross_pollination_multiplier(0, 1)
+	if abs(living_non_native - 0.4) > 0.01:
+		print("    FAIL: LIVING as non-native (phase 1) multiplier should be 0.4, got %s" % living_non_native)
 		return false
 
 	# Phase 3 → ████████(4) is native.
-	tuner.set_phase(3)
-	tuner.set_band(4)
-	tuner.set_frequency(150.0)  # ████████ center
-	var redacted_native: float = tuner.get_signal()
-	if abs(redacted_native - 100.0) > 0.5:
-		print("    FAIL: ████████ as native at center should be ~100, got %s" % redacted_native)
+	var redacted_native: float = BandController.get_cross_pollination_multiplier(4, 3)
+	if abs(redacted_native - 1.0) > 0.01:
+		print("    FAIL: ████████ as native (phase 3) multiplier should be 1.0, got %s" % redacted_native)
 		return false
 
 	return true
@@ -395,43 +352,46 @@ func test_pirate_drift() -> bool:
 		print("    FAIL: Could not create RadioTuner")
 		return false
 
-	# PIRATE band is band 6. Its base center is 98.0.
+	# PIRATE band is band 6. Its base center is 166.0 (GDD v2).
 	tuner.set_band(6)
-	var initial_center: float = tuner.get_current_center()
-	# Initial center should be 98.0 (no drift yet).
-	if abs(initial_center - 98.0) > 0.01:
-		print("    FAIL: PIRATE initial center should be 98.0, got %s" % initial_center)
+
+	# Trigger PIRATE drift via BandController's API.
+	BandController._on_pirate_drift_timeout()
+	var drift_offset: float = BandController.get_pirate_drift_offset()
+	# Drift offset should be within [-0.3, 0.3].
+	if drift_offset < -0.3 or drift_offset > 0.3:
+		print("    FAIL: PIRATE drift offset should be in [-0.3, 0.3], got %s" % drift_offset)
 		return false
 
-	# Simulate 30 seconds of _update_pirate_drift to trigger a drift.
-	# We call it with delta=30.0 to trigger the drift in one step.
-	tuner._update_pirate_drift(30.0)
-	var drifted_center: float = tuner.get_current_center()
-	# After drift, center should be 98.0 ± some offset in [-0.3, 0.3].
-	# The offset could be 0 by chance (randf_range returns 0), so we just verify
-	# the center is within [97.7, 98.3].
-	if drifted_center < 97.7 or drifted_center > 98.3:
-		print("    FAIL: PIRATE drifted center should be in [97.7, 98.3], got %s" % drifted_center)
+	# Verify RadioTuner.get_current_center() delegates to BandController for PIRATE.
+	var center: float = tuner.get_current_center()
+	var expected: float = BandController.get_pirate_center_frequency()
+	if abs(center - expected) > 0.01:
+		print("    FAIL: PIRATE center should delegate to BandController, got %s expected %s" % [center, expected])
+		return false
+
+	# Verify drifted center is within [165.7, 166.3].
+	if center < 165.7 or center > 166.3:
+		print("    FAIL: PIRATE drifted center should be in [165.7, 166.3], got %s" % center)
 		return false
 
 	# Test that PIRATE drifts even when NOT the active band.
 	tuner.set_band(0)  # Switch to LIVING
-	# PIRATE drift should still update.
-	tuner._pirate_drift_timer = 0.0  # Reset timer
-	tuner._update_pirate_drift(30.0)
-	# The pirate_drift_offset should have been updated.
-	# We can't check the exact value (random), but we can verify the timer was reset.
-	if tuner._pirate_drift_timer != 0.0:
-		print("    FAIL: PIRATE drift timer should be reset after 30s, got %s" % tuner._pirate_drift_timer)
+	BandController._on_pirate_drift_timeout()
+	var drift_after_switch: float = BandController.get_pirate_drift_offset()
+	if drift_after_switch < -0.3 or drift_after_switch > 0.3:
+		print("    FAIL: PIRATE drift offset after band switch should be in [-0.3, 0.3], got %s" % drift_after_switch)
 		return false
 
-	# Verify that when PIRATE is active, get_current_center() uses the pirate drift offset.
+	# Verify that when PIRATE is active again, get_current_center() uses the updated drift.
 	tuner.set_band(6)
-	# After set_band, _drift_offset is reset but _pirate_drift_offset persists.
-	# get_current_center() for PIRATE uses _pirate_drift_offset.
 	var center_after_switch: float = tuner.get_current_center()
-	if center_after_switch < 97.7 or center_after_switch > 98.3:
-		print("    FAIL: PIRATE center after re-switch should be in [97.7, 98.3], got %s" % center_after_switch)
+	var expected_after_switch: float = BandController.get_pirate_center_frequency()
+	if abs(center_after_switch - expected_after_switch) > 0.01:
+		print("    FAIL: PIRATE center after re-switch should delegate to BandController, got %s expected %s" % [center_after_switch, expected_after_switch])
+		return false
+	if center_after_switch < 165.7 or center_after_switch > 166.3:
+		print("    FAIL: PIRATE center after re-switch should be in [165.7, 166.3], got %s" % center_after_switch)
 		return false
 
 	return true

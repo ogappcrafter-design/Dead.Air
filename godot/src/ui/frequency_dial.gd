@@ -11,6 +11,9 @@ signal dial_tuned(direction: float)
 ## The RadioTuner node to observe. If null, the dial is decorative only.
 @export var radio_tuner: RadioTuner
 
+## SignalStrength node providing cross-pollination-adjusted signal. Overrides raw tuner signal.
+@export var signal_strength: SignalStrength
+
 ## Dial radius in pixels (the dial is drawn as a circular gauge).
 @export var dial_radius: float = 120.0
 
@@ -41,6 +44,8 @@ func _ready() -> void:
 		radio_tuner.signal_changed.connect(_on_signal_changed)
 		radio_tuner.fine_tune_changed.connect(_on_fine_tune_changed)
 		_update_from_tuner()
+	if signal_strength != null:
+		signal_strength.signal_changed.connect(_on_signal_strength_changed)
 
 
 func _build_ui() -> void:
@@ -216,6 +221,12 @@ func _on_band_changed(band_id: int) -> void:
 
 
 func _on_signal_changed(signal_value: float) -> void:
+	if signal_strength == null:
+		_signal_bar.value = signal_value
+		_update_quality_label(signal_value)
+
+
+func _on_signal_strength_changed(signal_value: float) -> void:
 	_signal_bar.value = signal_value
 	_update_quality_label(signal_value)
 
@@ -238,9 +249,14 @@ func _update_from_tuner() -> void:
 		_band_label.add_theme_color_override("font_color", band.color)
 	_freq_label.text = "%.1f MHz" % radio_tuner.current_frequency
 	_target_needle_angle = _freq_to_angle(radio_tuner.current_frequency)
-	var sig: float = radio_tuner.get_signal()
-	_signal_bar.value = sig
-	_update_quality_label(sig)
+	if signal_strength != null:
+		var ssig: float = signal_strength.signal_value
+		_signal_bar.value = ssig
+		_update_quality_label(ssig)
+	else:
+		var sig: float = radio_tuner.get_signal()
+		_signal_bar.value = sig
+		_update_quality_label(sig)
 	queue_redraw()
 
 

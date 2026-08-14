@@ -69,6 +69,8 @@ func _process(delta: float) -> void:
 	if radio_tuner == null:
 		return
 	var base_signal: float = radio_tuner.get_signal()
+	# Apply cross-pollination multiplier via BandController (native ×1.0, non-native ×0.4).
+	base_signal *= BandController.get_cross_pollination_multiplier(radio_tuner.current_band_id, radio_tuner.current_phase)
 	_last_base_signal = base_signal
 
 	# If in must-retune state, signal stays at 0 until player retunes

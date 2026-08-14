@@ -282,7 +282,7 @@ func _connect_signals() -> void:
 		radio_tuner.signal_changed.connect(_on_signal_changed)
 		radio_tuner.band_changed.connect(_on_band_changed)
 	if signal_strength:
-		signal_strength.effective_signal_changed.connect(_on_effective_signal_changed)
+		signal_strength.signal_changed.connect(_on_effective_signal_changed)
 
 
 func _on_signal_changed(_s: float) -> void:
@@ -303,10 +303,12 @@ func _update_state() -> void:
 		_current_band_id = radio_tuner.current_band_id
 
 	if signal_strength:
-		_current_signal = signal_strength.effective_signal
+		_current_signal = signal_strength.signal_value
 		_current_dread = signal_strength.dread_level
 	elif radio_tuner:
 		_current_signal = radio_tuner.get_signal()
+		_current_signal *= BandController.get_cross_pollination_multiplier(
+			radio_tuner.current_band_id, radio_tuner.current_phase)
 
 	_interference_interval = get_interference_interval(_current_signal)
 	_whisper_active = should_play_whisper(_current_dread)
