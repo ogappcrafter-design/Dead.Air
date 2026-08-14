@@ -64,6 +64,24 @@
           "additionalProperties": false
         }
       },
+      "moral_choices": {
+        "type": "array",
+        "description": "Moral choice effects mapping (DEA-98). Parallel to choices; maps choice text to empathy/self_preservation/curiosity deltas.",
+        "items": {
+          "type": "object",
+          "required": ["choice"],
+          "properties": {
+            "choice": { "type": "string" },
+            "empathy": { "type": "integer" },
+            "self_preservation": { "type": "integer" },
+            "curiosity": { "type": "integer" },
+            "sacrifice": { "type": "boolean" },
+            "dread": { "type": "number" },
+            "composure_penalty": { "type": "number" }
+          },
+          "additionalProperties": false
+        }
+      },
       "intro": { "type": "string" },
       "sequence": {
         "type": "array",

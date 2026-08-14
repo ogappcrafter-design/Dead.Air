@@ -93,7 +93,8 @@ const PROCEDURAL_TEMPLATES: Array[Dictionary] = [
 		"type": "JUST_LISTEN",
 		"signal": 25.0,
 		"staticReward": 14,
-		"lines": ["...I can't sleep.", "...the radio keeps me company.", "...does it keep you company too?"],
+		"lines":
+		["...I can't sleep.", "...the radio keeps me company.", "...does it keep you company too?"],
 	},
 ]
 
@@ -116,16 +117,17 @@ const SHIFT_DEFINITIONS: Array = [
 	],
 ]
 
-
 # ---------------------------------------------------------------------------
 # Lifecycle
 # ---------------------------------------------------------------------------
+
 
 func _ready() -> void:
 	_create_sub_systems()
 	_connectautoload_signals()
 	if BreatherSystem:
 		BreatherSystem.breather_ended.connect(_on_breather_ended)
+
 
 func _process(delta: float) -> void:
 	match _state:
@@ -145,9 +147,11 @@ func _process(delta: float) -> void:
 			if _resolving_timer <= 0.0:
 				_enter_state(CallState.COOLDOWN)
 
+
 # ---------------------------------------------------------------------------
 # Sub-systems
 # ---------------------------------------------------------------------------
+
 
 func _create_sub_systems() -> void:
 	# Create DreadComposure as a child node (not an autoload)
@@ -162,39 +166,50 @@ func _create_sub_systems() -> void:
 	_signal_strength.name = "SignalStrength"
 	add_child(_signal_strength)
 
+
 func _connectautoload_signals() -> void:
 	# StingerSystem connections for event-driven stingers during calls
 	if StingerSystem:
 		pass  # stingers triggered explicitly per call type
 
+
 # ---------------------------------------------------------------------------
 # Public API — State queries
 # ---------------------------------------------------------------------------
 
+
 func get_state() -> CallState:
 	return _state
+
 
 func get_current_call() -> Dictionary:
 	return _current_call
 
+
 func get_shift_number() -> int:
 	return _shift_number
+
 
 func is_in_call() -> bool:
 	return _state != CallState.IDLE and _state != CallState.COOLDOWN
 
+
 func is_shift_active() -> bool:
 	return _shift_in_progress
+
 
 func get_dread_composure() -> Node:
 	return _dread_composure
 
+
 func get_signal_strength() -> Node:
 	return _signal_strength
+
 
 # ---------------------------------------------------------------------------
 # Public API — Shift control
 # ---------------------------------------------------------------------------
+
 
 func start_shift(shift_num: int = -1) -> void:
 	if _shift_in_progress:
@@ -217,6 +232,7 @@ func start_shift(shift_num: int = -1) -> void:
 	_enter_state(CallState.COOLDOWN)
 	_cooldown_timer = 1.0  # short initial delay
 
+
 func end_shift() -> void:
 	if not _shift_in_progress:
 		return
@@ -227,13 +243,16 @@ func end_shift() -> void:
 	shift_ended.emit(_shift_number)
 	_enter_state(CallState.IDLE)
 
+
 # ---------------------------------------------------------------------------
 # Public API — Call control
 # ---------------------------------------------------------------------------
 
+
 func skip_call() -> void:
 	if _state == CallState.ACTIVE or _state == CallState.CHOICE:
 		_resolve_call("skipped")
+
 
 func select_choice(index: int) -> void:
 	if _state != CallState.CHOICE:
@@ -241,7 +260,9 @@ func select_choice(index: int) -> void:
 		return
 	var choices: Array = _current_call.get("choices", [])
 	if index < 0 or index >= choices.size():
-		push_warning("CallManager: choice index %d out of range (0-%d)" % [index, choices.size() - 1])
+		push_warning(
+			"CallManager: choice index %d out of range (0-%d)" % [index, choices.size() - 1]
+		)
 		return
 	var choice: Dictionary = choices[index]
 	choice_resolved.emit(index, choice)
@@ -250,9 +271,11 @@ func select_choice(index: int) -> void:
 	_apply_choice_effects(choice)
 	_resolve_call("choice_made")
 
+
 # ---------------------------------------------------------------------------
 # State machine
 # ---------------------------------------------------------------------------
+
 
 func _enter_state(new_state: CallState) -> void:
 	var old_state := _state
@@ -308,6 +331,7 @@ func _enter_state(new_state: CallState) -> void:
 				_cooldown_timer = COOLDOWN_DURATION
 				_breather_active = false
 
+
 func _advance_queue() -> void:
 	if not _shift_in_progress:
 		_enter_state(CallState.IDLE)
@@ -322,14 +346,17 @@ func _advance_queue() -> void:
 	_current_call = _shift_queue[_current_call_index]
 	_enter_state(CallState.INCOMING)
 
+
 func _on_breather_ended() -> void:
 	if _state == CallState.COOLDOWN and _breather_active:
 		_breather_active = false
 		_advance_queue()
 
+
 # ---------------------------------------------------------------------------
 # Call resolution
 # ---------------------------------------------------------------------------
+
 
 func _resolve_call(outcome: String) -> void:
 	call_ended.emit(_current_call, outcome)
@@ -341,6 +368,7 @@ func _resolve_call(outcome: String) -> void:
 	_is_last_call_in_shift = (_current_call_index >= _shift_queue.size() - 1)
 
 	_enter_state(CallState.RESOLVING)
+
 
 func _trigger_call_stingers(call_data: Dictionary, outcome: String) -> void:
 	if not StingerSystem:
@@ -356,9 +384,11 @@ func _trigger_call_stingers(call_data: Dictionary, outcome: String) -> void:
 		"STAY_CALM":
 			StingerSystem.trigger_wrongness()
 
+
 # ---------------------------------------------------------------------------
 # Effect application
 # ---------------------------------------------------------------------------
+
 
 func _apply_choice_effects(choice: Dictionary) -> void:
 	# Sanity delta
@@ -380,9 +410,18 @@ func _apply_choice_effects(choice: Dictionary) -> void:
 		var new_signal: float = _signal_strength.signal_value * static_mult
 		_signal_strength.set_signal(new_signal)
 
+	# DEA-98: Record moral choice for tracking (empathy/self-preservation/curiosity)
+	if MoralChoiceTracker:
+		var call_id: int = int(_current_call.get("id", -1))
+		var choice_text: String = choice.get("text", "")
+		if call_id >= 0 and choice_text != "":
+			MoralChoiceTracker.record_choice(call_id, choice_text)
+
+
 # ---------------------------------------------------------------------------
 # Shift queue building
 # ---------------------------------------------------------------------------
+
 
 func _build_shift_queue(shift_num: int) -> Array[Dictionary]:
 	var queue: Array[Dictionary] = []
@@ -406,6 +445,7 @@ func _build_shift_queue(shift_num: int) -> Array[Dictionary]:
 
 	return queue
 
+
 func _generate_procedural_call() -> Dictionary:
 	# Pick random template
 	var template: Dictionary = PROCEDURAL_TEMPLATES[randi() % PROCEDURAL_TEMPLATES.size()]
@@ -424,9 +464,11 @@ func _generate_procedural_call() -> Dictionary:
 		call["duration"] = float(call["lines"].size()) * 2.0
 	return call
 
+
 # ---------------------------------------------------------------------------
 # Testing helpers
 # ---------------------------------------------------------------------------
+
 
 func _reset_for_testing() -> void:
 	_state = CallState.IDLE

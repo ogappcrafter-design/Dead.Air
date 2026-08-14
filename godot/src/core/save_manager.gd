@@ -53,6 +53,9 @@ func save_game(tape_id: String, data: SaveData) -> bool:
 	# Build save dict once, compute checksum on un-indented stringification
 	# so it matches the recompute on load (which also uses no indent).
 	var save_dict := data.to_dict()
+	# DEA-98: Sync live MoralChoiceTracker state into the save dict
+	if MoralChoiceTracker:
+		MoralChoiceTracker.save_to(save_dict)
 	var checksum := _compute_checksum(JSON.stringify(save_dict))
 	save_dict[CHECKSUM_FIELD] = checksum
 
@@ -61,7 +64,9 @@ func save_game(tape_id: String, data: SaveData) -> bool:
 
 	var file := FileAccess.open(path, FileAccess.WRITE)
 	if file == null:
-		save_failed.emit(tape_id, "cannot open file: %s (error: %d)" % [path, FileAccess.get_open_error()])
+		save_failed.emit(
+			tape_id, "cannot open file: %s (error: %d)" % [path, FileAccess.get_open_error()]
+		)
 		return false
 
 	file.store_string(full_json)
@@ -113,6 +118,9 @@ func load_game(tape_id: String) -> SaveData:
 
 	# Reconstruct SaveData from the validated dict
 	var save_data := SaveData.from_dict(data_only)
+	# DEA-98: Sync MoralChoiceTracker from loaded save data
+	if MoralChoiceTracker:
+		MoralChoiceTracker.load_from(data_only)
 	load_completed.emit(save_data)
 	return save_data
 

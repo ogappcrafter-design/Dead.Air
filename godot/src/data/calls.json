@@ -37,6 +37,11 @@
         "tape": true,
         "tapeName": "Tape #1 — The Wrong Number"
       }
+    ],
+    "moral_choices": [
+      { "choice": "Yes.", "empathy": 10, "curiosity": 5 },
+      { "choice": "No.", "self_preservation": 10 },
+      { "choice": "Wrong number.", "curiosity": 10, "empathy": -5 }
     ]
   },
   {
@@ -98,6 +103,16 @@
         "staticMult": 2,
         "tape": false
       }
+    ],
+    "moral_choices": [
+      {
+        "choice": "Yes.",
+        "empathy": 5,
+        "sacrifice": true,
+        "composure_penalty": 10
+      },
+      { "choice": "No.", "self_preservation": 10, "empathy": -5 },
+      { "choice": "How much?", "curiosity": 10, "empathy": -5 }
     ]
   },
   {
@@ -300,7 +315,26 @@
         "tape": false
       }
     ],
-    "is_sacred": true
+    "is_sacred": true,
+    "moral_choices": [
+      {
+        "choice": "Yes. I'll play it.",
+        "empathy": 15,
+        "sacrifice": true,
+        "composure_penalty": 20
+      },
+      {
+        "choice": "Don't play it yet. Wait.",
+        "self_preservation": 5,
+        "curiosity": 5
+      },
+      {
+        "choice": "Burn it.",
+        "self_preservation": 10,
+        "empathy": -10,
+        "dread": 20
+      }
+    ]
   },
   {
     "id": 10,
@@ -399,6 +433,20 @@
         "staticMult": 2,
         "tape": true,
         "tapeName": "Tape #10 — Courtesy Call"
+      }
+    ],
+    "moral_choices": [
+      { "choice": "Cooperate.", "self_preservation": 10, "empathy": -5 },
+      {
+        "choice": "I don't know what you mean.",
+        "curiosity": 5,
+        "self_preservation": 5
+      },
+      {
+        "choice": "Who are you really?",
+        "curiosity": 15,
+        "empathy": 5,
+        "composure_penalty": 15
       }
     ]
   },
@@ -510,6 +558,11 @@
         "staticMult": 2,
         "tape": false
       }
+    ],
+    "moral_choices": [
+      { "choice": "I wanted to hear them.", "curiosity": 20 },
+      { "choice": "I was looking for someone.", "empathy": 20 },
+      { "choice": "I don't know why." }
     ]
   },
   {

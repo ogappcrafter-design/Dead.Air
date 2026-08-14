@@ -19,11 +19,17 @@ var _refused: Dictionary = {}  # tape_id -> true
 
 
 ## Collect a tape. Called when player picks up a cassette in a safe room.
-func collect_tape(tape_id: String, tape_data: Variant = null) -> void:
+## Set is_restore=true when rebuilding inventory from a save file to avoid
+## double-counting tapes_taken on MoralChoiceTracker (which already loaded
+## the saved count via load_from).
+func collect_tape(tape_id: String, tape_data: Variant = null, is_restore: bool = false) -> void:
 	if _collected.has(tape_id) or _consumed.has(tape_id):
 		return  # Already collected or consumed
 	_collected[tape_id] = tape_data if tape_data != null else {"id": tape_id}
 	tape_collected.emit(tape_id)
+	# DEA-98: Track tape taken for moral choice scoring (skip during save restore)
+	if not is_restore and MoralChoiceTracker:
+		MoralChoiceTracker.add_tape_taken()
 
 
 ## Consume a tape to save the game. The tape is removed from inventory.
@@ -42,6 +48,9 @@ func refuse_tape(tape_id: String) -> void:
 		return
 	_refused[tape_id] = true
 	tape_refused.emit(tape_id)
+	# DEA-98: Track tape refused for moral choice scoring
+	if MoralChoiceTracker:
+		MoralChoiceTracker.add_tape_refused()
 
 
 ## Check if the player has a specific tape in their inventory.

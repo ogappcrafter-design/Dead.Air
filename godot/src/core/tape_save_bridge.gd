@@ -41,12 +41,12 @@ func restore_inventory_from_save_data(save_data: SaveData) -> void:
 		for tape_id in save_data.tapes_collected:
 			var tape_data := library.get_tape_by_id(tape_id)
 			if tape_data:
-				TapeInventory.collect_tape(tape_id, tape_data)
+				TapeInventory.collect_tape(tape_id, tape_data, true)
 			else:
-				TapeInventory.collect_tape(tape_id)
+				TapeInventory.collect_tape(tape_id, null, true)
 	else:
 		for tape_id in save_data.tapes_collected:
-			TapeInventory.collect_tape(tape_id)
+			TapeInventory.collect_tape(tape_id, null, true)
 
 	# Mark consumed tapes
 	for tape_id in save_data.tapes_consumed:
