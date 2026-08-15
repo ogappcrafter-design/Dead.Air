@@ -138,6 +138,10 @@ func get_unlocked_bands() -> Array[String]:
 	return _unlocked_bands.duplicate()
 
 
+func get_call_count() -> int:
+	return _call_count
+
+
 func get_shift_data(shift_number: int) -> Dictionary:
 	if shift_number < 1 or shift_number > SHIFT_DATA.size():
 		return {}

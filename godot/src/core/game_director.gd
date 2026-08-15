@@ -2,23 +2,27 @@
 ## Central signal wiring hub for night_shift.tscn.
 ## Connects all subsystems: RadioTuner, CallManager, InteractionRaycast,
 ## TapePickup, SignalStrength, DreadComposure, HUD, CameraManager, PhaseManager,
-## SaveManager, TapeInventory, AudioBusManager, ShiftStub, DegradationStub.
+## SaveManager, TapeInventory, AudioBusManager, ShiftController, StationDegradation.
 ##
 ## Systems already wired internally (NOT duplicated here):
 ## - CallManager → PhaseManager (enter/exit call mode) — done in call_manager.gd
 ## - CallManager → AudioBusManager (duck_for_call) — done in call_manager.gd
+## - ShiftController → CallManager (shift_ended, call_started) — done in shift_controller.gd
 ## - HUD → RadioTuner/SignalStrength/DreadComposure/TapeInventory/PhaseManager
 ##   — auto-connected in hud_layout.gd
 ## - RadioIntegration → InputManager/RadioTuner — done in radio_integration.gd
 ##
 ## This node is a child of NightShift root in night_shift.tscn.
-extends Node
 class_name GameDirector
+extends Node
 
 ## Emitted when all systems are wired and the shift is ready to start.
 signal systems_ready
 ## Emitted when the night shift ends.
 signal night_complete(shift_num: int, success: bool)
+
+## Flow state
+const MAX_SHIFTS: int = 2
 
 ## Track wiring state for verification.
 var _wiring_complete: bool = false
@@ -30,10 +34,12 @@ var _call_manager: Node
 var _signal_strength: Node
 var _dread_composure: Node
 var _hud: Node
-var _shift_stub: Node
-var _degradation_stub: Node
+var _shift_controller: Node
+var _station_degradation: Node
 var _interaction_raycast: Node
 var _camera_manager: Node
+var _night_transition: Node
+var _shift_summary: Node
 
 
 func _ready() -> void:
@@ -41,12 +47,15 @@ func _ready() -> void:
 	_wire_signals()
 	_wiring_complete = true
 	systems_ready.emit()
-	print("[GameDirector] All systems wired. Shift %d ready." % _shift_number)
+	print("[GameDirector] All systems wired. Starting flow.")
+	_start_flow()
 
 
 func _resolve_references() -> void:
 	# Autoloads
 	_call_manager = get_node_or_null("/root/CallManager")
+	_shift_controller = get_node_or_null("/root/ShiftController")
+	_station_degradation = get_node_or_null("/root/StationDegradation")
 	# RadioTuner and friends are children of RadioConsole (instance of radio_integration.tscn)
 	var radio_console := get_node_or_null("../RadioConsole")
 	if radio_console:
@@ -60,9 +69,10 @@ func _resolve_references() -> void:
 		_dread_composure = _call_manager.get_node_or_null("DreadComposure")
 	# HUD is a child of NightShift root
 	_hud = get_node_or_null("../HUD")
-	# Stubs are siblings
-	_shift_stub = get_node_or_null("../ShiftController")
-	_degradation_stub = get_node_or_null("../StationDegradation")
+	# NightTransition is a sibling
+	_night_transition = get_node_or_null("../NightTransition")
+	# ShiftSummary is a sibling
+	_shift_summary = get_node_or_null("../ShiftSummary")
 	# InteractionRaycast is under StationEnvironment/Player
 	var station_env := get_node_or_null("../StationEnvironment")
 	if station_env:
@@ -75,19 +85,14 @@ func _resolve_references() -> void:
 
 func _wire_signals() -> void:
 	# 1. RadioTuner.frequency_changed → check for incoming calls
-	if _radio_tuner and _call_manager:
-		if _radio_tuner.has_signal("frequency_changed"):
-			_radio_tuner.frequency_changed.connect(_on_frequency_changed)
-	# 2. CallManager.call_started → HUD.show_call_info + shift progress
+	if _radio_tuner and _radio_tuner.has_signal("frequency_changed"):
+		_radio_tuner.frequency_changed.connect(_on_frequency_changed)
+	# 2. CallManager.call_started/ended → HUD update (ShiftController handles shift lifecycle)
 	if _call_manager:
 		if _call_manager.has_signal("call_started"):
 			_call_manager.call_started.connect(_on_call_started)
 		if _call_manager.has_signal("call_ended"):
 			_call_manager.call_ended.connect(_on_call_ended)
-		if _call_manager.has_signal("shift_started"):
-			_call_manager.shift_started.connect(_on_shift_started)
-		if _call_manager.has_signal("shift_ended"):
-			_call_manager.shift_ended.connect(_on_shift_ended)
 	# 3. SignalStrength.signal_changed → HUD update (if HUD doesn't auto-connect)
 	if _signal_strength and _signal_strength.has_signal("signal_changed"):
 		_signal_strength.signal_changed.connect(_on_signal_changed)
@@ -101,19 +106,27 @@ func _wire_signals() -> void:
 		_interaction_raycast.target_changed.connect(_on_interaction_target_changed)
 	if _interaction_raycast and _interaction_raycast.has_signal("interact_performed"):
 		_interaction_raycast.interact_performed.connect(_on_interact_performed)
-	# 6. TapePickup.tape_picked_up → TapeInventory (handled in tape_pickup.gd itself)
-	# But we wire it for notification + degradation
-	# 7. ShiftStub signals
-	if _shift_stub:
-		if _shift_stub.has_signal("shift_started"):
-			_shift_stub.shift_started.connect(_on_stub_shift_started)
-		if _shift_stub.has_signal("shift_ended"):
-			_shift_stub.shift_ended.connect(_on_stub_shift_ended)
-	# 8. DegradationStub signals
-	if _degradation_stub:
-		if _degradation_stub.has_signal("degradation_changed"):
-			_degradation_stub.degradation_changed.connect(_on_degradation_changed)
-	# 9. CameraManager signals
+	# 6. ShiftController signals (autoload, not scene stub)
+	if _shift_controller:
+		if _shift_controller.has_signal("shift_started"):
+			_shift_controller.shift_started.connect(_on_shift_started)
+		if _shift_controller.has_signal("shift_complete"):
+			_shift_controller.shift_complete.connect(_on_shift_complete)
+		if _shift_controller.has_signal("shift_phase_changed"):
+			_shift_controller.shift_phase_changed.connect(_on_shift_phase_changed)
+	# 7. StationDegradation signals (autoload, not scene stub)
+	if _station_degradation:
+		if _station_degradation.has_signal("degradation_applied"):
+			_station_degradation.degradation_applied.connect(_on_degradation_applied)
+		if _station_degradation.has_signal("wrongness_event_triggered"):
+			_station_degradation.wrongness_event_triggered.connect(_on_wrongness_event)
+	# 8. NightTransition
+	if _night_transition and _night_transition.has_signal("transition_complete"):
+		_night_transition.transition_complete.connect(_on_transition_complete)
+	# 9. ShiftSummary
+	if _shift_summary and _shift_summary.has_signal("continue_pressed"):
+		_shift_summary.continue_pressed.connect(_on_summary_continue)
+	# 10. CameraManager signals
 	if _camera_manager:
 		if _camera_manager.has_signal("camera_transition_started"):
 			_camera_manager.camera_transition_started.connect(_on_camera_transition_started)
@@ -121,20 +134,91 @@ func _wire_signals() -> void:
 			_camera_manager.camera_transition_completed.connect(_on_camera_transition_completed)
 
 
+# --- Flow Orchestration ---
+
+
+func _start_flow() -> void:
+	# Begin Night 1 transition
+	_transition_to_night(1)
+
+
+func _transition_to_night(night_number: int) -> void:
+	_shift_number = night_number
+	if _night_transition and _night_transition.has_method("start_transition"):
+		_night_transition.start_transition(night_number)
+	else:
+		# No transition available — start shift directly
+		_begin_shift(night_number)
+
+
+func _on_transition_complete() -> void:
+	_begin_shift(_shift_number)
+
+
+func _begin_shift(night_number: int) -> void:
+	if _shift_controller and _shift_controller.has_method("start_shift"):
+		_shift_controller.start_shift(night_number)
+	else:
+		print(
+			(
+				"[GameDirector] WARNING: ShiftController not available, cannot start shift %d"
+				% night_number
+			)
+		)
+
+
+func _on_shift_complete(shift_number: int) -> void:
+	print("[GameDirector] Shift %d complete." % shift_number)
+	_show_shift_summary(shift_number)
+
+
+func _show_shift_summary(shift_number: int) -> void:
+	if _shift_summary and _shift_summary.has_method("set_summary_data"):
+		# Gather stats from various systems
+		var calls_taken: int = 0
+		var tapes_collected: int = 0
+		var bands_unlocked: Array = []
+		if _shift_controller and _shift_controller.has_method("get_call_count"):
+			calls_taken = _shift_controller.get_call_count()
+		var tape_inv := get_node_or_null("/root/TapeInventory")
+		if tape_inv and tape_inv.has_method("get_collected_count"):
+			tapes_collected = tape_inv.get_collected_count()
+		if _shift_controller and _shift_controller.has_method("get_unlocked_bands"):
+			bands_unlocked = _shift_controller.get_unlocked_bands()
+		_shift_summary.set_summary_data(
+			shift_number, calls_taken, tapes_collected, bands_unlocked.size()
+		)
+	if _shift_summary:
+		_shift_summary.visible = true
+
+
+func _on_summary_continue() -> void:
+	if _shift_summary:
+		_shift_summary.visible = false
+	if _shift_number >= MAX_SHIFTS:
+		_return_to_main_menu()
+	else:
+		_transition_to_night(_shift_number + 1)
+
+
+func _return_to_main_menu() -> void:
+	print("[GameDirector] All shifts complete. Returning to main menu.")
+	get_tree().change_scene_to_file("res://scenes/main_menu.tscn")
+
+
+# --- Public API (for tests) ---
+
+
 func start_night_shift(shift_num: int = 1) -> void:
 	_shift_number = shift_num
-	if _call_manager and _call_manager.has_method("start_shift"):
-		_call_manager.start_shift(shift_num)
-	elif _shift_stub and _shift_stub.has_method("start_shift"):
-		_shift_stub.start_shift(shift_num)
+	if _shift_controller and _shift_controller.has_method("start_shift"):
+		_shift_controller.start_shift(shift_num)
 	print("[GameDirector] Night shift %d started." % shift_num)
 
 
 func end_night_shift(success: bool = true) -> void:
-	if _call_manager and _call_manager.has_method("end_shift"):
-		_call_manager.end_shift()
-	elif _shift_stub and _shift_stub.has_method("end_shift"):
-		_shift_stub.end_shift()
+	if _shift_controller and _shift_controller.has_method("end_shift"):
+		_shift_controller.end_shift()
 	night_complete.emit(_shift_number, success)
 	print("[GameDirector] Night shift %d ended. Success: %s" % [_shift_number, success])
 
@@ -151,42 +235,22 @@ func get_shift_number() -> int:
 
 
 func _on_frequency_changed(_freq: float) -> void:
-	# RadioTuner frequency changed — check if CallManager should trigger a call
-	# CallManager manages its own call state machine; this is a hook point
+	# RadioTuner frequency changed — CallManager manages its own call state
 	pass
 
 
 func _on_call_started(call_data: Dictionary) -> void:
-	# CallManager already calls PhaseManager.enter_call_mode internally
 	# Update HUD call info
 	if _hud and _hud.has_method("set_call_text"):
 		var caller_id: String = call_data.get("caller_id", "???")
 		var call_type: String = call_data.get("call_type", "unknown")
 		_hud.set_call_text(caller_id, call_type)
-	# Update shift progress
-	if _shift_stub and _shift_stub.has_method("update_progress"):
-		_shift_stub.update_progress(0.1)
 
 
-func _on_call_ended(_call_data: Dictionary, outcome: String) -> void:
-	# CallManager already calls PhaseManager.exit_call_mode internally
+func _on_call_ended(_call_data: Dictionary, _outcome: String) -> void:
 	# Clear HUD call info
 	if _hud and _hud.has_method("set_call_text"):
 		_hud.set_call_text("", "")
-	# Update shift progress
-	if _shift_stub and _shift_stub.has_method("update_progress"):
-		_shift_stub.update_progress(0.3)
-	# Feed degradation based on outcome
-	if _degradation_stub and _degradation_stub.has_method("add_degradation"):
-		match outcome:
-			"bad":
-				_degradation_stub.add_degradation(0.15)
-			"neutral":
-				_degradation_stub.add_degradation(0.05)
-			"good":
-				_degradation_stub.add_degradation(-0.05)
-			_:
-				pass
 
 
 func _on_shift_started(shift_num: int) -> void:
@@ -194,24 +258,21 @@ func _on_shift_started(shift_num: int) -> void:
 	# Initialize signal and dread for the shift
 	if _signal_strength and _signal_strength.has_method("start_shift"):
 		_signal_strength.start_shift()
+	print("[GameDirector] Shift %d started." % shift_num)
 
 
-func _on_shift_ended(_shift_num: int) -> void:
-	end_night_shift(true)
+func _on_shift_phase_changed(phase: String) -> void:
+	print("[GameDirector] Shift phase: %s" % phase)
 
 
-func _on_signal_changed(signal_value: float) -> void:
-	# HUD auto-connects to signal_strength, but we also feed degradation
-	if _degradation_stub and _degradation_stub.has_method("add_degradation"):
-		if signal_value < 20.0:
-			_degradation_stub.add_degradation(0.02)
+func _on_signal_changed(_signal_value: float) -> void:
+	# HUD auto-connects to signal_strength
+	pass
 
 
-func _on_dread_changed(dread: float) -> void:
+func _on_dread_changed(_dread: float) -> void:
 	# HUD auto-connects to dread_composure
-	# Feed degradation based on dread
-	if _degradation_stub and _degradation_stub.has_method("add_degradation"):
-		_degradation_stub.add_degradation(dread * 0.001)
+	pass
 
 
 func _on_composure_break() -> void:
@@ -220,9 +281,6 @@ func _on_composure_break() -> void:
 	var stinger := get_node_or_null("/root/StingerSystem")
 	if stinger and stinger.has_method("play_stinger"):
 		stinger.play_stinger()
-	# Spike degradation
-	if _degradation_stub and _degradation_stub.has_method("add_degradation"):
-		_degradation_stub.add_degradation(0.2)
 
 
 func _on_interaction_target_changed(target: Node) -> void:
@@ -247,28 +305,17 @@ func _on_interact_performed(target: Node) -> void:
 	# Check for tape pickup via type check
 	elif target is TapePickup:
 		# TapePickup handles its own collection
-		# But we can add degradation feedback
-		if _degradation_stub and _degradation_stub.has_method("add_degradation"):
-			_degradation_stub.add_degradation(-0.02)  # collecting tapes reduces degradation
+		pass
 
 
-func _on_stub_shift_started(shift_num: int) -> void:
-	_shift_number = shift_num
-	print("[GameDirector] ShiftStub: shift %d started." % shift_num)
+func _on_degradation_applied(shift_number: int) -> void:
+	print("[GameDirector] Degradation applied for shift %d" % shift_number)
 
 
-func _on_stub_shift_ended(shift_num: int) -> void:
-	print("[GameDirector] ShiftStub: shift %d ended." % shift_num)
-
-
-func _on_degradation_changed(level: float) -> void:
-	# Update AudioBusManager dread level
-	var abm := get_node_or_null("/root/AudioBusManager")
-	if abm and abm.has_method("set_dread_level"):
-		abm.set_dread_level(level)
-	# Update HUD subtitle for critical degradation
-	if level >= 0.75 and _hud and _hud.has_method("set_subtitle"):
-		_hud.set_subtitle("The station is falling apart...")
+func _on_wrongness_event(event_id: String, description: String) -> void:
+	print("[GameDirector] Wrongness event: %s — %s" % [event_id, description])
+	if _hud and _hud.has_method("set_subtitle"):
+		_hud.set_subtitle(description)
 
 
 func _on_camera_transition_started(new_id: String, old_id: String) -> void:

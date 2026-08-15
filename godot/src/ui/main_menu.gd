@@ -104,8 +104,7 @@ func _on_new_game() -> void:
 	print("[MainMenu] New Game selected — starting Phase 1 Station")
 	PhaseManager.set_phase(PhaseEnums.Phase.PHASE_1_STATION)
 	new_game_pressed.emit()
-	# Stub: load night_shift scene
-	print("[MainMenu] TODO: load night_shift scene")
+	get_tree().change_scene_to_file("res://scenes/night_shift.tscn")
 
 
 func _on_continue() -> void:
@@ -120,6 +119,7 @@ func _on_continue() -> void:
 		return
 	print("[MainMenu] Save loaded: phase=%d shift=%d" % [save_data.phase, save_data.shift])
 	continue_pressed.emit()
+	get_tree().change_scene_to_file("res://scenes/night_shift.tscn")
 
 
 func _on_settings() -> void:
