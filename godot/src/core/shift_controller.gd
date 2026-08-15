@@ -7,7 +7,7 @@ extends Node
 ## State machine: PRE_SHIFT → CALLS_ACTIVE → POST_SHIFT → SHIFT_TRANSITION
 ## Each shift: free exploration → scheduled calls → free exploration → time skip
 ##
-## Shifts 1-2 are implemented; Shifts 3-5 are stubbed as "not implemented".
+## All 5 shifts are implemented. Each shift's final call is sacred (cannot be skipped).
 
 # ─── Signals ────────────────────────────────────────────────────────────────
 
@@ -17,6 +17,9 @@ signal call_sequence_complete
 signal shift_complete(shift_number: int)
 signal band_unlocked(band_name: String)
 signal final_call_starting
+signal tape_review_started
+signal save_opportunity_offered
+signal band_unlock_announced(band_name: String)
 
 # ─── Enums ──────────────────────────────────────────────────────────────────
 
@@ -33,28 +36,87 @@ const PRE_SHIFT_DURATION: float = 120.0  # 2 minutes of free exploration
 const POST_SHIFT_DURATION: float = 0.0  # 0 = wait for player input
 const SHIFT_TRANSITION_DURATION: float = 3.0  # Short time-skip transition
 
-const MAX_IMPLEMENTED_SHIFTS: int = 2  # Shifts 1-2 implemented; 3-5 stubbed
+const MAX_IMPLEMENTED_SHIFTS: int = 5  # All 5 shifts implemented
 
-# ─── Shift Data (hardcoded for Shifts 1-2) ──────────────────────────────────
+# ─── Shift Data (all 5 shifts) ──────────────────────────────────────────────
+# Each shift defines: bands, call queue spec, mechanics, and post-shift flow.
+# The "calls" array mirrors CallManager.SHIFT_DEFINITIONS for count tracking.
+# "sacred_call_id" marks the final call of each shift as sacred (cannot be skipped).
+# "mid_shift_unlock" specifies bands that unlock mid-shift (after a specific call).
 
 const SHIFT_DATA: Array = [
-	# Shift 1
+	# Shift 1 — "First Night" (Tutorial)
 	{
 		"shift_number": 1,
+		"name": "First Night",
 		"bands": ["LIVING"],
 		"calls": ["procedural", 0, 1, 3],
 		"dread_meter_visible": false,
 		"save_unlocked": false,
 		"tutorial": true,
+		"recording_enabled": false,
+		"signal_decode_enabled": false,
+		"wrongness_event_count": 1,
+		"sacred_call_id": 3,  # HAROLD — final call, sacred
 	},
-	# Shift 2
+	# Shift 2 — "Settling In" (LIMINAL Unlocked)
 	{
 		"shift_number": 2,
+		"name": "Settling In",
 		"bands": ["LIVING", "LIMINAL"],
 		"calls": ["procedural", 2, 4, 5],
 		"dread_meter_visible": true,
 		"save_unlocked": true,
 		"tutorial": true,
+		"recording_enabled": false,
+		"signal_decode_enabled": false,
+		"wrongness_event_count": 2,
+		"sacred_call_id": 5,  # 3:47 AM — final call, sacred
+		"mid_shift_unlock": {"after_call": 0, "band": "LIMINAL"},  # LIMINAL unlocks after first call
+	},
+	# Shift 3 — "The Dead" (LOST Unlocked)
+	{
+		"shift_number": 3,
+		"name": "The Dead",
+		"bands": ["LIVING", "LIMINAL", "LOST"],
+		"calls": [6, 7, 8, 9],
+		"dread_meter_visible": true,
+		"save_unlocked": true,
+		"tutorial": false,
+		"recording_enabled": true,
+		"signal_decode_enabled": false,
+		"wrongness_event_count": 3,
+		"sacred_call_id": 9,  # MISSING PERSONS — final call, sacred
+		"mid_shift_unlock": {"after_call": 0, "band": "LOST"},  # LOST unlocks after first call
+	},
+	# Shift 4 — "Classified" (CLASSIFIED Unlocked)
+	{
+		"shift_number": 4,
+		"name": "Classified",
+		"bands": ["LIVING", "LIMINAL", "LOST", "CLASSIFIED"],
+		"calls": [10, 11, 12, 13],
+		"dread_meter_visible": true,
+		"save_unlocked": true,
+		"tutorial": false,
+		"recording_enabled": true,
+		"signal_decode_enabled": true,
+		"wrongness_event_count": 4,
+		"sacred_call_id": 13,  # ARIA-9 — final call, sacred
+		"mid_shift_unlock": {"after_call": 0, "band": "CLASSIFIED"},  # CLASSIFIED unlocks after first call
+	},
+	# Shift 5 — "Dead Air" (████████ Unlocked, Final Shift)
+	{
+		"shift_number": 5,
+		"name": "Dead Air",
+		"bands": ["LIVING", "LIMINAL", "LOST", "CLASSIFIED", "REDACTED"],
+		"calls": [14, 15, 16, 17],
+		"dread_meter_visible": true,
+		"save_unlocked": false,  # No saving — one-way trip
+		"tutorial": false,
+		"recording_enabled": true,
+		"signal_decode_enabled": true,
+		"wrongness_event_count": -1,  # -1 = continuous
+		"sacred_call_id": 17,  # DEAD AIR — final call, sacred
 	},
 ]
 
@@ -69,6 +131,12 @@ var _shift_active: bool = false
 var _dread_meter_visible: bool = false
 var _save_available: bool = false
 var _unlocked_bands: Array[String] = []
+
+# Per-shift mechanic flags
+var _recording_enabled: bool = false
+var _signal_decode_enabled: bool = false
+var _wrongness_event_count: int = 0
+var _sacred_call_id: int = -1
 
 # BandUnlockManager instance (not an autoload; created as child)
 var _band_unlock_manager: Node = null
@@ -152,6 +220,40 @@ func is_shift_implemented(shift_number: int) -> bool:
 	return shift_number >= 1 and shift_number <= MAX_IMPLEMENTED_SHIFTS
 
 
+func is_recording_enabled() -> bool:
+	return _recording_enabled
+
+
+func is_signal_decode_enabled() -> bool:
+	return _signal_decode_enabled
+
+
+func get_wrongness_event_count() -> int:
+	return _wrongness_event_count
+
+
+func is_wrongness_continuous() -> bool:
+	return _wrongness_event_count == -1
+
+
+func get_sacred_call_id() -> int:
+	return _sacred_call_id
+
+
+func is_sacred_call(call_id: int) -> bool:
+	return call_id == _sacred_call_id
+
+
+func is_final_call_sacred() -> bool:
+	# The framework enforces that the final call of every shift is sacred.
+	return true
+
+
+func get_shift_name(shift_number: int) -> String:
+	var data: Dictionary = get_shift_data(shift_number)
+	return data.get("name", "Shift %d" % shift_number)
+
+
 # ─── Shift Lifecycle ─────────────────────────────────────────────────────────
 
 
@@ -174,6 +276,10 @@ func start_shift(shift_number: int = 1) -> void:
 	_dread_meter_visible = data.get("dread_meter_visible", false)
 	_save_available = data.get("save_unlocked", false)
 	var bands: Array = data.get("bands", [])
+	_recording_enabled = data.get("recording_enabled", false)
+	_signal_decode_enabled = data.get("signal_decode_enabled", false)
+	_wrongness_event_count = data.get("wrongness_event_count", 0)
+	_sacred_call_id = data.get("sacred_call_id", -1)
 
 	# Set PhaseManager to PHASE_1_STATION
 	if PhaseManager:
@@ -244,6 +350,27 @@ func _enter_calls_active() -> void:
 func _enter_post_shift() -> void:
 	_set_phase(ShiftPhase.POST_SHIFT)
 	_phase_timer = POST_SHIFT_DURATION
+	_start_post_shift_flow()
+
+
+## Post-shift flow: tape review → save opportunity → band unlock announcements.
+func _start_post_shift_flow() -> void:
+	# 1. Tape review
+	tape_review_started.emit()
+
+	# 2. Save opportunity (if saving is available this shift)
+	if _save_available:
+		save_opportunity_offered.emit()
+
+	# 3. Announce band unlocks for the NEXT shift (if not the final shift)
+	if _current_shift < MAX_IMPLEMENTED_SHIFTS:
+		var next_data: Dictionary = get_shift_data(_current_shift + 1)
+		var current_bands: Array = get_shift_data(_current_shift).get("bands", [])
+		var next_bands: Array = next_data.get("bands", [])
+		for band_name in next_bands:
+			var band_str := str(band_name)
+			if not current_bands.has(band_str):
+				band_unlock_announced.emit(band_str)
 
 
 func _enter_shift_transition() -> void:
@@ -269,7 +396,19 @@ func _on_call_manager_shift_ended(_cm_shift_number: int) -> void:
 
 func _on_call_manager_call_started(_call_data: Dictionary) -> void:
 	_call_count += 1
+
+	# Mid-shift band unlock: unlock the specified band after the configured call
 	var data: Dictionary = get_shift_data(_current_shift)
+	var mid_unlock: Dictionary = data.get("mid_shift_unlock", {})
+	if not mid_unlock.is_empty():
+		var unlock_after: int = mid_unlock.get("after_call", -1)
+		if unlock_after >= 0 and _call_count == unlock_after + 1:
+			var band_name: String = mid_unlock.get("band", "")
+			if band_name != "" and not _unlocked_bands.has(band_name):
+				_unlocked_bands.append(band_name)
+				band_unlocked.emit(band_name)
+
+	# Final call detection: emit final_call_starting when the last call begins
 	var expected_calls: int = data.get("calls", []).size()
 	if expected_calls > 0 and _call_count == expected_calls:
 		final_call_starting.emit()
@@ -356,6 +495,10 @@ func _reset_for_testing() -> void:
 	_dread_meter_visible = false
 	_save_available = false
 	_unlocked_bands.clear()
+	_recording_enabled = false
+	_signal_decode_enabled = false
+	_wrongness_event_count = 0
+	_sacred_call_id = -1
 	_testing_mode = false
 	_call_count = 0
 	if CallManager:

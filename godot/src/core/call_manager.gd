@@ -98,22 +98,44 @@ const PROCEDURAL_TEMPLATES: Array[Dictionary] = [
 	},
 ]
 
-# --- Shift definitions (V-Slice: shifts 1 + 2) ---
+# --- Shift definitions (all 5 shifts) ---
 # Each shift: array of call specs. Scripted calls use {"id": N}. Procedural use {"procedural": true}.
+# The final call of each shift is sacred (is_sacred: true in call data, enforced by ShiftController).
 const SHIFT_DEFINITIONS: Array = [
-	# Shift 1
+	# Shift 1 — "First Night" (Tutorial)
 	[
 		{"procedural": true},
 		{"id": 0},
 		{"id": 1},
 		{"id": 3},
 	],
-	# Shift 2
+	# Shift 2 — "Settling In" (LIMINAL Unlocked)
 	[
 		{"procedural": true},
 		{"id": 2},
 		{"id": 4},
 		{"id": 5},
+	],
+	# Shift 3 — "The Dead" (LOST Unlocked)
+	[
+		{"id": 6},
+		{"id": 7},
+		{"id": 8},
+		{"id": 9},
+	],
+	# Shift 4 — "Classified" (CLASSIFIED Unlocked)
+	[
+		{"id": 10},
+		{"id": 11},
+		{"id": 12},
+		{"id": 13},
+	],
+	# Shift 5 — "Dead Air" (████████ Unlocked, Final Shift)
+	[
+		{"id": 14},
+		{"id": 15},
+		{"id": 16},
+		{"id": 17},
 	],
 ]
 

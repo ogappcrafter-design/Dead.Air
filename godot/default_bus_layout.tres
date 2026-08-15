@@ -1,69 +1,45 @@
-[gd_resource type="AudioBusLayout" format=3 uid="uid://da134audiobuslayout"]
+[gd_resource type="AudioBusLayout" format=3 uid="uid://h51tw2b6gi08"]
 
-; Master Bus — Limiter (ceiling -0.3 dB)
 [sub_resource type="AudioEffectLimiter" id="Limiter_Master"]
 ceiling_db = -0.3
 threshold_db = -1.0
 soft_clip_ratio = 0.0
 
-; ROOM_TONE — Reverb (room)
 [sub_resource type="AudioEffectReverb" id="Reverb_RoomTone"]
 predelay_msec = 50.0
 room_size = 0.7
 damping = 0.3
-spread = 1.0
 dry = 0.0
 wet = 0.4
-highpass = 0.0
-lowpass = 1.0
 
-; RADIO_AMBIENT — BandPass Filter (telephone range ~300-3400 Hz)
 [sub_resource type="AudioEffectBandPassFilter" id="BandPass_RadioAmbient"]
 cutoff_hz = 1850.0
 resonance = 0.6
 
-; RADIO_AMBIENT — Gain removed (AudioEffectGain not available in Godot 4.7.1)
-; Signal strength is now controlled via bus volume (see AudioBusManager.set_bus_volume)
-
-; CALL_AUDIO — Compressor (3:1, -20 dB threshold)
 [sub_resource type="AudioEffectCompressor" id="Compressor_CallAudio"]
 threshold = -20.0
 ratio = 3.0
-gain = 0.0
 attack_us = 1000.0
 release_ms = 200.0
 
-; CALL_AUDIO — Distortion (f(dread), subtle at baseline)
 [sub_resource type="AudioEffectDistortion" id="Distortion_CallAudio"]
 pre_gain = -6.0
-post_gain = 0.0
 drive = 0.2
-linear_limit = -1.0
-db_limit = 0.0
 
-; CALL_AUDIO — Reverb (small room 0.3s)
 [sub_resource type="AudioEffectReverb" id="Reverb_CallAudio"]
 predelay_msec = 20.0
 room_size = 0.3
-damping = 0.5
 spread = 0.8
 dry = 0.0
 wet = 0.25
-highpass = 0.0
-lowpass = 1.0
 
-; DREAD_LAYER — LowPass Filter (200 Hz cutoff)
 [sub_resource type="AudioEffectLowPassFilter" id="LowPass_DreadLayer"]
 cutoff_hz = 200.0
 resonance = 0.6
 
 [resource]
-; Bus 0: Master
-bus/0/volume_db = 0.0
 bus/0/effect/0/effect = SubResource("Limiter_Master")
 bus/0/effect/0/enabled = true
-
-; Bus 1: ROOM_TONE (-6 dB)
 bus/1/name = &"ROOM_TONE"
 bus/1/solo = false
 bus/1/mute = false
@@ -72,8 +48,6 @@ bus/1/volume_db = -6.0
 bus/1/send = &"Master"
 bus/1/effect/0/effect = SubResource("Reverb_RoomTone")
 bus/1/effect/0/enabled = true
-
-; Bus 2: RADIO_AMBIENT (-8 dB)
 bus/2/name = &"RADIO_AMBIENT"
 bus/2/solo = false
 bus/2/mute = false
@@ -82,9 +56,6 @@ bus/2/volume_db = -8.0
 bus/2/send = &"Master"
 bus/2/effect/0/effect = SubResource("BandPass_RadioAmbient")
 bus/2/effect/0/enabled = true
-; Gain effect removed (AudioEffectGain not available in Godot 4.7.1)
-
-; Bus 3: CALL_AUDIO (-3 dB)
 bus/3/name = &"CALL_AUDIO"
 bus/3/solo = false
 bus/3/mute = false
@@ -97,8 +68,6 @@ bus/3/effect/1/effect = SubResource("Distortion_CallAudio")
 bus/3/effect/1/enabled = true
 bus/3/effect/2/effect = SubResource("Reverb_CallAudio")
 bus/3/effect/2/enabled = true
-
-; Bus 4: DREAD_LAYER (-12 dB baseline, ramps to 0 dB at dread 75+)
 bus/4/name = &"DREAD_LAYER"
 bus/4/solo = false
 bus/4/mute = false
@@ -107,32 +76,24 @@ bus/4/volume_db = -12.0
 bus/4/send = &"Master"
 bus/4/effect/0/effect = SubResource("LowPass_DreadLayer")
 bus/4/effect/0/enabled = true
-
-; Bus 5: STINGER (-3 dB, sidechain duck all others -6 dB)
 bus/5/name = &"STINGER"
 bus/5/solo = false
 bus/5/mute = false
 bus/5/bypass_fx = false
 bus/5/volume_db = -3.0
 bus/5/send = &"Master"
-
-; Bus 6: SILENCE (0 dB, controller bus — mutes all others when active)
 bus/6/name = &"SILENCE"
 bus/6/solo = false
 bus/6/mute = false
 bus/6/bypass_fx = false
 bus/6/volume_db = 0.0
 bus/6/send = &"Master"
-
-; Bus 7: UI (-6 dB, clean no effects)
 bus/7/name = &"UI"
 bus/7/solo = false
 bus/7/mute = false
 bus/7/bypass_fx = false
 bus/7/volume_db = -6.0
 bus/7/send = &"Master"
-
-; Bus 8: TAPE (-6 dB, clean for tape playback)
 bus/8/name = &"TAPE"
 bus/8/solo = false
 bus/8/mute = false
