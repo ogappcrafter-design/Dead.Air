@@ -151,6 +151,14 @@ static func compute_params(
 	if dread > DREAD_SEVERE_THRESHOLD:
 		tint_color = COLOR_AMBER.lerp(COLOR_RED, (dread - DREAD_SEVERE_THRESHOLD) / 25.0)
 
+	# --- DEA-142: Signal-driven radial CA and scanline drift ---
+	# Both scale from 0 (signal=100) to max (signal=0).
+	# Note: safe_room resets dread and composure above, but NOT signal_val —
+	# signal-driven CA/drift intentionally persists in safe rooms.
+	var signal_factor: float = (100.0 - signal_val) / 100.0
+	var ca_radial_amount: float = signal_factor * 4.0
+	var signal_scanline_drift: float = signal_factor * 2.0
+
 	return {
 		"signal_strength": signal_val,
 		"dread_level": dread,
@@ -176,6 +184,8 @@ static func compute_params(
 		"alert_color": Vector3(COLOR_RED.r, COLOR_RED.g, COLOR_RED.b),
 		"alert_blend": alert_blend,
 		"inversion_amount": inversion_amount,
+		"ca_radial_amount": ca_radial_amount,
+		"signal_scanline_drift": signal_scanline_drift,
 	}
 
 
