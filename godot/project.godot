@@ -47,6 +47,8 @@ BreatherSystem="*res://src/core/breather_system.gd"
 RecordingManager="*res://src/core/recording_manager.gd"
 ; BandController — band system controller (singleton)
 BandController="*res://src/core/band_controller.gd"
+; DEA-135: Room tone ambient system (singleton)
+RoomToneSystem="*res://src/audio/room_tone_system.gd"
 
 [display]
 
