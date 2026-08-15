@@ -46,6 +46,7 @@ func run_tests() -> Dictionary:
 	results["test_signal_decode_per_shift"] = test_signal_decode_per_shift()
 	results["test_wrongness_events_per_shift"] = test_wrongness_events_per_shift()
 	results["test_mid_shift_band_unlock"] = test_mid_shift_band_unlock()
+	results["test_sacred_call_skip_prevention"] = test_sacred_call_skip_prevention()
 	results["test_post_shift_flow_events"] = test_post_shift_flow_events()
 	results["test_final_call_starting_signal"] = test_final_call_starting_signal()
 	results["test_breather_integration"] = test_breather_integration()
@@ -174,7 +175,7 @@ func test_shift_data_definitions() -> bool:
 	var s2_ok: bool = (
 		not s2.is_empty()
 		and s2["shift_number"] == 2
-		and s2["bands"] == ["LIVING", "LIMINAL"]
+		and s2["bands"] == ["LIVING"]
 		and s2["dread_meter_visible"] == true
 		and s2["save_unlocked"] == true
 		and s2["tutorial"] == true
@@ -187,7 +188,7 @@ func test_shift_data_definitions() -> bool:
 	var s3_ok: bool = (
 		not s3.is_empty()
 		and s3["shift_number"] == 3
-		and s3["bands"] == ["LIVING", "LIMINAL", "LOST"]
+		and s3["bands"] == ["LIVING", "LIMINAL"]
 		and s3["dread_meter_visible"] == true
 		and s3["save_unlocked"] == true
 		and s3["tutorial"] == false
@@ -201,7 +202,7 @@ func test_shift_data_definitions() -> bool:
 	var s4_ok: bool = (
 		not s4.is_empty()
 		and s4["shift_number"] == 4
-		and s4["bands"] == ["LIVING", "LIMINAL", "LOST", "CLASSIFIED"]
+		and s4["bands"] == ["LIVING", "LIMINAL", "LOST"]
 		and s4["dread_meter_visible"] == true
 		and s4["save_unlocked"] == true
 		and s4["tutorial"] == false
@@ -215,7 +216,7 @@ func test_shift_data_definitions() -> bool:
 	var s5_ok: bool = (
 		not s5.is_empty()
 		and s5["shift_number"] == 5
-		and s5["bands"] == ["LIVING", "LIMINAL", "LOST", "CLASSIFIED", "REDACTED"]
+		and s5["bands"] == ["LIVING", "LIMINAL", "LOST", "CLASSIFIED", "████████"]
 		and s5["dread_meter_visible"] == true
 		and s5["save_unlocked"] == false  # No saving — one-way trip
 		and s5["tutorial"] == false
@@ -337,12 +338,137 @@ func test_shift_2_config() -> bool:
 	if ShiftController.is_signal_decode_enabled() != false:
 		return false
 
+	# Shift 2: only LIVING at start (LIMINAL unlocks mid-shift)
+	var bands: Array[String] = ShiftController.get_unlocked_bands()
+	if bands.size() != 1:
+		return false
+	if bands[0] != "LIVING":
+		return false
+
+	# Sacred call ID should be 5 (3:47 AM)
+	if ShiftController.get_sacred_call_id() != 5:
+		return false
+
+	ShiftController._reset_for_testing()
+	return true
+
+
+func test_shift_3_config() -> bool:
+	_reset()
+	ShiftController._set_testing_mode(true)
+	ShiftController.start_shift(3)
+
+	# Shift 3: LIVING + LIMINAL + LOST, dread shown, save unlocked, recording enabled
+	if ShiftController.is_dread_meter_visible() != true:
+		return false
+	if ShiftController.is_save_available() != true:
+		return false
+	if ShiftController.is_recording_enabled() != true:
+		return false
+	if ShiftController.is_signal_decode_enabled() != false:
+		return false
+
+	# Shift 3: LIVING + LIMINAL at start (LOST unlocks mid-shift)
 	var bands: Array[String] = ShiftController.get_unlocked_bands()
 	if bands.size() != 2:
 		return false
 	if bands[0] != "LIVING":
 		return false
 	if bands[1] != "LIMINAL":
+		return false
+	if ShiftController.get_sacred_call_id() != 9:
+		return false
+
+	# 4 calls
+	var data: Dictionary = ShiftController.get_shift_data(3)
+	if data.get("calls", []).size() != 4:
+		return false
+
+	ShiftController._reset_for_testing()
+	return true
+
+
+func test_shift_4_config() -> bool:
+	_reset()
+	ShiftController._set_testing_mode(true)
+	ShiftController.start_shift(4)
+
+	# Shift 4: All bands except ████████, dread, save, recording, decode enabled
+	if ShiftController.is_dread_meter_visible() != true:
+		return false
+	if ShiftController.is_save_available() != true:
+		return false
+	if ShiftController.is_recording_enabled() != true:
+		return false
+	if ShiftController.is_signal_decode_enabled() != true:
+		return false
+
+	# Shift 4: LIVING + LIMINAL + LOST at start (CLASSIFIED unlocks mid-shift)
+	var bands: Array[String] = ShiftController.get_unlocked_bands()
+	if bands.size() != 3:
+		return false
+	if bands[0] != "LIVING":
+		return false
+	if bands[1] != "LIMINAL":
+		return false
+	if bands[2] != "LOST":
+		return false
+
+	# Sacred call ID should be 13 (ARIA-9)
+	if ShiftController.get_sacred_call_id() != 13:
+		return false
+
+	# 4 calls
+	var data: Dictionary = ShiftController.get_shift_data(4)
+	if data.get("calls", []).size() != 4:
+		return false
+
+	ShiftController._reset_for_testing()
+	return true
+
+
+func test_shift_5_config() -> bool:
+	_reset()
+	ShiftController._set_testing_mode(true)
+	ShiftController.start_shift(5)
+
+	# Shift 5: All bands, dread, NO save (one-way trip), recording, decode enabled
+	if ShiftController.is_dread_meter_visible() != true:
+		return false
+	if ShiftController.is_save_available() != false:
+		return false
+	if ShiftController.is_recording_enabled() != true:
+		return false
+	if ShiftController.is_signal_decode_enabled() != true:
+		return false
+
+	var bands: Array[String] = ShiftController.get_unlocked_bands()
+	if bands.size() != 5:
+		return false
+	if bands[0] != "LIVING":
+		return false
+	if bands[1] != "LIMINAL":
+		return false
+	if bands[2] != "LOST":
+		return false
+	if bands[3] != "CLASSIFIED":
+		return false
+	if bands[4] != "████████":
+		return false
+
+	# Sacred call ID should be 17 (DEAD AIR)
+	if ShiftController.get_sacred_call_id() != 17:
+		return false
+
+	# Wrongness is continuous (-1)
+	if ShiftController.get_wrongness_event_count() != -1:
+		return false
+	if not ShiftController.is_wrongness_continuous():
+		return false
+
+	# 4 calls
+	var data: Dictionary = ShiftController.get_shift_data(5)
+	if data.get("calls", []).size() != 4:
 		return false
 
 	# Sacred call ID should be 5 (3:47 AM)
@@ -484,18 +610,22 @@ func test_band_unlock_signal() -> bool:
 	ShiftController._set_testing_mode(true)
 	ShiftController.start_shift(2)
 
-	# Shift 2 unlocks LIVING and LIMINAL
-	# LIVING should fire on shift 1 start; on shift 2 both should fire
+	# Shift 2 unlocks only LIVING at start (LIMINAL unlocks mid-shift)
 	if _band_unlocked_count < 1:
 		return false
-	# Check LIMINAL was unlocked
-	var found_liminal := false
+	# LIVING should be unlocked
+	var found_living := false
+	for b in _band_unlocked_args:
+		if b == "LIVING":
+			found_living = true
+			break
+	if not found_living:
+		return false
+	# LIMINAL should NOT be unlocked at shift start
 	for b in _band_unlocked_args:
 		if b == "LIMINAL":
-			found_liminal = true
-			break
-	if not found_liminal:
-		return false
+			ShiftController._reset_for_testing()
+			return false
 
 	ShiftController._reset_for_testing()
 	return true
@@ -725,21 +855,73 @@ func test_mid_shift_band_unlock() -> bool:
 	ShiftController._set_testing_mode(true)
 	ShiftController.start_shift(2)
 
-	# Shift 2: LIMINAL should unlock after the first call (call_count == 1)
-	# _on_call_manager_call_started is called with call_count incrementing
-	# After the first call: LIMINAL should be unlocked
+	# LIMINAL should NOT be unlocked yet — it's a mid-shift unlock band
+	var bands_after_start: Array[String] = ShiftController.get_unlocked_bands()
+	for b in bands_after_start:
+		if b == "LIMINAL":
+			ShiftController._reset_for_testing()
+			return false
+
+	# Record band_unlocked count before mid-shift unlock
+	var unlocked_count_before: int = _band_unlocked_count
+
+	# Simulate the first call starting — should trigger mid-shift unlock
 	var call_data: Dictionary = {"id": 2}
 	ShiftController._on_call_manager_call_started(call_data)
 
-	# LIMINAL should now be in unlocked bands (it was added by start_shift, but
-	# the mid_shift_unlock should also emit band_unlocked signal)
+	# LIMINAL should now be unlocked
 	var found_liminal := false
 	for b in _band_unlocked_args:
 		if b == "LIMINAL":
 			found_liminal = true
 			break
-
 	if not found_liminal:
+		ShiftController._reset_for_testing()
+		return false
+
+	# band_unlocked signal should have fired from _on_call_manager_call_started
+	if _band_unlocked_count <= unlocked_count_before:
+		ShiftController._reset_for_testing()
+		return false
+
+	ShiftController._reset_for_testing()
+	return true
+
+
+func test_sacred_call_skip_prevention() -> bool:
+	_reset()
+	ShiftController._set_testing_mode(true)
+	ShiftController.start_shift(1)
+
+	if not CallManager:
+		ShiftController._reset_for_testing()
+		return true
+
+	# Build a shift queue so CallManager has a current call
+	CallManager._shift_in_progress = true
+	CallManager._shift_queue = [
+		{"id": 0, "is_sacred": false},
+		{"id": 1, "is_sacred": false},
+		{"id": 3, "is_sacred": true},
+	]
+	CallManager._current_call_index = 2
+	CallManager._current_call = CallManager._shift_queue[2]
+	CallManager._state = CallManager.CallState.ACTIVE
+
+	# Attempting to skip a sacred call should NOT resolve
+	# Track via _resolve_call side effect: state should stay ACTIVE, not go to RESOLVING
+	CallManager.skip_call()
+
+	if CallManager.get_state() != CallManager.CallState.ACTIVE:
+		ShiftController._reset_for_testing()
+		return false
+
+	# Now test a non-sacred call — skip should work
+	CallManager._current_call = {"id": 0, "is_sacred": false}
+	CallManager._state = CallManager.CallState.ACTIVE
+	CallManager.skip_call()
+
+	if CallManager.get_state() == CallManager.CallState.ACTIVE:
 		ShiftController._reset_for_testing()
 		return false
 
@@ -770,8 +952,8 @@ func test_post_shift_flow_events() -> bool:
 		ShiftController._reset_for_testing()
 		return false
 
-	# Band unlock announcements: shift 3 unlocks LOST (not in shift 2's bands)
-	# So LOST should be announced
+	# Band unlock announcements: shift 3 brings LIMINAL (in bands) and LOST (mid-shift unlock)
+	# LOST should be announced (not yet unlocked at this point)
 	if _band_unlock_announced_count < 1:
 		ShiftController._reset_for_testing()
 		return false

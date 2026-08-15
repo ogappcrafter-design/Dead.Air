@@ -63,7 +63,7 @@ const SHIFT_DATA: Array = [
 	{
 		"shift_number": 2,
 		"name": "Settling In",
-		"bands": ["LIVING", "LIMINAL"],
+		"bands": ["LIVING"],
 		"calls": ["procedural", 2, 4, 5],
 		"dread_meter_visible": true,
 		"save_unlocked": true,
@@ -78,7 +78,7 @@ const SHIFT_DATA: Array = [
 	{
 		"shift_number": 3,
 		"name": "The Dead",
-		"bands": ["LIVING", "LIMINAL", "LOST"],
+		"bands": ["LIVING", "LIMINAL"],
 		"calls": [6, 7, 8, 9],
 		"dread_meter_visible": true,
 		"save_unlocked": true,
@@ -93,7 +93,7 @@ const SHIFT_DATA: Array = [
 	{
 		"shift_number": 4,
 		"name": "Classified",
-		"bands": ["LIVING", "LIMINAL", "LOST", "CLASSIFIED"],
+		"bands": ["LIVING", "LIMINAL", "LOST"],
 		"calls": [10, 11, 12, 13],
 		"dread_meter_visible": true,
 		"save_unlocked": true,
@@ -108,7 +108,7 @@ const SHIFT_DATA: Array = [
 	{
 		"shift_number": 5,
 		"name": "Dead Air",
-		"bands": ["LIVING", "LIMINAL", "LOST", "CLASSIFIED", "REDACTED"],
+		"bands": ["LIVING", "LIMINAL", "LOST", "CLASSIFIED", "████████"],
 		"calls": [14, 15, 16, 17],
 		"dread_meter_visible": true,
 		"save_unlocked": false,  # No saving — one-way trip
@@ -365,11 +365,15 @@ func _start_post_shift_flow() -> void:
 	# 3. Announce band unlocks for the NEXT shift (if not the final shift)
 	if _current_shift < MAX_IMPLEMENTED_SHIFTS:
 		var next_data: Dictionary = get_shift_data(_current_shift + 1)
-		var current_bands: Array = get_shift_data(_current_shift).get("bands", [])
-		var next_bands: Array = next_data.get("bands", [])
+		var next_bands: Array = next_data.get("bands", []).duplicate()
+		var mid_unlock: Dictionary = next_data.get("mid_shift_unlock", {})
+		if not mid_unlock.is_empty():
+			var mid_band: String = mid_unlock.get("band", "")
+			if mid_band != "" and not next_bands.has(mid_band):
+				next_bands.append(mid_band)
 		for band_name in next_bands:
 			var band_str := str(band_name)
-			if not current_bands.has(band_str):
+			if not _unlocked_bands.has(band_str):
 				band_unlock_announced.emit(band_str)
 
 

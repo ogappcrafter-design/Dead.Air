@@ -273,6 +273,9 @@ func end_shift() -> void:
 
 func skip_call() -> void:
 	if _state == CallState.ACTIVE or _state == CallState.CHOICE:
+		if ShiftController and _current_call.get("is_sacred", false):
+			push_warning("CallManager: cannot skip sacred call (id %d)" % _current_call.get("id", -1))
+			return
 		_resolve_call("skipped")
 
 
