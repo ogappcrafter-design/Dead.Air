@@ -1,8 +1,8 @@
 class_name StaticTransition
 extends CanvasLayer
 
-## DEA-108: Brief static/scanline overlay during camera cuts.
-## Per acceptance criteria: "0.5-1.0 sec cut with brief static effect"
+## DEA-108 / DEA-144: Brief static/scanline overlay during camera cuts.
+## Per DEA-144: 0.3–0.5 sec cut with brief static effect (0.4s default).
 ##
 ## Uses a ColorRect + shader for a TV static effect that fades in/out
 ## over the transition duration.
@@ -12,6 +12,7 @@ var _shader_mat: ShaderMaterial
 var _timer: float = 0.0
 var _duration: float = 0.0
 var _playing: bool = false
+
 
 func _ready() -> void:
 	# Layer above everything
@@ -32,6 +33,7 @@ func _ready() -> void:
 
 	# Start hidden
 	_rect.visible = false
+
 
 func _get_shader_code() -> String:
 	return """
@@ -72,6 +74,7 @@ void fragment() {
 }
 """
 
+
 func play(duration: float) -> void:
 	_duration = duration
 	_timer = duration
@@ -79,6 +82,7 @@ func play(duration: float) -> void:
 	_rect.visible = true
 	_shader_mat.set_shader_parameter("intensity", 1.0)
 	_shader_mat.set_shader_parameter("scanline_strength", 0.7)
+
 
 func _process(delta: float) -> void:
 	if not _playing:

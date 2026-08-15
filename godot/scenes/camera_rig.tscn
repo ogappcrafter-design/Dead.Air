@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3 uid="uid://dea144camerarig"]
+
+[ext_resource type="Script" path="res://src/visual/camera_rig.gd" id="1_rig"]
+
+[node name="CameraRig" type="Camera3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 3)
+script = ExtResource("1_rig")

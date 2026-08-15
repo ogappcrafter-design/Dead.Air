@@ -1,24 +1,33 @@
 class_name CameraRig
 extends Camera3D
 
-## DEA-108: The actual camera that renders the scene.
-## Holds a reference to the current CameraAngle and applies semi-fixed
-## tracking behavior — subtle pan/zoom within the angle's max range.
+## DEA-108 / DEA-144: The actual camera that renders the scene.
+## Holds an array of CameraAngle resources (1-3 per room) and applies
+## semi-fixed tracking behavior — subtle pan/zoom within the angle's max range.
 ##
-## Per acceptance criteria:
-## - Semi-fixed: subtle pan/zoom within range (max 15°)
+## Per DEA-144 acceptance criteria:
+## - 1-3 predefined camera positions per room/location
+## - Trigger zones reference rig + camera index
+## - Semi-fixed: subtle pan/tilt within designer-set limits
 ## - Right Stick/Mouse: unused (no free look)
 ## - Player movement relative to screen, not camera
 
-## Current target angle (set by CameraManager).
+## Array of camera angles for this rig (1-3 per room).
+## Designer assigns CameraAngle resources here; zones reference by index.
+@export var angles: Array[CameraAngle] = []
+
+## Current target angle (set by CameraManager or via transition_to_index).
 var current_angle: CameraAngle = null
 
 ## Previous angle (for blending during transitions).
 var previous_angle: CameraAngle = null
 
+## Index of the current angle in the angles array (-1 if set via transition_to).
+var current_index: int = -1
+
 ## Transition timer (seconds). 0 = not transitioning.
 var _transition_time: float = 0.0
-var _transition_duration: float = 0.75
+var _transition_duration: float = 0.4
 
 ## Target player node for tracking.
 var _target: Node3D = null
@@ -30,24 +39,26 @@ var _base_transform: Transform3D = Transform3D.IDENTITY
 var _pan_offset: float = 0.0
 var _tilt_offset: float = 0.0
 
+
 func _ready() -> void:
-	# Make this the current camera
-	current = true
+	pass
+
 
 func set_target(target: Node3D) -> void:
 	_target = target
 
-func transition_to(angle: CameraAngle, duration: float = 0.75) -> void:
+
+func transition_to(angle: CameraAngle, duration: float = 0.4) -> void:
 	if angle == null:
 		return
 	previous_angle = current_angle
 	current_angle = angle
+	current_index = -1
 	_transition_duration = duration
 	_transition_time = duration
 	# Snap base transform to the angle's configured position/rotation
 	_base_transform = Transform3D(
-		Basis.from_euler(angle.rotation_degrees * deg_to_rad(1.0)),
-		angle.position
+		Basis.from_euler(angle.rotation_degrees * deg_to_rad(1.0)), angle.position
 	)
 	# Set FOV
 	fov = angle.fov
@@ -58,6 +69,27 @@ func transition_to(angle: CameraAngle, duration: float = 0.75) -> void:
 		attributes.dof_blur_far_amount = angle.dof_focus_length
 	else:
 		attributes.dof_blur_far_enabled = false
+
+
+## Transition to a camera angle by index into the angles array.
+## Per DEA-144: trigger zones reference rig + camera index.
+func transition_to_index(index: int, duration: float = 0.4) -> void:
+	if index < 0 or index >= angles.size():
+		push_warning("CameraRig: angle index %d out of range (0-%d)" % [index, angles.size() - 1])
+		return
+	transition_to(angles[index], duration)
+	current_index = index
+
+
+## Get the angle_id of the angle at the given index, or "" if invalid.
+func get_angle_id(index: int) -> String:
+	if index < 0 or index >= angles.size():
+		return ""
+	var angle: CameraAngle = angles[index]
+	if angle == null:
+		return ""
+	return angle.angle_id
+
 
 func _process(delta: float) -> void:
 	if current_angle == null:
@@ -88,6 +120,7 @@ func _process(delta: float) -> void:
 		# Fully fixed — just maintain base transform
 		global_transform = _base_transform
 
+
 func _semi_fixed_tracking(delta: float) -> void:
 	# Get direction from camera to player in the camera's local space
 	var to_player: Vector3 = _target.global_position - _base_transform.origin
@@ -107,8 +140,12 @@ func _semi_fixed_tracking(delta: float) -> void:
 		tilt_factor = clamp(local_dir.y / 10.0, -1.0, 1.0)
 
 	# Apply tracking strength and max range
-	var target_pan: float = pan_factor * current_angle.max_pan_degrees * current_angle.tracking_strength
-	var target_tilt: float = tilt_factor * current_angle.max_tilt_degrees * current_angle.tracking_strength
+	var target_pan: float = (
+		pan_factor * current_angle.max_pan_degrees * current_angle.tracking_strength
+	)
+	var target_tilt: float = (
+		tilt_factor * current_angle.max_tilt_degrees * current_angle.tracking_strength
+	)
 
 	# Lerp toward target for smooth motion
 	var lerp_speed: float = current_angle.tracking_lerp_speed * delta
@@ -117,16 +154,10 @@ func _semi_fixed_tracking(delta: float) -> void:
 
 	# Build the semi-fixed transform: base + pan/tilt offset
 	var offset_basis: Basis = Basis.from_euler(
-		Vector3(
-			_tilt_offset * deg_to_rad(1.0),
-			_pan_offset * deg_to_rad(1.0),
-			0.0
-		)
+		Vector3(_tilt_offset * deg_to_rad(1.0), _pan_offset * deg_to_rad(1.0), 0.0)
 	)
-	global_transform = Transform3D(
-		_base_transform.basis * offset_basis,
-		_base_transform.origin
-	)
+	global_transform = Transform3D(_base_transform.basis * offset_basis, _base_transform.origin)
+
 
 func is_transitioning() -> bool:
 	return _transition_time > 0.0

@@ -2,8 +2,9 @@
 class_name CameraAngle
 extends Resource
 
-## DEA-108: Defines a single fixed/semi-fixed camera angle.
-## One CameraAngle per room/zone. Assigned to CameraZone nodes.
+## DEA-108 / DEA-144: Defines a single fixed/semi-fixed camera angle.
+## 1-3 CameraAngle resources per room, held in a CameraRig's angles array
+## (DEA-144) or assigned directly to a CameraZone (DEA-108 legacy).
 ##
 ## Per GDD: "Fixed/semi-fixed camera (RE-style)"
 ## Per acceptance criteria: semi-fixed pan/zoom within max 15° range.
@@ -34,7 +35,7 @@ extends Resource
 @export_group("Depth of Field")
 @export var use_dof: bool = false
 @export_range(0.1, 100.0, 0.1) var dof_focus_distance: float = 5.0
-@export_range(0.1, 50.0, 0.1) var dof_focus_length: float =  2.0
+@export_range(0.1, 50.0, 0.1) var dof_focus_length: float = 2.0
 
 ## Identifier for debugging / GDD cross-reference (e.g. "BT1", "C5", "N2").
 @export var angle_id: String = ""
