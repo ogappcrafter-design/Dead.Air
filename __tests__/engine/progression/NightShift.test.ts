@@ -284,14 +284,12 @@ describe('NightShift singleton', () => {
 // --- Lazy import helpers ---
 
 function getNightShift() {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const mod =
     require('@/engine/progression/NightShift') as typeof import('@/engine/progression/NightShift');
   return mod.getNightShift();
 }
 
 function initNightShift(config: NightShiftConfig) {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const mod =
     require('@/engine/progression/NightShift') as typeof import('@/engine/progression/NightShift');
   return mod.initNightShift(config);

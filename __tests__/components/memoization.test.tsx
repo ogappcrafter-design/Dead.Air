@@ -3,7 +3,6 @@ jest.mock('react-native-gesture-handler', () => ({
   GestureDetector: ({ children }: { children: React.ReactNode }) => children,
 }));
 jest.mock('react-native-reanimated', () => {
-  const React = require('react');
   const { View, Text } = require('react-native');
   return {
     __esModule: true,
@@ -27,7 +26,7 @@ jest.mock('react-native-reanimated', () => {
   };
 });
 
-import React, { memo } from 'react';
+import React from 'react';
 import { FrequencyDisplay } from '../../components/radio/FrequencyDisplay';
 import { SignalStrength } from '../../components/radio/SignalStrength';
 import { BandSelector } from '../../components/radio/BandSelector';

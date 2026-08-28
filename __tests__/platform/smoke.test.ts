@@ -56,14 +56,6 @@ import {
   isWeb,
   supportsFeature,
 } from '@/lib/platform/PlatformDetector';
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const rnMock = require('react-native') as {
-  __setMockPlatform: (
-    os: 'ios' | 'android' | 'web' | 'windows' | 'macos',
-    version?: string | number,
-  ) => void;
-};
-const setMockPlatform = rnMock.__setMockPlatform;
 
 describe('lib/platform/PlatformDetector + PlatformSmokeTest', () => {
   beforeEach(() => {
@@ -245,7 +237,6 @@ describe('lib/platform/PlatformDetector + PlatformSmokeTest', () => {
 
     it('PlatformBridge.isWebBridge / isNativeBridge accept detector labels', () => {
       jest.isolateModules(() => {
-        // eslint-disable-next-line @typescript-eslint/no-var-requires
         const mod = require('@/engine/audio/PlatformBridge') as {
           isWebBridge: (b: { readonly platform: 'web' | 'native' }) => boolean;
           isNativeBridge: (b: { readonly platform: 'web' | 'native' }) => boolean;
@@ -261,7 +252,6 @@ describe('lib/platform/PlatformDetector + PlatformSmokeTest', () => {
 
     it('detector label space matches PlatformBridge label space', () => {
       jest.isolateModules(() => {
-        // eslint-disable-next-line @typescript-eslint/no-var-requires
         const mod = require('@/engine/audio/PlatformBridge') as {
           bandStaticCharacter: unknown;
         };

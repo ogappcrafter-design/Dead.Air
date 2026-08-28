@@ -422,14 +422,12 @@ describe('CallScheduler singleton', () => {
 // --- Lazy import helpers (independent of hoisting) ---
 
 function getScheduler() {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const mod =
     require('@/engine/calls/CallScheduler') as typeof import('@/engine/calls/CallScheduler');
   return mod.getCallScheduler();
 }
 
 function initScheduler(registry: ReadonlyArray<CallData>) {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const mod =
     require('@/engine/calls/CallScheduler') as typeof import('@/engine/calls/CallScheduler');
   return mod.initCallScheduler(registry);

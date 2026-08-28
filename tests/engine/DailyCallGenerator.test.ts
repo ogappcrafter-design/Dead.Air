@@ -3,7 +3,6 @@
 
 import { DailyCallGenerator, DAILY_ID_BASE, getTodayUTC } from '@/engine/calls/DailyCallGenerator';
 import { ALL_FRAGMENTS, BAND_VARIATIONS } from '@/data/fragments';
-import type { CallData } from '@/engine/calls/types';
 
 describe('DailyCallGenerator', () => {
   let generator: DailyCallGenerator;

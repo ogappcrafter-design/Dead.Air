@@ -131,9 +131,7 @@ describe('choiceHistoryStore', () => {
 
       const result = useChoiceHistoryStore.getState().getChoicesForCall(1001);
       expect(result).toHaveLength(2);
-      expect(result.map((r) => r.choiceKey)).toEqual(
-        expect.arrayContaining(['K1', 'K2']),
-      );
+      expect(result.map((r) => r.choiceKey)).toEqual(expect.arrayContaining(['K1', 'K2']));
     });
 
     it('returns empty array for a call with no choices', () => {
@@ -149,27 +147,19 @@ describe('choiceHistoryStore', () => {
       store.recordChoice(1001, 'RIGHT_ANSWER:1001:0', 'Door A');
       store.recordChoice(1002, 'SIGNAL_DECODE:1002:1', 'Decode B');
 
-      expect(
-        useChoiceHistoryStore.getState().hasChoicePattern(/^RIGHT_ANSWER:/),
-      ).toBe(true);
-      expect(
-        useChoiceHistoryStore.getState().hasChoicePattern(/^SIGNAL_DECODE:/),
-      ).toBe(true);
+      expect(useChoiceHistoryStore.getState().hasChoicePattern(/^RIGHT_ANSWER:/)).toBe(true);
+      expect(useChoiceHistoryStore.getState().hasChoicePattern(/^SIGNAL_DECODE:/)).toBe(true);
     });
 
     it('returns false when no choiceKey matches the regex', () => {
       const store = useChoiceHistoryStore.getState();
       store.recordChoice(1001, 'RIGHT_ANSWER:1001:0', 'Door A');
 
-      expect(
-        useChoiceHistoryStore.getState().hasChoicePattern(/^STAY_CALM:/),
-      ).toBe(false);
+      expect(useChoiceHistoryStore.getState().hasChoicePattern(/^STAY_CALM:/)).toBe(false);
     });
 
     it('returns false on empty history', () => {
-      expect(
-        useChoiceHistoryStore.getState().hasChoicePattern(/.*/),
-      ).toBe(false);
+      expect(useChoiceHistoryStore.getState().hasChoicePattern(/.*/)).toBe(false);
     });
   });
 
@@ -178,8 +168,7 @@ describe('choiceHistoryStore', () => {
       const store = useChoiceHistoryStore.getState();
       store.recordChoice(1001, 'SNAP_KEY', 'snapval');
 
-      const snapshot: ChoiceHistorySnapshot =
-        useChoiceHistoryStore.getState().toSnapshot();
+      const snapshot: ChoiceHistorySnapshot = useChoiceHistoryStore.getState().toSnapshot();
 
       expect(snapshot.records).toHaveLength(1);
       expect(snapshot.hasChoice('SNAP_KEY')).toBe(true);
@@ -229,7 +218,6 @@ describe('choiceHistoryStore', () => {
     });
   });
 });
-
 
 describe('legacy choice-history migration (DEA-48 P1)', () => {
   const LEGACY_KEY = `${SAVE_KEY}_choices`;

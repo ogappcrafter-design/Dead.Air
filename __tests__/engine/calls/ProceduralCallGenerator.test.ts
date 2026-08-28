@@ -16,7 +16,7 @@ import {
 import { ALL_FRAGMENTS, BAND_VARIATIONS } from '@/data/fragments';
 import { CALLS } from '@/data/calls';
 import { getCallPool } from '@/engine/progression/InfiniteSignal';
-import type { CallData, CallChoice } from '@/engine/calls/types';
+import type { CallData } from '@/engine/calls/types';
 import type { CallType } from '@/lib/constants';
 import type { FragmentLibrary, BandVariation } from '@/data/fragments/types';
 
@@ -37,8 +37,7 @@ const VALID_CALL_TYPES: ReadonlyArray<CallType> = [
 ];
 
 /** Assert a value is within [min, max] inclusive. */
-const within = (value: number, min: number, max: number): boolean =>
-  value >= min && value <= max;
+const within = (value: number, min: number, max: number): boolean => value >= min && value <= max;
 
 /** Assert a generated call matches the CallData interface. */
 const assertValidCallData = (call: CallData, band: number): void => {
@@ -245,22 +244,22 @@ describe('ProceduralCallGenerator', () => {
       it(`band ${variation.band} (${variation.bandName}) staticReward in range`, () => {
         const calls = generator.generateBatch(variation.band, SAMPLE_SIZE);
         for (const call of calls) {
-          expect(within(
-            call.staticReward,
-            variation.staticRewardRange[0],
-            variation.staticRewardRange[1],
-          )).toBe(true);
+          expect(
+            within(
+              call.staticReward,
+              variation.staticRewardRange[0],
+              variation.staticRewardRange[1],
+            ),
+          ).toBe(true);
         }
       });
 
       it(`band ${variation.band} (${variation.bandName}) signal in range`, () => {
         const calls = generator.generateBatch(variation.band, SAMPLE_SIZE);
         for (const call of calls) {
-          expect(within(
-            call.signal,
-            variation.signalRange[0],
-            variation.signalRange[1],
-          )).toBe(true);
+          expect(within(call.signal, variation.signalRange[0], variation.signalRange[1])).toBe(
+            true,
+          );
         }
       });
 
@@ -268,11 +267,13 @@ describe('ProceduralCallGenerator', () => {
         const calls = generator.generateBatch(variation.band, SAMPLE_SIZE);
         for (const call of calls) {
           if (call.sanityDelta !== undefined) {
-            expect(within(
-              call.sanityDelta,
-              variation.sanityDeltaRange[0],
-              variation.sanityDeltaRange[1],
-            )).toBe(true);
+            expect(
+              within(
+                call.sanityDelta,
+                variation.sanityDeltaRange[0],
+                variation.sanityDeltaRange[1],
+              ),
+            ).toBe(true);
           }
         }
       });

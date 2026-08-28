@@ -4,8 +4,6 @@ import {
   bandVoicePreset,
   isWebBridge,
   isNativeBridge,
-  StaticCharacter,
-  VoicePreset,
 } from '../../../engine/audio/PlatformBridge';
 import { makeMockBridge } from '../../../__mocks__/engine/audio/mockBridge';
 import { Band } from '../../../lib/constants';

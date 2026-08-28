@@ -1,17 +1,10 @@
 import { ProceduralCallGenerator } from '@/engine/calls/ProceduralCallGenerator';
-import {
-  FragmentLibrary,
-  ResponseOption,
-  BandVariation,
-} from '@/data/fragments/types';
+import { FragmentLibrary, ResponseOption, BandVariation } from '@/data/fragments/types';
 import { ChoiceHistorySnapshot } from '@/store/choiceHistoryStore';
 
 // --- Minimal mock data ---
 
-function makeResponse(
-  text: string,
-  requiresChoiceKey?: string,
-): ResponseOption {
+function makeResponse(text: string, requiresChoiceKey?: string): ResponseOption {
   return {
     text,
     outcome: 'NEUTRAL' as never,
@@ -26,11 +19,7 @@ const BASE_LIB: FragmentLibrary = {
   openings: ['Static opening.'],
   middles: ['Static middle.'],
   closings: ['Static closing.'],
-  responses: [
-    makeResponse('Response A'),
-    makeResponse('Response B'),
-    makeResponse('Response C'),
-  ],
+  responses: [makeResponse('Response A'), makeResponse('Response B'), makeResponse('Response C')],
   callerIdPrefixes: ['CALLER'],
   callerNamePrefixes: ['Unknown'],
 };
@@ -75,12 +64,9 @@ function makeSnapshot(
   return {
     records,
     hasChoice: (key: string) => records.some((r) => r.choiceKey === key),
-    getChoice: (key: string) =>
-      records.filter((r) => r.choiceKey === key).slice(-1)[0],
-    getChoicesForCall: (callId: number) =>
-      records.filter((r) => r.callId === callId),
-    hasChoicePattern: (regex: RegExp) =>
-      records.some((r) => regex.test(r.choiceKey)),
+    getChoice: (key: string) => records.filter((r) => r.choiceKey === key).slice(-1)[0],
+    getChoicesForCall: (callId: number) => records.filter((r) => r.callId === callId),
+    hasChoicePattern: (regex: RegExp) => records.some((r) => regex.test(r.choiceKey)),
   };
 }
 
@@ -109,18 +95,12 @@ describe('ProceduralCallGenerator', () => {
       // Should include BASE_LIB (unbranched, always available as fallback)
       // and BRANCH_LIB_A (requiresChoiceKey satisfied)
       expect(branches.length).toBeGreaterThanOrEqual(1);
-      expect(
-        branches.some((lib) => lib.branchId === 'branchA'),
-      ).toBe(true);
-      expect(
-        branches.some((lib) => lib.branchId === 'branchB'),
-      ).toBe(false);
+      expect(branches.some((lib) => lib.branchId === 'branchA')).toBe(true);
+      expect(branches.some((lib) => lib.branchId === 'branchB')).toBe(false);
     });
 
     it('falls back to unbranched when no branch key matches', () => {
-      const snapshot = makeSnapshot([
-        { callId: 1001, choiceKey: 'UNKNOWN_KEY', value: 'val' },
-      ]);
+      const snapshot = makeSnapshot([{ callId: 1001, choiceKey: 'UNKNOWN_KEY', value: 'val' }]);
       const branches = generator.getAvailableBranches(snapshot, 0);
 
       expect(branches).toHaveLength(1);
@@ -137,9 +117,7 @@ describe('ProceduralCallGenerator', () => {
 
   describe('getGatedCallIds', () => {
     it('returns empty array when CHOICE_GATES is empty', () => {
-      const snapshot = makeSnapshot([
-        { callId: 1001, choiceKey: 'ANY_KEY', value: 'val' },
-      ]);
+      const snapshot = makeSnapshot([{ callId: 1001, choiceKey: 'ANY_KEY', value: 'val' }]);
 
       expect(generator.getGatedCallIds(snapshot)).toEqual([]);
     });

@@ -12,7 +12,7 @@ import {
   BridgeAudioContext,
   BridgeAudioNode,
 } from '../../../engine/audio/PlatformBridge';
-import { INTERACTIVE_CONFIG, BALANCED_CONFIG } from '../../../engine/audio/AudioPerformanceConfig';
+import { INTERACTIVE_CONFIG } from '../../../engine/audio/AudioPerformanceConfig';
 
 const mockCtx = (): BridgeAudioContext => ({
   sampleRate: 44100,

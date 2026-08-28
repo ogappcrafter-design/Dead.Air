@@ -1,10 +1,7 @@
 // __tests__/engine/calls/renderers/PuzzleHandler.test.ts
 // Unit tests for the PUZZLE call type outcome computer.
 
-import {
-  computePuzzleOutcome,
-  PUZZLE_RENDERER,
-} from '@/engine/calls/renderers/PuzzleHandler';
+import { computePuzzleOutcome, PUZZLE_RENDERER } from '@/engine/calls/renderers/PuzzleHandler';
 import type { CallData } from '@/engine/calls/types';
 
 // --- Fixtures ---

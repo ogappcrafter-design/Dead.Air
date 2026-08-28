@@ -86,7 +86,7 @@ describe('computeStayCalmOutcome — edge cases', () => {
     const oddCall: CallData = { ...STAY_CALM_CALL, staticReward: 51, sanityPenalty: 10 };
     const outcome = computeStayCalmOutcome(oddCall, false);
     // Math.round(51 * 0.5) = Math.round(25.5) = 26
-    expect(outcome.staticReward).toBe(51)
+    expect(outcome.staticReward).toBe(51);
     expect(outcome.staticMultiplier).toBe(0.5);
     expect(outcome.sanityDelta).toBe(-10);
   });

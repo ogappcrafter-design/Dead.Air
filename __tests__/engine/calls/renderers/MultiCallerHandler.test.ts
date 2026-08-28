@@ -20,11 +20,7 @@ const MULTI_CALLER_CALL: CallData = {
   sanityDelta: -15,
   tape: true,
   tapeName: 'Tape #M1 — Two Voices',
-  lines: [
-    '"Hello? Who is this?"',
-    '"I asked first. Who are YOU?"',
-    '"Stop calling this number."',
-  ],
+  lines: ['"Hello? Who is this?"', '"I asked first. Who are YOU?"', '"Stop calling this number."'],
   lineSpeakers: [0, 1, 0],
   speakerPairs: [
     { voiceId: 0, name: 'Voice A' },
@@ -106,18 +102,14 @@ describe('MULTI_CALLER renderer — edge cases', () => {
 
   it('returns zero outcome when lineSpeakers is empty', () => {
     const noSpeakers: CallData = { ...MULTI_CALLER_CALL, lineSpeakers: [] };
-    const outcome = computeMultiCallerOutcome(noSpeakers, [
-      { utteranceIndex: 0, voiceIndex: 0 },
-    ]);
+    const outcome = computeMultiCallerOutcome(noSpeakers, [{ utteranceIndex: 0, voiceIndex: 0 }]);
     expect(outcome.sanityDelta).toBe(0);
     expect(outcome.staticReward).toBe(0);
   });
 
   it('returns zero outcome when lines is empty', () => {
     const noLines: CallData = { ...MULTI_CALLER_CALL, lines: [] };
-    const outcome = computeMultiCallerOutcome(noLines, [
-      { utteranceIndex: 0, voiceIndex: 0 },
-    ]);
+    const outcome = computeMultiCallerOutcome(noLines, [{ utteranceIndex: 0, voiceIndex: 0 }]);
     expect(outcome.sanityDelta).toBe(0);
     expect(outcome.staticReward).toBe(0);
   });

@@ -213,10 +213,10 @@ describe('getTotalLayersUnlocked', () => {
 
   it('aggregates correctly across multiple tapes', () => {
     const counts = {
-      'tape-001': 3,  // surface
-      'tape-002': 7,  // surface + depth
+      'tape-001': 3, // surface
+      'tape-002': 7, // surface + depth
       'tape-003': 12, // surface + depth + abyss
-      'tape-004': 0,  // nothing
+      'tape-004': 0, // nothing
     };
     const result = getTotalLayersUnlocked(counts);
     expect(result.surface).toBe(3);

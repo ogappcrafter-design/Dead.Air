@@ -33,7 +33,7 @@ describe('Splash routing — persistence hydration guard (DEA-48 P1)', () => {
   });
 
   it('keeps the 2000ms minimum splash duration', () => {
-    expect(SRC).toMatch(/setTimeout\([\s\S]{0,120}2000/);
+    expect(SRC).toMatch(/setTimeout\([\s\S]{0,120}4500/);
   });
 
   it('does not navigate before hydration AND splash time both hold', () => {

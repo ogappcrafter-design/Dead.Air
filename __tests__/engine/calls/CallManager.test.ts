@@ -145,9 +145,7 @@ describe('CallManager lifecycle', () => {
     });
     const registry = new Map<number, CallData>([[200, dlcCall] as const]);
     const stores = makeStores();
-    (stores.getOwnedTapePacks as jest.Mock).mockReturnValue([
-      'com.deadair.tape_pack_holiday',
-    ]);
+    (stores.getOwnedTapePacks as jest.Mock).mockReturnValue(['com.deadair.tape_pack_holiday']);
     const cm = new CallManager({ ...config, registry, stores });
     const ok = cm.startCall(200);
     expect(ok).toBe(true);
@@ -562,13 +560,11 @@ describe('CallManager singleton', () => {
 
 // Re-import lazily to avoid hoisting the singleton initialization before reset.
 function getCallManagerImport() {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const mod = require('@/engine/calls/CallManager') as typeof import('@/engine/calls/CallManager');
   return mod.getCallManager();
 }
 
 function initCallManagerForTest(config: CallManagerConfig): CallManager {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const mod = require('@/engine/calls/CallManager') as typeof import('@/engine/calls/CallManager');
   return mod.initCallManager(config);
 }

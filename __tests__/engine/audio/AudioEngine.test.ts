@@ -4,7 +4,6 @@ import {
   getOrCreateAudioEngine,
   resetAudioEngine,
   getAudioEngine,
-  AudioEngineState,
 } from '../../../engine/audio/AudioEngine';
 import { makeMockBridge } from '../../../__mocks__/engine/audio/mockBridge';
 

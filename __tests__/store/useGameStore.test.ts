@@ -122,7 +122,6 @@ describe('useGameStore', () => {
   });
 });
 
-
 describe('DEA-46 P1: per-difficulty shift tracking + permadeath resets', () => {
   beforeEach(() => {
     useSettingsStore.setState({ difficulty: 'insomniac' });
@@ -136,9 +135,7 @@ describe('DEA-46 P1: per-difficulty shift tracking + permadeath resets', () => {
     useGameStore.getState().incrementShiftsCompleted();
     expect(useGameStore.getState().shiftsCompleted).toBe(1);
     expect(useGameStore.getState().shiftsCompletedByDifficulty.no_rest).toBe(1);
-    expect(
-      useGameStore.getState().shiftsCompletedByDifficulty.night_owl,
-    ).toBeUndefined();
+    expect(useGameStore.getState().shiftsCompletedByDifficulty.night_owl).toBeUndefined();
   });
 
   it('keeps buckets independent across difficulty switches', () => {

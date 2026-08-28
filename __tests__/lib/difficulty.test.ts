@@ -1,11 +1,7 @@
 // __tests__/lib/difficulty.test.ts
 // Tests for difficulty mode configurations.
 
-import {
-  DIFFICULTY_CONFIGS,
-  DIFFICULTY_ORDER,
-  type DifficultyMode,
-} from '@/lib/difficulty';
+import { DIFFICULTY_CONFIGS, DIFFICULTY_ORDER, type DifficultyMode } from '@/lib/difficulty';
 
 describe('DIFFICULTY_CONFIGS', () => {
   it('has configs for all three modes', () => {

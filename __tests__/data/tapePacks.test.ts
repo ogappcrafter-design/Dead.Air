@@ -113,23 +113,17 @@ describe('ALL_DLC_CALLS', () => {
   });
 
   it('includes holiday calls with IDs 200-202', () => {
-    const ids = ALL_DLC_CALLS.filter(
-      (c) => c.sourcePackId === HOLIDAY_ID,
-    ).map((c) => c.id);
+    const ids = ALL_DLC_CALLS.filter((c) => c.sourcePackId === HOLIDAY_ID).map((c) => c.id);
     expect(ids).toEqual([200, 201, 202]);
   });
 
   it('includes numbers station calls with IDs 300-302', () => {
-    const ids = ALL_DLC_CALLS.filter(
-      (c) => c.sourcePackId === NUMBERS_ID,
-    ).map((c) => c.id);
+    const ids = ALL_DLC_CALLS.filter((c) => c.sourcePackId === NUMBERS_ID).map((c) => c.id);
     expect(ids).toEqual([300, 301, 302]);
   });
 
   it('includes voices beyond calls with IDs 400-402', () => {
-    const ids = ALL_DLC_CALLS.filter(
-      (c) => c.sourcePackId === VOICES_ID,
-    ).map((c) => c.id);
+    const ids = ALL_DLC_CALLS.filter((c) => c.sourcePackId === VOICES_ID).map((c) => c.id);
     expect(ids).toEqual([400, 401, 402]);
   });
 
@@ -170,19 +164,12 @@ describe('getDlcCallsForOwnedPacks', () => {
   });
 
   it('returns 9 calls when all 3 packs owned', () => {
-    const calls = getDlcCallsForOwnedPacks([
-      HOLIDAY_ID,
-      NUMBERS_ID,
-      VOICES_ID,
-    ]);
+    const calls = getDlcCallsForOwnedPacks([HOLIDAY_ID, NUMBERS_ID, VOICES_ID]);
     expect(calls).toHaveLength(9);
   });
 
   it('ignores unknown product IDs', () => {
-    const calls = getDlcCallsForOwnedPacks([
-      HOLIDAY_ID,
-      'com.deadair.unknown',
-    ]);
+    const calls = getDlcCallsForOwnedPacks([HOLIDAY_ID, 'com.deadair.unknown']);
     expect(calls).toHaveLength(3);
   });
 });
@@ -199,11 +186,7 @@ describe('getDlcFragmentsForOwnedPacks', () => {
   });
 
   it('returns fragments for all 3 packs when all owned', () => {
-    const frags = getDlcFragmentsForOwnedPacks([
-      HOLIDAY_ID,
-      NUMBERS_ID,
-      VOICES_ID,
-    ]);
+    const frags = getDlcFragmentsForOwnedPacks([HOLIDAY_ID, NUMBERS_ID, VOICES_ID]);
     expect(frags.length).toBeGreaterThanOrEqual(3);
   });
 });

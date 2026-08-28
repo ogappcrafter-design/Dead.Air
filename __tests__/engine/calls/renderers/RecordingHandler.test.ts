@@ -72,7 +72,7 @@ describe('RECORDING renderer — exact seek position', () => {
 describe('RECORDING renderer — off-seek (partial accuracy)', () => {
   it('reduces sanityDelta proportionally to distance', () => {
     const outcome = computeRecordingOutcome(RECORDING_CALL, {
-      seekPosition: 0.50,
+      seekPosition: 0.5,
       revealedMetadata: [],
     });
     // distance = 0.25, accuracy = 0.75, sanityDelta = trunc(-10 * 0.75) = -7
@@ -81,7 +81,10 @@ describe('RECORDING renderer — off-seek (partial accuracy)', () => {
 
   it('returns reduced sanityDelta when far off target', () => {
     const farOutcome = computeRecordingOutcome(
-      { ...RECORDING_CALL, recordingClips: [{ ...RECORDING_CALL.recordingClips![0]!, targetSeekPosition: 0.1 }] },
+      {
+        ...RECORDING_CALL,
+        recordingClips: [{ ...RECORDING_CALL.recordingClips![0]!, targetSeekPosition: 0.1 }],
+      },
       { seekPosition: 0.9, revealedMetadata: [] },
     );
     // distance = 0.8, accuracy = max(0, 1 - 0.8) = 0.2, sanityDelta = trunc(-10 * 0.2)
@@ -91,7 +94,7 @@ describe('RECORDING renderer — off-seek (partial accuracy)', () => {
 
   it('does not unlock tape when distance >= 0.05', () => {
     const outcome = computeRecordingOutcome(RECORDING_CALL, {
-      seekPosition: 0.50,
+      seekPosition: 0.5,
       revealedMetadata: [],
     });
     expect(outcome.tapeUnlocked).toBeUndefined();

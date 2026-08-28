@@ -5,7 +5,7 @@ import { RAIN_NIGHT_FRAGMENTS } from '@/data/fragments/rainNight';
 import { WINTER_STATIC_FRAGMENTS } from '@/data/fragments/winterStatic';
 import { DEEP_SPACE_FRAGMENTS } from '@/data/fragments/deepSpace';
 import type { FragmentLibrary } from '@/data/fragments/types';
-import { BANDS, CALL_TYPES } from '@/lib/constants';
+import { CALL_TYPES } from '@/lib/constants';
 
 const ALL_FRAGMENTS: Array<{ name: string; lib: FragmentLibrary; minCalls: number }> = [
   { name: 'RAIN_NIGHT', lib: RAIN_NIGHT_FRAGMENTS, minCalls: 4 },

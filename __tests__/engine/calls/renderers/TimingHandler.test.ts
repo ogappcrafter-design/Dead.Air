@@ -1,10 +1,7 @@
 // __tests__/engine/calls/renderers/TimingHandler.test.ts
 // Unit tests for the TIMING call type outcome computer.
 
-import {
-  computeTimingOutcome,
-  TIMING_RENDERER,
-} from '@/engine/calls/renderers/TimingHandler';
+import { computeTimingOutcome, TIMING_RENDERER } from '@/engine/calls/renderers/TimingHandler';
 import type { CallData } from '@/engine/calls/types';
 
 // --- Fixtures ---
@@ -111,9 +108,7 @@ describe('TIMING renderer — empty taps (penalty)', () => {
 describe('TIMING renderer — edge cases', () => {
   it('returns zero outcome when beatMap is empty', () => {
     const noBeat: CallData = { ...TIMING_CALL, beatMap: [] };
-    const outcome = computeTimingOutcome(noBeat, [
-      { timestampMs: 1000, isHold: false },
-    ]);
+    const outcome = computeTimingOutcome(noBeat, [{ timestampMs: 1000, isHold: false }]);
     expect(outcome.sanityDelta).toBe(0);
     expect(outcome.staticReward).toBe(0);
     expect(outcome.staticMultiplier).toBe(0);
@@ -133,9 +128,7 @@ describe('TIMING renderer — edge cases', () => {
   });
 
   it('returns bandUnlocked undefined always', () => {
-    const outcome = computeTimingOutcome(TIMING_CALL, [
-      { timestampMs: 1000, isHold: false },
-    ]);
+    const outcome = computeTimingOutcome(TIMING_CALL, [{ timestampMs: 1000, isHold: false }]);
     expect(outcome.bandUnlocked).toBeUndefined();
   });
 

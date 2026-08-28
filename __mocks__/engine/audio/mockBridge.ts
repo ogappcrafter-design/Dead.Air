@@ -198,19 +198,19 @@ export const makeMockBridge = (platform: 'web' | 'native' = 'web'): PlatformBrid
         n.lastThreshold = v;
         n.ops.push({ kind: 'setThreshold', args: [v] });
       };
-      ((n.setKnee = (_v: number) => {}),
-        (n.setRatio = (v: number) => {
-          n.lastRatio = v;
-          n.ops.push({ kind: 'setRatio', args: [v] });
-        }));
-      ((n.setAttack = (_v: number) => {}),
-        (n.setRelease = (_v: number) => {}),
-        (n.connect = (target: BridgeAudioNode) => {
-          n.ops.push({
-            kind: 'connect',
-            args: [(target as MockNode).id, (target as MockNode).kind],
-          });
-        }));
+      n.setKnee = (_v: number) => {};
+      n.setRatio = (v: number) => {
+        n.lastRatio = v;
+        n.ops.push({ kind: 'setRatio', args: [v] });
+      };
+      n.setAttack = (_v: number) => {};
+      n.setRelease = (_v: number) => {};
+      n.connect = (target: BridgeAudioNode) => {
+        n.ops.push({
+          kind: 'connect',
+          args: [(target as MockNode).id, (target as MockNode).kind],
+        });
+      };
       return n;
     }),
     createReverbBuffer: jest.fn(

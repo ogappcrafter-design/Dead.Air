@@ -3,7 +3,12 @@ jest.mock('react-native', () => ({
   Text: 'Text',
   TouchableOpacity: 'TouchableOpacity',
   StyleSheet: {
-    create: <T extends Record<string, unknown>>(s: T): T => s,
+    create: (s: Record<string, unknown>) => s,
+  },
+  Platform: {
+    OS: 'ios',
+    Version: 16,
+    select: (obj: Record<string, unknown>) => obj.ios ?? obj.default ?? Object.values(obj)[0],
   },
 }));
 
