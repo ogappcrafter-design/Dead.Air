@@ -6,7 +6,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { PURCHASES_KEY } from '../lib/constants';
+import { PURCHASES_KEY, ENTITLEMENT_PRODUCT_IDS } from '../lib/constants';
 
 export interface PurchaseRecord {
   productId: string;
@@ -65,9 +65,27 @@ export const useStoreStore = create<StoreState>()(
       lastError: null,
       lastMessage: null,
 
-      setInfiniteSignal: (owned) => set({ hasInfiniteSignal: owned }),
+      setInfiniteSignal: (owned) => {
+        if (owned) {
+          // Grant only if a matching purchase record with a receipt exists.
+          // applyPurchase adds the record before calling this setter.
+          const hasValidPurchase = get().purchases.some(
+            (p) => p.productId === ENTITLEMENT_PRODUCT_IDS.INFINITE_SIGNAL && p.transactionReceipt,
+          );
+          if (!hasValidPurchase) return;
+        }
+        set({ hasInfiniteSignal: owned });
+      },
 
-      setBase: (owned) => set({ hasBase: owned }),
+      setBase: (owned) => {
+        if (owned) {
+          const hasValidPurchase = get().purchases.some(
+            (p) => p.productId === ENTITLEMENT_PRODUCT_IDS.BASE && p.transactionReceipt,
+          );
+          if (!hasValidPurchase) return;
+        }
+        set({ hasBase: owned });
+      },
 
       addOwnedAtmosphericPack: (packId) => {
         const existing = get().ownedAtmosphericPacks;

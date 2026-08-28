@@ -29,16 +29,46 @@ describe('useStoreStore', () => {
     expect(state.lastMessage).toBeNull();
   });
 
-  it('setInfiniteSignal sets hasInfiniteSignal', () => {
+  it('setInfiniteSignal grants entitlement only with a valid purchase record', () => {
+    // Without a purchase record, the setter is a no-op (security gate)
+    useStoreStore.getState().setInfiniteSignal(true);
+    expect(useStoreStore.getState().hasInfiniteSignal).toBe(false);
+
+    // Add a matching purchase record with a receipt
+    useStoreStore.getState().addPurchase({
+      productId: 'com.deadair.infinite_signal',
+      orderId: 'order-signal',
+      purchaseTime: 1000,
+      transactionReceipt: 'receipt-signal',
+    });
+
+    // Now the setter grants the entitlement
     useStoreStore.getState().setInfiniteSignal(true);
     expect(useStoreStore.getState().hasInfiniteSignal).toBe(true);
+
+    // Revocation always works (no purchase record needed)
     useStoreStore.getState().setInfiniteSignal(false);
     expect(useStoreStore.getState().hasInfiniteSignal).toBe(false);
   });
 
-  it('setBase sets hasBase', () => {
+  it('setBase grants entitlement only with a valid purchase record', () => {
+    // Without a purchase record, the setter is a no-op (security gate)
+    useStoreStore.getState().setBase(true);
+    expect(useStoreStore.getState().hasBase).toBe(false);
+
+    // Add a matching purchase record with a receipt
+    useStoreStore.getState().addPurchase({
+      productId: 'com.deadair.base',
+      orderId: 'order-base',
+      purchaseTime: 1000,
+      transactionReceipt: 'receipt-base',
+    });
+
+    // Now the setter grants the entitlement
     useStoreStore.getState().setBase(true);
     expect(useStoreStore.getState().hasBase).toBe(true);
+
+    // Revocation always works
     useStoreStore.getState().setBase(false);
     expect(useStoreStore.getState().hasBase).toBe(false);
   });
@@ -143,9 +173,7 @@ describe('useStoreStore', () => {
 
   it('addOwnedTapePack adds a pack id', () => {
     useStoreStore.getState().addOwnedTapePack('com.deadair.tape_pack_holiday');
-    expect(useStoreStore.getState().ownedTapePacks).toEqual([
-      'com.deadair.tape_pack_holiday',
-    ]);
+    expect(useStoreStore.getState().ownedTapePacks).toEqual(['com.deadair.tape_pack_holiday']);
   });
 
   it('addOwnedTapePack deduplicates', () => {

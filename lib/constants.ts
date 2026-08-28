@@ -29,5 +29,10 @@ export const CALL_TYPES = [
 ] as const;
 export type CallType = (typeof CALL_TYPES)[number];
 
+export const ENTITLEMENT_PRODUCT_IDS = {
+  BASE: 'com.deadair.base',
+  INFINITE_SIGNAL: 'com.deadair.infinite_signal',
+} as const;
+
 export const MAX_SANITY = 100;
 export const MAX_STATIC = 100;

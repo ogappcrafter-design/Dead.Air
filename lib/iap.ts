@@ -7,6 +7,7 @@ import { Platform } from 'react-native';
 import { useStoreStore, IAPErrorState, PurchaseRecord } from '../store/useStoreStore';
 import { useSkinStore, skinIdFromProductId } from '../store/useSkinStore';
 import { PURCHASABLE_SKIN_IDS } from './skins';
+import { ENTITLEMENT_PRODUCT_IDS } from './constants';
 
 // Type-only import: erased at compile time, never crashes on web.
 import type * as IAPTypes from 'expo-in-app-purchases';
@@ -24,8 +25,8 @@ function getIAP(): typeof import('expo-in-app-purchases') | null {
 }
 
 export const PRODUCT_IDS = {
-  BASE: 'com.deadair.base',
-  INFINITE_SIGNAL: 'com.deadair.infinite_signal',
+  BASE: ENTITLEMENT_PRODUCT_IDS.BASE,
+  INFINITE_SIGNAL: ENTITLEMENT_PRODUCT_IDS.INFINITE_SIGNAL,
   ATMOS_RAIN_NIGHT: 'com.deadair.atmos_rain_night',
   ATMOS_WINTER_STATIC: 'com.deadair.atmos_winter_static',
   ATMOS_DEEP_SPACE: 'com.deadair.atmos_deep_space',
@@ -65,8 +66,8 @@ const ATMOS_PACK_IDS: Record<string, string> = {
 
 // ---- Module-level state (not exported) ----
 
-let purchaseListener:
-  ((result: IAPTypes.IAPQueryResponse<IAPTypes.InAppPurchase>) => void) | null = null;
+let purchaseListener: ((result: IAPTypes.IAPQueryResponse<IAPTypes.InAppPurchase>) => void) | null =
+  null;
 // Resolvers for in-flight purchaseItemAsync calls, keyed by product id so concurrent
 // purchases each get their own promise resolved by the matching purchase event.
 const pendingResolvers = new Map<
@@ -270,21 +271,19 @@ export async function purchaseProduct(
   store.setError(null);
   store.setMessage(null);
 
-  return new Promise<IAPTypes.IAPQueryResponse<IAPTypes.InAppPurchase> | null>(
-    (resolve) => {
-      pendingResolvers.set(productId, resolve);
-      IAP.purchaseItemAsync(productId).catch(() => {
-        pendingResolvers.delete(productId);
-        store.setPurchasing(false);
-        store.setPurchasingProductId(null);
-        store.setError({
-          kind: 'unknown',
-          message: 'Purchase failed to start.',
-        });
-        resolve(null);
+  return new Promise<IAPTypes.IAPQueryResponse<IAPTypes.InAppPurchase> | null>((resolve) => {
+    pendingResolvers.set(productId, resolve);
+    IAP.purchaseItemAsync(productId).catch(() => {
+      pendingResolvers.delete(productId);
+      store.setPurchasing(false);
+      store.setPurchasingProductId(null);
+      store.setError({
+        kind: 'unknown',
+        message: 'Purchase failed to start.',
       });
-    },
-  );
+      resolve(null);
+    });
+  });
 }
 
 export async function restorePurchases(): Promise<void> {
@@ -335,6 +334,46 @@ export async function restorePurchases(): Promise<void> {
     }
   } catch {
     store.setError({ kind: 'unknown', message: 'Restore failed.' });
+  }
+}
+
+/**
+ * Re-validate entitlements against the store's purchase history on app launch.
+ * Revokes entitlements for purchases that were refunded or cancelled.
+ * Best-effort: silently skips if IAP is unavailable or not connected.
+ */
+export async function revalidateEntitlements(): Promise<void> {
+  const store = useStoreStore.getState();
+  const IAP = getIAP();
+
+  if (!IAP || !store.isConnected) return;
+
+  try {
+    const result = await IAP.getPurchaseHistoryAsync();
+    if (result.responseCode !== IAP.IAPResponseCode.OK || !result.results) return;
+
+    const validProductIds = new Set(
+      result.results
+        .filter(
+          (p) =>
+            p.purchaseState === IAP.InAppPurchaseState.PURCHASED ||
+            p.purchaseState === IAP.InAppPurchaseState.RESTORED,
+        )
+        .map((p) => p.productId),
+    );
+
+    const current = useStoreStore.getState();
+    if (
+      current.hasInfiniteSignal &&
+      !validProductIds.has(ENTITLEMENT_PRODUCT_IDS.INFINITE_SIGNAL)
+    ) {
+      current.setInfiniteSignal(false);
+    }
+    if (current.hasBase && !validProductIds.has(ENTITLEMENT_PRODUCT_IDS.BASE)) {
+      current.setBase(false);
+    }
+  } catch {
+    // Best-effort: don't block app launch on revalidation failure
   }
 }
 
