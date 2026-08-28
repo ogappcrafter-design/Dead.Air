@@ -5,8 +5,8 @@
 [ext_resource type="Script" path="res://src/ui/hud_layout.gd" id="3_hud"]
 [ext_resource type="Script" path="res://src/ui/interact_prompt.gd" id="4_prompt"]
 [ext_resource type="Script" path="res://src/core/game_director.gd" id="5_director"]
-[ext_resource type="Script" path="res://src/core/night_transition.gd" id="6_transition"]
-[ext_resource type="PackedScene" path="res://scenes/shift_summary.tscn" id="7_summary"]
+[ext_resource type="Script" path="res://src/core/shift_stub.gd" id="6_shift"]
+[ext_resource type="Script" path="res://src/core/degradation_stub.gd" id="7_degradation"]
 
 [sub_resource type="GDScript" id="8_test_runner"]
 script/source = "extends Node
@@ -73,12 +73,11 @@ fade_duration = 0.3
 offset_from_bottom = 120.0
 offset_from_left = 0.0
 
-[node name="NightTransition" type="CanvasLayer" parent="."]
-layer = 90
-script = ExtResource("6_transition")
+[node name="ShiftController" type="Node" parent="."]
+script = ExtResource("6_shift")
 
-[node name="ShiftSummary" parent="." instance=ExtResource("7_summary")]
-visible = false
+[node name="StationDegradation" type="Node" parent="."]
+script = ExtResource("7_degradation")
 
 [node name="GameDirector" type="Node" parent="."]
 script = ExtResource("5_director")

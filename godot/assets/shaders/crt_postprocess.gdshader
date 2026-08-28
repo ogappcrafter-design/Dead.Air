@@ -2,10 +2,9 @@ shader_type canvas_item;
 render_mode unshaded, blend_mix;
 
 // ============================================================================
-// CRT Post-Processing Shader — DEA-107 / DEA-142
+// CRT Post-Processing Shader — DEA-107
 // Deadair's core visual identity: everything looks like an old CRT monitor.
 // Degrades in real-time based on dread/composure/signal levels.
-// DEA-142: Radial chromatic aberration + signal-driven scanline drift.
 // ============================================================================
 
 // --- Uniforms: Runtime-controllable parameters ---
@@ -41,15 +40,6 @@ uniform float glitch_intensity : hint_range(0.0, 1.0) = 0.0;
 uniform float glitch_shift_max : hint_range(0.0, 16.0) = 8.0;
 uniform float color_split_offset : hint_range(0.0, 4.0) = 0.0;
 uniform float tear_intensity : hint_range(0.0, 1.0) = 0.0;
-
-// --- Radial Chromatic Aberration (DEA-142) ---
-// Distance-from-center based CA: subtle at center, stronger at edges.
-// Driven by signal strength — degrades as signal drops.
-uniform float ca_radial_amount : hint_range(0.0, 8.0) = 0.0;
-
-// --- Signal-driven scanline drift (DEA-142) ---
-// Horizontal sync instability at low signal: scanlines wobble.
-uniform float signal_scanline_drift : hint_range(0.0, 4.0) = 0.0;
 
 // --- Vignette ---
 uniform float vignette_inner : hint_range(0.0, 1.0) = 0.3;
@@ -158,33 +148,13 @@ void fragment() {
 
 	vec2 glitched_uv = clamped_uv + vec2(glitch_shift + tear_shift, 0.0);
 
-	// --- Signal-driven scanline drift (DEA-142) ---
-	// Low signal causes horizontal sync instability — scanlines wobble.
-	if (signal_scanline_drift > 0.001) {
-		float drift = sin(glitched_uv.y * 40.0 + time_sec * 5.0) * signal_scanline_drift / screen_resolution.x;
-		glitched_uv.x += drift;
-	}
-
 	// --- Chromatic Aberration / Color Channel Split ---
-	// Uniform horizontal CA (from glitch/composure)
-	float ca_uniform_px = color_split_offset / screen_resolution.x;
-
-	// Radial CA: offset scales with distance from center (DEA-142)
-	vec2 ca_center = uv - 0.5;
-	float ca_dist = length(ca_center);
-	vec2 ca_dir = normalize(ca_center + vec2(0.0001));
-	float ca_radial_px = ca_radial_amount / max(screen_resolution.x, 1.0) * ca_dist;
-	vec2 ca_radial_offset = ca_dir * ca_radial_px;
-
-	// Combined: R shifts outward, B shifts inward, G stays centered
-	vec2 ca_offset_r = vec2(ca_uniform_px, 0.0) + ca_radial_offset;
-	vec2 ca_offset_b = vec2(-ca_uniform_px, 0.0) - ca_radial_offset;
-
+	float ca_offset = color_split_offset / screen_resolution.x;
 	vec3 color;
-	if (abs(ca_uniform_px) > 0.001 || ca_radial_px > 0.001) {
-		float r = texture(SCREEN_TEXTURE, glitched_uv + ca_offset_r).r;
+	if (ca_offset > 0.001) {
+		float r = texture(SCREEN_TEXTURE, glitched_uv + vec2(ca_offset, 0.0)).r;
 		float g = texture(SCREEN_TEXTURE, glitched_uv).g;
-		float b = texture(SCREEN_TEXTURE, glitched_uv + ca_offset_b).b;
+		float b = texture(SCREEN_TEXTURE, glitched_uv - vec2(ca_offset, 0.0)).b;
 		color = vec3(r, g, b);
 	} else {
 		color = texture(SCREEN_TEXTURE, glitched_uv).rgb;

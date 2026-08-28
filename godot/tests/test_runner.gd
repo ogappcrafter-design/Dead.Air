@@ -32,7 +32,6 @@ func _run_tests() -> void:
 		["DifficultyManager", "res://tests/test_difficulty_manager.gd"],
 		["StingerSystem", "res://tests/test_stinger_system.gd"],
 		["CRTShader", "res://tests/test_crt_shader.gd"],
-		["CRTShaderV2", "res://tests/test_crt_shader_v2.gd"],
 		["CallManager", "res://tests/test_call_manager.gd"],
 		["TapePickup", "res://tests/test_tape_pickup.gd"],
 		["TapeInventoryUI", "res://tests/test_tape_inventory_ui.gd"],

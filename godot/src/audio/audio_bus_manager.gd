@@ -26,8 +26,6 @@ const IDX_UI := 7
 # ─── Ducking amounts (dB) ─────────────────────────────────────────────
 ## CallAudio ducks RadioAmbient by -6 dB
 const DUCK_CALL_TO_RADIO := -6.0
-## CallAudio ducks RoomTone by -8 dB (DEA-135)
-const DUCK_CALL_TO_ROOM_TONE := -8.0
 ## Stinger ducks all other buses by -6 dB
 const DUCK_STINGER_TO_OTHERS := -6.0
 ## Silence ducks all other buses by -12 dB
@@ -44,9 +42,9 @@ var _silence_active: bool = false
 
 # ─── Effect indices per bus (for runtime effect parameter access) ────
 # These correspond to the effect order in default_bus_layout.tres.
-const FX_RADIO_AMBIENT_GAIN := 1  # BandPass=0 (Gain effect removed in Godot 4.7.1)
+const FX_RADIO_AMBIENT_GAIN := 1     # BandPass=0 (Gain effect removed in Godot 4.7.1)
 const FX_CALL_AUDIO_DISTORTION := 1  # Compressor=0, Distortion=1, Reverb=2
-const FX_DREAD_LAYER_LOWPASS := 0  # LowPass=0
+const FX_DREAD_LAYER_LOWPASS := 0    # LowPass=0
 
 
 # ─── Lifecycle ────────────────────────────────────────────────────────
@@ -128,9 +126,7 @@ func _recompute_ducks() -> void:
 			continue
 		var duck_offset: float = _compute_duck_offset(bus_idx)
 		if duck_offset < 0.0:
-			AudioServer.set_bus_volume_db(
-				bus_idx, _baseline_volumes.get(bus_idx, 0.0) + duck_offset
-			)
+			AudioServer.set_bus_volume_db(bus_idx, _baseline_volumes.get(bus_idx, 0.0) + duck_offset)
 		else:
 			AudioServer.set_bus_volume_db(bus_idx, _baseline_volumes.get(bus_idx, 0.0))
 
@@ -142,10 +138,6 @@ func _compute_duck_offset(bus_idx: int) -> float:
 	# CallAudio → RadioAmbient -6 dB
 	if _call_active and bus_idx == IDX_RADIO_AMBIENT:
 		offset += DUCK_CALL_TO_RADIO
-
-	# CallAudio → RoomTone -8 dB (DEA-135)
-	if _call_active and bus_idx == IDX_ROOM_TONE:
-		offset += DUCK_CALL_TO_ROOM_TONE
 
 	# Stinger → all others -6 dB
 	if _stinger_active and bus_idx != IDX_STINGER:

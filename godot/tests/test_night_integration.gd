@@ -13,8 +13,8 @@ func run_tests() -> Dictionary:
 	results["test_station_present"] = test_station_present()
 	results["test_radio_console_present"] = test_radio_console_present()
 	results["test_hud_present"] = test_hud_present()
-	results["test_shift_controller_autoload"] = test_shift_controller_autoload()
-	results["test_station_degradation_autoload"] = test_station_degradation_autoload()
+	results["test_shift_stub_present"] = test_shift_stub_present()
+	results["test_degradation_stub_present"] = test_degradation_stub_present()
 	results["test_game_director_present"] = test_game_director_present()
 	results["test_director_has_wiring_method"] = test_director_has_wiring_method()
 	results["test_autoloads_available"] = test_autoloads_available()
@@ -69,14 +69,30 @@ func test_hud_present() -> bool:
 	return valid
 
 
-func test_shift_controller_autoload() -> bool:
-	var sc: Node = get_node_or_null("/root/ShiftController")
-	return sc != null and sc.has_method("start_shift")
+func test_shift_stub_present() -> bool:
+	var scene: PackedScene = _load_night_shift()
+	if scene == null:
+		return false
+	var instance: Node = scene.instantiate()
+	if instance == null:
+		return false
+	var stub: Node = instance.get_node_or_null("ShiftController")
+	var valid: bool = stub != null and stub.has_method("start_shift")
+	instance.queue_free()
+	return valid
 
 
-func test_station_degradation_autoload() -> bool:
-	var sd: Node = get_node_or_null("/root/StationDegradation")
-	return sd != null and sd.has_method("apply_degradation")
+func test_degradation_stub_present() -> bool:
+	var scene: PackedScene = _load_night_shift()
+	if scene == null:
+		return false
+	var instance: Node = scene.instantiate()
+	if instance == null:
+		return false
+	var stub: Node = instance.get_node_or_null("StationDegradation")
+	var valid: bool = stub != null and stub.has_method("set_degradation")
+	instance.queue_free()
+	return valid
 
 
 func test_game_director_present() -> bool:
@@ -143,14 +159,7 @@ func test_scene_tree_structure() -> bool:
 	# Verify root is Node3D
 	var valid: bool = instance is Node3D
 	# Verify expected children exist
-	var expected: Array[String] = [
-		"StationEnvironment",
-		"RadioConsole",
-		"HUD",
-		"GameDirector",
-		"NightTransition",
-		"ShiftSummary"
-	]
+	var expected: Array[String] = ["StationEnvironment", "RadioConsole", "HUD", "GameDirector"]
 	for child_name in expected:
 		if instance.get_node_or_null(child_name) == null:
 			valid = false
@@ -163,7 +172,7 @@ func test_scene_tree_structure() -> bool:
 
 
 func _load_night_shift() -> PackedScene:
-	return load("res://scenes/night_shift.tscn")
+	return _load_night_shift()
 
 
 func get_node_or_null(path: String) -> Node:
