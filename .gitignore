@@ -81,3 +81,5 @@ state/
 
 # Husky runtime shims
 .husky/_/
+# Jest coverage output
+coverage/
