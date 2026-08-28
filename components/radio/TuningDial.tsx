@@ -19,7 +19,7 @@ export const TuningDial = memo(function TuningDial({
   frequency,
   minFreq,
   maxFreq,
-  isTuning,
+  isTuning: _isTuning,
   onFrequencyChange,
   onTuningStart,
   onTuningEnd,

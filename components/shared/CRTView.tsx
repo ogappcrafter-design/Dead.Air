@@ -109,9 +109,7 @@ function CRTView({ intensity = 0, children, style, ...rest }: CRTViewProps): JSX
 
   return (
     <View style={[styles.container, style]} {...rest}>
-      <Animated.View style={[styles.layer, tearStyle]}>
-        {children}
-      </Animated.View>
+      <Animated.View style={[styles.layer, tearStyle]}>{children}</Animated.View>
 
       {/* Effect overlays — pointerEvents none so touches reach children. */}
       {particleEffects && <PhosphorGlow intensity={intensity} mode={overlayMode} />}

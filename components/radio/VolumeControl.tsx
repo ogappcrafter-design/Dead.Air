@@ -48,7 +48,6 @@ export const VolumeControl = memo(function VolumeControl({
           accessibilityLabel={`Volume ${Math.round(volume * 100)} percent`}
         >
           {Array.from({ length: segments }, (_, idx) => (
-            // eslint-disable-next-line react/no-array-index-key
             <View
               key={`vol-${idx}`}
               style={[styles.segment, idx < activeSegments && styles.segmentActive]}

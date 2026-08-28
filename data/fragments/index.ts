@@ -4,8 +4,7 @@
 // consumes them to assemble infinite procedural calls for the
 // Infinite Signal IAP.
 
-import type { FragmentLibrary, BandVariation, ResponseOption } from './types';
-import { BAND_VARIATIONS, getBandVariation } from './variations';
+import type { FragmentLibrary } from './types';
 import { LIVING_FRAGMENTS } from './living';
 import { LIMINAL_FRAGMENTS } from './liminal';
 import { LOST_FRAGMENTS } from './lost';

@@ -12,13 +12,12 @@ import { MultiCallerCall } from '@/components/calls/MultiCallerCall';
 import { TimingCall } from '@/components/calls/TimingCall';
 import { PuzzleCall } from '@/components/calls/PuzzleCall';
 import { ConversationCall } from '@/components/calls/ConversationCall';
-import { SanityOverlay } from './SanityOverlay';
 import { useSanityEffect } from '../../hooks/useSanityEffect';
 
 export function ActiveCallDispatcher() {
   // SanityEffect drives the visual overlay during active calls; it derives
   // its target from the game store internally, so no argument is needed.
-  const sanityEffect = useSanityEffect();
+  useSanityEffect();
   const [route, setRoute] = useState<CallTypeRoute | null>(null);
   const [activeCall, setActiveCall] = useState<ActiveCall | null>(null);
 

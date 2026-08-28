@@ -26,7 +26,6 @@ const RESULT_DWELL_MS = 2000;
 
 export const TimingCall = memo(function TimingCall({ call, onComplete }: TimingCallProps) {
   const beatMap = call.beatMap ?? [];
-  const duration = call.duration ?? 10;
 
   const [phase, setPhase] = useState<Phase>('countdown');
   const [countdown, setCountdown] = useState(COUNTDOWN_SECONDS);

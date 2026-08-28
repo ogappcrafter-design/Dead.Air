@@ -12,9 +12,9 @@ const TUNING_MESSAGES = [
   'Something is listening...',
   'Finding your signal...',
   'The line is open...',
-  'They know you\'re here...',
+  "They know you're here...",
   'Stay on the line...',
-  'Don\'t look behind you...',
+  "Don't look behind you...",
 ];
 
 export default function IndexScreen() {

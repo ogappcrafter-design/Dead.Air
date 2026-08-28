@@ -14,9 +14,6 @@ import { TapePackSection } from '../../components/store/TapePackSection';
 import { purchaseProduct, restorePurchases, PRODUCT_IDS } from '../../lib/iap';
 import { ATMOSPHERIC_PACKS } from '../../data/atmosphericPacks';
 
-/** Stable noop — avoids creating a new function reference on every render. */
-const NOOP = () => {};
-
 export default function StoreScreen() {
   const router = useRouter();
   const hasInfiniteSignal = useStoreStore((s) => s.hasInfiniteSignal);

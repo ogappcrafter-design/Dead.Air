@@ -1,11 +1,11 @@
 // components/settings/AmbientPicker.tsx
 // Settings UI for selecting owned atmospheric DLC packs as the active ambience.
 
-import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { colors, fonts, spacing } from '../../lib/theme';
 import { useStoreStore } from '../../store/useStoreStore';
 import { useAmbientStore } from '../../store/useAmbientStore';
-import { ATMOSPHERIC_PACKS, getOwnedPacks, DEFAULT_PACK_ID } from '../../data/atmosphericPacks';
+import { getOwnedPacks, DEFAULT_PACK_ID } from '../../data/atmosphericPacks';
 
 export function AmbientPicker() {
   const ownedIds = useStoreStore((s) => s.ownedAtmosphericPacks);

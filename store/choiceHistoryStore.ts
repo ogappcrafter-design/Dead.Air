@@ -107,9 +107,7 @@ function isChoiceRecord(value: unknown): value is ChoiceRecord {
  * records when the new key has no saved state so existing saves keep
  * influencing ending variants and procedural-call gates.
  */
-async function importLegacyChoices(
-  state: ChoiceHistoryState | undefined,
-): Promise<void> {
+async function importLegacyChoices(state: ChoiceHistoryState | undefined): Promise<void> {
   if (!state || state.choices.length > 0) {
     return;
   }

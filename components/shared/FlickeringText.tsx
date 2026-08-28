@@ -26,13 +26,7 @@ function randomBetween(a: number, b: number) {
   return a + Math.random() * (b - a);
 }
 
-function Letter({
-  char,
-  flickerChance,
-}: {
-  char: string;
-  flickerChance: number;
-}) {
+function Letter({ char, flickerChance }: { char: string; flickerChance: number }) {
   const opacity = useSharedValue(1);
 
   useEffect(() => {
@@ -68,18 +62,10 @@ function Letter({
     return <Text style={{ opacity: 1 }}> </Text>;
   }
 
-  return (
-    <Animated.Text style={[{ opacity: 1 }, animatedStyle]}>
-      {char}
-    </Animated.Text>
-  );
+  return <Animated.Text style={[{ opacity: 1 }, animatedStyle]}>{char}</Animated.Text>;
 }
 
-export function FlickeringText({
-  text,
-  style,
-  letterSpacing = 8,
-}: FlickeringTextProps) {
+export function FlickeringText({ text, style, letterSpacing = 8 }: FlickeringTextProps) {
   const letters = useMemo(() => text.split(''), [text]);
 
   return (

@@ -7,7 +7,7 @@ import { useCallback, useEffect, useRef, useState, memo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { colors, fonts, spacing } from '../../lib/theme';
 import { computeConversationOutcome } from '../../engine/calls/renderers/ConversationHandler';
-import type { CallData, CallChoice, CallOutcome } from '../../engine/calls/types';
+import type { CallData, CallOutcome } from '../../engine/calls/types';
 
 interface ConversationCallProps {
   call: CallData;
