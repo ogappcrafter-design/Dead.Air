@@ -17,27 +17,27 @@
 
 ## Phase P1: IAP Store Hardening — PENDING
 
-| Task | Issue | Status |
-|------|-------|--------|
-| Integrate expo-in-app-purchases | PIX-4263 | [ ] PENDING |
+| Task                               | Issue    | Status      |
+| ---------------------------------- | -------- | ----------- |
+| Integrate expo-in-app-purchases    | PIX-4263 | [ ] PENDING |
 | Handle purchase receipts + restore | PIX-4264 | [ ] PENDING |
-| IAP error handling + edge cases | PIX-4265 | [ ] PENDING |
+| IAP error handling + edge cases    | PIX-4265 | [ ] PENDING |
 
 ## Phase P2: Tape Audio Playback — PENDING
 
-| Task | Issue | Status |
-|------|-------|--------|
+| Task                              | Issue    | Status      |
+| --------------------------------- | -------- | ----------- |
 | Synthesize ambient drone per tape | PIX-4260 | [ ] PENDING |
 | Voice fragments + static textures | PIX-4261 | [ ] PENDING |
-| Tape player UI | PIX-4262 | [ ] PENDING |
+| Tape player UI                    | PIX-4262 | [ ] PENDING |
 
 ## Phase P3: Procedural Call Engine — PENDING
 
-| Task | Issue | Status |
-|------|-------|--------|
-| ProceduralCallGenerator class | PIX-4256 | [ ] PENDING |
-| Fragment libraries per band | PIX-4257 | [ ] PENDING |
-| Wire IAP ownership gate | PIX-4258 | [ ] PENDING |
+| Task                            | Issue    | Status      |
+| ------------------------------- | -------- | ----------- |
+| ProceduralCallGenerator class   | PIX-4256 | [ ] PENDING |
+| Fragment libraries per band     | PIX-4257 | [ ] PENDING |
+| Wire IAP ownership gate         | PIX-4258 | [ ] PENDING |
 | Tests for procedural generation | PIX-4259 | [ ] PENDING |
 
 ## Known Issues

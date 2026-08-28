@@ -17,11 +17,11 @@ Dead Air Radio uses [EAS Build](https://docs.expo.dev/build/introduction/) for c
 
 ## Build profiles
 
-| Profile | Distribution | Channel | Platforms | Use |
-|---|---|---|---|---|
-| `development` | internal | `development` | iOS sim + Android apk | Local dev client, dev API |
-| `preview` | internal | `preview` | iOS ad-hoc + Android apk | QA on real devices, staging API |
-| `production` | store | `production` | iOS universal + Android aab | Release to stores |
+| Profile       | Distribution | Channel       | Platforms                   | Use                             |
+| ------------- | ------------ | ------------- | --------------------------- | ------------------------------- |
+| `development` | internal     | `development` | iOS sim + Android apk       | Local dev client, dev API       |
+| `preview`     | internal     | `preview`     | iOS ad-hoc + Android apk    | QA on real devices, staging API |
+| `production`  | store        | `production`  | iOS universal + Android aab | Release to stores               |
 
 Each profile injects `EXPO_PUBLIC_*` env vars (see `eas.json`) so the client bundle picks up the right API, Sentry DSN, and analytics key for that environment. See [`.env.example`](../.env.example) for the full list.
 
@@ -75,43 +75,10 @@ Secrets that should never be tracked can also be stored with `eas secret:create`
 
 ## Running EAS builds in CI
 
-Use the [`expo/eas-build-action`](https://github.com/expo/expo-github-action) GitHub Action. Example workflow:
-
-```yaml
-# .github/workflows/eas-build.yml
-name: EAS Build
-on:
-  push:
-    tags: ['v*']
-  workflow_dispatch:
-    inputs:
-      profile:
-        description: Build profile
-        required: true
-        default: preview
-        type: choice
-        options: [development, preview, production]
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '24'
-      - uses: pnpm/action-setup@v4
-        with:
-          version: latest
-      - run: pnpm install --frozen-lockfile
-      - uses: expo/expo-github-action@v8
-        with:
-          eas-version: latest
-          token: ${{ secrets.EXPO_TOKEN }}
-      - run: eas build --platform all --profile ${{ github.event.inputs.profile || 'preview' }} --non-interactive
-```
+The committed workflow at [`.github/workflows/eas-build.yml`](../.github/workflows/eas-build.yml) uses the [`expo/eas-build-action`](https://github.com/expo/expo-github-action) GitHub Action. It triggers on version tags (`v*`) and manual dispatch with a profile selector.
 
 Required CI secrets:
+
 - `EXPO_TOKEN` — Expo access token (`eas token:create` locally).
 - For production submit, also set credentials via `eas credentials` or store them as GitHub secrets.
 

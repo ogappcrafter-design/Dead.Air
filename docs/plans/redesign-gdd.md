@@ -1447,21 +1447,10 @@ CRT SHADER PARAMETERS (applied as screen-space post-process):
 
 5. GLITCH (composure < 40)
    - Horizontal pixel shift: 2-8px, random rows, 1 per 5 sec
-   - Color channel split: R+1px, B-1px, 1 per 8 sec (composure-driven, uniform)
+   - Color channel split: R+1px, B-1px, 1 per 8 sec
    - At composure < 20: full-frame tear (horizontal line, 1 per 4 sec)
 
-6. RADIAL CHROMATIC ABERRATION (DEA-142, signal-driven)
-   - Distance-from-center CA: subtle at center, stronger at edges
-   - R shifts outward, B shifts inward, G stays centered
-   - Amount scales 0 (signal=100) to 4.0 (signal=0)
-   - Persists in safe rooms (only dread/composure are reset)
-
-7. SIGNAL-DRIVEN SCANLINE DRIFT (DEA-142)
-   - Horizontal sync instability at low signal: scanlines wobble
-   - Drift scales 0 (signal=100) to 2.0 (signal=0)
-   - Persists in safe rooms (only dread/composure are reset)
-
-8. VIGNETTE
+6. VIGNETTE
    - Inner radius: 0.3
    - Outer radius: 0.8
    - Intensity: 0.3 (normal), 0.6 (dread > 75)

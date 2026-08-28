@@ -63,6 +63,7 @@ dead-air/
 ### Task 1: Initialize Expo Project
 
 **Files:**
+
 - Create: `package.json` (via expo-cli)
 - Create: `tsconfig.json`
 - Create: `app.json`
@@ -70,6 +71,7 @@ dead-air/
 - Create: `.prettierrc`
 
 **Interfaces:**
+
 - Consumes: None
 - Produces: Working Expo project with TypeScript
 
@@ -106,15 +108,11 @@ npx expo install expo-router expo-constants expo-linking expo-status-bar react-n
 ```javascript
 // .eslintrc.js
 module.exports = {
-  extends: [
-    'expo',
-    '@typescript-eslint/recommended',
-    'prettier'
-  ],
+  extends: ['expo', '@typescript-eslint/recommended', 'prettier'],
   rules: {
     '@typescript-eslint/no-explicit-any': 'error',
-    '@typescript-eslint/explicit-function-return-type': 'warn'
-  }
+    '@typescript-eslint/explicit-function-return-type': 'warn',
+  },
 };
 ```
 
@@ -135,6 +133,7 @@ module.exports = {
 ```bash
 npx expo start
 ```
+
 Expected: Project starts without errors
 
 - [ ] **Step 7: Commit**
@@ -149,10 +148,12 @@ git commit -m "chore: initialize expo project with typescript, eslint, prettier"
 ### Task 2: Set Up Theme System
 
 **Files:**
+
 - Create: `lib/theme.ts`
 - Create: `components/shared/CRTView.tsx`
 
 **Interfaces:**
+
 - Consumes: None
 - Produces: `theme` object with colors/fonts/spacing, `CRTView` component
 
@@ -167,7 +168,7 @@ export const colors = {
   green: '#39FF14',
   red: '#FF3131',
   dimGreen: '#1A5C0A',
-  
+
   // UI colors
   surface: '#0A0A0A',
   surfaceLight: '#1A1A1A',
@@ -215,13 +216,7 @@ export function CRTView({ children, intensity = 0.1 }: CRTViewProps) {
   return (
     <View style={styles.container}>
       {children}
-      <View 
-        style={[
-          styles.scanlines,
-          { opacity: intensity }
-        ]} 
-        pointerEvents="none"
-      />
+      <View style={[styles.scanlines, { opacity: intensity }]} pointerEvents="none" />
     </View>
   );
 }
@@ -276,6 +271,7 @@ describe('Theme', () => {
 ```bash
 npx jest __tests__/lib/theme.test.ts
 ```
+
 Expected: PASS
 
 - [ ] **Step 5: Commit**
@@ -290,10 +286,12 @@ git commit -m "feat: add CRT theme system with colors, fonts, spacing"
 ### Task 3: Create Storage Wrapper
 
 **Files:**
+
 - Create: `lib/storage.ts`
 - Create: `__tests__/lib/storage.test.ts`
 
 **Interfaces:**
+
 - Consumes: `@react-native-async-storage/async-storage`
 - Produces: `storage.get<T>(key)`, `storage.set<T>(key, value)`, `storage.remove(key)`
 
@@ -355,6 +353,7 @@ describe('Storage', () => {
 ```bash
 npx jest __tests__/lib/storage.test.ts
 ```
+
 Expected: FAIL with "Cannot find module '../../lib/storage'"
 
 - [ ] **Step 3: Implement storage wrapper**
@@ -397,6 +396,7 @@ export const storage = {
 ```bash
 npx jest __tests__/lib/storage.test.ts
 ```
+
 Expected: PASS
 
 - [ ] **Step 5: Commit**
@@ -411,10 +411,12 @@ git commit -m "feat: add AsyncStorage wrapper with get/set/remove"
 ### Task 4: Create Game Store
 
 **Files:**
+
 - Create: `store/useGameStore.ts`
 - Create: `__tests__/store/useGameStore.test.ts`
 
 **Interfaces:**
+
 - Consumes: `lib/storage.ts`, `lib/constants.ts`
 - Produces: `useGameStore` hook with sanity, static, tapes, unlockedBands
 
@@ -478,7 +480,7 @@ describe('useGameStore', () => {
     const { addTape } = useGameStore.getState();
     addTape('tape-1');
     addTape('tape-1');
-    expect(useGameStore.getState().tapes.filter(t => t === 'tape-1')).toHaveLength(1);
+    expect(useGameStore.getState().tapes.filter((t) => t === 'tape-1')).toHaveLength(1);
   });
 
   it('unlocks band', () => {
@@ -503,6 +505,7 @@ describe('useGameStore', () => {
 ```bash
 npx jest __tests__/store/useGameStore.test.ts
 ```
+
 Expected: FAIL with "Cannot find module '../../store/useGameStore'"
 
 - [ ] **Step 3: Create constants file first**
@@ -513,7 +516,7 @@ export const SAVE_KEY = 'dead_air_save_v1';
 export const PURCHASES_KEY = 'dead_air_purchases_v1';
 
 export const BANDS = ['LIVING', 'LIMINAL', 'LOST', 'CLASSIFIED', '████████'] as const;
-export type Band = typeof BANDS[number];
+export type Band = (typeof BANDS)[number];
 
 export const CALL_TYPES = [
   'JUST_LISTEN',
@@ -522,7 +525,7 @@ export const CALL_TYPES = [
   'SIGNAL_DECODE',
   'STAY_CALM',
 ] as const;
-export type CallType = typeof CALL_TYPES[number];
+export type CallType = (typeof CALL_TYPES)[number];
 
 export const MAX_SANITY = 100;
 export const MAX_STATIC = 100;
@@ -544,7 +547,7 @@ interface GameState {
   unlockedBands: Band[];
   isPlaying: boolean;
   currentCall: string | null;
-  
+
   // Actions
   decreaseSanity: (amount: number) => void;
   addStatic: (amount: number) => void;
@@ -581,9 +584,7 @@ export const useGameStore = create<GameState>()(
 
       addTape: (tapeId) =>
         set((state) => ({
-          tapes: state.tapes.includes(tapeId)
-            ? state.tapes
-            : [...state.tapes, tapeId],
+          tapes: state.tapes.includes(tapeId) ? state.tapes : [...state.tapes, tapeId],
         })),
 
       unlockBand: (band) =>
@@ -602,8 +603,8 @@ export const useGameStore = create<GameState>()(
     {
       name: SAVE_KEY,
       storage: createJSONStorage(() => AsyncStorage),
-    }
-  )
+    },
+  ),
 );
 ```
 
@@ -612,6 +613,7 @@ export const useGameStore = create<GameState>()(
 ```bash
 npx jest __tests__/store/useGameStore.test.ts
 ```
+
 Expected: PASS
 
 - [ ] **Step 6: Commit**
@@ -626,10 +628,12 @@ git commit -m "feat: add game store with sanity, static, tapes, bands"
 ### Task 5: Create Radio Store
 
 **Files:**
+
 - Create: `store/useRadioStore.ts`
 - Create: `__tests__/store/useRadioStore.test.ts`
 
 **Interfaces:**
+
 - Consumes: `lib/constants.ts`
 - Produces: `useRadioStore` hook with band, frequency, volume, isTuning
 
@@ -705,6 +709,7 @@ describe('useRadioStore', () => {
 ```bash
 npx jest __tests__/store/useRadioStore.test.ts
 ```
+
 Expected: FAIL with "Cannot find module '../../store/useRadioStore'"
 
 - [ ] **Step 3: Implement radio store**
@@ -725,7 +730,7 @@ interface RadioState {
   volume: number;
   isTuning: boolean;
   signalStrength: number;
-  
+
   // Actions
   setBand: (band: Band) => void;
   setFrequency: (freq: number) => void;
@@ -772,8 +777,8 @@ export const useRadioStore = create<RadioState>()(
     {
       name: `${SAVE_KEY}_radio`,
       storage: createJSONStorage(() => AsyncStorage),
-    }
-  )
+    },
+  ),
 );
 ```
 
@@ -782,6 +787,7 @@ export const useRadioStore = create<RadioState>()(
 ```bash
 npx jest __tests__/store/useRadioStore.test.ts
 ```
+
 Expected: PASS
 
 - [ ] **Step 5: Commit**
@@ -796,9 +802,11 @@ git commit -m "feat: add radio store with band, frequency, volume controls"
 ### Task 6: Create Settings Store
 
 **Files:**
+
 - Create: `store/useSettingsStore.ts`
 
 **Interfaces:**
+
 - Consumes: `lib/constants.ts`
 - Produces: `useSettingsStore` hook with audio, display, gameplay preferences
 
@@ -818,21 +826,21 @@ interface SettingsState {
   musicVolume: number;
   voiceVolume: number;
   staticEnabled: boolean;
-  
+
   // Display
   scanlineIntensity: number;
   crtEnabled: boolean;
   reducedMotion: boolean;
-  
+
   // Gameplay
   autoSave: boolean;
   callFrequency: 'low' | 'medium' | 'high';
   difficulty: 'easy' | 'normal' | 'hard';
-  
+
   // Account
   cloudSyncEnabled: boolean;
   userId: string | null;
-  
+
   // Actions
   setMasterVolume: (vol: number) => void;
   setSfxVolume: (vol: number) => void;
@@ -876,7 +884,8 @@ export const useSettingsStore = create<SettingsState>()(
       setMusicVolume: (vol) => set({ musicVolume: Math.max(0, Math.min(1, vol)) }),
       setVoiceVolume: (vol) => set({ voiceVolume: Math.max(0, Math.min(1, vol)) }),
       setStaticEnabled: (enabled) => set({ staticEnabled: enabled }),
-      setScanlineIntensity: (intensity) => set({ scanlineIntensity: Math.max(0, Math.min(1, intensity)) }),
+      setScanlineIntensity: (intensity) =>
+        set({ scanlineIntensity: Math.max(0, Math.min(1, intensity)) }),
       setCrtEnabled: (enabled) => set({ crtEnabled: enabled }),
       setReducedMotion: (reduced) => set({ reducedMotion: reduced }),
       setAutoSave: (enabled) => set({ autoSave: enabled }),
@@ -889,8 +898,8 @@ export const useSettingsStore = create<SettingsState>()(
     {
       name: `${SAVE_KEY}_settings`,
       storage: createJSONStorage(() => AsyncStorage),
-    }
-  )
+    },
+  ),
 );
 ```
 
@@ -966,6 +975,7 @@ describe('useSettingsStore', () => {
 ```bash
 npx jest __tests__/store/useSettingsStore.test.ts
 ```
+
 Expected: PASS
 
 - [ ] **Step 4: Commit**
@@ -980,6 +990,7 @@ git commit -m "feat: add settings store with audio, display, gameplay prefs"
 ### Task 7: Set Up Expo Router
 
 **Files:**
+
 - Modify: `app.json` (add scheme)
 - Create: `app/_layout.tsx`
 - Create: `app/index.tsx`
@@ -990,6 +1001,7 @@ git commit -m "feat: add settings store with audio, display, gameplay prefs"
 - Create: `app/settings/index.tsx` (placeholder)
 
 **Interfaces:**
+
 - Consumes: `lib/theme.ts`, stores
 - Produces: Working navigation between screens
 
@@ -1311,6 +1323,7 @@ const styles = StyleSheet.create({
 ```bash
 npx expo start
 ```
+
 Expected: App launches, shows splash, navigates to radio screen
 
 - [ ] **Step 7: Commit**
@@ -1325,11 +1338,13 @@ git commit -m "feat: set up expo router with all screens"
 ### Task 8: Create Data Files
 
 **Files:**
+
 - Create: `data/bands.ts`
 - Create: `data/tapes.ts`
 - Create: `data/calls.ts` (copy from existing)
 
 **Interfaces:**
+
 - Consumes: `lib/constants.ts`
 - Produces: Band definitions, tape metadata, calls data
 
@@ -1368,7 +1383,7 @@ export const BANDS: Record<Band, BandInfo> = {
   LOST: {
     id: 'LOST',
     name: 'LOST',
-    description: 'Frequencies that shouldn\'t exist.',
+    description: "Frequencies that shouldn't exist.",
     frequencyRange: [96.5, 101.0],
     vibe: 'children singing, dial-up tones, impossible distances',
     unlockRequirement: 'Collect 5 tapes',
@@ -1376,7 +1391,7 @@ export const BANDS: Record<Band, BandInfo> = {
   CLASSIFIED: {
     id: 'CLASSIFIED',
     name: 'CLASSIFIED',
-    description: 'Government stations. They know you\'re listening.',
+    description: "Government stations. They know you're listening.",
     frequencyRange: [101.0, 105.5],
     vibe: 'numbers stations, emergency alerts, distorted orders',
     unlockRequirement: 'Complete "The Signal" call',
@@ -1392,9 +1407,11 @@ export const BANDS: Record<Band, BandInfo> = {
 };
 
 export const getBandByFrequency = (freq: number): BandInfo | null => {
-  return Object.values(BANDS).find(
-    (band) => freq >= band.frequencyRange[0] && freq <= band.frequencyRange[1]
-  ) ?? null;
+  return (
+    Object.values(BANDS).find(
+      (band) => freq >= band.frequencyRange[0] && freq <= band.frequencyRange[1],
+    ) ?? null
+  );
 };
 ```
 
@@ -1432,7 +1449,7 @@ export const TAPES: TapeInfo[] = [
   {
     id: 'tape-003',
     title: 'The Last Broadcast',
-    description: 'They signed off. They didn\'t come back.',
+    description: "They signed off. They didn't come back.",
     band: 'LIVING',
     duration: '6:45',
     rarity: 'uncommon',
@@ -1488,7 +1505,7 @@ export const TAPES: TapeInfo[] = [
   {
     id: 'tape-010',
     title: 'Whispers',
-    description: 'They\'re talking about you.',
+    description: "They're talking about you.",
     band: 'LIMINAL',
     duration: '2:56',
     rarity: 'uncommon',
@@ -1562,10 +1579,12 @@ git commit -m "feat: add bands, tapes, and calls data files"
 ### Task 9: Add Jest Configuration
 
 **Files:**
+
 - Create: `jest.config.js`
 - Modify: `package.json` (add test script)
 
 **Interfaces:**
+
 - Consumes: None
 - Produces: Working Jest setup
 
@@ -1602,6 +1621,7 @@ module.exports = {
 ```bash
 npm test
 ```
+
 Expected: All tests pass
 
 - [ ] **Step 4: Commit**
@@ -1616,10 +1636,12 @@ git commit -m "chore: add jest configuration"
 ### Task 10: Clean Up and Verify
 
 **Files:**
+
 - Delete: Old `App.js` (replaced by app/_layout.tsx)
 - Delete: Old `components/` (replaced by new structure)
 
 **Interfaces:**
+
 - Consumes: All previous tasks
 - Produces: Clean project ready for Phase 2
 
@@ -1644,6 +1666,7 @@ rm -rf components/
 npx expo start
 npm test
 ```
+
 Expected: App launches, all tests pass
 
 - [ ] **Step 4: Final commit**
@@ -1658,6 +1681,7 @@ git commit -m "chore: clean up old files, verify foundation"
 ## Summary
 
 Phase 1 establishes:
+
 - ✅ Expo project with TypeScript
 - ✅ CRT theme system
 - ✅ AsyncStorage wrapper

@@ -40,7 +40,7 @@ deadair/
 │   └── progression/        # Progression system
 │       └── InfiniteSignal.ts  # IAP-gated call pool (TODO at line 54)
 ├── store/                  # Zustand stores
-│   ├── useStoreStore.ts    # IAP store (MOCK ONLY — no real billing)
+│   ├── useStoreStore.ts    # IAP entitlement state (persisted via AsyncStorage)
 │   ├── useRadioStore.ts    # Radio state (frequency, band, volume)
 │   ├── useGameStore.ts     # Game state (sanity, static, tapes)
 │   ├── useLeaderboardStore.ts  # Anonymous leaderboard (local-only, AsyncStorage)
@@ -53,6 +53,7 @@ deadair/
 │   ├── calls.js            # 18 hand-crafted sacred calls (DO NOT MODIFY)
 │   └── ...
 ├── lib/                    # Utilities
+│   ├── iap.ts             # IAP orchestration — wires expo-in-app-purchases, manages purchase lifecycle
 │   └── constants.ts        # App constants (includes IAP product IDs)
 ├── docs/                   # Documentation
 │   └── store/              # Store listing docs
@@ -67,14 +68,14 @@ deadair/
 - **CallManager** has `setAudioAccess()` method for late audio binding — intended to be called once AudioEngine is ready.
 - **InfiniteSignal** gates call pool by IAP ownership. Currently returns same 18 calls regardless. TODO at line 54 for procedural generation.
 - **Data files** in `data/calls.js` are sacred — 18 hand-crafted calls must never be modified.
-- **IAP** is mock-only. `useStoreStore.ts` simulates purchase with setTimeout. No real billing SDK integrated.
+- **IAP** is wired via `lib/iap.ts` using `expo-in-app-purchases`. `useStoreStore.ts` holds entitlement state (persisted). Purchase lifecycle: `initIAP()` → `setPurchaseListener` → `purchaseProduct()` / `restorePurchases()`. Receipts are validated before granting entitlement.
 
-## Critical Gaps (DAR Phase 1 Targets)
+## Remaining Gaps (DAR Phase 1 Targets)
 
-1. **No real IAP** — `expo-in-app-purchases` not installed, mock purchase flow only
-2. **Audio not wired** — AudioEngine exists but no hook/component connects it to RadioBody
-3. **InfiniteSignal IAP does nothing** — $3.99 purchase gives no value, `getCallPool()` unchanged
-4. **No tape audio** — Tape playback UI exists but no audio synthesis or playback
+1. **Audio not wired** — AudioEngine exists but no hook/component connects it to RadioBody
+2. **InfiniteSignal procedural generation** — `getCallPool()` returns same 18 calls; TODO at line 54 for procedural expansion
+3. **No tape audio** — Tape playback UI exists but no audio synthesis or playback
+4. **~~Entitlement setter exposure~~ (RESOLVED)** — `setInfiniteSignal`/`setBase` in `useStoreStore` now validate purchase records before granting entitlement (`purchases.some(p => p.productId === ... && p.transactionReceipt)`). `lib/iap.ts` `revalidateEntitlements()` re-validates receipts on launch. See `context/security-auth.md`.
 
 ## Build & Test
 
