@@ -23,7 +23,7 @@ import type { CallType } from '../../lib/constants';
 import type { FragmentLibrary, ResponseOption, BandVariation } from '../../data/fragments/types';
 import { BAND_VARIATIONS, getBandVariation } from '../../data/fragments/variations';
 import type { ChoiceHistorySnapshot } from '../../store/choiceHistoryStore';
-import { CHOICE_GATES, type ChoiceGate } from '../../data/choiceGates';
+import { CHOICE_GATES } from '../../data/choiceGates';
 
 /** Starting id for generated calls. Sacred 18 use ids 0..17. */
 export const PROCEDURAL_ID_BASE = 1000;

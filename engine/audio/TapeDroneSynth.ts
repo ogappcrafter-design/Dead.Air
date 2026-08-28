@@ -198,12 +198,13 @@ const RARITY_TEXTURE_MULT: Record<'common' | 'uncommon' | 'rare' | 'legendary', 
   legendary: 2.5,
 };
 
-const RARITY_FRAGMENT_INTERVAL_MULT: Record<'common' | 'uncommon' | 'rare' | 'legendary', number> = {
-  common: 1,
-  uncommon: 0.8,
-  rare: 0.6,
-  legendary: 0.4,
-};
+const RARITY_FRAGMENT_INTERVAL_MULT: Record<'common' | 'uncommon' | 'rare' | 'legendary', number> =
+  {
+    common: 1,
+    uncommon: 0.8,
+    rare: 0.6,
+    legendary: 0.4,
+  };
 
 /**
  * Build an audio profile for a tape from its band + id + rarity.

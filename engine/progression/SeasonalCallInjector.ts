@@ -1,4 +1,4 @@
-import type { FragmentLibrary, BandVariation } from '../../data/fragments/types';
+import type { BandVariation } from '../../data/fragments/types';
 import { SEASONAL_FRAGMENTS } from '../../data/fragments/seasonal';
 import { BAND_VARIATIONS } from '../../data/fragments/variations';
 import { ProceduralCallGenerator } from '../calls/ProceduralCallGenerator';

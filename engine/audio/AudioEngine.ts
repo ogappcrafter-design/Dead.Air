@@ -4,11 +4,7 @@
 
 import { PlatformBridge, BridgeAudioContext, BridgeGainNode } from './PlatformBridge';
 import { LatencyProfiler, type LatencyStats } from './LatencyProfiler';
-import {
-  BALANCED_CONFIG,
-  type AudioPerformanceConfig,
-  type LatencyHint,
-} from './AudioPerformanceConfig';
+import { BALANCED_CONFIG, type AudioPerformanceConfig } from './AudioPerformanceConfig';
 import type { AmbientLayer } from './AmbientLayer';
 import type { AmbientProfile } from './profiles/types';
 
