@@ -76,3 +76,9 @@ HANDOFF.md
 GRAND_PLAN.md
 DESIGN.md
 dist-check/
+
+# Runtime state (agent/task status files)
+state/
+
+# Husky runtime shims
+.husky/_/

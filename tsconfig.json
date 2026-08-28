@@ -7,20 +7,10 @@
     "noFallthroughCasesInSwitch": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": [
-        "./*"
-      ]
+      "@/*": ["./*"]
     },
     "ignoreDeprecations": "6.0"
   },
-  "include": [
-    "**/*.ts",
-    "**/*.tsx"
-  ],
-  "exclude": [
-    "__mocks__/**",
-    "__tests__/**",
-    "tests/**",
-    "node_modules/**"
-  ]
+  "include": ["**/*.ts", "**/*.tsx"],
+  "exclude": ["__mocks__/**", "__tests__/**", "tests/**", "node_modules/**"]
 }

@@ -3,15 +3,10 @@
 # Web export gate for dead.air platform detection layer.
 #
 # This script verifies:
-#   1. `npx tsc --noEmit` is clean (no NEW errors from lib/platform/).
+#   1. `npx tsc --noEmit` is clean (no type errors).
 #   2. `npx jest __tests__/platform/smoke.test.ts` passes (CI gate).
 #   3. `npx expo export --platform web` produces a bundle that does not
 #      crash on import of `lib/platform/PlatformDetector`.
-#
-# Pre-existing tsc failures unrelated to platform detection
-# (`@sentry/react-native` missing, `app/settings/index.tsx` shape errors)
-# are tolerated and reported separately — the gate only fails on NEW
-# errors that mention `lib/platform/` or `__tests__/platform/`.
 #
 # Usage:
 #   bash scripts/smoke-test.sh           # run all three gates
@@ -50,17 +45,9 @@ run_tsc() {
   echo "==> tsc --noEmit"
   local out
   if ! out=$(npx tsc --noEmit 2>&1); then
-    # tsc exits non-zero on any error; surface platform-detector-specific
-    # errors only.
-    local new_errors
-    new_errors=$(printf '%s\n' "$out" | grep -E '^(lib/platform/|__tests__/platform/)' || true)
-    if [[ -n "$new_errors" ]]; then
-      echo "FAIL: tsc reports platform-detection errors:"
-      printf '%s\n' "$new_errors"
-      fail=1
-    else
-      echo "PASS (pre-existing errors only, none from lib/platform/)"
-    fi
+    echo "FAIL: tsc reports errors:"
+    printf '%s\n' "$out"
+    fail=1
     return
   fi
   echo "PASS"
