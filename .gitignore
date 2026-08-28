@@ -68,7 +68,6 @@ skills-lock.json
 # Tool-specific config
 .nvmrc
 .lintstagedrc.json
-.prettierrc
 
 # Project docs (user-specific)
 HANDOFF.md
