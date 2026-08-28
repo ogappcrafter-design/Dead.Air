@@ -64,7 +64,6 @@ tsbuildinfo/
 autobots-model-registry.json
 autobots.toml
 skills-lock.json
-pnpm-workspace.yaml
 
 # Tool-specific config
 .nvmrc

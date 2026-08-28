@@ -15,6 +15,7 @@
 
 ### A paranormal late-night radio game. You are the DJ. The calls are real.
 
+[![CI](https://github.com/daggerstuff/deadair/actions/workflows/ci.yml/badge.svg)](https://github.com/daggerstuff/deadair/actions/workflows/ci.yml)
 [![Expo SDK 56](https://img.shields.io/badge/Expo_SDK-56-black?logo=expo&logoColor=white)](https://expo.dev)
 [![React Native](https://img.shields.io/badge/React_Native-0.85-black?logo=react&logoColor=61DAFB)](https://reactnative.dev)
 [![TypeScript](https://img.shields.io/badge/TypeScript-6.0-blue?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
@@ -275,6 +276,8 @@ pnpm test:watch     # Watch mode
 pnpm test:coverage  # Coverage report
 pnpm lint           # Lint with ESLint
 pnpm lint:fix       # Lint and auto-fix
+pnpm typecheck      # Strict TypeScript check
+pnpm run deps:circular  # Fail on circular imports (also enforced in CI)
 pnpm run eas-build  # Production build (all platforms)
 ```
 
