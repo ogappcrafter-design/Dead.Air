@@ -106,11 +106,75 @@ export function applyCallResult(save, call, result = {}) {
   };
 }
 
-/** Descriptive band for the sanity readout. Cosmetic — no mechanical effect. */
+/**
+ * Descriptive band for the sanity readout.
+ *
+ * Not cosmetic: DEAD AIR is a real state — see `isOffAir` — and everything
+ * below STABLE drives visible interference through src/engine/interference.js.
+ */
 export function sanityState(sanity) {
   const s = clampSanity(sanity);
   if (s >= 70) return { label: 'STABLE', color: '#39FF14' };
   if (s >= 35) return { label: 'FRAYED', color: '#FF8C00' };
   if (s > 0) return { label: 'CRITICAL', color: '#FF3366' };
   return { label: 'DEAD AIR', color: '#FF3366' };
+}
+
+/* ── Going off air, and buying your way back ─────────────────────────────────
+ *
+ * Sanity used to be a number that fell and did nothing, and static a score
+ * with nothing to spend it on. These two close the loop: the calls that pay
+ * best are the ones that cost the most sanity, and sanity is bought back with
+ * static. Playing greedily walks you toward the edge on purpose.
+ */
+
+/** Full price of a stabilise, in static. */
+export const STABILISE_COST = 100;
+
+/** Sanity a full-price stabilise restores. */
+export const STABILISE_RESTORE = 30;
+
+/**
+ * What a broke player at zero sanity gets anyway.
+ *
+ * Without this, spending everything and then taking one bad call would strand
+ * someone off air with no way back — a softlock at the exact moment the game
+ * is most interesting. Hitting zero should cost you your score, not your save.
+ */
+export const EMERGENCY_RESTORE = 10;
+
+/** At zero the station is dark: no calls until the DJ stabilises. */
+export const isOffAir = (save) => clampSanity(save?.sanity) <= SANITY_MIN;
+
+/** What a stabilise would cost and give right now, without performing it. */
+export function stabiliseQuote(save) {
+  const base = migrateSave(save);
+  const spend = Math.min(STABILISE_COST, base.bal);
+  const restore = Math.round(STABILISE_RESTORE * (spend / STABILISE_COST));
+  const emergency = base.sanity <= SANITY_MIN && restore < EMERGENCY_RESTORE;
+
+  return {
+    cost: emergency ? base.bal : spend,
+    restore: emergency ? EMERGENCY_RESTORE : restore,
+    emergency,
+    // Topping up a full meter is not a purchase worth offering.
+    available: base.sanity < SANITY_MAX && (base.bal > 0 || emergency),
+  };
+}
+
+/** Spend static to buy sanity back. Pure; returns a new save. */
+export function stabilise(save) {
+  const base = migrateSave(save);
+  const quote = stabiliseQuote(base);
+  if (!quote.available) return { save: base, spent: 0, restored: 0 };
+
+  return {
+    save: {
+      ...base,
+      bal: Math.max(0, base.bal - quote.cost),
+      sanity: clampSanity(base.sanity + quote.restore),
+    },
+    spent: quote.cost,
+    restored: quote.restore,
+  };
 }

@@ -4,6 +4,7 @@ import { Animated, Easing, View, Text, StyleSheet } from 'react-native';
 import feedback from '../feedback';
 import Button from '../components/Button';
 import Fade from '../components/Fade';
+import useShake from '../hooks/useShake';
 import { useReducedMotion } from '../motion';
 import { colors, mono, type } from '../theme/theme';
 
@@ -20,7 +21,7 @@ const BREATH_RELIEF = 22;
  * losing; v1 ran the bar and the clock on two independent timer chains and
  * whichever fired first won the race.
  */
-export default function StayCalm({ call, onComplete }) {
+export default function StayCalm({ call, accent, onComplete }) {
   const [anxiety, setAnxiety] = useState(0);
   const [remaining, setRemaining] = useState(call.duration);
   const [status, setStatus] = useState('live');
@@ -36,6 +37,7 @@ export default function StayCalm({ call, onComplete }) {
   const [trackWidth, setTrackWidth] = useState(0);
   const fill = useRef(new Animated.Value(0)).current;
   const reduced = useReducedMotion();
+  const { shake, style: shakeStyle } = useShake({ distance: 9, cycles: 4 });
 
   const drive = useCallback(
     (value) => {
@@ -81,6 +83,7 @@ export default function StayCalm({ call, onComplete }) {
       if (next >= 100) {
         statusRef.current = 'lost';
         setStatus('lost');
+        shake();
       } else if (elapsed >= call.duration) {
         statusRef.current = 'won';
         setStatus('won');
@@ -88,7 +91,7 @@ export default function StayCalm({ call, onComplete }) {
     }, TICK_MS);
 
     return () => clearInterval(id);
-  }, [call.duration, drive]);
+  }, [call.duration, drive, shake]);
 
   const breathe = useCallback(() => {
     if (statusRef.current !== 'live') return;
@@ -103,9 +106,9 @@ export default function StayCalm({ call, onComplete }) {
   const caption = status === 'live' ? 'STAY CALM' : status === 'won' ? 'SIGNAL HELD' : 'SIGNAL LOST';
 
   return (
-    <View style={{ flex: 1 }}>
+    <Animated.View style={[{ flex: 1 }, shakeStyle]}>
       <View style={s.head}>
-        <Text style={type.timer}>
+        <Text style={[type.timer, { color: status === 'lost' ? colors.red : accent || colors.amber }]}>
           {remaining > 0 ? `00:${String(remaining).padStart(2, '0')}` : '─ ─ ─'}
         </Text>
         <Text style={s.sub}>{caption}</Text>
@@ -173,7 +176,7 @@ export default function StayCalm({ call, onComplete }) {
           />
         </Fade>
       )}
-    </View>
+    </Animated.View>
   );
 }
 

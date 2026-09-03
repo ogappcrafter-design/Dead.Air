@@ -7,6 +7,7 @@ import Fade from '../components/Fade';
 import Wordmark from '../components/Wordmark';
 import { MARK } from '../content/symbols';
 import { progressSummary } from '../engine/progression';
+import { isOffAir } from '../engine/save';
 import { useReducedMotion } from '../motion';
 import { colors, mono } from '../theme/theme';
 
@@ -25,6 +26,7 @@ export default function TitleScreen({ save, purchases, onEnter }) {
 
   const progress = progressSummary(save, purchases);
   const returning = progress.callsDone > 0;
+  const dark = isOffAir(save);
 
   // "DEAD AIR" is 8 cells-groups wide; size the matrix to the screen so it
   // fills small phones without overflowing large ones.
@@ -73,8 +75,10 @@ export default function TitleScreen({ save, purchases, onEnter }) {
       <View style={s.foot}>
         {settled && (
           <Fade delay={420}>
-            <Animated.Text style={[s.prompt, { opacity: prompt }]}>
-              {returning ? `${MARK} RESUME BROADCAST` : `${MARK} TUNE IN`}
+            <Animated.Text
+              style={[s.prompt, dark && { color: colors.red }, { opacity: prompt }]}
+            >
+              {dark ? `${MARK} THE STATION IS DARK` : returning ? `${MARK} RESUME BROADCAST` : `${MARK} TUNE IN`}
             </Animated.Text>
             {returning && (
               <Text style={s.progress}>
@@ -86,7 +90,7 @@ export default function TitleScreen({ save, purchases, onEnter }) {
         )}
       </View>
 
-      <CRT />
+      <CRT sanity={save.sanity} />
     </Pressable>
   );
 }

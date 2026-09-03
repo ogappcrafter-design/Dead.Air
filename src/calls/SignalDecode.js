@@ -1,50 +1,72 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { Animated, View, Text, Pressable, StyleSheet } from 'react-native';
 
-import feedback from '../feedback';
 import Button from '../components/Button';
+import Fade from '../components/Fade';
+import feedback from '../feedback';
+import useShake from '../hooks/useShake';
 import { SYM } from '../content/symbols';
 import { colors, mono } from '../theme/theme';
 
 /** Tap the transmitted glyph sequence back. A wrong tap flashes and resets nothing. */
-export default function SignalDecode({ call, onComplete }) {
+export default function SignalDecode({ call, accent, onComplete }) {
   const [progress, setProgress] = useState(0);
   const [wrong, setWrong] = useState(null);
   const target = call.sequence;
   const solved = progress === target.length;
   const errorTimer = useRef(null);
+  const { shake, style: shakeStyle } = useShake();
 
-  // v1 left this setTimeout dangling — unmounting mid-flash set state on a
-  // dead component.
+  /**
+   * The authority on how far in we are.
+   *
+   * Reading `progress` straight from render state judged a second correct tap
+   * against the position from before the first one had committed — so tapping
+   * quickly, which is exactly what anyone does in a sequence minigame, threw
+   * false misses. The ref is updated synchronously on the tap.
+   */
+  const progressRef = useRef(0);
+
+  // Unmounting mid-flash used to set state on a dead component.
   useEffect(() => () => clearTimeout(errorTimer.current), []);
 
   const tap = (symbolIndex) => {
-    if (solved) return;
-    if (symbolIndex === target[progress]) {
+    if (progressRef.current >= target.length) return;
+
+    if (symbolIndex === target[progressRef.current]) {
+      progressRef.current += 1;
+      setProgress(progressRef.current);
       feedback.fire('key');
-      setProgress((p) => p + 1);
       return;
     }
+
     feedback.fire('reject');
+    shake();
     setWrong(symbolIndex);
     clearTimeout(errorTimer.current);
     errorTimer.current = setTimeout(() => setWrong(null), 400);
   };
 
+  const tint = accent || colors.amber;
+
   return (
-    <View style={{ flex: 1 }}>
+    <Animated.View style={[{ flex: 1 }, shakeStyle]}>
       {!!call.intro && <Text style={s.intro}>{call.intro}</Text>}
 
       <View style={s.seqRow}>
         {target.map((symbol, i) => (
           <View
             key={i}
-            style={[s.slot, i < progress && s.slotDone, i === progress && !solved && s.slotActive]}
+            style={[
+              s.slot,
+              i < progress && { borderColor: tint, backgroundColor: colors.amberInk },
+              i === progress && !solved && s.slotActive,
+            ]}
           >
             <Text
               style={[
                 s.slotSym,
-                { color: i < progress ? colors.amber : i === progress ? colors.white : colors.lineBright },
+                { color: i < progress ? tint : i === progress ? colors.white : colors.lineBright },
               ]}
             >
               {SYM[symbol]}
@@ -59,38 +81,43 @@ export default function SignalDecode({ call, onComplete }) {
 
       <View style={s.grid}>
         {SYM.map((symbol, i) => (
-          <TouchableOpacity
+          <Pressable
             key={i}
             accessibilityRole="button"
             accessibilityLabel={`Glyph ${i + 1}`}
-            activeOpacity={0.7}
-            style={[s.key, wrong === i && s.keyWrong]}
             onPress={() => tap(i)}
+            style={({ pressed }) => [
+              s.key,
+              pressed && { borderColor: tint, backgroundColor: '#0b0b0b' },
+              wrong === i && s.keyWrong,
+            ]}
           >
             <Text style={s.keySym}>{symbol}</Text>
-          </TouchableOpacity>
+          </Pressable>
         ))}
       </View>
 
       {solved && (
-        <View style={{ gap: 10, marginTop: 12 }}>
-          <View style={s.decoded}>
-            <Text style={s.decodedText}>{call.decodedMessage}</Text>
+        <Fade style={{ marginTop: 12 }}>
+          <View style={{ gap: 10 }}>
+            <View style={s.decoded}>
+              <Text style={s.decodedText}>{call.decodedMessage}</Text>
+            </View>
+            <Button
+              label="END CALL"
+              onPress={() =>
+                onComplete({
+                  sanityDelta: call.sanityDelta || 0,
+                  staticMult: 1,
+                  tape: call.tape || null,
+                  outcome: `DECODED: "${call.decodedMessage}"`,
+                })
+              }
+            />
           </View>
-          <Button
-            label="END CALL"
-            onPress={() =>
-              onComplete({
-                sanityDelta: call.sanityDelta || 0,
-                staticMult: 1,
-                tape: call.tape || null,
-                outcome: `DECODED: "${call.decodedMessage}"`,
-              })
-            }
-          />
-        </View>
+        </Fade>
       )}
-    </View>
+    </Animated.View>
   );
 }
 
@@ -113,7 +140,6 @@ const s = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  slotDone: { borderColor: colors.amber, backgroundColor: colors.amberInk },
   slotActive: { borderColor: colors.white, backgroundColor: colors.hairline },
   slotSym: { fontSize: 22 },
   counter: {

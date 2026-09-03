@@ -110,7 +110,7 @@ export default function SettingsScreen({ save, purchases, settings, onToggle, on
         <Text style={s.footer}>{'The frequency is open.\nSomething is already waiting.'}</Text>
       </ScrollView>
 
-      <CRT />
+      <CRT sanity={save.sanity} />
     </View>
   );
 }

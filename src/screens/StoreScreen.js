@@ -8,7 +8,7 @@ import { PRODUCT_LIST, isOwned, isStoreOpen } from '../services/billing';
 import { colors, mono, safeTop } from '../theme/theme';
 
 /** Two one-time purchases. Billing itself lives behind src/services/billing.js. */
-export default function StoreScreen({ purchases, onBuy, onRestore, onClose, busy, error }) {
+export default function StoreScreen({ purchases, sanity = 100, onBuy, onRestore, onClose, busy, error }) {
   const [confirming, setConfirming] = useState(null);
   const open = isStoreOpen();
 
@@ -112,7 +112,7 @@ export default function StoreScreen({ purchases, onBuy, onRestore, onClose, busy
         </Text>
       </ScrollView>
 
-      <CRT />
+      <CRT sanity={sanity} />
     </View>
   );
 }

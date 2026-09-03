@@ -1,5 +1,5 @@
 import { BANDS } from '../content/bands';
-import { CALLS, CALL_COUNT, callsInBand } from '../content/calls';
+import { CALL_COUNT, STORY_CALLS, callsInBand } from '../content/calls';
 import { TAPE_COUNT } from '../content/tapes';
 
 /** Free players get this many Infinite Signal generations before the paywall. */
@@ -34,11 +34,51 @@ export function bandLockReason(band, save, purchases) {
 export const unlockedBands = (save, purchases) =>
   BANDS.filter((b) => isBandUnlocked(b, save, purchases));
 
-/** Calls still waiting on a band — completed ones drop off the dial. */
-export const availableCalls = (bandId, save) =>
-  callsInBand(bandId).filter((c) => !(save?.done || []).includes(c.id));
+/**
+ * Is this call on the dial right now?
+ *
+ * Beyond "not already logged", a call can carry two extra gates:
+ *   `window`   local hours it exists between, e.g. the 3:47 AM transmission
+ *   `requires` the id of a call that has to be logged first
+ *
+ * `now` is injected so the clock can be tested rather than waited for.
+ */
+export function isCallAvailable(call, save, now = new Date()) {
+  if (!call) return false;
+  if ((save?.done || []).includes(call.id)) return false;
+  if (call.requires && !(save?.done || []).includes(call.requires)) return false;
 
-export const isBandCleared = (bandId, save) => availableCalls(bandId, save).length === 0;
+  if (call.window) {
+    const hour = now.getHours();
+    const { from, to } = call.window;
+    // Windows that wrap past midnight (23 → 2) still read naturally.
+    const inside = from <= to ? hour >= from && hour < to : hour >= from || hour < to;
+    if (!inside) return false;
+  }
+
+  return true;
+}
+
+/** Calls still waiting on a band — completed ones drop off the dial. */
+export const availableCalls = (bandId, save, now = new Date()) =>
+  callsInBand(bandId).filter((c) => isCallAvailable(c, save, now));
+
+/**
+ * A secret the player has earned the right to know about but cannot reach yet
+ * — the dial shows it as a locked slot rather than nothing, so missing it
+ * feels like a near miss instead of an absence.
+ */
+export const teasedCalls = (bandId, save, now = new Date()) =>
+  callsInBand(bandId).filter(
+    (c) =>
+      c.secret &&
+      !(save?.done || []).includes(c.id) &&
+      (!c.requires || (save?.done || []).includes(c.requires)) &&
+      !isCallAvailable(c, save, now),
+  );
+
+export const isBandCleared = (bandId, save, now = new Date()) =>
+  availableCalls(bandId, save, now).length === 0;
 
 /** Can the player generate an AI call right now, and why not if they can't. */
 export function generationStatus(save, purchases) {
@@ -56,7 +96,10 @@ export function generationStatus(save, purchases) {
 
 /** Everything the progress readout needs, in one pass. */
 export function progressSummary(save, purchases) {
-  const done = save?.done?.length || 0;
+  // Secret calls are excluded so a player who is never awake at the right hour
+  // still reads 100%.
+  const logged = new Set(save?.done || []);
+  const done = STORY_CALLS.filter((c) => logged.has(c.id)).length;
   return {
     callsDone: done,
     callsTotal: CALL_COUNT,
@@ -74,15 +117,32 @@ export function progressSummary(save, purchases) {
  * calls waiting, so the player resumes where the story left off. Falls back to
  * the last unlocked band once everything reachable has been logged.
  */
-export function defaultBandId(save, purchases) {
+export function defaultBandId(save, purchases, now = new Date()) {
   const open = unlockedBands(save, purchases);
   if (!open.length) return BANDS[0].id;
-  const withCalls = open.find((b) => availableCalls(b.id, save).length > 0);
+  const withCalls = open.find((b) => availableCalls(b.id, save, now).length > 0);
   return (withCalls || open[open.length - 1]).id;
+}
+
+/**
+ * Where the dial should move after a call, if anywhere.
+ *
+ * Clearing a band used to strand the player looking at "ALL CALLS LOGGED"
+ * while the band they had just unlocked sat one tap away, unmentioned. Returns
+ * null when the current band still has work, so the dial only ever moves on
+ * its own at a genuine dead end.
+ */
+export function nextBandId(currentBandId, save, purchases, now = new Date()) {
+  if (availableCalls(currentBandId, save, now).length > 0) return null;
+  const open = unlockedBands(save, purchases);
+  const next = open.find(
+    (b) => b.id !== currentBandId && availableCalls(b.id, save, now).length > 0,
+  );
+  return next ? next.id : null;
 }
 
 /** Recent caller names on a band, used to steer the generator away from repeats. */
 export const recentCallerNames = (bandId, limit = 5) =>
-  CALLS.filter((c) => c.band === bandId)
+  STORY_CALLS.filter((c) => c.band === bandId)
     .slice(-limit)
     .map((c) => c.callerName);

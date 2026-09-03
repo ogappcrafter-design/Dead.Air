@@ -13,9 +13,16 @@ import StaticBurst from './src/components/StaticBurst';
 
 import feedback from './src/feedback';
 import { bandById } from './src/content/bands';
-import { applyCallResult, DEFAULT_SAVE, migratePurchases, migrateSave } from './src/engine/save';
+import {
+  applyCallResult,
+  DEFAULT_SAVE,
+  isOffAir,
+  migratePurchases,
+  migrateSave,
+  stabilise,
+} from './src/engine/save';
 import { DEFAULT_SETTINGS, migrateSettings } from './src/engine/settings';
-import { defaultBandId, generationStatus } from './src/engine/progression';
+import { defaultBandId, generationStatus, nextBandId } from './src/engine/progression';
 import { applyEntitlements, purchase, restore } from './src/services/billing';
 import { generateCall } from './src/services/signal';
 import {
@@ -107,12 +114,25 @@ export default function App() {
       const call = activeCall;
       const { save: next, gained } = applyCallResult(save, call, result);
       setActiveCall(null);
-      setSignOff({ call, gained });
+      setSignOff({ call, gained, sanity: next.sanity, offAir: isOffAir(next) });
       setScreen('signoff');
+
+      // Clearing a band used to leave the player staring at "ALL CALLS LOGGED"
+      // while the band they had just unlocked sat one unmentioned tap away.
+      const move = nextBandId(activeBandId, next, purchases);
+      if (move !== null) setActiveBandId(move);
+
       await persistSave(next);
     },
-    [activeCall, save, persistSave],
+    [activeCall, activeBandId, purchases, save, persistSave],
   );
+
+  const handleStabilise = useCallback(async () => {
+    const { save: next, restored } = stabilise(save);
+    if (restored <= 0) return;
+    feedback.fire('breath');
+    await persistSave(next);
+  }, [save, persistSave]);
 
   const handleGenerate = useCallback(async () => {
     if (generating) return;
@@ -187,6 +207,7 @@ export default function App() {
           setScreen('call');
         }}
         onGenerate={handleGenerate}
+        onStabilise={handleStabilise}
         onOpenStore={() => {
           setStoreError(null);
           setScreen('store');
@@ -194,7 +215,7 @@ export default function App() {
         onOpenSettings={() => setScreen('settings')}
       />
     ),
-    [save, purchases, activeBandId, generating, generationError, handleGenerate],
+    [save, purchases, activeBandId, generating, generationError, handleGenerate, handleStabilise],
   );
 
   if (!loaded) return <BootScreen />;
@@ -205,11 +226,13 @@ export default function App() {
       {screen === 'title' ? (
         <TitleScreen save={save} purchases={purchases} onEnter={() => setScreen('dial')} />
       ) : screen === 'call' && activeCall ? (
-        <CallScreen call={activeCall} onComplete={handleCallComplete} />
+        <CallScreen call={activeCall} sanity={save.sanity} onComplete={handleCallComplete} />
       ) : screen === 'signoff' && signOff ? (
         <SignOffScreen
           call={signOff.call}
           gained={signOff.gained}
+          sanity={signOff.sanity}
+          offAir={signOff.offAir}
           onDismiss={() => {
             setSignOff(null);
             setScreen('dial');
@@ -218,6 +241,7 @@ export default function App() {
       ) : screen === 'store' ? (
         <StoreScreen
           purchases={purchases}
+          sanity={save.sanity}
           busy={storeBusy}
           error={storeError}
           onBuy={handleBuy}

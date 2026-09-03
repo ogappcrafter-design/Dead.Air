@@ -32,10 +32,47 @@ pressure, and no ads.
 
 3. **Sign off** — the readout shows the static earned, the sanity moved, and
    any tape recovered.
-4. Completed calls drop off the dial. Completed calls open new bands.
+4. Completed calls drop off the dial and open new bands. When a band is
+   cleared the dial moves itself to the next one that has calls waiting.
 
-**Static** (`◈`) is the score. **Sanity** runs 0–100 and drifts with your
-choices; the header shows it as `STABLE` / `FRAYED` / `CRITICAL` / `DEAD AIR`.
+## Sanity, static, and going dark
+
+The two numbers are a loop, not a scoreboard.
+
+**Sanity** runs 0–100 and drifts with your choices. It is not a label: below 70
+the broadcast visibly starts coming apart — heavier scanlines, the vignette
+closing in, the signal meter dropping a bar, and bursts of static arriving
+uninvited mid-call, all scaling off one curve in `src/engine/interference.js`.
+The readout pulses when it is bad.
+
+At **zero the station goes dark**. No calls come through until you stabilise.
+
+**Static** (`◈`) is what buys sanity back. `STABILISE` trades 100 static for 30
+sanity, so the calls that pay best — the ones that cost the most sanity — are
+exactly the ones that walk you toward the edge. Static used to be a score with
+nothing to spend it on; now playing greedily has a price.
+
+Hitting zero broke costs you everything you have rather than your save: an
+emergency stabilise always gets you back on air, so the worst case is a wiped
+balance, never a softlock.
+
+## Pacing
+
+Lines type out at reading speed rather than appearing whole on a fixed timer,
+and the pause after each one scales with its weight — a beat holds, a line that
+trails off or asks something hangs longer. Tapping anywhere skips ahead, so
+impatience never means leaving the call. The rules are a pure function
+(`lineTiming`) so the feel can be tuned without sitting through a call.
+
+## The 3:47 AM transmission
+
+One call only exists between 3 and 4 in the morning, local time. It stays
+hidden until you have taken the LIMINAL call that tells you the hour matters —
+then it shows on the dial as a locked, redacted slot with the window printed on
+it, so missing it reads as a near miss rather than as nothing being there.
+
+It is excluded from the completion counts on purpose: finding it is a reward
+for being awake at the wrong time, not a wall between a player and 100%.
 
 ## Bands
 
@@ -65,11 +102,12 @@ while the burst is up, because one tile held still reads as a texture and
 swapping between them reads as live static. Changing band fires a lighter one.
 Getting around the app should feel like retuning, not like swapping views.
 
-Everything else is restrained: transmission lines fade and lift in as they
-arrive, call cards form in sequence when the dial moves, buttons take the weight
-on press, the anxiety bar glides instead of stepping, and the signal meter
-wavers on an open line. The CRT layer breathes and drops a frame every ten
-seconds or so.
+Everything else is restrained: lines type in under a blinking cursor, call
+cards form in sequence when the dial moves, buttons take the weight on press,
+the anxiety bar glides instead of stepping, and a small oscilloscope kicks in
+the header each time the caller speaks. A wrong glyph or a lost nerve jolts the
+screen. The CRT layer breathes and drops a frame every few seconds — more often
+the worse your sanity gets.
 
 All motion is opacity and transform only, so it runs on the native driver and
 never competes with the JS thread while a call is ticking — and all of it
@@ -107,10 +145,11 @@ from the save, so erasing progress does not turn it back on.
 
 ## Content
 
-18 hand-authored transmissions and a 15-tape archive. Every tape is reachable in
-a single playthrough, but several are locked behind one specific branch of a
-`RIGHT_ANSWER` call — a full archive means choosing right, not just playing
-everything. `__tests__/content.test.js` enforces both of those properties.
+18 hand-authored transmissions plus one secret, and a 15-tape archive. Every
+tape is reachable in a single playthrough, but several are locked behind one
+specific branch of a `RIGHT_ANSWER` call — a full archive means choosing right,
+not just playing everything. `__tests__/content.test.js` enforces both of those
+properties, and that the secret can never be required for either count.
 
 ## Infinite Signal
 
@@ -160,6 +199,7 @@ src/
     save.js             save shape, v1→v2 migration, reward + sanity math
     progression.js      band unlocks, available calls, generation credits
     generation.js       clamping AI-generated calls into playable ones
+    interference.js     how far the broadcast has come apart, from sanity
     proxyUrl.js         resolving and vetting the Infinite Signal endpoint
     settings.js         player preferences, kept apart from progress
   feedback/             the one facade screens use for sound + haptics
@@ -170,7 +210,7 @@ src/
   calls/                the five call players + the type→player registry
   screens/              title, boot, dial, call, sign-off, archive, store, settings
   components/           wordmark, static burst, CRT, fade, buttons, log
-  hooks/                line reveal, countdown
+  hooks/                transcript pacing, countdown, screen shake
   theme/                colors, type, spacing, safe-area top
 plugins/                Expo config plugins (native debug symbols)
 proxy/
@@ -190,7 +230,7 @@ driven over real HTTP against a stub.
 
 ```bash
 npm install
-npm test          # 162 tests: engine, content, audio, proxy, build plugin
+npm test          # 205 tests: engine, content, audio, proxy, build plugin
 npm run lint
 npm start         # Expo dev server
 npm run android
@@ -292,9 +332,8 @@ be a mangled ESLint config that was never wired to anything.
 Sound, haptics, motion and the title screen all arrived after the rebuild —
 see **Feel** and **Sound** above. v1 had none of them.
 
-Still outstanding: there is nothing to spend static on — it is a score, not a
-currency, and the store sells unlocks rather than upgrades. Worth deciding
-before launch.
+Static now has a sink and sanity now has teeth — see **Sanity, static, and
+going dark** above. Both were flagged here as outstanding after the rebuild.
 
 ## Content warning
 

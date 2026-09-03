@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
+  Animated,
   View,
   Text,
   ScrollView,
+  Pressable,
   TouchableOpacity,
   ActivityIndicator,
   StyleSheet,
@@ -14,18 +16,52 @@ import CRT from '../components/CRT';
 import Fade from '../components/Fade';
 import StaticBurst from '../components/StaticBurst';
 import SignalBars from '../components/SignalBars';
+import Button from '../components/Button';
 import { BANDS, bandById } from '../content/bands';
 import { callTypeLabel } from '../content/callTypes';
 import { MARK } from '../content/symbols';
-import { sanityState } from '../engine/save';
+import { isOffAir, sanityState, stabiliseQuote } from '../engine/save';
+import { CALM_ABOVE, interference } from '../engine/interference';
 import {
   availableCalls,
   bandLockReason,
   generationStatus,
   isBandUnlocked,
   progressSummary,
+  teasedCalls,
 } from '../engine/progression';
+import { useReducedMotion } from '../motion';
 import { colors, mono, safeTop } from '../theme/theme';
+
+/** The sanity readout pulses once the station is in trouble. */
+function SanityReadout({ sanity }) {
+  const reduced = useReducedMotion();
+  const state = sanityState(sanity);
+  const alarmed = interference(sanity) > 0.45;
+  const pulse = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    if (!alarmed || reduced) {
+      pulse.setValue(1);
+      return undefined;
+    }
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulse, { toValue: 0.35, duration: 620, useNativeDriver: true }),
+        Animated.timing(pulse, { toValue: 1, duration: 620, useNativeDriver: true }),
+      ]),
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [alarmed, reduced, pulse]);
+
+  return (
+    <Animated.Text style={[s.stat, { opacity: pulse }]}>
+      <Text style={{ color: state.color }}>{sanity}</Text>
+      <Text style={s.statKey}> SAN</Text>
+    </Animated.Text>
+  );
+}
 
 /** The station. Pick a band, pick a call, or ask the frequency for a new one. */
 export default function DialScreen({
@@ -35,6 +71,7 @@ export default function DialScreen({
   onSelectBand,
   onStartCall,
   onGenerate,
+  onStabilise,
   onOpenStore,
   onOpenSettings,
   generating,
@@ -44,9 +81,11 @@ export default function DialScreen({
 
   const band = bandById(activeBandId);
   const calls = availableCalls(activeBandId, save);
+  const teased = teasedCalls(activeBandId, save);
   const gen = generationStatus(save, purchases);
-  const sanity = sanityState(save.sanity);
   const progress = progressSummary(save, purchases);
+  const offAir = isOffAir(save);
+  const quote = stabiliseQuote(save);
 
   const generateLabel = () => {
     if (!gen.allowed) return `${MARK} UNLOCK INFINITE IN STORE`;
@@ -57,12 +96,9 @@ export default function DialScreen({
   return (
     <View style={s.screen}>
       <View style={s.header}>
-        <Text style={s.logo}>{MARK} DEAD AIR</Text>
+        <Text style={[s.logo, { color: band.color }]}>{MARK} DEAD AIR</Text>
         <View style={s.headerRight}>
-          <Text style={s.stat}>
-            <Text style={{ color: sanity.color }}>{save.sanity}</Text>
-            <Text style={s.statKey}> SAN</Text>
-          </Text>
+          <SanityReadout sanity={save.sanity} />
           <Text style={s.stat}>
             <Text style={{ color: colors.amber }}>{save.bal}</Text>
             <Text style={s.statKey}> {MARK}</Text>
@@ -125,10 +161,10 @@ export default function DialScreen({
             key={key}
             accessibilityRole="tab"
             accessibilityState={{ selected: tab === key }}
-            style={[s.tab, tab === key && s.tabActive]}
+            style={[s.tab, tab === key && { borderBottomColor: band.color, borderBottomWidth: 2 }]}
             onPress={() => setTab(key)}
           >
-            <Text style={[s.tabText, tab === key && { color: colors.amber }]}>{label}</Text>
+            <Text style={[s.tabText, tab === key && { color: band.color }]}>{label}</Text>
           </TouchableOpacity>
         ))}
       </View>
@@ -137,55 +173,129 @@ export default function DialScreen({
         <ArchiveScreen tapes={save.tapes} />
       ) : (
         <ScrollView style={{ flex: 1 }} contentContainerStyle={s.list}>
-          {calls.length === 0 && (
-            <Text style={s.empty}>— ALL CALLS LOGGED FOR THIS BAND —</Text>
-          )}
+          {offAir ? (
+            <Fade>
+              <View style={s.deadAir}>
+                <Text style={s.deadAirTitle}>DEAD AIR</Text>
+                <Text style={s.deadAirBody}>
+                  You have nothing left to give the callers. The desk is dark and the frequency has
+                  gone quiet.
+                </Text>
+                <Text style={s.deadAirBody}>
+                  Sit with it until you can hold a line again.
+                </Text>
+                <Button
+                  label={
+                    quote.emergency
+                      ? `STABILISE — EVERYTHING YOU HAVE  →  +${quote.restore} SAN`
+                      : `STABILISE — ${quote.cost} ${MARK}  →  +${quote.restore} SAN`
+                  }
+                  tone="red"
+                  style={{ marginTop: 18 }}
+                  onPress={onStabilise}
+                />
+              </View>
+            </Fade>
+          ) : (
+            <>
+              {/* Only once it matters. Offering a top-up after every scratch
+                  would turn a tension release into a chore. */}
+              {quote.available && save.sanity < CALM_ABOVE && (
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={`Stabilise for ${quote.cost} static, restoring ${quote.restore} sanity`}
+                  onPress={onStabilise}
+                  style={({ pressed }) => [s.stabilise, pressed && { borderColor: colors.green }]}
+                >
+                  <Text style={s.stabiliseLabel}>◈ STABILISE</Text>
+                  <Text style={s.stabiliseCost}>
+                    {quote.cost} {MARK} → +{quote.restore} SAN
+                  </Text>
+                </Pressable>
+              )}
 
-          {calls.map((call, i) => (
-            // Keyed by band so the list re-forms when the dial moves, arriving
-            // in sequence rather than all at once.
-            <Fade key={`${activeBandId}-${call.id}`} delay={Math.min(i, 6) * 55}>
+              {calls.length === 0 && teased.length === 0 && (
+                <Text style={s.empty}>— ALL CALLS LOGGED FOR THIS BAND —</Text>
+              )}
+
+              {calls.map((call, i) => (
+                // Keyed by band so the list re-forms when the dial moves, arriving
+                // in sequence rather than all at once.
+                <Fade key={`${activeBandId}-${call.id}`} delay={Math.min(i, 6) * 55}>
+                  <Pressable
+                    accessibilityRole="button"
+                    onPress={() => onStartCall(call)}
+                    style={({ pressed }) => [
+                      s.card,
+                      call.secret && { borderColor: band.color },
+                      pressed && { borderColor: band.color, backgroundColor: '#080808' },
+                    ]}
+                  >
+                    <View style={s.cardTop}>
+                      <Text style={[s.cardId, { color: band.color }]} numberOfLines={1}>
+                        {call.callerId}
+                      </Text>
+                      <SignalBars n={call.signal} color={band.color} />
+                    </View>
+                    <Text style={s.cardName}>{call.callerName}</Text>
+                    <Text style={s.cardType}>
+                      {call.secret ? 'UNLISTED TRANSMISSION' : callTypeLabel(call.type)}
+                    </Text>
+                  </Pressable>
+                </Fade>
+              ))}
+
+              {/* Earned, but not right now. Shown so a near miss reads as a
+                  near miss rather than as nothing being there. */}
+              {teased.map((call) => (
+                <Fade key={`teased-${call.id}`}>
+                  <View style={[s.card, s.cardLocked]}>
+                    <Text style={s.cardIdLocked}>{call.callerId}</Text>
+                    <Text style={s.cardNameLocked}>████████████</Text>
+                    <Text style={s.cardType}>
+                      {call.window
+                        ? `RECEIVABLE ${String(call.window.from).padStart(2, '0')}:00 – ${String(
+                            call.window.to,
+                          ).padStart(2, '0')}:00 ONLY`
+                        : 'NOT RECEIVABLE'}
+                    </Text>
+                  </View>
+                </Fade>
+              ))}
+
               <TouchableOpacity
                 accessibilityRole="button"
                 activeOpacity={0.7}
-                style={s.card}
-                onPress={() => onStartCall(call)}
+                disabled={generating || !gen.allowed}
+                onPress={gen.allowed ? onGenerate : onOpenStore}
+                style={[
+                  s.generate,
+                  { borderColor: gen.allowed ? band.color : colors.line },
+                ]}
               >
-                <View style={s.cardTop}>
-                  <Text style={[s.cardId, { color: band.color }]} numberOfLines={1}>
-                    {call.callerId}
+                {generating ? (
+                  <ActivityIndicator color={band.color} />
+                ) : (
+                  <Text
+                    style={[
+                      s.generateText,
+                      { color: gen.allowed ? band.color : colors.textGhost },
+                    ]}
+                  >
+                    {generateLabel()}
                   </Text>
-                  <SignalBars n={call.signal} color={band.color} />
-                </View>
-                <Text style={s.cardName}>{call.callerName}</Text>
-                <Text style={s.cardType}>{callTypeLabel(call.type)}</Text>
+                )}
               </TouchableOpacity>
-            </Fade>
-          ))}
 
-          <TouchableOpacity
-            accessibilityRole="button"
-            activeOpacity={0.7}
-            disabled={generating || !gen.allowed}
-            onPress={gen.allowed ? onGenerate : onOpenStore}
-            style={[s.generate, !gen.allowed && { borderColor: colors.line }]}
-          >
-            {generating ? (
-              <ActivityIndicator color={colors.amber} />
-            ) : (
-              <Text style={[s.generateText, !gen.allowed && { color: colors.textGhost }]}>
-                {generateLabel()}
-              </Text>
-            )}
-          </TouchableOpacity>
-
-          {!!generationError && <Text style={s.error}>{generationError}</Text>}
+              {!!generationError && <Text style={s.error}>{generationError}</Text>}
+            </>
+          )}
         </ScrollView>
       )}
 
       {/* Lighter than a screen change — retuning within the same station. */}
       <StaticBurst trigger={activeBandId} intensity={0.55} />
-      <CRT />
+      <CRT sanity={save.sanity} />
     </View>
   );
 }
@@ -202,7 +312,7 @@ const s = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.hairline,
   },
-  logo: { fontFamily: mono, fontSize: 18, letterSpacing: 5, color: colors.amber },
+  logo: { fontFamily: mono, fontSize: 18, letterSpacing: 5 },
   headerRight: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   stat: { fontFamily: mono, fontSize: 12 },
   statKey: { color: colors.textFaint },
@@ -226,26 +336,51 @@ const s = StyleSheet.create({
   bandFreq: { fontFamily: mono, fontSize: 10 },
 
   tabs: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: colors.hairline },
-  tab: { flex: 1, paddingVertical: 10, alignItems: 'center' },
-  tabActive: { borderBottomWidth: 2, borderBottomColor: colors.amber },
+  tab: { flex: 1, paddingVertical: 10, alignItems: 'center', borderBottomColor: 'transparent' },
   tabText: { fontFamily: mono, fontSize: 11, letterSpacing: 2, color: colors.textGhost },
 
   list: { padding: 16, gap: 10, paddingBottom: 96 },
   card: { borderWidth: 1, borderColor: colors.line, borderRadius: 2, padding: 14, gap: 4 },
+  cardLocked: { borderColor: '#141414', borderStyle: 'dashed' },
   cardTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12 },
   cardId: { fontFamily: mono, fontSize: 11, letterSpacing: 2, flex: 1 },
+  cardIdLocked: { fontFamily: mono, fontSize: 11, letterSpacing: 2, color: colors.textGhost },
   cardName: { fontFamily: mono, fontSize: 16, color: '#ccc' },
+  cardNameLocked: { fontFamily: mono, fontSize: 16, color: colors.lineBright, letterSpacing: 1 },
   cardType: { fontFamily: mono, fontSize: 10, letterSpacing: 2, color: colors.textGhost },
+
+  stabilise: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.lineBright,
+    borderRadius: 2,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  stabiliseLabel: { fontFamily: mono, fontSize: 12, letterSpacing: 2, color: colors.green },
+  stabiliseCost: { fontFamily: mono, fontSize: 11, color: colors.textFaint },
+
+  deadAir: {
+    borderWidth: 1,
+    borderColor: colors.red,
+    borderRadius: 2,
+    padding: 20,
+    gap: 10,
+    marginTop: 24,
+  },
+  deadAirTitle: { fontFamily: mono, fontSize: 22, letterSpacing: 6, color: colors.red },
+  deadAirBody: { fontFamily: mono, fontSize: 13, lineHeight: 21, color: colors.textDim },
 
   generate: {
     borderWidth: 1,
-    borderColor: colors.amber,
     borderRadius: 2,
     padding: 14,
     alignItems: 'center',
     marginTop: 8,
   },
-  generateText: { fontFamily: mono, fontSize: 13, letterSpacing: 1, color: colors.amber },
+  generateText: { fontFamily: mono, fontSize: 13, letterSpacing: 1 },
   error: { fontFamily: mono, fontSize: 12, color: colors.red, textAlign: 'center', marginTop: 6 },
   empty: {
     fontFamily: mono,
