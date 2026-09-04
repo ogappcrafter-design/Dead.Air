@@ -98,6 +98,24 @@ pnpm run ios        # iOS simulator or device
 pnpm run web        # browser
 ```
 
+### Docker
+
+```bash
+docker build -t deadair .
+docker run -p 8081:8081 deadair
+# Open http://localhost:8081 in your browser
+```
+
+### Environment Variables
+
+Copy `.env.example` to `.env` and fill in real values. `.env` is gitignored — never commit real secrets.
+
+| Variable                    | Required | Description                                     |
+| --------------------------- | -------- | ----------------------------------------------- |
+| `EXPO_PUBLIC_API_URL`       | No       | Backend / API proxy endpoint                    |
+| `EXPO_PUBLIC_SENTRY_DSN`    | No       | Sentry DSN for error tracking (production only) |
+| `EXPO_PUBLIC_ANALYTICS_KEY` | No       | Analytics key for event tracking                |
+
 ---
 
 ## 📡 Frequency Bands
