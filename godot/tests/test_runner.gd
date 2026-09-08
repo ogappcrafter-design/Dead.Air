@@ -45,6 +45,7 @@ func _run_tests() -> void:
 		["ShiftController", "res://tests/test_shift_controller.gd"],
 		["BreatherSystem", "res://tests/test_breather_system.gd"],
 		["RecordingManager", "res://tests/test_recording_manager.gd"],
+		["CallAudioPipeline", "res://tests/test_call_audio_pipeline.gd"],
 	]
 
 	for suite in test_suites:
