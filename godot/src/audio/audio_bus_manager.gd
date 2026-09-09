@@ -31,6 +31,12 @@ const DUCK_STINGER_TO_OTHERS := -6.0
 ## Silence ducks all other buses by -12 dB
 const DUCK_SILENCE_TO_OTHERS := -12.0
 
+# ─── Effect indices per bus (for runtime effect parameter access) ────
+# These correspond to the effect order in default_bus_layout.tres.
+const FX_RADIO_AMBIENT_GAIN := 1  # BandPass=0 (Gain effect removed in Godot 4.7.1)
+const FX_CALL_AUDIO_DISTORTION := 1  # Compressor=0, Distortion=1, Reverb=2
+const FX_DREAD_LAYER_LOWPASS := 0  # LowPass=0
+
 # ─── Baseline volume snapshot ─────────────────────────────────────────
 # Stored at _ready() so ducking can restore to baseline when released.
 var _baseline_volumes: Dictionary[int, float] = {}
@@ -40,11 +46,10 @@ var _call_active: bool = false
 var _stinger_active: bool = false
 var _silence_active: bool = false
 
-# ─── Effect indices per bus (for runtime effect parameter access) ────
-# These correspond to the effect order in default_bus_layout.tres.
-const FX_RADIO_AMBIENT_GAIN := 1     # BandPass=0 (Gain effect removed in Godot 4.7.1)
-const FX_CALL_AUDIO_DISTORTION := 1  # Compressor=0, Distortion=1, Reverb=2
-const FX_DREAD_LAYER_LOWPASS := 0    # LowPass=0
+# ─── Dynamic dread offset (dB) ────────────────────────────────────────
+# Set by set_dread_level; added on top of the accessibility baseline for
+# DREAD_LAYER so that AccessibilityManager volume settings persist.
+var _dread_offset: float = 0.0
 
 
 # ─── Lifecycle ────────────────────────────────────────────────────────
@@ -78,7 +83,10 @@ func set_bus_volume(bus_idx: int, volume_db: float) -> void:
 	_baseline_volumes[bus_idx] = volume_db
 	# Apply immediately unless a duck is active on this bus
 	if not _is_bus_ducked(bus_idx):
-		AudioServer.set_bus_volume_db(bus_idx, volume_db)
+		var vol: float = volume_db
+		if bus_idx == IDX_DREAD_LAYER:
+			vol += _dread_offset
+		AudioServer.set_bus_volume_db(bus_idx, vol)
 
 
 ## Get the baseline volume for a bus.
@@ -125,10 +133,10 @@ func _recompute_ducks() -> void:
 		if bus_idx == IDX_MASTER:
 			continue
 		var duck_offset: float = _compute_duck_offset(bus_idx)
-		if duck_offset < 0.0:
-			AudioServer.set_bus_volume_db(bus_idx, _baseline_volumes.get(bus_idx, 0.0) + duck_offset)
-		else:
-			AudioServer.set_bus_volume_db(bus_idx, _baseline_volumes.get(bus_idx, 0.0))
+		var vol: float = _baseline_volumes.get(bus_idx, 0.0) + duck_offset
+		if bus_idx == IDX_DREAD_LAYER:
+			vol += _dread_offset
+		AudioServer.set_bus_volume_db(bus_idx, vol)
 
 
 ## Compute the cumulative duck offset (dB) for a given bus based on active duck states.
@@ -186,10 +194,12 @@ func set_dread_lowpass_cutoff(hz: float) -> void:
 
 
 ## Set the DreadLayer bus volume (ramps from -12 dB to 0 dB at dread 75+).
+## The dynamic dread level is stored as an offset applied on top of the
+## accessibility baseline so AccessibilityManager volume settings persist.
 func set_dread_level(dread_value: float) -> void:
 	# dread_value: 0.0 (calm) → 100.0 (max dread)
 	var t: float = clampf(dread_value / 75.0, 0.0, 1.0)
-	var vol: float = lerpf(-12.0, 0.0, t)
-	set_bus_volume(IDX_DREAD_LAYER, vol)
+	_dread_offset = lerpf(-12.0, 0.0, t)
+	_recompute_ducks()
 	# Also tighten the lowpass as dread rises (200 Hz → 600 Hz)
 	set_dread_lowpass_cutoff(lerpf(200.0, 600.0, t))

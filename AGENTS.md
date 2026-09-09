@@ -16,9 +16,9 @@ Autoloads are registered in `godot/project.godot` under `[autoload]`. Order matt
 - `TapeInventory.collect_tape()/refuse_tape()` → `add_tape_taken()/add_tape_refused()`
 - `SaveManager.save_game()/load_game()` → `save_to()/load_from()`
 
-## Call Audio Pipeline (DEA-137)
+## Accessibility Audio Options (DEA-141)
 
-`CallAudioPipeline` autoload (`godot/src/audio/call_audio_pipeline.gd`) handles voice call audio playback with real-time processing. Routes all audio through the `CALL_AUDIO` bus (from DEA-134). Processing chain: Base → Band EQ → Compression → Radio Simulation → Bitcrush → Spatial → Output. Band EQ profiles per band (LIVING warm, LOST telephone bandpass, CLASSIFIED military crackle, ████████ sub-bass+proximity). Signal quality 0-100 controls degradation. Dread >60 applies pitch shift (-2 semitones), reverse reverb tail, random gate. Phase 4 corruption reverses segments and warps pitch. AudioBusManager.duck_for_call() ducks RadioAmbient -6dB; stinger ducking handled via duck_for_stinger().
+`AccessibilityManager` autoload (`godot/src/core/accessibility_manager.gd`) manages audio accessibility: volume sliders (6 buses), subtitles, visual audio cues, colorblind audio patterns, reduce-horror mode, hold-breath toggle, pause-anywhere override. Persists via `user://accessibility.cfg`. Modifies `AudioBusManager` bus volumes at runtime. Creates `SubtitleDisplay` and `VisualAudioCues` child Controls.
 
 ## Maintaining this file
 
