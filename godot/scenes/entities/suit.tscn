@@ -1,0 +1,60 @@
+[gd_scene load_steps=5 format=3 uid="uid://suitentity125"]
+
+[ext_resource type="Script" path="res://src/entities/suit.gd" id="1_suit"]
+
+[sub_resource type="StandardMaterial3D" id="mat_suit"]
+resource_local_to_scene = true
+albedo_color = Color(0.102, 0.102, 0.102, 1)  # #1A1A1A charcoal
+roughness = 0.9
+metallic = 0.0
+
+[sub_resource type="StandardMaterial3D" id="mat_skin"]
+resource_local_to_scene = true
+albedo_color = Color(0.78, 0.72, 0.66, 1)  # smooth faceless skin
+roughness = 1.0
+metallic = 0.0
+
+[sub_resource type="StandardMaterial3D" id="mat_shirt"]
+resource_local_to_scene = true
+albedo_color = Color(0.9, 0.9, 0.9, 1)  # white shirt
+roughness = 0.85
+metallic = 0.0
+
+[node name="Suit" type="CharacterBody3D"]
+script = ExtResource("1_suit")
+cast_shadows = false
+
+[node name="Body" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+size = Vector3(0.5, 1.2, 0.3)
+material = SubResource("mat_suit")
+cast_shadow = 0  # SHADOW_OFF — The Suits do not cast shadows
+use_collision = false
+
+[node name="Head" type="CSGSphere3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.75, 0)
+radius = 0.18
+material = SubResource("mat_skin")
+cast_shadow = 0
+use_collision = false
+
+[node name="Shirt" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+size = Vector3(0.16, 1.0, 0.05)
+material = SubResource("mat_shirt")
+cast_shadow = 0
+use_collision = false
+
+[node name="Tie" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.0, 0.025)
+size = Vector3(0.04, 0.6, 0.02)
+material = SubResource("mat_suit")
+cast_shadow = 0
+use_collision = false
+
+[node name="Legs" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1, 0)
+size = Vector3(0.48, 0.6, 0.28)
+material = SubResource("mat_suit")
+cast_shadow = 0
+use_collision = false

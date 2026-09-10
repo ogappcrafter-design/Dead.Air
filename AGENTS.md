@@ -20,6 +20,14 @@ Autoloads are registered in `godot/project.godot` under `[autoload]`. Order matt
 
 `AccessibilityManager` autoload (`godot/src/core/accessibility_manager.gd`) manages audio accessibility: volume sliders (6 buses), subtitles, visual audio cues, colorblind audio patterns, reduce-horror mode, hold-breath toggle, pause-anywhere override. Persists via `user://accessibility.cfg`. Modifies `AudioBusManager` bus volumes at runtime. Creates `SubtitleDisplay` and `VisualAudioCues` child Controls.
 
+## The Suits Enemy Entity (DEA-125)
+
+`Suit` class (`godot/src/entities/suit.gd`) — faceless suited enemies in dark charcoal suits. State machine: IDLE → PATROL → INVESTIGATE → APPROACH → SEARCH → RELOCATE. Detection ranges: 5m PATROL, 10m INVESTIGATE, +1m per 10 dread. Contact sets composure to 0 and teleports player to a random safe area (no kill). Audio is radio-only: no footsteps/breathing; proximity telegraphed via radio static intensity + signal needle.
+
+`SuitSpawner` class (`godot/src/entities/suit_spawner.gd`) — phase-based spawn manager. Phase 2: 1 suit; Phase 3 Liminal: 2; Phase 3 Bunker (location 3): 3; Phase 4: 0. Despawns all on Phase 4 entry. Scene: `godot/scenes/entities/suit.tscn`.
+
+Integration hooks: `DreadComposure.entity_nearby` / `hiding_detected` flags, `SignalStrength` entity count, `StingerSystem.trigger_suits_detected()`, `PhaseManager.enter_hide_mode()` / `exit_hide_mode()`. Hide = Input action `hide` (Circle/B), breath = `hold_breath` (L2/LT, 5s max).
+
 ## Maintaining this file
 
 Keep this file for knowledge useful to almost every future agent session in this project.

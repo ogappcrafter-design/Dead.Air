@@ -82,3 +82,4 @@ state/
 .husky/_/
 # Jest coverage output
 coverage/
+opencode.json

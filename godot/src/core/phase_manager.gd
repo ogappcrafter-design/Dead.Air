@@ -26,6 +26,10 @@ signal temporary_mode_entered(mode: int)
 ## Emitted when returning from Call or Hide mode to previous context.
 signal temporary_mode_exited(restored_mode: int)
 
+## Shared breath-hold state. Set by the player controller; read by entities
+## that need to know whether the player is holding their breath (e.g. the Suits).
+var breath_held: bool = false
+
 var _phase: int = PhaseEnums.Phase.PHASE_1_STATION
 var _mode: int = PhaseEnums.ModeContext.RADIO
 var _previous_mode: int = PhaseEnums.ModeContext.RADIO
