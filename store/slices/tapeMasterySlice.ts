@@ -2,7 +2,7 @@
 // Tape Mastery: per-tape listen counts for progression layer tracking.
 
 import type { StoreApi } from 'zustand';
-import type { GameState } from '../useGameStore';
+import type { GameState } from '../types';
 import { incrementListenCount } from '../../engine/progression/TapeMastery';
 
 export interface TapeMasterySlice {

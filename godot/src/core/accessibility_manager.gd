@@ -1,9 +1,12 @@
 ## AccessibilityManager
-## Autoload singleton managing audio accessibility settings for DEA-141.
-## Controls volume sliders, subtitles, visual audio cues, colorblind audio patterns,
-## reduce-audio-horror mode, hold-breath toggle, and pause-anywhere override.
-## Persists settings via ConfigFile at user://accessibility.cfg.
-## Reference: DEA-141, GDD §Accessibility (docs/plans/redesign-gdd.md lines 1810-1828)
+## Autoload singleton managing accessibility settings for DEA-141 (audio) and
+## DEA-146 (visual). Audio: volume sliders, subtitles, visual audio cues, colorblind
+## audio patterns, reduce-audio-horror mode, hold-breath toggle, pause-anywhere
+## override. Visual: camera shake reduction, high contrast, text size, screen flash
+## reduction, static reduction, vignette reduction, CRT toggle, difficulty presets.
+## Persists settings via ConfigFile at user://accessibility.cfg (audio, controls,
+## visual sections).
+## Reference: DEA-141, DEA-146, GDD §Accessibility (docs/plans/redesign-gdd.md)
 extends Node
 
 # ─── Signals ───────────────────────────────────────────────────────────
@@ -21,6 +24,16 @@ signal dread_vignette_changed(intensity: float)
 signal heartbeat_pulse_changed(intensity: float)
 signal scanline_intensity_changed(intensity: float)
 
+# ─── DEA-146: Visual accessibility signals ────────────────────────────
+signal camera_shake_reduction_changed(reduction: int)
+signal high_contrast_toggled(enabled: bool)
+signal text_size_changed(size: int)
+signal screen_flash_reduction_toggled(enabled: bool)
+signal static_reduction_toggled(enabled: bool)
+signal vignette_reduction_toggled(enabled: bool)
+signal crt_toggled(enabled: bool)
+signal difficulty_preset_changed(preset: int)
+
 # ─── Noise types for colorblind audio patterns ───────────────────────
 enum NoiseType {
 	DEFAULT,  # Use band's existing character
@@ -28,6 +41,68 @@ enum NoiseType {
 	PINK,  # Even energy — LOST
 	WHITE,  # Harsh/bright — CLASSIFIED
 }
+
+# ─── DEA-146: Text size options ───────────────────────────────────────
+enum TextSize {
+	SMALL,  # Default (1.0×)
+	MEDIUM,  # +25% (1.25×)
+	LARGE,  # +50% (1.5×)
+	EXTRA_LARGE,  # +100% (2.0×)
+}
+
+# ─── DEA-146: Difficulty presets ─────────────────────────────────────
+enum DifficultyPreset {
+	EASY,  # Composure decays 50% slower, lower starting dread, more frequent saves
+	NORMAL,  # Defaults
+	HARD,  # Composure 25% faster, higher dread, fewer saves
+	DEAD_AIR,  # No saves, one life, composure starts at 50
+}
+
+## Text size scale factors indexed by TextSize enum.
+const TEXT_SIZE_SCALES: Array[float] = [1.0, 1.25, 1.5, 2.0]
+
+## Difficulty preset parameters (see DIFFICULTY_PRESETS dict below).
+const DIFFICULTY_PRESETS: Dictionary = {
+	DifficultyPreset.EASY:
+	{
+		"composure_decay_mult": 0.5,
+		"starting_dread": 20.0,
+		"save_freq_mult": 1.5,
+		"composure_start": 100.0,
+		"one_life": false,
+		"no_saves": false,
+	},
+	DifficultyPreset.NORMAL:
+	{
+		"composure_decay_mult": 1.0,
+		"starting_dread": 40.0,
+		"save_freq_mult": 1.0,
+		"composure_start": 100.0,
+		"one_life": false,
+		"no_saves": false,
+	},
+	DifficultyPreset.HARD:
+	{
+		"composure_decay_mult": 1.25,
+		"starting_dread": 55.0,
+		"save_freq_mult": 0.7,
+		"composure_start": 100.0,
+		"one_life": false,
+		"no_saves": false,
+	},
+	DifficultyPreset.DEAD_AIR:
+	{
+		"composure_decay_mult": 1.0,
+		"starting_dread": 70.0,
+		"save_freq_mult": 0.0,
+		"composure_start": 50.0,
+		"one_life": true,
+		"no_saves": true,
+	},
+}
+
+## Valid camera shake reduction levels (percent).
+const CAMERA_SHAKE_LEVELS: Array[int] = [0, 50, 100]
 
 # ─── Volume bus keys ──────────────────────────────────────────────────
 const VOL_MASTER := "master"
@@ -112,6 +187,7 @@ const COLORBLIND_CHARACTERS: Dictionary = {
 const SETTINGS_PATH := "user://accessibility.cfg"
 const SECTION_AUDIO := "audio"
 const SECTION_CONTROLS := "controls"
+const SECTION_VISUAL := "visual"  # DEA-146: visual accessibility
 
 # ─── Settings state ──────────────────────────────────────────────────
 var subtitles_enabled: bool = true
@@ -122,6 +198,16 @@ var hearing_impaired_mode: bool = false
 var reduce_audio_horror: bool = false
 var hold_breath_toggle_mode: bool = false
 var pause_anywhere: bool = false
+
+# ─── DEA-146: Visual accessibility state ─────────────────────────────
+var camera_shake_reduction: int = 0  # 0, 50, or 100 percent
+var high_contrast_mode: bool = false
+var text_size: TextSize = TextSize.SMALL
+var screen_flash_reduction: bool = false
+var static_reduction: bool = false
+var vignette_reduction: bool = false
+var crt_enabled: bool = true
+var difficulty_preset: DifficultyPreset = DifficultyPreset.NORMAL
 
 ## Volume percentages (0-100) per bus key.
 var _volume_percents: Dictionary = {}
@@ -162,6 +248,20 @@ func _create_ui_overlays() -> void:
 		visual_cues.name = "VisualAudioCues"
 		add_child(visual_cues)
 
+	# DEA-146: Visual accessibility controller (CRT shader parameter modifiers)
+	var va_script = load("res://src/visual/visual_accessibility_controller.gd")
+	if va_script:
+		var va_controller = va_script.new()
+		va_controller.name = "VisualAccessibilityController"
+		add_child(va_controller)
+
+	# DEA-146: High contrast manager (UI borders + text size scaling)
+	var hc_script = load("res://src/ui/high_contrast_manager.gd")
+	if hc_script:
+		var hc_manager = hc_script.new()
+		hc_manager.name = "HighContrastManager"
+		add_child(hc_manager)
+
 
 # ─── Persistence ─────────────────────────────────────────────────────
 
@@ -194,6 +294,18 @@ func _load_settings() -> void:
 	hold_breath_toggle_mode = config.get_value(SECTION_CONTROLS, "hold_breath_toggle_mode", false)
 	pause_anywhere = config.get_value(SECTION_CONTROLS, "pause_anywhere", false)
 
+	# DEA-146: Visual section
+	camera_shake_reduction = int(config.get_value(SECTION_VISUAL, "camera_shake_reduction", 0))
+	high_contrast_mode = config.get_value(SECTION_VISUAL, "high_contrast_mode", false)
+	text_size = int(config.get_value(SECTION_VISUAL, "text_size", TextSize.SMALL))
+	screen_flash_reduction = config.get_value(SECTION_VISUAL, "screen_flash_reduction", false)
+	static_reduction = config.get_value(SECTION_VISUAL, "static_reduction", false)
+	vignette_reduction = config.get_value(SECTION_VISUAL, "vignette_reduction", false)
+	crt_enabled = config.get_value(SECTION_VISUAL, "crt_enabled", true)
+	difficulty_preset = int(
+		config.get_value(SECTION_VISUAL, "difficulty_preset", DifficultyPreset.NORMAL)
+	)
+
 
 func save_settings() -> void:
 	var config := ConfigFile.new()
@@ -214,6 +326,16 @@ func save_settings() -> void:
 	# Controls section
 	config.set_value(SECTION_CONTROLS, "hold_breath_toggle_mode", hold_breath_toggle_mode)
 	config.set_value(SECTION_CONTROLS, "pause_anywhere", pause_anywhere)
+
+	# DEA-146: Visual section
+	config.set_value(SECTION_VISUAL, "camera_shake_reduction", camera_shake_reduction)
+	config.set_value(SECTION_VISUAL, "high_contrast_mode", high_contrast_mode)
+	config.set_value(SECTION_VISUAL, "text_size", text_size)
+	config.set_value(SECTION_VISUAL, "screen_flash_reduction", screen_flash_reduction)
+	config.set_value(SECTION_VISUAL, "static_reduction", static_reduction)
+	config.set_value(SECTION_VISUAL, "vignette_reduction", vignette_reduction)
+	config.set_value(SECTION_VISUAL, "crt_enabled", crt_enabled)
+	config.set_value(SECTION_VISUAL, "difficulty_preset", difficulty_preset)
 
 	config.save(SETTINGS_PATH)
 
@@ -468,6 +590,132 @@ func _on_dread_changed(dread: float) -> void:
 	heartbeat_pulse_changed.emit(compute_heartbeat_pulse(dread))
 
 
+# ─── DEA-146: Visual accessibility setters ────────────────────────────
+
+
+## Set camera shake reduction (0, 50, or 100 percent). Clamped to valid levels.
+func set_camera_shake_reduction(reduction: int) -> void:
+	var clamped: int = reduction
+	if clamped not in CAMERA_SHAKE_LEVELS:
+		# Snap to nearest valid level
+		var best: int = 0
+		var best_dist: int = absi(clamped - 0)
+		for level in CAMERA_SHAKE_LEVELS:
+			var d: int = absi(clamped - level)
+			if d < best_dist:
+				best = level
+				best_dist = d
+		clamped = best
+	if camera_shake_reduction == clamped:
+		return
+	camera_shake_reduction = clamped
+	camera_shake_reduction_changed.emit(clamped)
+
+
+## Get the camera shake multiplier (1.0 = full, 0.5 = half, 0.0 = none).
+func get_camera_shake_multiplier() -> float:
+	return 1.0 - (float(camera_shake_reduction) / 100.0)
+
+
+## Toggle high contrast mode.
+func set_high_contrast_mode(enabled: bool) -> void:
+	if high_contrast_mode == enabled:
+		return
+	high_contrast_mode = enabled
+	high_contrast_toggled.emit(enabled)
+
+
+## Set text size.
+func set_text_size(size: TextSize) -> void:
+	if text_size == size:
+		return
+	text_size = size
+	text_size_changed.emit(size)
+
+
+## Get the text size scale factor (1.0, 1.25, 1.5, or 2.0).
+func get_text_size_scale() -> float:
+	return TEXT_SIZE_SCALES[text_size]
+
+
+## Toggle screen flash reduction (eliminates CRT roll, cuts flicker ~75%).
+func set_screen_flash_reduction(enabled: bool) -> void:
+	if screen_flash_reduction == enabled:
+		return
+	screen_flash_reduction = enabled
+	screen_flash_reduction_toggled.emit(enabled)
+
+
+## Toggle static reduction (cuts analog noise density ~50%).
+func set_static_reduction(enabled: bool) -> void:
+	if static_reduction == enabled:
+		return
+	static_reduction = enabled
+	static_reduction_toggled.emit(enabled)
+
+
+## Toggle vignette reduction (reduce/eliminate vignette darkening).
+func set_vignette_reduction(enabled: bool) -> void:
+	if vignette_reduction == enabled:
+		return
+	vignette_reduction = enabled
+	vignette_reduction_toggled.emit(enabled)
+
+
+## Toggle CRT effects on/off (master switch).
+func set_crt_enabled(enabled: bool) -> void:
+	if crt_enabled == enabled:
+		return
+	crt_enabled = enabled
+	crt_toggled.emit(enabled)
+
+
+## Set difficulty preset.
+func set_difficulty_preset(preset: DifficultyPreset) -> void:
+	if difficulty_preset == preset:
+		return
+	difficulty_preset = preset
+	difficulty_preset_changed.emit(preset)
+
+
+# ─── DEA-146: Difficulty preset parameter getters ────────────────────
+
+
+## Get the composure decay multiplier for the current difficulty preset.
+func get_difficulty_composure_decay_mult() -> float:
+	return DIFFICULTY_PRESETS[difficulty_preset]["composure_decay_mult"]
+
+
+## Get the starting dread level for the current difficulty preset.
+func get_difficulty_starting_dread() -> float:
+	return DIFFICULTY_PRESETS[difficulty_preset]["starting_dread"]
+
+
+## Get the save frequency multiplier for the current difficulty preset.
+func get_difficulty_save_freq_mult() -> float:
+	return DIFFICULTY_PRESETS[difficulty_preset]["save_freq_mult"]
+
+
+## Get the composure start value for the current difficulty preset.
+func get_difficulty_composure_start() -> float:
+	return DIFFICULTY_PRESETS[difficulty_preset]["composure_start"]
+
+
+## Check if the current difficulty preset has one-life mode.
+func is_one_life() -> bool:
+	return DIFFICULTY_PRESETS[difficulty_preset]["one_life"]
+
+
+## Check if the current difficulty preset disables saves.
+func is_no_saves() -> bool:
+	return DIFFICULTY_PRESETS[difficulty_preset]["no_saves"]
+
+
+## Get the difficulty preset name as a string.
+func get_difficulty_preset_name() -> String:
+	return DifficultyPreset.keys()[difficulty_preset]
+
+
 # ─── Testing helpers ─────────────────────────────────────────────────
 
 
@@ -487,3 +735,12 @@ func _reset_for_testing() -> void:
 	_heartbeat_bpm = 60.0
 	_dread_hpf = null
 	_dread_hpf_idx = -1
+	# DEA-146: Visual accessibility resets
+	camera_shake_reduction = 0
+	high_contrast_mode = false
+	text_size = TextSize.SMALL
+	screen_flash_reduction = false
+	static_reduction = false
+	vignette_reduction = false
+	crt_enabled = true
+	difficulty_preset = DifficultyPreset.NORMAL

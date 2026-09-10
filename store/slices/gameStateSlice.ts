@@ -5,7 +5,7 @@ import type { StoreApi } from 'zustand';
 import { MAX_SANITY, MAX_STATIC } from '../../lib/constants';
 import type { Band } from '../../lib/constants';
 import type { DifficultyMode } from '../../lib/difficulty';
-import type { GameState } from '../useGameStore';
+import type { GameState } from '../types';
 import { useAnalyticsStore } from '../useAnalyticsStore';
 import { useSettingsStore } from '../useSettingsStore';
 import { useAchievementStore } from '../useAchievementStore';

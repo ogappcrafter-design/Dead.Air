@@ -32,6 +32,11 @@ var _texture_rect: ColorRect
 var _time_accum: float = 0.0
 var _param_overrides: Dictionary = {}
 
+# DEA-146: Accessibility modifiers applied after normal params each frame.
+# Keys: "shake_mult" (float), "flash_reduction" (bool), "static_mult" (float),
+#        "vignette_off" (bool), "crt_off" (bool)
+var _accessibility_mods: Dictionary = {}
+
 
 func _ready() -> void:
 	_setup_post_process()
@@ -208,6 +213,9 @@ func _apply_all_params() -> void:
 	for key in params:
 		_shader_material.set_shader_parameter(key, params[key])
 
+	# DEA-146: Apply accessibility modifiers on top of normal params
+	_apply_accessibility_mods()
+
 	# Set screen resolution from viewport
 	var vp: Viewport = get_viewport()
 	if vp != null:
@@ -245,3 +253,63 @@ func trigger_roll(duration: float = 1.0, speed: float = 8.0) -> void:
 func trigger_glitch_burst(intensity: float = 1.0, duration: float = 0.3) -> void:
 	_param_overrides["glitch_intensity"] = {"value": intensity, "remaining": duration}
 	_param_overrides["tear_intensity"] = {"value": intensity * 0.5, "remaining": duration}
+
+
+# ============================================================================
+# DEA-146: Accessibility modifier API
+# ============================================================================
+
+
+## Set accessibility modifiers. Pass a Dictionary with any of:
+## "shake_mult": float (0.0-1.0) — scales roll speed
+## "flash_reduction": bool — eliminates roll, cuts flicker speed 75%
+## "static_mult": float (0.0-1.0) — scales noise density
+## "vignette_off": bool — sets vignette intensity to 0
+## "crt_off": bool — hides the CRT overlay entirely
+func set_accessibility_mods(mods: Dictionary) -> void:
+	_accessibility_mods = mods
+	if _texture_rect != null:
+		_texture_rect.visible = not mods.get("crt_off", false)
+
+
+## Get the current accessibility modifiers.
+func get_accessibility_mods() -> Dictionary:
+	return _accessibility_mods
+
+
+## Apply accessibility modifiers to shader parameters after normal computation.
+func _apply_accessibility_mods() -> void:
+	if _shader_material == null or _accessibility_mods.is_empty():
+		return
+
+	if _accessibility_mods.get("crt_off", false):
+		if _texture_rect != null:
+			_texture_rect.visible = false
+		return
+
+	if _texture_rect != null:
+		_texture_rect.visible = true
+
+	# Camera shake reduction: scale roll speed
+	if _accessibility_mods.has("shake_mult"):
+		var shake_mult: float = _accessibility_mods["shake_mult"]
+		var roll: float = _shader_material.get_shader_parameter("scanline_roll_speed")
+		_shader_material.set_shader_parameter("scanline_roll_speed", roll * shake_mult)
+
+	# Screen flash reduction: eliminate roll, cut flicker speed 75%
+	if _accessibility_mods.get("flash_reduction", false):
+		_shader_material.set_shader_parameter("scanline_roll_speed", 0.0)
+		var flicker: float = _shader_material.get_shader_parameter("flicker_speed")
+		_shader_material.set_shader_parameter("flicker_speed", flicker * 0.25)
+		var flicker_i: float = _shader_material.get_shader_parameter("flicker_intensity")
+		_shader_material.set_shader_parameter("flicker_intensity", flicker_i * 0.25)
+
+	# Static reduction: cut noise density by the given multiplier
+	if _accessibility_mods.has("static_mult"):
+		var static_mult: float = _accessibility_mods["static_mult"]
+		var noise: float = _shader_material.get_shader_parameter("noise_density")
+		_shader_material.set_shader_parameter("noise_density", noise * static_mult)
+
+	# Vignette reduction: eliminate vignette
+	if _accessibility_mods.get("vignette_off", false):
+		_shader_material.set_shader_parameter("vignette_intensity", 0.0)

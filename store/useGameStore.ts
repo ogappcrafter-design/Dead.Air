@@ -13,13 +13,14 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SAVE_KEY } from '../lib/constants';
+import type { GameState } from './types';
 
-import { createGameSlice, type GameStateSlice } from './slices/gameStateSlice';
-import { createNgPlusSlice, type NgPlusSlice } from './slices/ngPlusSlice';
-import { createEndlessNightSlice, type EndlessNightSlice } from './slices/endlessNightSlice';
-import { createTapeMasterySlice, type TapeMasterySlice } from './slices/tapeMasterySlice';
+import { createGameSlice } from './slices/gameStateSlice';
+import { createNgPlusSlice } from './slices/ngPlusSlice';
+import { createEndlessNightSlice } from './slices/endlessNightSlice';
+import { createTapeMasterySlice } from './slices/tapeMasterySlice';
 
-export type GameState = GameStateSlice & NgPlusSlice & EndlessNightSlice & TapeMasterySlice;
+export type { GameState } from './types';
 
 export const useGameStore = create<GameState>()(
   persist(

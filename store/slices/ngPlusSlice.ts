@@ -3,7 +3,7 @@
 
 import type { StoreApi } from 'zustand';
 import type { Band } from '../../lib/constants';
-import type { GameState } from '../useGameStore';
+import type { GameState } from '../types';
 import {
   startNewGamePlus,
   endNewGamePlus,

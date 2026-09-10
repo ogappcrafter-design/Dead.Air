@@ -1816,10 +1816,20 @@ Subtitles           All call audio is subtitled (text already exists from call d
 Subtitle BG         Optional background panel for readability
 Audio cues          Visual indicators for audio-only events (radio static level,
                     entity proximity, stinger warnings)
-Colorblind          Band colors have distinct patterns (stripes, dots, solid)
+Colorblind          Band identification by audio character (timbre), not screen
+                    color — pairs with DEA-141 static noise patterns (LIVING brown
+                    noise, LOST pink, CLASSIFIED white)
 Composure effects   Option to reduce visual glitch intensity (does not change gameplay)
-Camera shake        Option to reduce/disable camera shake
-Difficulty          4 levels (see Difficulty System spec)
+Camera shake        Reduce camera shake and CRT roll (0%, 50%, 100%)
+High contrast       UI elements gain borders; text gains background boxes
+Text size           Small (default), Medium (+25%), Large (+50%), Extra Large
+                    (+100%) — CRT shader keeps text legible
+Screen flash        Eliminate CRT roll; cut flicker frequency ~75% (scanlines remain)
+reduction
+Static reduction    Cut analog noise density ~50% (scanlines remain, noise lighter)
+Vignette reduction  Reduce or eliminate vignette darkening for full-screen visibility
+CRT toggle          Turn off all CRT effects (game still works, just looks different)
+Difficulty          4 presets (see Difficulty System spec)
 Hold breath         Toggle mode (press instead of hold) for accessibility
 Save system         Manual saves — player controls when to save
 Pause               Pause available in safe rooms only (design intent —

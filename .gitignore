@@ -18,6 +18,7 @@ yarn.lock
 
 # IDE / editor
 .vscode/
+opencode.json
 .idea/
 .cursor/
 .sublime-project

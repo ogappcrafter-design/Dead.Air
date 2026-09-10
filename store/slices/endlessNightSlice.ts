@@ -2,7 +2,7 @@
 // Endless Night mode: active state, score, high score, escalation, weather, game over.
 
 import type { StoreApi } from 'zustand';
-import type { GameState } from '../useGameStore';
+import type { GameState } from '../types';
 import {
   startEndlessNight,
   onShiftCompleted,
