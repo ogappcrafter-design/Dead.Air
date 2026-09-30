@@ -1,0 +1,67 @@
+# Pull request labels are based on changed paths and conventional branch names.
+# Every label below already exists in the repository.
+
+bug:
+  - head-branch:
+      - '^bugfix/'
+      - '^fix/'
+      - '^hotfix/'
+
+enhancement:
+  - head-branch:
+      - '^feat/'
+      - '^feature/'
+
+documentation:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'docs/**'
+          - '**/*.md'
+
+Core System:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'engine/**'
+          - 'store/**'
+          - 'state/**'
+          - 'hooks/**'
+          - 'lib/**'
+
+Feature:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'app/**'
+          - 'components/**'
+
+Audio:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'engine/audio/**'
+          - 'components/audio/**'
+          - 'assets/audio/**'
+
+Visual:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'components/**'
+          - 'app/**'
+          - 'assets/**'
+          - 'godot/src/ui/**'
+
+Game Design:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'data/**'
+          - 'engine/calls/**'
+          - 'engine/progression/**'
+
+Level Design:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'godot/scenes/**'
+          - 'godot/src/levels/**'
+
+Migration:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'godot/**'
