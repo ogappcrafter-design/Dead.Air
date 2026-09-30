@@ -20,32 +20,37 @@ import { ALL_DLC_CALLS } from '@/data/tapePacks';
 import type { Band } from '@/lib/constants';
 import type { CallData } from './types';
 
-// Build registry from sacred calls + procedural/seasonal calls (DEA-68 P1 #2).
-// getCallPool generates IDs >= 1000 for procedural/seasonal calls so they
-// never collide with sacred call IDs 0..17 from data/calls.js.
+// Build the registry from sacred calls plus the owner's procedural pool.
+// The registry is refreshed after store hydration and entitlement changes;
+// non-owners must never receive the Infinite Signal call IDs.
 const _sacredEntries = (CALLS as unknown as CallData[]).map((c) => [c.id, c] as const);
 
-// Track procedural call IDs (1000 to SEASONAL_ID_BASE-1) from the expansion
-// pool so they can be removed and regenerated after store rehydration (DEA-32-2).
-// Seasonal IDs (>= SEASONAL_ID_BASE) are excluded because they collide with
-// atmospheric DLC idBases and do not depend on ownedTapePacks.
+// Track only Infinite Signal procedural IDs (1000 to SEASONAL_ID_BASE-1).
+// Seasonal IDs overlap other generated content's reserved ranges.
 let _expansionCallIds = new Set<number>();
 
 function buildExpansionEntries(
+  hasInfiniteSignal: boolean,
   ownedTapePacks: ReadonlyArray<string>,
 ): readonly (readonly [number, CallData])[] {
-  const pool = getCallPool(CALLS as unknown as CallData[], true, undefined, { ownedTapePacks });
+  const pool = getCallPool(CALLS as unknown as CallData[], hasInfiniteSignal, undefined, {
+    ownedTapePacks,
+  });
   const entries: (readonly [number, CallData])[] = [];
   for (const c of pool) {
-    entries.push([c.id, c] as const);
     if (c.id >= 1000 && c.id < SEASONAL_ID_BASE) {
+      entries.push([c.id, c] as const);
       _expansionCallIds.add(c.id);
     }
   }
   return entries;
 }
 
-const _expansionEntries = buildExpansionEntries(useStoreStore.getState().ownedTapePacks);
+const initialStore = useStoreStore.getState();
+const _expansionEntries = buildExpansionEntries(
+  initialStore.hasInfiniteSignal,
+  initialStore.ownedTapePacks,
+);
 const _tutorialEntries = TUTORIAL_CALLS.map((c) => [c.id, c] as const);
 const _dlcEntries = ALL_DLC_CALLS.map((c) => [c.id, c] as const);
 const registry = new Map<number, CallData>([
@@ -89,11 +94,16 @@ export function registerDailyCall(call: CallData): void {
   registry.set(call.id, call);
 }
 
-export function refreshExpansionCalls(ownedTapePacks: ReadonlyArray<string>): void {
+export function refreshExpansionCalls(
+  hasInfiniteSignal: boolean,
+  ownedTapePacks: ReadonlyArray<string>,
+): void {
   for (const id of _expansionCallIds) {
     registry.delete(id);
   }
   _expansionCallIds = new Set();
+
+  if (!hasInfiniteSignal) return;
 
   const pool = getCallPool(CALLS as unknown as CallData[], true, undefined, { ownedTapePacks });
 

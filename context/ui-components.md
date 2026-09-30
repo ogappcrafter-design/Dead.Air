@@ -1,58 +1,38 @@
 # Dead Air Radio — UI Components & Design System
 
+_Status reconciled against the app on 2026-09-29._
+
 ## Design Language
 
-CRT aesthetic — retro radio / analog horror vibe. Dark backgrounds, green/amber phosphor text, scanline effects, glitch styling.
+CRT / analog-horror aesthetic with dark backgrounds, phosphor green and amber text, scanlines, and glitch styling. Shared colors, typography, and spacing tokens are in `lib/theme.ts`.
 
 ## Component Architecture
 
-- **Screens** in `app/` (Expo Router routes)
-- **Components** in `components/` — presentational, receive props from Zustand stores
-- **No component library** (no NativeBase, no Tamagui) — custom styled components with React Native StyleSheet
+- **Screens:** Expo Router routes in `app/`.
+- **Components:** reusable UI in `components/`; state is supplied through props and Zustand selectors.
+- **Styling:** React Native `StyleSheet` with project theme tokens; no external component library is used.
 
-## Key UI Components
+## Key Screens
 
-### Radio Screen (`app/radio/index.tsx` + `components/radio/RadioBody.tsx`)
+### Radio (`app/radio/index.tsx`, `components/radio/RadioBody.tsx`)
 
-- Frequency tuner (dial control)
-- Band selector (5 bands: LIVING, LIMINAL, LOST, CLASSIFIED, ████████)
-- Volume control
-- Signal strength visualizer
-- Call display area
-- **CRITICAL:** Currently no audio playback — pure visual UI
+The screen contains the tuner, band selection, volume control, signal display, and active-call UI. **Radio-call audio is not wired:** the shared `callManagerInstance` currently has `audio: null`. This gap is specific to call playback; it does not describe the tape player.
 
-### Store Screen (`app/store/index.tsx`)
+### Store (`app/store/index.tsx`)
 
-- StoreCard components for IAP products
-- Purchase button (currently mock)
-- "Mock store. Real billing arrives in a later phase." disclaimer
+The store screen uses the real `lib/iap.ts` purchase and restore functions. `useStoreStore` holds receipt-gated entitlements and purchase status. The restore button is on the store screen, and status/error messages are shown in the screen banner. Product-console setup and native sandbox testing remain release work.
 
-### Tape Detail (TBD — PIX-4262 adds player UI)
+### Tape Collection (`app/tapes/index.tsx`)
 
-- Will need: play/pause/stop controls, progress bar, visual feedback
-- Must integrate with CRT aesthetic
+Collected tapes open `components/tapes/TapePlayer.tsx`. The screen drives synthesized audio through `TapeDroneSynth`, with band/tape/rarity profiles, play/pause/stop controls, a progress display, and cleanup when playback closes or navigation leaves the screen.
 
-### Settings Screen (`app/settings/`)
+### Settings (`app/settings/`)
 
-- Will need: "Restore Purchases" button (PIX-4264)
-- **Leaderboard** section — `components/leaderboard/Leaderboard.tsx`, powered by `useLeaderboardStore` (local-only, AsyncStorage)
-- **Call of the Day** section — `components/callOfTheDay/CallOfTheDay.tsx`, powered by `useCallOfTheDayStore` (local-only, AsyncStorage)
-- **Friend Codes** section — `components/friends/FriendCodeManager.tsx`, powered by `useFriendCodeStore` (local-only, AsyncStorage)
-- **Share** section — `components/share/ShareTranscript.tsx`, uses `react-native-view-shot` + `expo-sharing`
-
-## Styling Patterns
-
-- React Native `StyleSheet.create()` for all styles
-- Dark theme: `#0a0a0a` backgrounds, phosphor green `#33ff33`, amber `#ffb000`
-- Monospace fonts for terminal/radio text
-- Animated components use `react-native-reanimated`
+Settings include accessibility, audio, data, and progression options, along with the project’s achievement and social components where enabled. Restore purchases is not described as a settings-only feature; it is exposed from the store screen.
 
 ## State Management
 
-- `useRadioStore` — frequency, band, volume, signal strength
-- `useGameStore` — sanity, static level, tapes, collected calls
-- `useStoreStore` — IAP state (hasInfiniteSignal, purchase methods — currently mock)
-
-## No Design System File
-
-No `DESIGN.md`, no theme config, no shared design tokens. Styling is inline per component. Match existing patterns when adding new UI.
+- `useRadioStore` — frequency, band, and radio controls.
+- `useGameStore` — sanity, static, tapes, and progression.
+- `useStoreStore` — IAP connection, purchase records, entitlements, and status.
+- Domain-specific stores own accessibility, settings, audio ambience, and other features.

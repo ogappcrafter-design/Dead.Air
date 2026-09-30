@@ -1,48 +1,20 @@
 # Dead Air Radio — Progress Tracker
 
-## Completed Work (Pre-DAR Phase 1)
+_Status reconciled against `master` on 2026-09-29._ This replaces the older pending-work snapshot; the implementation and current release checklist are authoritative.
 
-- [x] Foundation: Radio UI, store UI, game state, call system
-- [x] P4-P7: Merged to master
-- [x] Audio engine files created (8 files in engine/audio/)
-- [x] Mock IAP store implemented (useStoreStore.ts)
-- [x] 18 hand-crafted sacred calls in data/calls.js
-- [x] 5 bands configured: LIVING, LIMINAL, LOST, CLASSIFIED, ████████
+## Implemented in the repository
 
-## DAR Phase 1 Phases
+- **IAP purchase flow:** `lib/iap.ts` integrates `expo-in-app-purchases`, entitlement updates are receipt/order-ID gated, restore is available from the store screen, and purchase-history revalidation runs at launch.
+- **Procedural calls:** `engine/calls/ProceduralCallGenerator.ts`, band fragment libraries, the Infinite Signal owner gate, and unit tests are present. Owners receive eligible hand-authored calls plus a generated finite pool; non-owners do not receive the generated pool.
+- **Tape playback:** the tape screen connects its player controls to synthesized per-tape audio profiles, progress updates, and cleanup on navigation.
+- **Quality checks:** CI runs formatting, lint, typecheck, circular-dependency analysis, Jest tests, and secret scanning.
 
-- [ ] P1: IAP Store Hardening (PIX-4255) — COMPLETE
-- [ ] P2: Tape Audio Playback (PIX-4254) — COMPLETE
-- [ ] P3: Procedural Call Engine (PIX-4253) — COMPLETE
+## Confirmed remaining gaps / release gates
 
-## Phase P1: IAP Store Hardening — PENDING
+1. **Radio-call audio is not wired:** `engine/calls/callManagerInstance.ts` still passes `audio: null`; `CallManager.setAudioAccess()` is not connected to the radio screen. This does not mean tape playback is missing.
+2. **Store release setup is external:** confirm App Store Connect / Google Play products, EAS credentials, and native purchase/restore behavior using the sandbox checklist in `docs/store/release-checklist.md`.
+3. **Receipt verification limitation:** the app checks for a transaction receipt and order ID and rechecks store purchase history, but this repository has no server-side receipt validation.
 
-| Task                               | Issue    | Status      |
-| ---------------------------------- | -------- | ----------- |
-| Integrate expo-in-app-purchases    | PIX-4263 | [ ] PENDING |
-| Handle purchase receipts + restore | PIX-4264 | [ ] PENDING |
-| IAP error handling + edge cases    | PIX-4265 | [ ] PENDING |
+## Validation baseline
 
-## Phase P2: Tape Audio Playback — PENDING
-
-| Task                              | Issue    | Status      |
-| --------------------------------- | -------- | ----------- |
-| Synthesize ambient drone per tape | PIX-4260 | [ ] PENDING |
-| Voice fragments + static textures | PIX-4261 | [ ] PENDING |
-| Tape player UI                    | PIX-4262 | [ ] PENDING |
-
-## Phase P3: Procedural Call Engine — PENDING
-
-| Task                            | Issue    | Status      |
-| ------------------------------- | -------- | ----------- |
-| ProceduralCallGenerator class   | PIX-4256 | [ ] PENDING |
-| Fragment libraries per band     | PIX-4257 | [ ] PENDING |
-| Wire IAP ownership gate         | PIX-4258 | [ ] PENDING |
-| Tests for procedural generation | PIX-4259 | [ ] PENDING |
-
-## Known Issues
-
-1. IAP is mock-only — useStoreStore.ts uses setTimeout, no real billing
-2. Audio not wired — AudioEngine exists but not connected to UI
-3. InfiniteSignal TODO — Line 54 of InfiniteSignal.ts, procedural generation not implemented
-4. $3.99 IAP delivers nothing — Players who buy Infinite Signal get no additional content
+The last verified local baseline reported 78 Jest suites and 1,386 tests passing, with formatting, lint, typecheck, and circular-dependency checks passing. Re-run checks after source changes.

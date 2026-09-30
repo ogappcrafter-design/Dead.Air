@@ -1,87 +1,57 @@
 # Dead Air Radio — Architecture
 
+_Status reconciled against `master` on 2026-09-29._ Source code is authoritative when this note and implementation differ.
+
 ## Tech Stack
 
 - **Framework:** React Native / Expo SDK 56
-- **Language:** TypeScript 6.0
-- **React:** 19.2
-- **State:** Zustand 5.0 (stores in `store/`)
-- **Audio:** Web Audio API (custom engine in `engine/audio/`)
+- **Language:** TypeScript 6
+- **State:** Zustand 5 (`store/`)
+- **Audio:** PlatformBridge-based synthesis in `engine/audio/`
 - **Testing:** Jest 29
-- **Package Manager:** pnpm
-- **Repo:** `git@github.com:daggerstuff/deadair`, branch `master`
+- **Package manager:** pnpm
 
 ## Directory Structure
 
-```
+```text
 deadair/
-├── app/                    # Screen routes (Expo Router)
-│   ├── radio/index.tsx     # Main radio screen
-│   ├── store/index.tsx     # IAP store screen
-│   ├── tapes/              # Tape detail views
-│   └── settings/           # Settings screen
+├── app/                    # Expo Router screens
 ├── components/             # UI components
-│   ├── radio/RadioBody.tsx # Radio UI (NO audio wiring currently)
-│   ├── store/StoreCard.tsx # Store card (presentational)
-│   └── ...
-├── engine/                 # Core game engine
-│   ├── audio/              # 8 audio engine files
-│   │   ├── AudioEngine.ts       # Main audio controller
-│   │   ├── StaticSynth.ts       # Static noise synthesizer
-│   │   ├── EffectsChain.ts      # Audio effects
-│   │   ├── VoiceProcessor.ts    # Voice processing
-│   │   ├── AmbientLayer.ts      # Ambient drone layer
-│   │   ├── PlatformBridge.ts    # Platform abstraction
-│   │   ├── LatencyProfiler.ts  # Audio latency measurement
-│   │   └── AudioPerformanceConfig.ts
-│   ├── calls/              # Call system
-│   │   ├── CallManager.ts  # Manages incoming calls (has setAudioAccess method)
-│   │   └── CallOfTheDayGenerator.ts  # Seeded daily featured call picker
-│   └── progression/        # Progression system
-│       └── InfiniteSignal.ts  # IAP-gated call pool (TODO at line 54)
-├── store/                  # Zustand stores
-│   ├── useStoreStore.ts    # IAP entitlement state (persisted via AsyncStorage)
-│   ├── useRadioStore.ts    # Radio state (frequency, band, volume)
-│   ├── useGameStore.ts     # Game state (sanity, static, tapes)
-│   ├── useLeaderboardStore.ts  # Anonymous leaderboard (local-only, AsyncStorage)
-│   ├── useCallOfTheDayStore.ts # Call of the day + voting (local-only, AsyncStorage)
-│   └── useFriendCodeStore.ts   # Friend code management (local-only, AsyncStorage)
-├── hooks/                  # React hooks
-│   ├── useNightShift.ts
-│   └── useSanityEffect.ts
-├── data/                   # Game data
-│   ├── calls.js            # 18 hand-crafted sacred calls (DO NOT MODIFY)
-│   └── ...
-├── lib/                    # Utilities
-│   ├── iap.ts             # IAP orchestration — wires expo-in-app-purchases, manages purchase lifecycle
-│   └── constants.ts        # App constants (includes IAP product IDs)
-├── docs/                   # Documentation
-│   └── store/              # Store listing docs
-├── scripts/                # Build scripts
-└── context/                # autobots context files (this directory)
+├── data/                   # Calls, tapes, fragments, and DLC content
+├── engine/
+│   ├── audio/              # Audio engine, tape synthesis, effects, bridges
+│   ├── calls/              # Call types, generation, scheduling, rendering
+│   └── progression/        # Unlocks, tape playback, Infinite Signal pool
+├── hooks/                  # UI lifecycle and playback hooks
+├── lib/                    # IAP service, theme, analytics, utilities
+├── store/                  # Zustand state and persistence
+├── tests/                  # Jest tests
+└── context/                # Project notes; keep aligned with source
 ```
+
+## Current Implementation
+
+- **Procedural calls:** `engine/calls/ProceduralCallGenerator.ts` assembles valid calls from fragment libraries. `engine/progression/InfiniteSignal.ts` includes procedural calls for owners and restricts non-owners to the eligible hand-authored pool. The default generator currently produces six calls per configured band library (48 across the eight base libraries), with seasonal and owned-pack content added separately. This is a finite pool generated for a session, not an unbounded in-memory stream. `data/calls.js` remains the protected hand-authored source.
+- **Purchases:** `lib/iap.ts` connects to `expo-in-app-purchases`; the store screen exposes purchase and restore flows. Entitlements require a transaction receipt and order ID, and launch-time purchase-history revalidation can revoke entitlements. This is client-side store-history/receipt-presence checking; this repository does not implement server-side receipt verification. Store-console product setup and native sandbox testing remain release tasks.
+- **Tape audio:** `app/tapes/index.tsx` wires the tape player UI to `TapeDroneSynth`, using per-band, per-tape, and per-rarity profiles with drone, texture, and vowel-like voice fragments. Playback stops when the player closes or the screen unmounts.
+- **Radio-call audio:** This is a separate unfinished path. `engine/calls/callManagerInstance.ts` currently constructs the manager with `audio: null`; `CallManager.setAudioAccess()` exists but is not wired from the radio screen. The call UI is functional, but calls do not yet use the audio engine for playback.
 
 ## Key Patterns
 
-- **Zustand stores** manage all app state. Each store file exports a hook.
-- **Engine layer** is separate from UI. Audio engine exists but is NOT wired to UI.
-- **CallManager** has `setAudioAccess()` method for late audio binding — intended to be called once AudioEngine is ready.
-- **InfiniteSignal** gates call pool by IAP ownership. Currently returns same 18 calls regardless. TODO at line 54 for procedural generation.
-- **Data files** in `data/calls.js` are sacred — 18 hand-crafted calls must never be modified.
-- **IAP** is wired via `lib/iap.ts` using `expo-in-app-purchases`. `useStoreStore.ts` holds entitlement state (persisted). Purchase lifecycle: `initIAP()` → `setPurchaseListener` → `purchaseProduct()` / `restorePurchases()`. Receipts are validated before granting entitlement.
-
-## Remaining Gaps (DAR Phase 1 Targets)
-
-1. **Audio not wired** — AudioEngine exists but no hook/component connects it to RadioBody
-2. **InfiniteSignal procedural generation** — `getCallPool()` returns same 18 calls; TODO at line 54 for procedural expansion
-3. **No tape audio** — Tape playback UI exists but no audio synthesis or playback
-4. **~~Entitlement setter exposure~~ (RESOLVED)** — `setInfiniteSignal`/`setBase` in `useStoreStore` now validate purchase records before granting entitlement (`purchases.some(p => p.productId === ... && p.transactionReceipt)`). `lib/iap.ts` `revalidateEntitlements()` re-validates receipts on launch. See `context/security-auth.md`.
+- Engine logic is kept separate from React UI and receives store/audio access through explicit interfaces.
+- Zustand stores own app state; persistent state uses the configured storage adapters.
+- Radio-call audio and tape-audio playback have different integration paths; do not infer one is wired because the other is.
+- `data/calls.js` contains the protected hand-authored calls. Add generated content through fragment libraries instead.
 
 ## Build & Test
 
 ```bash
-pnpm install          # Install dependencies
-pnpm test             # Run Jest tests
-npx tsc --noEmit      # Type check (must be clean)
-npx expo start        # Start dev server
+pnpm install
+pnpm run format:check
+pnpm run lint
+pnpm run typecheck
+pnpm run deps:circular
+pnpm test --runInBand --forceExit
 ```
+
+The force-exit flag avoids Jest lingering after tests because of an open async handle; it does not suppress test failures.
