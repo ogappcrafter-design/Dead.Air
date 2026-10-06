@@ -4,6 +4,14 @@ This file is the project's committed home for project-intrinsic agent knowledge:
 
 - Add durable project-specific notes here as they are discovered through real work.
 
+## Game-dev scaffold
+
+The game-development workflow scaffold lives at `~/everything-game-dev-code` (installed here via the `godot-production` profile; state in `.game/` is local-only). Use it for planning and review work; do not copy or modify the scaffold from this repo.
+
+- **Rules resolution order:** read the scaffold's `rules/common/` first, then exactly one engine layer — `rules/godot/` for this repo (never mix in Unity/Unreal/web rules).
+- **Workflow entry points:** the scaffold's slash commands (e.g. `/gdd`, `/plan`, `/godot-review`, `/godot-build-fix`, `/godot-scene-audit`) resolve to files under the scaffold's `commands/` — read the named file and follow its declared agents/skills/output.
+- **Engine isolation:** Godot work stays in `godot/` against the GDD (`docs/plans/redesign-gdd.md`); the Expo/React Native app in `app/`, `components/`, `engine/`, `store/` follows this repo's own conventions above, not the scaffold's web rules.
+
 ## Autoloads
 
 Autoloads are registered in `godot/project.godot` under `[autoload]`. Order matters — later autoloads can reference earlier ones at runtime (not at LSP/edit time). LSP errors on autoload identifiers (CallManager, CallData, MoralChoiceTracker, etc.) are expected and valid at runtime.

@@ -60,6 +60,7 @@ tsbuildinfo/
 .omc/
 .lavish/
 .autobots-state/
+.game-dev/
 
 # Project-local config (user-specific)
 autobots-model-registry.json
