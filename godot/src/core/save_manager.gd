@@ -50,6 +50,10 @@ func save_game(tape_id: String, data: SaveData) -> bool:
 	data.tape_id = tape_id
 	data.stamp_timestamp()
 
+	# DEA-145: Sync live CRT degradation level into the save data
+	if CRTDegradation:
+		data.crt_degradation = CRTDegradation.get_permanent_degradation()
+
 	# Build save dict once, compute checksum on un-indented stringification
 	# so it matches the recompute on load (which also uses no indent).
 	var save_dict := data.to_dict()
@@ -121,6 +125,9 @@ func load_game(tape_id: String) -> SaveData:
 	# DEA-98: Sync MoralChoiceTracker from loaded save data
 	if MoralChoiceTracker:
 		MoralChoiceTracker.load_from(data_only)
+	# DEA-145: Restore CRT degradation level from loaded save data
+	if CRTDegradation:
+		CRTDegradation.set_degradation(save_data.crt_degradation)
 	load_completed.emit(save_data)
 	return save_data
 

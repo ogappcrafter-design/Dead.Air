@@ -47,13 +47,14 @@ func test_shader_loads() -> bool:
 
 # --- Test: Shader has all required uniforms ---
 func test_shader_has_required_uniforms() -> bool:
-	var shader: Shader = load(SHADER_PATH)
-	if shader == null:
+	# Headless-safe source parsing: the Shader class has no parameter-list
+	# accessor, and RenderingServer queries deadlock under `--script`.
+	# (Same pattern as test_crt_degradation.gd.)
+	var f := FileAccess.open(SHADER_PATH, FileAccess.READ)
+	if f == null:
 		return false
-	var params: Array = shader.get_shader_parameter_list()
-	var param_names: Array = []
-	for p in params:
-		param_names.append(p["name"])
+	var source := f.get_as_text()
+	f.close()
 	var required: Array = [
 		"signal_strength",
 		"dread_level",
@@ -80,11 +81,19 @@ func test_shader_has_required_uniforms() -> bool:
 		"alert_color",
 		"alert_blend",
 		"inversion_amount",
+		"rgb_swap_amount",
+		"ca_radial_amount",
+		"signal_scanline_drift",
 		"time_sec",
 		"screen_resolution",
 	]
 	for param in required:
-		if not param in param_names:
+		# Uniform declarations in the merged shader are float / vec3 / vec2.
+		if not (
+			source.contains("uniform float %s" % param)
+			or source.contains("uniform vec3 %s" % param)
+			or source.contains("uniform vec2 %s" % param)
+		):
 			return false
 	return true
 
@@ -114,14 +123,20 @@ func test_controller_color_constants() -> bool:
 	return is_valid
 
 
-# --- Test: Threshold constants match spec ---
+# --- Test: Threshold constants match spec (DEA-145) ---
 func test_controller_thresholds() -> bool:
 	var instance = CRTPostProcess.new()
 	var is_valid = (
-		instance.DREAD_DESAT_THRESHOLD == 50.0
-		and instance.DREAD_SEVERE_THRESHOLD == 75.0
-		and instance.COMPOSITION_GLITCH_THRESHOLD == 40.0
-		and instance.COMPOSITION_SEVERE_THRESHOLD == 20.0
+		instance.COMPOSURE_FLICKER == 50.0
+		and instance.COMPOSURE_DRIFT == 30.0
+		and instance.COMPOSURE_SEVERE == 20.0
+		and instance.COMPOSURE_INVERSION == 10.0
+		and instance.SIGNAL_NOISE == 50.0
+		and instance.SIGNAL_HEAVY == 30.0
+		and instance.SIGNAL_NEAR_TOTAL == 10.0
+		and instance.DREAD_VIGNETTE == 40.0
+		and instance.DREAD_CA == 60.0
+		and instance.DREAD_BREAK == 80.0
 	)
 	instance.free()
 	return is_valid
@@ -152,16 +167,23 @@ func test_curvature_scales_with_composure() -> bool:
 	return true
 
 
-# --- Test: Noise density = (100 - signal) / 100 ---
+# --- Test: Noise density tiers with signal (DEA-145) ---
 func test_noise_density_scales_with_signal() -> bool:
+	# Signal >= 50: quiet baseline
 	var p_full = CRTPostProcess.compute_params(0.0, 100.0, 100.0, false)
-	if abs(p_full["noise_density"] - 0.0) > 0.001:
+	if abs(p_full["noise_density"] - 0.05) > 0.001:
 		return false
-	var p_none = CRTPostProcess.compute_params(0.0, 100.0, 0.0, false)
-	if abs(p_none["noise_density"] - 1.0) > 0.001:
+	# Signal < 50: increased noise
+	var p_low = CRTPostProcess.compute_params(0.0, 100.0, 40.0, false)
+	if p_low["noise_density"] <= 0.05:
 		return false
-	var p_default = CRTPostProcess.compute_params(0.0, 100.0, 80.0, false)
-	if abs(p_default["noise_density"] - 0.2) > 0.001:
+	# Signal < 30: heavy static
+	var p_heavy = CRTPostProcess.compute_params(0.0, 100.0, 20.0, false)
+	if p_heavy["noise_density"] <= 0.3:
+		return false
+	# Signal < 10: near-total static
+	var p_near_total = CRTPostProcess.compute_params(0.0, 100.0, 5.0, false)
+	if p_near_total["noise_density"] <= 0.6:
 		return false
 	return true
 
@@ -180,12 +202,12 @@ func test_desaturation_at_dread_thresholds() -> bool:
 	return true
 
 
-# --- Test: Glitch activates at composure < 40 ---
+# --- Test: Glitch activates at composure < 20 (DEA-145 severe threshold) ---
 func test_glitch_activates_at_low_composure() -> bool:
 	var p_high = CRTPostProcess.compute_params(0.0, 50.0, 80.0, false)
 	if abs(p_high["glitch_intensity"] - 0.0) > 0.001:
 		return false
-	var p_mid = CRTPostProcess.compute_params(0.0, 20.0, 80.0, false)
+	var p_mid = CRTPostProcess.compute_params(0.0, 10.0, 80.0, false)
 	if abs(p_mid["glitch_intensity"] - 0.5) > 0.001:
 		return false
 	var p_low = CRTPostProcess.compute_params(0.0, 0.0, 80.0, false)
@@ -205,26 +227,26 @@ func test_bloom_intensity_scales_with_dread() -> bool:
 	return true
 
 
-# --- Test: Vignette intensity scales 0.3 → 0.6 at dread > 75 ---
+# --- Test: Vignette intensifies at dread > 40, breaks apart > 80 (DEA-145) ---
 func test_vignette_scales_with_severe_dread() -> bool:
-	var p_low = CRTPostProcess.compute_params(50.0, 100.0, 80.0, false)
+	var p_low = CRTPostProcess.compute_params(30.0, 100.0, 80.0, false)
 	if abs(p_low["vignette_intensity"] - 0.3) > 0.001:
 		return false
-	var p_high = CRTPostProcess.compute_params(100.0, 100.0, 80.0, false)
-	if abs(p_high["vignette_intensity"] - 0.6) > 0.001:
+	var p_mid = CRTPostProcess.compute_params(50.0, 100.0, 80.0, false)
+	if p_mid["vignette_intensity"] <= 0.3:
 		return false
-	var p_thresh = CRTPostProcess.compute_params(75.0, 100.0, 80.0, false)
-	if abs(p_thresh["vignette_intensity"] - 0.3) > 0.001:
+	var p_high = CRTPostProcess.compute_params(90.0, 100.0, 80.0, false)
+	if p_high["vignette_intensity"] <= 0.5:
 		return false
 	return true
 
 
-# --- Test: Color inversion at composure < 20 ---
+# --- Test: Color inversion at composure < 10 (DEA-145) ---
 func test_color_inversion_at_low_composure() -> bool:
 	var p_high = CRTPostProcess.compute_params(0.0, 30.0, 80.0, false)
 	if abs(p_high["inversion_amount"] - 0.0) > 0.001:
 		return false
-	var p_mid = CRTPostProcess.compute_params(0.0, 10.0, 80.0, false)
+	var p_mid = CRTPostProcess.compute_params(0.0, 5.0, 80.0, false)
 	if abs(p_mid["inversion_amount"] - 0.5) > 0.001:
 		return false
 	var p_low = CRTPostProcess.compute_params(0.0, 0.0, 80.0, false)
@@ -266,10 +288,10 @@ func test_roll_activates_at_dread_threshold() -> bool:
 	return true
 
 
-# --- Test: Alert blend at severe dread ---
+# --- Test: Alert blend at high dread (activates > 60, DEA-145) ---
 func test_alert_blend_at_severe_dread() -> bool:
-	var p_75 = CRTPostProcess.compute_params(75.0, 100.0, 80.0, false)
-	if abs(p_75["alert_blend"] - 0.0) > 0.001:
+	var p_below = CRTPostProcess.compute_params(55.0, 100.0, 80.0, false)
+	if abs(p_below["alert_blend"] - 0.0) > 0.001:
 		return false
 	var p_100 = CRTPostProcess.compute_params(100.0, 100.0, 80.0, false)
 	if abs(p_100["alert_blend"] - 1.0) > 0.001:

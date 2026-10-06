@@ -49,6 +49,8 @@ RecordingManager="*res://src/core/recording_manager.gd"
 BandController="*res://src/core/band_controller.gd"
 ; DEA-141: Accessibility audio options (singleton) — volume, subtitles, visual cues, colorblind patterns
 AccessibilityManager="*res://src/core/accessibility_manager.gd"
+; DEA-145: Per-shift CRT degradation tracking + save/load (singleton)
+CRTDegradation="*res://src/visual/crt_degradation.gd"
 
 [display]
 

@@ -181,6 +181,9 @@ func start_shift(shift_number: int = 1) -> void:
 	# Apply station degradation if available
 	_apply_station_degradation(shift_number)
 
+	# Apply per-shift permanent CRT degradation (DEA-145)
+	_apply_crt_degradation(shift_number)
+
 	# Toggle save availability (forward-compatible: call if method exists)
 	if SaveManager and SaveManager.has_method("set_save_available"):
 		SaveManager.set_save_available(_save_available)
@@ -295,6 +298,15 @@ func _apply_station_degradation(shift_number: int) -> void:
 	# StationState is an autoload; check for apply_degradation method
 	if StationState and StationState.has_method("apply_degradation"):
 		StationState.apply_degradation(shift_number)
+
+
+# ─── Internal: CRT Degradation (DEA-145) ─────────────────────────────────────
+
+
+func _apply_crt_degradation(shift_number: int) -> void:
+	# CRTDegradation is an autoload; check for apply_shift_degradation method
+	if CRTDegradation and CRTDegradation.has_method("apply_shift_degradation"):
+		CRTDegradation.apply_shift_degradation(shift_number)
 
 
 # ─── Internal: Dread Meter Visibility ─────────────────────────────────────────

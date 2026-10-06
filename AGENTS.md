@@ -36,6 +36,14 @@ CRT shader parameter application: `VisualAccessibilityController` (`godot/src/vi
 
 High contrast + text size: `HighContrastManager` (`godot/src/ui/high_contrast_manager.gd`, child of AccessibilityManager) walks the scene tree applying borders to Panels/ProgressBars and outline+bg to Labels, and scales font sizes by the text size multiplier.
 
+## CRT Degradation System (DEA-145)
+
+`CRTDegradation` autoload (`godot/src/visual/crt_degradation.gd`) tracks per-shift permanent CRT degradation: shift levels `[0.0, 0.15, 0.35, 0.60, 0.85]` (pristine → barely holding), capped at 0.85, persisted via the `SaveData.crt_degradation` field (SaveManager syncs it on save/load).
+
+`CRTPostProcess` (`godot/src/visual/crt_postprocess.gd`) owns the controller role (the old `CRTController` autoload was removed in the companion-project sync). `compute_params(dread, composure, signal, in_safe_room, degradation)` applies DEA-145 thresholds (composure <50 flicker / <30 scanline drift / <20 severe glitch / <10 inversion+RGB swap; signal <50 noise / <30 heavy static / <10 near-total; dread >40 vignette / >60 CA / >80 image breaks) with degradation as a baseline amplifier. Hide mode: `set_crt_visible(false)` hides the CRT layer (meters on other canvas layers stay); full room-darkening lands with the hide mechanic (DEA-119). Integration: `ShiftController.start_shift()` → `_apply_crt_degradation()`; `CRTPostProcess` reads `/root/CRTDegradation` each frame.
+
+The shader's `ca_radial_amount` / `signal_scanline_drift` uniforms (DEA-142) were restored by DEA-145 — they were removed in the companion sync only because their driver was gone; DEA-145's `compute_params` drives them again.
+
 ## Maintaining this file
 
 Keep this file for knowledge useful to almost every future agent session in this project.

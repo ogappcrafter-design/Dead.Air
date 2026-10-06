@@ -45,6 +45,7 @@ extends Resource
 
 # --- Station Degradation ---
 @export var station_degradation: int = 0
+@export var crt_degradation: float = 0.0  # Per-shift CRT degradation (DEA-145)
 
 # --- Ending Flags ---
 @export var ending_flags: Dictionary = {}
@@ -89,6 +90,7 @@ static func from_dict(data: Dictionary) -> SaveData:
 	sd.tuning_time = _to_tuning_time_dict(data.get("tuning_time", {}))
 	sd.call_history = data.get("call_history", [])
 	sd.station_degradation = data.get("station_degradation", 0)
+	sd.crt_degradation = data.get("crt_degradation", 0.0)
 	sd.ending_flags = data.get("ending_flags", {})
 	sd.entity_states = data.get("entity_states", {})
 	sd.playtime_seconds = data.get("playtime_seconds", 0.0)
@@ -126,6 +128,7 @@ func to_dict() -> Dictionary:
 		"tuning_time": tuning_time,
 		"call_history": call_history,
 		"station_degradation": station_degradation,
+		"crt_degradation": crt_degradation,
 		"ending_flags": ending_flags,
 		"entity_states": entity_states,
 		"playtime_seconds": playtime_seconds,
