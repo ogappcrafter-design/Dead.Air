@@ -88,7 +88,7 @@ static func from_dict(data: Dictionary) -> SaveData:
 	sd.tapes_consumed = _to_string_array(data.get("tapes_consumed", []))
 	sd.bands_unlocked = _to_string_array(data.get("bands_unlocked", []))
 	sd.tuning_time = _to_tuning_time_dict(data.get("tuning_time", {}))
-	sd.call_history = data.get("call_history", [])
+	sd.call_history = _to_call_history(data.get("call_history", []))
 	sd.station_degradation = data.get("station_degradation", 0)
 	sd.crt_degradation = data.get("crt_degradation", 0.0)
 	sd.ending_flags = data.get("ending_flags", {})
@@ -165,7 +165,7 @@ func set_position(pos: Vector3) -> void:
 
 ## Stamp the save timestamp.
 func stamp_timestamp() -> void:
-	save_timestamp = Time.get_unix_time_string_from_system()
+	save_timestamp = Time.get_datetime_string_from_system()
 
 
 static func _to_string_array(arr: Array) -> Array[String]:
@@ -181,4 +181,15 @@ static func _to_tuning_time_dict(d: Dictionary) -> Dictionary:
 	for key in d.keys():
 		var ikey: int = int(key)
 		result[ikey] = float(d[key])
+	return result
+
+
+## Convert an untyped Array (e.g. from parsed JSON) to Array[Dictionary] for
+## call_history. Direct assignment of an untyped Array to the typed property
+## fails at runtime.
+static func _to_call_history(arr: Array) -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	for item in arr:
+		if item is Dictionary:
+			result.append(item)
 	return result

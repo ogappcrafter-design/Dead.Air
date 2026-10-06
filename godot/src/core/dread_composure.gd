@@ -92,6 +92,10 @@ var _break_timer: float = 0.0
 var _rng_seed: int = 0
 var _rng: RandomNumberGenerator
 
+# Visibility proxy — DreadComposure extends Node (not CanvasItem),
+# so we track visibility ourselves for shift_controller to query.
+var _visible: bool = true
+
 
 func _ready() -> void:
 	_rng = RandomNumberGenerator.new()
@@ -215,6 +219,16 @@ func _trigger_auto_tune() -> void:
 	auto_tune_triggered.emit()
 	if radio_tuner != null:
 		radio_tuner.set_band(REDACTED_BAND_ID)
+
+
+## Set visibility flag (proxy — Node has no set_visible like CanvasItem).
+func set_visible(v: bool) -> void:
+	_visible = v
+
+
+## Get visibility flag.
+func is_visible() -> bool:
+	return _visible
 
 
 ## Reset composure to starting value (for new game / checkpoint).

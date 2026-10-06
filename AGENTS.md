@@ -36,6 +36,10 @@ CRT shader parameter application: `VisualAccessibilityController` (`godot/src/vi
 
 High contrast + text size: `HighContrastManager` (`godot/src/ui/high_contrast_manager.gd`, child of AccessibilityManager) walks the scene tree applying borders to Panels/ProgressBars and outline+bg to Labels, and scales font sizes by the text size multiplier.
 
+## Shift 1 Tutorial (DEA-111)
+
+`BandController` enforces band locks (`unlock_band` / `lock_all_bands` / `is_band_unlocked`; locked bands are rejected in `set_active_band` / `on_band_changed` / `on_frequency_changed`). `ShiftController.start_shift()` resets locks via `lock_all_bands()`, then `_unlock_bands_for_shift()` unlocks the shift's bands. `TutorialManager` (a child of `GameDirector`, not an autoload) shows 3 dismissible `TutorialOverlay` steps on shifts with `tutorial=true` in `SHIFT_DATA`: TUNING at shift start, SIGNAL_METER on first call, COMPOSURE on first composure change; each step must be dismissed before the next shows. `ShiftSummary.set_save_available()` hides the save UI when `save_unlocked=false` (Shift 1: dread meter hidden, save disabled).
+
 ## CRT Degradation System (DEA-145)
 
 `CRTDegradation` autoload (`godot/src/visual/crt_degradation.gd`) tracks per-shift permanent CRT degradation: shift levels `[0.0, 0.15, 0.35, 0.60, 0.85]` (pristine → barely holding), capped at 0.85, persisted via the `SaveData.crt_degradation` field (SaveManager syncs it on save/load).

@@ -60,7 +60,14 @@ func save_game(tape_id: String, data: SaveData) -> bool:
 	# DEA-98: Sync live MoralChoiceTracker state into the save dict
 	if MoralChoiceTracker:
 		MoralChoiceTracker.save_to(save_dict)
-	var checksum := _compute_checksum(JSON.stringify(save_dict))
+	# Normalize through a JSON round trip before hashing: parsed JSON turns
+	# ints into floats and settles key ordering, so hashing the raw in-memory
+	# dict would never match the recompute on load.
+	var normalized = JSON.parse_string(JSON.stringify(save_dict))
+	if typeof(normalized) != TYPE_DICTIONARY:
+		save_failed.emit(tape_id, "save dict failed to serialize")
+		return false
+	var checksum := _compute_checksum(JSON.stringify(normalized))
 	save_dict[CHECKSUM_FIELD] = checksum
 
 	var full_json := JSON.stringify(save_dict, "\t")

@@ -34,10 +34,17 @@ var _shift_stub: Node
 var _degradation_stub: Node
 var _interaction_raycast: Node
 var _camera_manager: Node
+# DEA-111: ShiftController autoload (shift data lookup) + TutorialManager
+var _shift_controller: Node
+var _tutorial_manager: Node
 
 
 func _ready() -> void:
 	_resolve_references()
+	# Create TutorialManager as child of GameDirector
+	_tutorial_manager = TutorialManager.new()
+	_tutorial_manager.name = "TutorialManager"
+	add_child(_tutorial_manager)
 	_wire_signals()
 	_wiring_complete = true
 	systems_ready.emit()
@@ -71,6 +78,8 @@ func _resolve_references() -> void:
 			_interaction_raycast = player.get_node_or_null("InteractionRaycast")
 	# CameraManager autoload
 	_camera_manager = get_node_or_null("/root/CameraManager")
+	# DEA-111: ShiftController autoload (authoritative shift data)
+	_shift_controller = get_node_or_null("/root/ShiftController")
 
 
 func _wire_signals() -> void:
@@ -96,6 +105,8 @@ func _wire_signals() -> void:
 		_dread_composure.dread_changed.connect(_on_dread_changed)
 	if _dread_composure and _dread_composure.has_signal("composure_break"):
 		_dread_composure.composure_break.connect(_on_composure_break)
+	if _dread_composure and _dread_composure.has_signal("composure_changed"):
+		_dread_composure.composure_changed.connect(_on_composure_changed)
 	# 5. InteractionRaycast.target_changed → HUD prompt
 	if _interaction_raycast and _interaction_raycast.has_signal("target_changed"):
 		_interaction_raycast.target_changed.connect(_on_interaction_target_changed)
@@ -119,15 +130,6 @@ func _wire_signals() -> void:
 			_camera_manager.camera_transition_started.connect(_on_camera_transition_started)
 		if _camera_manager.has_signal("camera_transition_completed"):
 			_camera_manager.camera_transition_completed.connect(_on_camera_transition_completed)
-
-
-func start_night_shift(shift_num: int = 1) -> void:
-	_shift_number = shift_num
-	if _call_manager and _call_manager.has_method("start_shift"):
-		_call_manager.start_shift(shift_num)
-	elif _shift_stub and _shift_stub.has_method("start_shift"):
-		_shift_stub.start_shift(shift_num)
-	print("[GameDirector] Night shift %d started." % shift_num)
 
 
 func end_night_shift(success: bool = true) -> void:
@@ -166,6 +168,9 @@ func _on_call_started(call_data: Dictionary) -> void:
 	# Update shift progress
 	if _shift_stub and _shift_stub.has_method("update_progress"):
 		_shift_stub.update_progress(0.1)
+	# Notify TutorialManager (DEA-111)
+	if _tutorial_manager and _tutorial_manager.has_method("on_call_started"):
+		_tutorial_manager.on_call_started(call_data)
 
 
 func _on_call_ended(_call_data: Dictionary, outcome: String) -> void:
@@ -194,6 +199,13 @@ func _on_shift_started(shift_num: int) -> void:
 	# Initialize signal and dread for the shift
 	if _signal_strength and _signal_strength.has_method("start_shift"):
 		_signal_strength.start_shift()
+	# Notify TutorialManager if tutorial is enabled for this shift (DEA-111)
+	if _tutorial_manager and _tutorial_manager.has_method("on_shift_started"):
+		var tutorial_enabled := false
+		if _shift_controller and _shift_controller.has_method("get_shift_data"):
+			var data: Dictionary = _shift_controller.get_shift_data(shift_num)
+			tutorial_enabled = data.get("tutorial", false)
+		_tutorial_manager.on_shift_started(shift_num, tutorial_enabled)
 
 
 func _on_shift_ended(_shift_num: int) -> void:
@@ -212,6 +224,12 @@ func _on_dread_changed(dread: float) -> void:
 	# Feed degradation based on dread
 	if _degradation_stub and _degradation_stub.has_method("add_degradation"):
 		_degradation_stub.add_degradation(dread * 0.001)
+
+
+func _on_composure_changed(value: float) -> void:
+	# Forward to TutorialManager
+	if _tutorial_manager and _tutorial_manager.has_method("on_composure_changed"):
+		_tutorial_manager.on_composure_changed(value)
 
 
 func _on_composure_break() -> void:

@@ -175,7 +175,9 @@ func start_shift(shift_number: int = 1) -> void:
 	if PhaseManager:
 		PhaseManager.set_phase(PhaseEnums.Phase.PHASE_1_STATION)
 
-	# Unlock bands for this shift
+	# Reset band locks then unlock bands for this shift
+	if BandController and BandController.has_method("lock_all_bands"):
+		BandController.lock_all_bands()
 	_unlock_bands_for_shift(shift_number)
 
 	# Apply station degradation if available
@@ -285,6 +287,11 @@ func _unlock_bands_for_shift(shift_number: int) -> void:
 		if not _unlocked_bands.has(band_str):
 			_unlocked_bands.append(band_str)
 			band_unlocked.emit(band_str)
+		# Also unlock in BandController so radio tuner enforces restriction
+		if BandController and BandController.band_config:
+			var band_data = BandController.band_config.get_band_by_name(band_str)
+			if band_data and BandController.has_method("unlock_band"):
+				BandController.unlock_band(band_data.id)
 
 	# Also notify BandUnlockManager if available
 	if _band_unlock_manager:
@@ -368,6 +375,8 @@ func _reset_for_testing() -> void:
 	_call_count = 0
 	if CallManager:
 		CallManager._reset_for_testing()
+	if BandController and BandController.has_method("lock_all_bands"):
+		BandController.lock_all_bands()
 
 
 func _force_enter_calls_active() -> void:

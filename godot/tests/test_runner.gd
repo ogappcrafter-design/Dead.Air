@@ -49,6 +49,7 @@ func _run_tests() -> void:
 		["AudioBusManager", "res://tests/test_audio_bus_manager.gd"],
 		["SuitEntity", "res://tests/test_suits.gd"],
 		["VisualAccessibility", "res://tests/test_visual_accessibility.gd"],
+		["Shift1Tutorial", "res://tests/test_shift1_tutorial.gd"],
 		["CRTDegradation", "res://tests/test_crt_degradation.gd"],
 	]
 

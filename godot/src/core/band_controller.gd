@@ -3,7 +3,6 @@
 ## Centralizes band system logic previously scattered across RadioTuner and SignalStrength.
 ## Loaded as autoload after ShiftController in project.godot.
 extends Node
-class_name BandController
 
 signal band_changed(band_id: int)
 signal pirate_drift_changed(offset: float)
@@ -19,6 +18,7 @@ var band_config: BandConfig
 var active_band_id: int = 0
 var _pirate_drift_offset: float = 0.0
 var _pirate_drift_timer: Timer
+var _unlocked_bands: Array[int] = [0] ## Bands the player can tune to. LIVING (0) always unlocked.
 
 
 func _ready() -> void:
@@ -48,10 +48,34 @@ func get_active_band() -> BandData:
 	return band_config.get_band(active_band_id)
 
 
-## Sets the active band and emits band_changed.
+## Unlocks a band so the player can tune to it.
+func unlock_band(band_id: int) -> void:
+	if band_id < 0 or band_id >= band_config.get_band_count():
+		push_warning("BandController: Cannot unlock invalid band_id %d" % band_id)
+		return
+	if band_id not in _unlocked_bands:
+		_unlocked_bands.append(band_id)
+
+
+## Returns true if the band is currently unlocked.
+func is_band_unlocked(band_id: int) -> bool:
+	return band_id in _unlocked_bands
+
+
+## Resets unlocked bands to only LIVING (0). Used by tests and shift resets.
+func lock_all_bands() -> void:
+	_unlocked_bands = [0]
+	active_band_id = 0
+	band_changed.emit(0)
+
+
+## Sets the active band and emits band_changed. Rejects locked bands.
 func set_active_band(band_id: int) -> void:
 	if band_id < 0 or band_id >= band_config.get_band_count():
 		push_warning("BandController: Invalid band_id %d" % band_id)
+		return
+	if not is_band_unlocked(band_id):
+		push_warning("BandController: Band %d is locked" % band_id)
 		return
 	if band_id == active_band_id:
 		return
@@ -64,6 +88,8 @@ func on_band_changed(band_id: int) -> void:
 	if band_config == null:
 		return
 	if band_id < 0 or band_id >= band_config.get_band_count():
+		return
+	if not is_band_unlocked(band_id):
 		return
 	if band_id != active_band_id:
 		active_band_id = band_id
@@ -79,7 +105,7 @@ func on_frequency_changed(freq: float, known_band_id: int = -1) -> void:
 	var band_id: int = band_config.find_band_by_frequency(freq)
 	if known_band_id != -1 and (band_id == -1 or band_id != known_band_id):
 		band_id = known_band_id
-	if band_id != -1 and band_id != active_band_id:
+	if band_id != -1 and band_id != active_band_id and is_band_unlocked(band_id):
 		active_band_id = band_id
 		band_changed.emit(band_id)
 

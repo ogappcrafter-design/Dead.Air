@@ -14,6 +14,7 @@ var _save_yes_button: Button
 var _save_no_button: Button
 var _continue_button: Button
 var _save_container: HBoxContainer
+var _save_prompt: Label
 
 var _shift_number: int = 1
 var _calls_completed: int = 0
@@ -33,6 +34,13 @@ func set_summary_data(shift: int, calls: int, tapes: int, bands: int) -> void:
 	_tapes_collected = tapes
 	_bands_unlocked = bands
 	_update_display()
+
+
+func set_save_available(available: bool) -> void:
+	if _save_prompt:
+		_save_prompt.visible = available
+	if _save_container:
+		_save_container.visible = available
 
 
 func _build_ui() -> void:
@@ -72,16 +80,16 @@ func _build_ui() -> void:
 	root.add_child(spacer2)
 
 	# Save prompt
-	var save_prompt := Label.new()
-	save_prompt.text = "Save Game?"
-	save_prompt.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	CRTText.style_amber(save_prompt, 24)
-	root.add_child(save_prompt)
+	_save_prompt = Label.new()
+	_save_prompt.text = "Save Game?"
+	_save_prompt.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	CRTText.style_amber(_save_prompt, 24)
+	root.add_child(_save_prompt)
 
 	# Save buttons
 	_save_container = HBoxContainer.new()
 	_save_container.alignment = BoxContainer.ALIGNMENT_CENTER
-	_save_container.spacing = 20
+	_save_container.add_theme_constant_override("separation", 20)
 	root.add_child(_save_container)
 
 	_save_yes_button = Button.new()
@@ -130,7 +138,7 @@ func _update_display() -> void:
 func _add_stat_line(label_text: String, value_text: String) -> void:
 	var line := HBoxContainer.new()
 	line.alignment = BoxContainer.ALIGNMENT_CENTER
-	line.spacing = 20
+	line.add_theme_constant_override("separation", 20)
 
 	var label := Label.new()
 	label.text = label_text + ":"
