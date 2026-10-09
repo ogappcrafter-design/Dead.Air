@@ -48,6 +48,9 @@ pnpm-debug.*
 tsbuildinfo/
 *.tsbuildinfo
 
+# Godot-generated UID sidecars (auto-created by Godot 4.4+, regenerable)
+*.gd.uid
+
 # Cache
 .cache/
 .eslintcache
