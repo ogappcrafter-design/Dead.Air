@@ -14,6 +14,7 @@ var _new_game_button: Button
 var _continue_button: Button
 var _settings_button: Button
 var _background: ColorRect
+var _completion_label: Label
 
 
 func _ready() -> void:
@@ -86,6 +87,15 @@ func _build_ui() -> void:
 	_settings_button.pressed.connect(_on_settings)
 	button_container.add_child(_settings_button)
 
+	# Completion line: shown when the game has been finished at least once.
+	# The marker records which of the four endings was reached.
+	_completion_label = Label.new()
+	_completion_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	CRTText.style_amber(_completion_label, 14)
+	_completion_label.modulate.a = 0.55
+	button_container.add_child(_completion_label)
+	_update_completion_label()
+
 	# Disable Continue if no saves
 	if SaveManager.get_save_count() == 0:
 		_continue_button.disabled = true
@@ -98,6 +108,16 @@ func _style_button(btn: Button) -> void:
 	btn.add_theme_color_override("font_pressed_color", CRTText.BLOOD_RED)
 	btn.add_theme_color_override("font_disabled_color", Color(0.2, 0.2, 0.2))
 	btn.add_theme_font_size_override("font_size", 20)
+
+
+## Show which ending was reached, if any. Empty (and hidden) otherwise.
+func _update_completion_label() -> void:
+	var marker := EndingSequences.get_completion_marker()
+	if marker.is_empty():
+		_completion_label.visible = false
+		return
+	_completion_label.text = "COMPLETED — " + marker.replace("_", " ")
+	_completion_label.visible = true
 
 
 func _on_new_game() -> void:

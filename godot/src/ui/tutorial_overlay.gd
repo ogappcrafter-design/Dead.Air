@@ -21,6 +21,7 @@ const PANEL_BORDER := Color(0.3, 0.6, 0.3, 0.6)
 const OVERLAY_Z_INDEX := 100
 
 func _ready() -> void:
+	set_anchors_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	z_index = OVERLAY_Z_INDEX
 	visible = false
@@ -93,8 +94,11 @@ func show_message(title: String, body: String) -> void:
 	_active = true
 
 func hide_overlay() -> void:
+	if not _active and not visible:
+		return
 	visible = false
 	_active = false
+	dismissed.emit()
 
 func is_active() -> bool:
 	return _active
@@ -109,5 +113,4 @@ func _input(event: InputEvent) -> void:
 
 func _dismiss() -> void:
 	hide_overlay()
-	dismissed.emit()
 	get_viewport().set_input_as_handled()

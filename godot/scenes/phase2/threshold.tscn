@@ -1,0 +1,163 @@
+[gd_scene load_steps=17 format=3 uid="uid://bp2threshold01"]
+
+[ext_resource type="Script" uid="uid://bp2thresholdscr" path="res://src/levels/threshold_segment.gd" id="1_segment"]
+[ext_resource type="Script" uid="uid://xilho0al60wt" path="res://src/visual/camera_angle.gd" id="3_angle"]
+[ext_resource type="Script" uid="uid://dk6rm7a0v0721" path="res://src/visual/camera_zone.gd" id="4_zone"]
+[ext_resource type="Script" uid="uid://be6swwtavc18m" path="res://src/visual/camera_rig.gd" id="5_rig"]
+[ext_resource type="Script" uid="uid://byfya25euxxwe" path="res://src/entities/player.gd" id="6_player"]
+[ext_resource type="Script" uid="uid://bnhl1nrqqywda" path="res://src/core/radio_tuner.gd" id="7_tuner"]
+[ext_resource type="Script" uid="uid://b2ojlbnvs1xnr" path="res://src/core/signal_strength.gd" id="8_signal"]
+[ext_resource type="Resource" uid="uid://11e914f432000" path="res://src/data/band_config.tres" id="9_band"]
+[ext_resource type="Script" uid="uid://cn3ic8sfogvs3" path="res://src/audio/radio_static.gd" id="10_static"]
+
+[sub_resource type="StandardMaterial3D" id="floor_mat"]
+albedo_color = Color(0.22, 0.16, 0.1, 1)
+
+[sub_resource type="StandardMaterial3D" id="wood_panel_mat"]
+albedo_color = Color(0.35, 0.24, 0.14, 1)
+
+[sub_resource type="StandardMaterial3D" id="brass_mat"]
+albedo_color = Color(0.72, 0.58, 0.28, 1)
+metallic = 0.8
+roughness = 0.3
+
+[sub_resource type="StandardMaterial3D" id="door_mat"]
+albedo_color = Color(0.25, 0.17, 0.1, 1)
+
+[sub_resource type="BoxShape3D" id="zone_a_shape"]
+size = Vector3(10, 3, 3)
+
+[sub_resource type="BoxShape3D" id="exit_door_shape"]
+size = Vector3(0.5, 2.2, 1.4)
+
+[sub_resource type="Resource" id="angle_a"]
+script = ExtResource("3_angle")
+position = Vector3(1.5, 2.8, 4.5)
+rotation_degrees = Vector3(-15, -30, 0)
+fov = 65.0
+max_pan_degrees = 10.0
+max_tilt_degrees = 5.0
+tracking_strength = 0.4
+tracking_lerp_speed = 4.0
+angle_id = "T1"
+
+[node name="ThresholdSegment" type="Node3D"]
+script = ExtResource("1_segment")
+
+[node name="Hallway" type="Node3D" parent="."]
+
+[node name="Floor" type="CSGBox3D" parent="Hallway"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 0, 0)
+size = Vector3(40, 0.1, 3)
+material = SubResource("floor_mat")
+use_collision = true
+
+[node name="Ceiling" type="CSGBox3D" parent="Hallway"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 3, 0)
+size = Vector3(40, 0.1, 3)
+material = SubResource("wood_panel_mat")
+use_collision = true
+
+[node name="NorthWall" type="CSGBox3D" parent="Hallway"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 1.5, -1.5)
+size = Vector3(40, 3, 0.1)
+material = SubResource("wood_panel_mat")
+use_collision = true
+
+[node name="SouthWall" type="CSGBox3D" parent="Hallway"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 1.5, 1.5)
+size = Vector3(40, 3, 0.1)
+material = SubResource("wood_panel_mat")
+use_collision = true
+
+[node name="WestEndWall" type="CSGBox3D" parent="Hallway"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+size = Vector3(0.1, 3, 3)
+material = SubResource("wood_panel_mat")
+use_collision = true
+
+[node name="EastEndWallLower" type="CSGBox3D" parent="Hallway"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40, 1.5, -1.1)
+size = Vector3(0.1, 3, 0.9)
+material = SubResource("wood_panel_mat")
+use_collision = true
+
+[node name="EastEndWallUpper" type="CSGBox3D" parent="Hallway"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40, 2.3, 0)
+size = Vector3(0.1, 1.4, 3)
+material = SubResource("wood_panel_mat")
+use_collision = true
+
+[node name="EastEndWallSide" type="CSGBox3D" parent="Hallway"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40, 0.75, 1.1)
+size = Vector3(0.1, 1.5, 0.9)
+material = SubResource("wood_panel_mat")
+use_collision = true
+
+[node name="BrassFixture1" type="CSGBox3D" parent="Hallway"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 1.8, -1.4)
+size = Vector3(0.1, 0.3, 0.08)
+material = SubResource("brass_mat")
+
+[node name="BrassFixture2" type="CSGBox3D" parent="Hallway"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 1.8, 1.4)
+size = Vector3(0.1, 0.3, 0.08)
+material = SubResource("brass_mat")
+
+[node name="BrassFixture3" type="CSGBox3D" parent="Hallway"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30, 1.8, -1.4)
+size = Vector3(0.1, 0.3, 0.08)
+material = SubResource("brass_mat")
+
+[node name="DeadBulb" type="OmniLight3D" parent="Hallway"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 34, 2.6, 0)
+light_color = Color(0.9, 0.85, 0.7, 1)
+light_energy = 0.6
+light_range = 4.0
+
+[node name="StationDoor" type="CSGBox3D" parent="Hallway"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.15, 1.25, 0)
+size = Vector3(0.2, 2.5, 1.8)
+material = SubResource("door_mat")
+
+[node name="ExitDoor" type="Area3D" parent="Hallway"]
+collision_layer = 4
+collision_mask = 2
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 39.5, 1, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Hallway/ExitDoor"]
+shape = SubResource("exit_door_shape")
+
+[node name="Player" type="CharacterBody3D" parent="." groups=["player"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5, 0.5, 0)
+script = ExtResource("6_player")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Player"]
+shape = SubResource("exit_door_shape")
+
+[node name="CameraRig" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.95, 0.3, 0, -0.3, 0.95, 1.5, 2.8, 4.5)
+script = ExtResource("5_rig")
+
+[node name="ZoneA" type="Area3D" parent="." groups=["camera_zone"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 1.5, 0)
+script = ExtResource("4_zone")
+camera_angle = SubResource("angle_a")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ZoneA"]
+shape = SubResource("zone_a_shape")
+
+[node name="PortableRadio" type="Node" parent="."]
+
+[node name="RadioTuner" type="Node" parent="PortableRadio"]
+script = ExtResource("7_tuner")
+band_config = ExtResource("9_band")
+
+[node name="SignalStrength" type="Node" parent="PortableRadio"]
+script = ExtResource("8_signal")
+radio_tuner = NodePath("../RadioTuner")
+
+[node name="RadioStatic" type="Node" parent="PortableRadio"]
+script = ExtResource("10_static")
+radio_tuner = NodePath("../RadioTuner")
+signal_strength = NodePath("../SignalStrength")

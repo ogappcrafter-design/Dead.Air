@@ -1,8 +1,8 @@
 [gd_scene load_steps=13 format=3 uid="uid://bstation03bath"]
 
-[ext_resource type="Script" path="res://src/visual/camera_zone.gd" id="1_zone"]
-[ext_resource type="Script" path="res://src/visual/camera_angle.gd" id="2_angle"]
-[ext_resource type="Script" path="res://src/core/door_trigger.gd" id="3_door"]
+[ext_resource type="Script" uid="uid://dk6rm7a0v0721" path="res://src/visual/camera_zone.gd" id="1_zone"]
+[ext_resource type="Script" uid="uid://xilho0al60wt" path="res://src/visual/camera_angle.gd" id="2_angle"]
+[ext_resource type="Script" uid="uid://51crg13hs5r6" path="res://src/core/door_trigger.gd" id="3_door"]
 
 [sub_resource type="StandardMaterial3D" id="floor_mat"]
 albedo_color = Color(0.15, 0.15, 0.16, 1)
@@ -122,6 +122,8 @@ camera_angle = SubResource("angle_br1")
 shape = SubResource("zone_br1_shape")
 
 [node name="DoorToHallway" type="Area3D" parent="."]
+collision_layer = 4
+collision_mask = 2
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.8, 0.5, 0)
 script = ExtResource("3_door")
 target_position = Vector3(21, 0.5, 0.5)

@@ -70,7 +70,9 @@ func save_settings() -> void:
 
 
 func _apply_deadzones() -> void:
-	# Apply deadzone to all joypad motion actions in the InputMap
+	# Apply deadzone to all joypad motion actions in the InputMap.
+	# Deadzone lives on the action, not the event — InputEventJoypadMotion
+	# rejects a per-event assignment in Godot 4.7.
 	var motion_actions: Array[String] = [
 		"move_left", "move_right", "move_up", "move_down",
 		"radio_tune_left", "radio_tune_right",
@@ -79,12 +81,13 @@ func _apply_deadzones() -> void:
 	for action_name in motion_actions:
 		if not InputMap.has_action(action_name):
 			continue
+		var is_trigger := false
 		for event in InputMap.action_get_events(action_name):
-			if event is InputEventJoypadMotion:
-				if event.axis >= 4:  # Trigger axes
-					event.deadzone = settings.trigger_deadzone
-				else:
-					event.deadzone = settings.stick_deadzone
+			if event is InputEventJoypadMotion and event.axis >= 4:
+				is_trigger = true
+				break
+		var deadzone: float = settings.trigger_deadzone if is_trigger else settings.stick_deadzone
+		InputMap.action_set_deadzone(action_name, deadzone)
 
 
 func _init_hold_states() -> void:

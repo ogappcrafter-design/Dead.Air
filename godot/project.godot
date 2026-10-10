@@ -8,7 +8,7 @@ config_version=5
 
 config/name="Dead Air Radio"
 config/description="Paranormal late-night radio game — Godot 4 rebuild"
-run/main_scene=""
+run/main_scene="res://scenes/main_menu.tscn"
 config/features=4.3
 config/icon="res://icon.svg"
 
@@ -60,6 +60,18 @@ window/size/viewport_width=1920
 window/size/viewport_height=1080
 window/size/resizable=true
 window/vsync/vsync_mode=1
+
+[physics]
+
+; Collision layer scheme (see project README):
+; 1 world — static geometry (CSG floors/walls with use_collision)
+; 2 player — the player CharacterBody3D
+; 3 triggers — Area3D triggers (CameraZone, DoorTrigger, interactables)
+; 4 suit — The Suits enemy body
+layer_names/3d_physics/layer_1="world"
+layer_names/3d_physics/layer_2="player"
+layer_names/3d_physics/layer_3="triggers"
+layer_names/3d_physics/layer_4="suit"
 
 [rendering]
 

@@ -1,0 +1,299 @@
+[gd_scene load_steps=15 format=3 uid="uid://bp4staircase"]
+
+
+
+[ext_resource type="Script" uid="uid://byfya25euxxwe" path="res://src/entities/player.gd" id="1_player"]
+[ext_resource type="Script" uid="uid://bnhl1nrqqywda" path="res://src/core/radio_tuner.gd" id="2_tuner"]
+[ext_resource type="Script" uid="uid://b2ojlbnvs1xnr" path="res://src/core/signal_strength.gd" id="3_signal"]
+[ext_resource type="Resource" uid="uid://11e914f432000" path="res://src/data/band_config.tres" id="4_band"]
+[ext_resource type="Script" uid="uid://cn3ic8sfogvs3" path="res://src/audio/radio_static.gd" id="5_static"]
+[ext_resource type="Script" path="res://src/levels/staircase_segment.gd" id="6_seg"]
+[sub_resource type="StandardMaterial3D" id="step_mat"]
+albedo_color = Color(0.3, 0.3, 0.28, 1)
+roughness = 0.9
+[sub_resource type="StandardMaterial3D" id="concrete_mat"]
+albedo_color = Color(0.55, 0.55, 0.52, 1)
+roughness = 0.95
+[sub_resource type="Environment" id="env_dark"]
+background_mode = 1
+ambient_light_color = Color(0.05, 0.05, 0.06, 1)
+ambient_light_energy = 0.3
+[sub_resource type="BoxShape3D" id="player_shape"]
+size = Vector3(0.5, 1.0, 0.5)
+[sub_resource type="StandardMaterial3D" id="era_mat_0"]
+albedo_color = Color(0.55, 0.55, 0.52, 1)
+roughness = 0.95
+
+[sub_resource type="StandardMaterial3D" id="era_mat_1"]
+albedo_color = Color(0.45, 0.47, 0.50, 1)
+roughness = 0.95
+
+[sub_resource type="StandardMaterial3D" id="era_mat_2"]
+albedo_color = Color(0.48, 0.38, 0.28, 1)
+roughness = 0.95
+
+[sub_resource type="StandardMaterial3D" id="era_mat_3"]
+albedo_color = Color(0.35, 0.28, 0.20, 1)
+roughness = 0.95
+
+[node name="Staircase" type="Node3D"]
+script = ExtResource("6_seg")
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("env_dark")
+[node name="DescentLight" type="DirectionalLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, 0, 4, 0.001)
+light_color = Color(0.7, 0.7, 0.75, 1)
+light_energy = 0.4
+[node name="Shaft" type="Node3D" parent="."]
+[node name="Step0" type="CSGBox3D" parent="Shaft"]
+transform = Transform3D(1.000000, 0, -0.000000, 0, 1, 0, 0.000000, 0, 1.000000, 3.000, 0.00, 0.000)
+size = Vector3(1.2, 0.15, 0.8)
+material = SubResource("step_mat")
+use_collision = true
+[node name="Step1" type="CSGBox3D" parent="Shaft"]
+transform = Transform3D(0.866025, 0, -0.500000, 0, 1, 0, 0.500000, 0, 0.866025, 2.598, -0.50, 1.500)
+size = Vector3(1.2, 0.15, 0.8)
+material = SubResource("step_mat")
+use_collision = true
+[node name="Step2" type="CSGBox3D" parent="Shaft"]
+transform = Transform3D(0.500000, 0, -0.866025, 0, 1, 0, 0.866025, 0, 0.500000, 1.500, -1.00, 2.598)
+size = Vector3(1.2, 0.15, 0.8)
+material = SubResource("step_mat")
+use_collision = true
+[node name="Step3" type="CSGBox3D" parent="Shaft"]
+transform = Transform3D(0.000000, 0, -1.000000, 0, 1, 0, 1.000000, 0, 0.000000, 0.000, -1.50, 3.000)
+size = Vector3(1.2, 0.15, 0.8)
+material = SubResource("step_mat")
+use_collision = true
+[node name="Step4" type="CSGBox3D" parent="Shaft"]
+transform = Transform3D(-0.500000, 0, -0.866025, 0, 1, 0, 0.866025, 0, -0.500000, -1.500, -2.00, 2.598)
+size = Vector3(1.2, 0.15, 0.8)
+material = SubResource("step_mat")
+use_collision = true
+[node name="Step5" type="CSGBox3D" parent="Shaft"]
+transform = Transform3D(-0.866025, 0, -0.500000, 0, 1, 0, 0.500000, 0, -0.866025, -2.598, -2.50, 1.500)
+size = Vector3(1.2, 0.15, 0.8)
+material = SubResource("step_mat")
+use_collision = true
+[node name="Step6" type="CSGBox3D" parent="Shaft"]
+transform = Transform3D(-1.000000, 0, -0.000000, 0, 1, 0, 0.000000, 0, -1.000000, -3.000, -3.00, 0.000)
+size = Vector3(1.2, 0.15, 0.8)
+material = SubResource("step_mat")
+use_collision = true
+[node name="Step7" type="CSGBox3D" parent="Shaft"]
+transform = Transform3D(-0.866025, 0, 0.500000, 0, 1, 0, -0.500000, 0, -0.866025, -2.598, -3.50, -1.500)
+size = Vector3(1.2, 0.15, 0.8)
+material = SubResource("step_mat")
+use_collision = true
+[node name="Step8" type="CSGBox3D" parent="Shaft"]
+transform = Transform3D(-0.500000, 0, 0.866025, 0, 1, 0, -0.866025, 0, -0.500000, -1.500, -4.00, -2.598)
+size = Vector3(1.2, 0.15, 0.8)
+material = SubResource("step_mat")
+use_collision = true
+[node name="Step9" type="CSGBox3D" parent="Shaft"]
+transform = Transform3D(-0.000000, 0, 1.000000, 0, 1, 0, -1.000000, 0, -0.000000, -0.000, -4.50, -3.000)
+size = Vector3(1.2, 0.15, 0.8)
+material = SubResource("step_mat")
+use_collision = true
+[node name="Step10" type="CSGBox3D" parent="Shaft"]
+transform = Transform3D(0.500000, 0, 0.866025, 0, 1, 0, -0.866025, 0, 0.500000, 1.500, -5.00, -2.598)
+size = Vector3(1.2, 0.15, 0.8)
+material = SubResource("step_mat")
+use_collision = true
+[node name="Step11" type="CSGBox3D" parent="Shaft"]
+transform = Transform3D(0.866025, 0, 0.500000, 0, 1, 0, -0.500000, 0, 0.866025, 2.598, -5.50, -1.500)
+size = Vector3(1.2, 0.15, 0.8)
+material = SubResource("step_mat")
+use_collision = true
+[node name="Step12" type="CSGBox3D" parent="Shaft"]
+transform = Transform3D(1.000000, 0, 0.000000, 0, 1, 0, -0.000000, 0, 1.000000, 3.000, -6.00, -0.000)
+size = Vector3(1.2, 0.15, 0.8)
+material = SubResource("step_mat")
+use_collision = true
+[node name="Step13" type="CSGBox3D" parent="Shaft"]
+transform = Transform3D(0.866025, 0, -0.500000, 0, 1, 0, 0.500000, 0, 0.866025, 2.598, -6.50, 1.500)
+size = Vector3(1.2, 0.15, 0.8)
+material = SubResource("step_mat")
+use_collision = true
+[node name="Step14" type="CSGBox3D" parent="Shaft"]
+transform = Transform3D(0.500000, 0, -0.866025, 0, 1, 0, 0.866025, 0, 0.500000, 1.500, -7.00, 2.598)
+size = Vector3(1.2, 0.15, 0.8)
+material = SubResource("step_mat")
+use_collision = true
+[node name="Step15" type="CSGBox3D" parent="Shaft"]
+transform = Transform3D(0.000000, 0, -1.000000, 0, 1, 0, 1.000000, 0, 0.000000, 0.000, -7.50, 3.000)
+size = Vector3(1.2, 0.15, 0.8)
+material = SubResource("step_mat")
+use_collision = true
+[node name="Step16" type="CSGBox3D" parent="Shaft"]
+transform = Transform3D(-0.500000, 0, -0.866025, 0, 1, 0, 0.866025, 0, -0.500000, -1.500, -8.00, 2.598)
+size = Vector3(1.2, 0.15, 0.8)
+material = SubResource("step_mat")
+use_collision = true
+[node name="Step17" type="CSGBox3D" parent="Shaft"]
+transform = Transform3D(-0.866025, 0, -0.500000, 0, 1, 0, 0.500000, 0, -0.866025, -2.598, -8.50, 1.500)
+size = Vector3(1.2, 0.15, 0.8)
+material = SubResource("step_mat")
+use_collision = true
+[node name="Step18" type="CSGBox3D" parent="Shaft"]
+transform = Transform3D(-1.000000, 0, -0.000000, 0, 1, 0, 0.000000, 0, -1.000000, -3.000, -9.00, 0.000)
+size = Vector3(1.2, 0.15, 0.8)
+material = SubResource("step_mat")
+use_collision = true
+[node name="Step19" type="CSGBox3D" parent="Shaft"]
+transform = Transform3D(-0.866025, 0, 0.500000, 0, 1, 0, -0.500000, 0, -0.866025, -2.598, -9.50, -1.500)
+size = Vector3(1.2, 0.15, 0.8)
+material = SubResource("step_mat")
+use_collision = true
+[node name="Step20" type="CSGBox3D" parent="Shaft"]
+transform = Transform3D(-0.500000, 0, 0.866025, 0, 1, 0, -0.866025, 0, -0.500000, -1.500, -10.00, -2.598)
+size = Vector3(1.2, 0.15, 0.8)
+material = SubResource("step_mat")
+use_collision = true
+[node name="Step21" type="CSGBox3D" parent="Shaft"]
+transform = Transform3D(-0.000000, 0, 1.000000, 0, 1, 0, -1.000000, 0, -0.000000, -0.000, -10.50, -3.000)
+size = Vector3(1.2, 0.15, 0.8)
+material = SubResource("step_mat")
+use_collision = true
+[node name="Step22" type="CSGBox3D" parent="Shaft"]
+transform = Transform3D(0.500000, 0, 0.866025, 0, 1, 0, -0.866025, 0, 0.500000, 1.500, -11.00, -2.598)
+size = Vector3(1.2, 0.15, 0.8)
+material = SubResource("step_mat")
+use_collision = true
+[node name="Step23" type="CSGBox3D" parent="Shaft"]
+transform = Transform3D(0.866025, 0, 0.500000, 0, 1, 0, -0.500000, 0, 0.866025, 2.598, -11.50, -1.500)
+size = Vector3(1.2, 0.15, 0.8)
+material = SubResource("step_mat")
+use_collision = true
+[node name="Step24" type="CSGBox3D" parent="Shaft"]
+transform = Transform3D(1.000000, 0, 0.000000, 0, 1, 0, -0.000000, 0, 1.000000, 3.000, -12.00, -0.000)
+size = Vector3(1.2, 0.15, 0.8)
+material = SubResource("step_mat")
+use_collision = true
+[node name="Step25" type="CSGBox3D" parent="Shaft"]
+transform = Transform3D(0.866025, 0, -0.500000, 0, 1, 0, 0.500000, 0, 0.866025, 2.598, -12.50, 1.500)
+size = Vector3(1.2, 0.15, 0.8)
+material = SubResource("step_mat")
+use_collision = true
+[node name="Step26" type="CSGBox3D" parent="Shaft"]
+transform = Transform3D(0.500000, 0, -0.866025, 0, 1, 0, 0.866025, 0, 0.500000, 1.500, -13.00, 2.598)
+size = Vector3(1.2, 0.15, 0.8)
+material = SubResource("step_mat")
+use_collision = true
+[node name="Step27" type="CSGBox3D" parent="Shaft"]
+transform = Transform3D(0.000000, 0, -1.000000, 0, 1, 0, 1.000000, 0, 0.000000, 0.000, -13.50, 3.000)
+size = Vector3(1.2, 0.15, 0.8)
+material = SubResource("step_mat")
+use_collision = true
+[node name="Step28" type="CSGBox3D" parent="Shaft"]
+transform = Transform3D(-0.500000, 0, -0.866025, 0, 1, 0, 0.866025, 0, -0.500000, -1.500, -14.00, 2.598)
+size = Vector3(1.2, 0.15, 0.8)
+material = SubResource("step_mat")
+use_collision = true
+[node name="Step29" type="CSGBox3D" parent="Shaft"]
+transform = Transform3D(-0.866025, 0, -0.500000, 0, 1, 0, 0.500000, 0, -0.866025, -2.598, -14.50, 1.500)
+size = Vector3(1.2, 0.15, 0.8)
+material = SubResource("step_mat")
+use_collision = true
+[node name="Step30" type="CSGBox3D" parent="Shaft"]
+transform = Transform3D(-1.000000, 0, -0.000000, 0, 1, 0, 0.000000, 0, -1.000000, -3.000, -15.00, 0.000)
+size = Vector3(1.2, 0.15, 0.8)
+material = SubResource("step_mat")
+use_collision = true
+[node name="Step31" type="CSGBox3D" parent="Shaft"]
+transform = Transform3D(-0.866025, 0, 0.500000, 0, 1, 0, -0.500000, 0, -0.866025, -2.598, -15.50, -1.500)
+size = Vector3(1.2, 0.15, 0.8)
+material = SubResource("step_mat")
+use_collision = true
+[node name="Step32" type="CSGBox3D" parent="Shaft"]
+transform = Transform3D(-0.500000, 0, 0.866025, 0, 1, 0, -0.866025, 0, -0.500000, -1.500, -16.00, -2.598)
+size = Vector3(1.2, 0.15, 0.8)
+material = SubResource("step_mat")
+use_collision = true
+[node name="Step33" type="CSGBox3D" parent="Shaft"]
+transform = Transform3D(0.000000, 0, 1.000000, 0, 1, 0, -1.000000, 0, 0.000000, 0.000, -16.50, -3.000)
+size = Vector3(1.2, 0.15, 0.8)
+material = SubResource("step_mat")
+use_collision = true
+[node name="Step34" type="CSGBox3D" parent="Shaft"]
+transform = Transform3D(0.500000, 0, 0.866025, 0, 1, 0, -0.866025, 0, 0.500000, 1.500, -17.00, -2.598)
+size = Vector3(1.2, 0.15, 0.8)
+material = SubResource("step_mat")
+use_collision = true
+[node name="Step35" type="CSGBox3D" parent="Shaft"]
+transform = Transform3D(0.866025, 0, 0.500000, 0, 1, 0, -0.500000, 0, 0.866025, 2.598, -17.50, -1.500)
+size = Vector3(1.2, 0.15, 0.8)
+material = SubResource("step_mat")
+use_collision = true
+[node name="Step36" type="CSGBox3D" parent="Shaft"]
+transform = Transform3D(1.000000, 0, 0.000000, 0, 1, 0, -0.000000, 0, 1.000000, 3.000, -18.00, -0.000)
+size = Vector3(1.2, 0.15, 0.8)
+material = SubResource("step_mat")
+use_collision = true
+[node name="Step37" type="CSGBox3D" parent="Shaft"]
+transform = Transform3D(0.866025, 0, -0.500000, 0, 1, 0, 0.500000, 0, 0.866025, 2.598, -18.50, 1.500)
+size = Vector3(1.2, 0.15, 0.8)
+material = SubResource("step_mat")
+use_collision = true
+[node name="Step38" type="CSGBox3D" parent="Shaft"]
+transform = Transform3D(0.500000, 0, -0.866025, 0, 1, 0, 0.866025, 0, 0.500000, 1.500, -19.00, 2.598)
+size = Vector3(1.2, 0.15, 0.8)
+material = SubResource("step_mat")
+use_collision = true
+[node name="Step39" type="CSGBox3D" parent="Shaft"]
+transform = Transform3D(-0.000000, 0, -1.000000, 0, 1, 0, 1.000000, 0, -0.000000, 0.000, -19.50, 3.000)
+size = Vector3(1.2, 0.15, 0.8)
+material = SubResource("step_mat")
+use_collision = true
+[node name="Era0" type="CSGCylinder3D" parent="Shaft"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -25, 0)
+radius = 4.0
+height = 50.0
+material = SubResource("era_mat_0")
+sides = 12
+
+[node name="Era1" type="CSGCylinder3D" parent="Shaft"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -75, 0)
+radius = 4.0
+height = 50.0
+material = SubResource("era_mat_1")
+sides = 12
+
+[node name="Era2" type="CSGCylinder3D" parent="Shaft"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -125, 0)
+radius = 4.0
+height = 50.0
+material = SubResource("era_mat_2")
+sides = 12
+
+[node name="Era3" type="CSGCylinder3D" parent="Shaft"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -175, 0)
+radius = 4.0
+height = 50.0
+material = SubResource("era_mat_3")
+sides = 12
+
+[node name="Player" type="CharacterBody3D" parent="." groups=["player"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1, 0)
+script = ExtResource("1_player")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Player"]
+shape = SubResource("player_shape")
+
+[node name="CameraRig" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, 0, 7, 0.001)
+
+[node name="PortableRadio" type="Node" parent="."]
+
+[node name="RadioTuner" type="Node" parent="PortableRadio"]
+script = ExtResource("2_tuner")
+band_config = ExtResource("4_band")
+
+[node name="SignalStrength" type="Node" parent="PortableRadio"]
+script = ExtResource("3_signal")
+radio_tuner = NodePath("../RadioTuner")
+
+[node name="RadioStatic" type="Node" parent="PortableRadio"]
+script = ExtResource("5_static")
+radio_tuner = NodePath("../RadioTuner")
+signal_strength = NodePath("../SignalStrength")

@@ -1,10 +1,10 @@
-[gd_scene load_steps=14 format=3 uid="uid://dea108cameratest"]
+[gd_scene load_steps=15 format=3 uid="uid://dea108cameratest"]
 
-[ext_resource type="Script" path="res://src/visual/camera_rig.gd" id="1_rig"]
-[ext_resource type="Script" path="res://src/visual/camera_zone.gd" id="2_zone"]
-[ext_resource type="Script" path="res://src/visual/camera_angle.gd" id="3_angle"]
-[ext_resource type="Script" path="res://src/entities/player.gd" id="4_player"]
-[ext_resource type="Script" path="res://src/visual/screen_relative_movement.gd" id="5_move"]
+[ext_resource type="Script" uid="uid://be6swwtavc18m" path="res://src/visual/camera_rig.gd" id="1_rig"]
+[ext_resource type="Script" uid="uid://dk6rm7a0v0721" path="res://src/visual/camera_zone.gd" id="2_zone"]
+[ext_resource type="Script" uid="uid://xilho0al60wt" path="res://src/visual/camera_angle.gd" id="3_angle"]
+[ext_resource type="Script" uid="uid://byfya25euxxwe" path="res://src/entities/player.gd" id="4_player"]
+[ext_resource type="Script" uid="uid://ceue68wyskfat" path="res://src/visual/screen_relative_movement.gd" id="5_move"]
 
 [sub_resource type="Resource" id="angle_a"]
 script = ExtResource("3_angle")
@@ -50,6 +50,9 @@ albedo_color = Color(0.3, 0.3, 0.3, 1)
 [sub_resource type="BoxMesh" id="floor_mesh"]
 size = Vector3(20, 0.1, 20)
 
+[sub_resource type="BoxShape3D" id="floor_shape"]
+size = Vector3(20, 0.1, 20)
+
 [node name="CameraTest" type="Node3D"]
 
 [node name="Floor" type="MeshInstance3D" parent="."]
@@ -61,7 +64,7 @@ collision_layer = 1
 collision_mask = 1
 
 [node name="FloorCollision" type="CollisionShape3D" parent="Floor/FloorBody"]
-shape = SubResource("floor_mesh")
+shape = SubResource("floor_shape")
 
 [node name="CameraRig" type="Camera3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 0.819, 0.574, 0, -0.574, 0.819, 0, 5, 10)

@@ -1,0 +1,175 @@
+[gd_scene load_steps=15 format=3 uid="uid://bp3liminalsp"]
+
+[ext_resource type="Script" uid="uid://byfya25euxxwe" path="res://src/entities/player.gd" id="1_player"]
+[ext_resource type="Script" uid="uid://bnhl1nrqqywda" path="res://src/core/radio_tuner.gd" id="2_tuner"]
+[ext_resource type="Script" uid="uid://b2ojlbnvs1xnr" path="res://src/core/signal_strength.gd" id="3_signal"]
+[ext_resource type="Resource" uid="uid://11e914f432000" path="res://src/data/band_config.tres" id="4_band"]
+[ext_resource type="Script" uid="uid://cn3ic8sfogvs3" path="res://src/audio/radio_static.gd" id="5_static"]
+[ext_resource type="Script" uid="uid://be6swwtavc18m" path="res://src/visual/camera_rig.gd" id="6_rig"]
+[ext_resource type="Script" path="res://src/levels/liminal_space_segment.gd" id="7_seg"]
+[sub_resource type="StandardMaterial3D" id="void_mat"]
+albedo_color = Color(0.02, 0.02, 0.03, 1)
+roughness = 1.0
+[sub_resource type="StandardMaterial3D" id="door_mat"]
+albedo_color = Color(0.15, 0.13, 0.11, 1)
+roughness = 0.8
+[sub_resource type="StandardMaterial3D" id="panel_mat"]
+albedo_color = Color(0.3, 0.3, 0.35, 1)
+roughness = 0.6
+[sub_resource type="StandardMaterial3D" id="room_mat"]
+albedo_color = Color(0.18, 0.16, 0.14, 1)
+roughness = 0.9
+[sub_resource type="Environment" id="env_void"]
+background_mode = 1
+ambient_light_color = Color(0.04, 0.04, 0.06, 1)
+ambient_light_energy = 0.25
+[sub_resource type="BoxShape3D" id="door_shape"]
+size = Vector3(2, 3, 1)
+[sub_resource type="BoxShape3D" id="player_shape"]
+size = Vector3(0.5, 1.0, 0.5)
+[sub_resource type="BoxShape3D" id="zone_shape"]
+size = Vector3(5, 3, 5)
+
+[node name="LiminalSpace" type="Node3D"]
+script = ExtResource("7_seg")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("env_void")
+[node name="Platform" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
+size = Vector3(30, 1, 30)
+material = SubResource("void_mat")
+use_collision = true
+
+[node name="Doors" type="Node3D" parent="."]
+
+[node name="NeighborhoodDoor" type="Node3D" parent="Doors"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 1.5, -10)
+
+[node name="Frame" type="CSGBox3D" parent="Doors/NeighborhoodDoor"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+size = Vector3(2.4, 3.4, 0.3)
+material = SubResource("door_mat")
+
+[node name="Panel" type="CSGBox3D" parent="Doors/NeighborhoodDoor"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.2)
+size = Vector3(2, 3, 0.15)
+material = SubResource("panel_mat")
+
+[node name="Area" type="Area3D" parent="Doors/NeighborhoodDoor"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1.5)
+collision_layer = 4
+collision_mask = 2
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Doors/NeighborhoodDoor/Area"]
+shape = SubResource("door_shape")
+
+[node name="BunkerDoor" type="Node3D" parent="Doors"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, 1.5, -8)
+
+[node name="Frame" type="CSGBox3D" parent="Doors/BunkerDoor"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+size = Vector3(2.4, 3.4, 0.3)
+material = SubResource("door_mat")
+
+[node name="Panel" type="CSGBox3D" parent="Doors/BunkerDoor"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.2)
+size = Vector3(2, 3, 0.15)
+material = SubResource("panel_mat")
+
+[node name="Area" type="Area3D" parent="Doors/BunkerDoor"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1.5)
+collision_layer = 4
+collision_mask = 2
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Doors/BunkerDoor/Area"]
+shape = SubResource("door_shape")
+
+[node name="SafeDoor" type="Node3D" parent="Doors"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, -14)
+
+[node name="Frame" type="CSGBox3D" parent="Doors/SafeDoor"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+size = Vector3(2.4, 3.4, 0.3)
+material = SubResource("door_mat")
+
+[node name="Panel" type="CSGBox3D" parent="Doors/SafeDoor"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.2)
+size = Vector3(2, 3, 0.15)
+material = SubResource("panel_mat")
+
+[node name="Area" type="Area3D" parent="Doors/SafeDoor"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1.5)
+collision_layer = 4
+collision_mask = 2
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Doors/SafeDoor/Area"]
+shape = SubResource("door_shape")
+
+[node name="SafeRoom" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 0, 8)
+
+[node name="Floor" type="CSGBox3D" parent="SafeRoom"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+size = Vector3(6, 0.2, 6)
+material = SubResource("room_mat")
+use_collision = true
+
+[node name="Walls" type="CSGBox3D" parent="SafeRoom"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+size = Vector3(6, 3, 6)
+material = SubResource("room_mat")
+use_collision = true
+
+[node name="CassettePlayer" type="CSGBox3D" parent="SafeRoom"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, -2)
+size = Vector3(1, 0.5, 0.8)
+material = SubResource("panel_mat")
+
+[node name="Zone" type="Area3D" parent="SafeRoom"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+collision_layer = 4
+collision_mask = 2
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="SafeRoom/Zone"]
+shape = SubResource("zone_shape")
+
+[node name="KeyLight" type="DirectionalLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 10, 0)
+light_color = Color(0.7, 0.7, 0.9, 1)
+light_energy = 0.3
+transform = Transform3D(1, 0, 0, 0, 0.5, 0.866, 0, -0.866, 0.5, 0, 10, 0)
+
+[node name="Accent" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 3, -5)
+light_color = Color(0.8, 1, 0.6, 1)
+light_energy = 1.2
+omni_range = 10
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 3, -5)
+
+[node name="Player" type="CharacterBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 4)
+groups=["player"]
+script = ExtResource("1_player")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Player"]
+shape = SubResource("player_shape")
+
+[node name="CameraRig" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 8, 10)
+script = ExtResource("6_rig")
+
+[node name="PortableRadio" type="Node" parent="."]
+
+[node name="RadioTuner" type="Node" parent="PortableRadio"]
+script = ExtResource("2_tuner")
+band_config = ExtResource("4_band")
+
+[node name="SignalStrength" type="Node" parent="PortableRadio"]
+script = ExtResource("3_signal")
+radio_tuner = NodePath("../RadioTuner")
+
+[node name="RadioStatic" type="Node" parent="PortableRadio"]
+script = ExtResource("5_static")
+radio_tuner = NodePath("../RadioTuner")
+signal_strength = NodePath("../SignalStrength")

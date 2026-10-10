@@ -54,17 +54,14 @@ func _ready() -> void:
 func _resolve_references() -> void:
 	# Autoloads
 	_call_manager = get_node_or_null("/root/CallManager")
-	# RadioTuner and friends are children of RadioConsole (instance of radio_integration.tscn)
+	# SignalStrength and DreadComposure are owned by CallManager (single instances)
+	if _call_manager:
+		_signal_strength = _call_manager.get_node_or_null("SignalStrength")
+		_dread_composure = _call_manager.get_node_or_null("DreadComposure")
+	# RadioTuner is a child of RadioConsole (instance of radio_integration.tscn)
 	var radio_console := get_node_or_null("../RadioConsole")
 	if radio_console:
 		_radio_tuner = radio_console.get_node_or_null("RadioTuner")
-		_signal_strength = radio_console.get_node_or_null("SignalStrength")
-		_dread_composure = radio_console.get_node_or_null("DreadComposure")
-	# Also try CallManager's children (it creates DreadComposure and SignalStrength)
-	if not _signal_strength and _call_manager:
-		_signal_strength = _call_manager.get_node_or_null("SignalStrength")
-	if not _dread_composure and _call_manager:
-		_dread_composure = _call_manager.get_node_or_null("DreadComposure")
 	# HUD is a child of NightShift root
 	_hud = get_node_or_null("../HUD")
 	# Stubs are siblings
@@ -195,17 +192,20 @@ func _on_call_ended(_call_data: Dictionary, outcome: String) -> void:
 
 
 func _on_shift_started(shift_num: int) -> void:
-	_shift_number = shift_num
+	# CallManager uses 0-indexed shift numbers; shift data and TutorialManager
+	# are 1-indexed. Convert before storing or forwarding.
+	var shift_num_1: int = shift_num + 1
+	_shift_number = shift_num_1
 	# Initialize signal and dread for the shift
 	if _signal_strength and _signal_strength.has_method("start_shift"):
 		_signal_strength.start_shift()
-	# Notify TutorialManager if tutorial is enabled for this shift (DEA-111)
+	# Notify TutorialManager if tutorial is enabled for this shift (DEA-111/112)
 	if _tutorial_manager and _tutorial_manager.has_method("on_shift_started"):
 		var tutorial_enabled := false
 		if _shift_controller and _shift_controller.has_method("get_shift_data"):
-			var data: Dictionary = _shift_controller.get_shift_data(shift_num)
+			var data: Dictionary = _shift_controller.get_shift_data(shift_num_1)
 			tutorial_enabled = data.get("tutorial", false)
-		_tutorial_manager.on_shift_started(shift_num, tutorial_enabled)
+		_tutorial_manager.on_shift_started(shift_num_1, tutorial_enabled)
 
 
 func _on_shift_ended(_shift_num: int) -> void:

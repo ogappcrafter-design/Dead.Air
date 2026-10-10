@@ -17,8 +17,6 @@ var _cooldown_timer: float = 0.0
 
 func _ready() -> void:
 	monitoring = true
-	if collision_mask == 0:
-		collision_mask = 1
 	if not body_entered.is_connected(_on_body_entered):
 		body_entered.connect(_on_body_entered)
 

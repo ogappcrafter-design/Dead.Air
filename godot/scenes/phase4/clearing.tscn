@@ -1,0 +1,323 @@
+[gd_scene load_steps=16 format=3 uid="uid://bp4clearing1"]
+
+[ext_resource type="Script" uid="uid://byfya25euxxwe" path="res://src/entities/player.gd" id="1_player"]
+[ext_resource type="Script" uid="uid://bnhl1nrqqywda" path="res://src/core/radio_tuner.gd" id="2_tuner"]
+[ext_resource type="Script" uid="uid://b2ojlbnvs1xnr" path="res://src/core/signal_strength.gd" id="3_signal"]
+[ext_resource type="Resource" uid="uid://11e914f432000" path="res://src/data/band_config.tres" id="4_band"]
+[ext_resource type="Script" uid="uid://cn3ic8sfogvs3" path="res://src/audio/radio_static.gd" id="5_static"]
+[ext_resource type="Script" uid="uid://be6swwtavc18m" path="res://src/visual/camera_rig.gd" id="6_rig"]
+[ext_resource type="Script" path="res://src/levels/clearing_segment.gd" id="7_seg"]
+[ext_resource type="Script" path="res://src/entities/tape_pickup.gd" id="8_tape"]
+[sub_resource type="StandardMaterial3D" id="grass_mat"]
+albedo_color = Color(0.10, 0.12, 0.09, 1)
+roughness = 1.0
+[sub_resource type="StandardMaterial3D" id="wood_mat"]
+albedo_color = Color(0.25, 0.18, 0.12, 1)
+roughness = 0.9
+[sub_resource type="StandardMaterial3D" id="brass_mat"]
+albedo_color = Color(0.55, 0.42, 0.20, 1)
+roughness = 0.35
+metallic = 0.85
+[sub_resource type="StandardMaterial3D" id="bark_mat"]
+albedo_color = Color(0.16, 0.12, 0.09, 1)
+roughness = 1.0
+[sub_resource type="StandardMaterial3D" id="stone_mat"]
+albedo_color = Color(0.30, 0.30, 0.28, 1)
+roughness = 0.95
+[sub_resource type="Environment" id="env_1923"]
+background_mode = 1
+ambient_light_color = Color(0.35, 0.35, 0.35, 1)
+ambient_light_energy = 0.6
+fog_enabled = true
+fog_light_color = Color(0.30, 0.30, 0.32, 1)
+fog_density = 0.02
+[sub_resource type="BoxShape3D" id="player_shape"]
+size = Vector3(0.5, 1.0, 0.5)
+
+[node name="Clearing" type="Node3D"]
+script = ExtResource("7_seg")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("env_1923")
+[node name="SkyLight" type="DirectionalLight3D" parent="."]
+transform = Transform3D(-0.65, 0.35, 0.67, 0, -0.88, 0.47, -0.76, -0.31, -0.57, 20, 30, 20)
+light_color = Color(0.85, 0.85, 0.85, 1)
+light_energy = 0.5
+shadow_enabled = true
+[node name="Ground" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -15)
+size = Vector3(80, 0.2, 80)
+material = SubResource("grass_mat")
+use_collision = true
+
+[node name="Tower" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -40)
+
+[node name="Legs" type="Node3D" parent="Tower"]
+
+[node name="Leg0" type="CSGBox3D" parent="Tower/Legs"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.5, 7, -2.5)
+size = Vector3(0.4, 14, 0.4)
+material = SubResource("wood_mat")
+
+[node name="Leg1" type="CSGBox3D" parent="Tower/Legs"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.5, 7, -2.5)
+size = Vector3(0.4, 14, 0.4)
+material = SubResource("wood_mat")
+
+[node name="Leg2" type="CSGBox3D" parent="Tower/Legs"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.5, 7, 2.5)
+size = Vector3(0.4, 14, 0.4)
+material = SubResource("wood_mat")
+
+[node name="Leg3" type="CSGBox3D" parent="Tower/Legs"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.5, 7, 2.5)
+size = Vector3(0.4, 14, 0.4)
+material = SubResource("wood_mat")
+
+[node name="BrassRing1" type="CSGBox3D" parent="Tower"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 10, 0)
+size = Vector3(5.5, 0.3, 5.5)
+material = SubResource("brass_mat")
+
+[node name="BrassRing2" type="CSGBox3D" parent="Tower"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 14, 0)
+size = Vector3(3.5, 0.3, 3.5)
+material = SubResource("brass_mat")
+
+[node name="Mast" type="CSGBox3D" parent="Tower"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 18, 0)
+size = Vector3(0.3, 8, 0.3)
+material = SubResource("brass_mat")
+
+[node name="DoorFrame" type="CSGBox3D" parent="Tower"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, 2.55)
+size = Vector3(1.8, 3.2, 0.2)
+material = SubResource("wood_mat")
+
+[node name="TowerBase" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -38)
+
+[node name="Toolbox" type="CSGBox3D" parent="TowerBase"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.2, 0.3, 0)
+size = Vector3(1, 0.6, 0.6)
+material = SubResource("brass_mat")
+
+[node name="TapePickup" type="Area3D" parent="TowerBase"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.2, 0.5, 0)
+tape_id = "tape-013"
+collision_layer = 4
+collision_mask = 2
+script = ExtResource("8_tape")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="TowerBase/TapePickup"]
+shape = SubResource("player_shape")
+
+[node name="Fragments" type="Node3D" parent="."]
+
+[node name="Machine" type="Node3D" parent="Fragments"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, 0, -10)
+
+[node name="Body" type="CSGBox3D" parent="Fragments/Machine"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
+size = Vector3(1.5, 1.2, 1)
+material = SubResource("brass_mat")
+
+[node name="Grave" type="Node3D" parent="Fragments"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, -15)
+
+[node name="Mound" type="CSGBox3D" parent="Fragments/Grave"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.2, 0)
+size = Vector3(1.5, 0.4, 2.5)
+material = SubResource("stone_mat")
+
+[node name="Farmhouse" type="Node3D" parent="Fragments"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15, 0, -30)
+
+[node name="Body" type="CSGBox3D" parent="Fragments/Farmhouse"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+size = Vector3(8, 4, 6)
+material = SubResource("wood_mat")
+
+[node name="Tree0" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30.0, 0, -15.0)
+
+[node name="Trunk" type="CSGBox3D" parent="Tree0"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4, 0)
+size = Vector3(0.8, 8, 0.8)
+material = SubResource("bark_mat")
+
+[node name="Canopy" type="CSGBox3D" parent="Tree0"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 9, 0)
+size = Vector3(4, 3, 4)
+material = SubResource("bark_mat")
+
+[node name="Tree1" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 25.98076211353316, 0, -1.7763568394002505e-15)
+
+[node name="Trunk" type="CSGBox3D" parent="Tree1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4, 0)
+size = Vector3(0.8, 8, 0.8)
+material = SubResource("bark_mat")
+
+[node name="Canopy" type="CSGBox3D" parent="Tree1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 9, 0)
+size = Vector3(4, 3, 4)
+material = SubResource("bark_mat")
+
+[node name="Tree2" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15.000000000000004, 0, 10.980762113533157)
+
+[node name="Trunk" type="CSGBox3D" parent="Tree2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4, 0)
+size = Vector3(0.8, 8, 0.8)
+material = SubResource("bark_mat")
+
+[node name="Canopy" type="CSGBox3D" parent="Tree2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 9, 0)
+size = Vector3(4, 3, 4)
+material = SubResource("bark_mat")
+
+[node name="Tree3" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.83697019872103e-15, 0, 15.0)
+
+[node name="Trunk" type="CSGBox3D" parent="Tree3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4, 0)
+size = Vector3(0.8, 8, 0.8)
+material = SubResource("bark_mat")
+
+[node name="Canopy" type="CSGBox3D" parent="Tree3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 9, 0)
+size = Vector3(4, 3, 4)
+material = SubResource("bark_mat")
+
+[node name="Tree4" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14.999999999999993, 0, 10.98076211353316)
+
+[node name="Trunk" type="CSGBox3D" parent="Tree4"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4, 0)
+size = Vector3(0.8, 8, 0.8)
+material = SubResource("bark_mat")
+
+[node name="Canopy" type="CSGBox3D" parent="Tree4"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 9, 0)
+size = Vector3(4, 3, 4)
+material = SubResource("bark_mat")
+
+[node name="Tree5" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -25.98076211353316, 0, -1.7763568394002505e-15)
+
+[node name="Trunk" type="CSGBox3D" parent="Tree5"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4, 0)
+size = Vector3(0.8, 8, 0.8)
+material = SubResource("bark_mat")
+
+[node name="Canopy" type="CSGBox3D" parent="Tree5"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 9, 0)
+size = Vector3(4, 3, 4)
+material = SubResource("bark_mat")
+
+[node name="Tree6" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -30.0, 0, -14.999999999999996)
+
+[node name="Trunk" type="CSGBox3D" parent="Tree6"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4, 0)
+size = Vector3(0.8, 8, 0.8)
+material = SubResource("bark_mat")
+
+[node name="Canopy" type="CSGBox3D" parent="Tree6"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 9, 0)
+size = Vector3(4, 3, 4)
+material = SubResource("bark_mat")
+
+[node name="Tree7" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -25.980762113533164, 0, -29.999999999999993)
+
+[node name="Trunk" type="CSGBox3D" parent="Tree7"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4, 0)
+size = Vector3(0.8, 8, 0.8)
+material = SubResource("bark_mat")
+
+[node name="Canopy" type="CSGBox3D" parent="Tree7"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 9, 0)
+size = Vector3(4, 3, 4)
+material = SubResource("bark_mat")
+
+[node name="Tree8" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15.000000000000014, 0, -40.98076211353315)
+
+[node name="Trunk" type="CSGBox3D" parent="Tree8"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4, 0)
+size = Vector3(0.8, 8, 0.8)
+material = SubResource("bark_mat")
+
+[node name="Canopy" type="CSGBox3D" parent="Tree8"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 9, 0)
+size = Vector3(4, 3, 4)
+material = SubResource("bark_mat")
+
+[node name="Tree9" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.510910596163089e-15, 0, -45.0)
+
+[node name="Trunk" type="CSGBox3D" parent="Tree9"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4, 0)
+size = Vector3(0.8, 8, 0.8)
+material = SubResource("bark_mat")
+
+[node name="Canopy" type="CSGBox3D" parent="Tree9"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 9, 0)
+size = Vector3(4, 3, 4)
+material = SubResource("bark_mat")
+
+[node name="Tree10" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15.000000000000004, 0, -40.98076211353316)
+
+[node name="Trunk" type="CSGBox3D" parent="Tree10"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4, 0)
+size = Vector3(0.8, 8, 0.8)
+material = SubResource("bark_mat")
+
+[node name="Canopy" type="CSGBox3D" parent="Tree10"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 9, 0)
+size = Vector3(4, 3, 4)
+material = SubResource("bark_mat")
+
+[node name="Tree11" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 25.980762113533153, 0, -30.000000000000014)
+
+[node name="Trunk" type="CSGBox3D" parent="Tree11"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4, 0)
+size = Vector3(0.8, 8, 0.8)
+material = SubResource("bark_mat")
+
+[node name="Canopy" type="CSGBox3D" parent="Tree11"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 9, 0)
+size = Vector3(4, 3, 4)
+material = SubResource("bark_mat")
+
+[node name="Player" type="CharacterBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+groups=["player"]
+script = ExtResource("1_player")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Player"]
+shape = SubResource("player_shape")
+
+[node name="CameraRig" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 12)
+script = ExtResource("6_rig")
+
+[node name="PortableRadio" type="Node" parent="."]
+
+[node name="RadioTuner" type="Node" parent="PortableRadio"]
+script = ExtResource("2_tuner")
+band_config = ExtResource("4_band")
+
+[node name="SignalStrength" type="Node" parent="PortableRadio"]
+script = ExtResource("3_signal")
+radio_tuner = NodePath("../RadioTuner")
+
+[node name="RadioStatic" type="Node" parent="PortableRadio"]
+script = ExtResource("5_static")
+radio_tuner = NodePath("../RadioTuner")
+signal_strength = NodePath("../SignalStrength")

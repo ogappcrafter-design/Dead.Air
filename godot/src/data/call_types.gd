@@ -43,5 +43,7 @@ static func from_string(type_name: String) -> CallType:
 			return CallType.JUST_LISTEN
 
 ## Convert enum value back to string (for serialization/debugging).
-static func to_string(type_val: CallType) -> String:
+## Named `name_of` rather than `to_string` to avoid shadowing the built-in
+## Object.to_string, which is a parse error in Godot 4.3+.
+static func name_of(type_val: CallType) -> String:
 	return CallType.keys()[type_val]

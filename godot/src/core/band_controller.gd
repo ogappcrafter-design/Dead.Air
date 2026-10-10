@@ -140,9 +140,9 @@ func is_redacted_band_active() -> bool:
 
 
 ## Returns true if the redacted band (████████) has been unlocked.
-## Delegates to BandUnlockManager if present in the scene tree.
+## Delegates to BandUnlockManager (a child of the ShiftController autoload).
 func is_redacted_band_unlocked() -> bool:
-	var unlock_manager: Node = get_node_or_null("/root/BandUnlockManager")
+	var unlock_manager: Node = get_node_or_null("/root/ShiftController/BandUnlockManager")
 	if unlock_manager and unlock_manager.has_method("is_redacted_band_unlocked"):
 		return unlock_manager.is_redacted_band_unlocked()
 	return false

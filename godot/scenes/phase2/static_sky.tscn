@@ -1,0 +1,165 @@
+[gd_scene load_steps=19 format=3 uid="uid://bp2skytwo01"]
+
+[ext_resource type="Script" uid="uid://bp2skyscr" path="res://src/levels/static_sky_segment.gd" id="1_segment"]
+[ext_resource type="Script" uid="uid://bp2sky" path="res://src/visual/static_sky.gd" id="2_sky"]
+[ext_resource type="Script" uid="uid://be6swwtavc18m" path="res://src/visual/camera_rig.gd" id="3_rig"]
+[ext_resource type="Script" uid="uid://byfya25euxxwe" path="res://src/entities/player.gd" id="4_player"]
+[ext_resource type="Script" uid="uid://bnhl1nrqqywda" path="res://src/core/radio_tuner.gd" id="5_tuner"]
+[ext_resource type="Script" uid="uid://b2ojlbnvs1xnr" path="res://src/core/signal_strength.gd" id="6_signal"]
+[ext_resource type="Resource" uid="uid://11e914f432000" path="res://src/data/band_config.tres" id="7_band"]
+[ext_resource type="Script" uid="uid://cn3ic8sfogvs3" path="res://src/audio/radio_static.gd" id="8_static"]
+[ext_resource type="Script" uid="uid://bp2skyamb" path="res://src/audio/outdoor_ambience.gd" id="9_amb"]
+[ext_resource type="Script" uid="uid://bp2skyfrag" path="res://src/audio/reversed_fragments.gd" id="10_frag"]
+
+[sub_resource type="StandardMaterial3D" id="asphalt_mat"]
+albedo_color = Color(0.13, 0.13, 0.15, 1)
+roughness = 0.95
+
+[sub_resource type="StandardMaterial3D" id="grass_mat"]
+albedo_color = Color(0.08, 0.11, 0.07, 1)
+roughness = 1.0
+
+[sub_resource type="StandardMaterial3D" id="house_mat"]
+albedo_color = Color(0.16, 0.14, 0.12, 1)
+roughness = 0.9
+
+[sub_resource type="StandardMaterial3D" id="house_roof_mat"]
+albedo_color = Color(0.1, 0.09, 0.1, 1)
+roughness = 0.9
+
+[sub_resource type="StandardMaterial3D" id="yellow_line_mat"]
+albedo_color = Color(0.45, 0.38, 0.1, 1)
+roughness = 0.9
+
+[sub_resource type="BoxShape3D" id="exit_shape"]
+size = Vector3(2.0, 3.0, 6.0)
+
+[sub_resource type="BoxShape3D" id="player_shape"]
+size = Vector3(0.5, 1.0, 0.5)
+
+[sub_resource type="Environment" id="env_night"]
+background_mode = 1
+ambient_light_color = Color(0.07, 0.08, 0.12, 1)
+ambient_light_energy = 0.35
+fog_enabled = true
+fog_light_color = Color(0.05, 0.05, 0.08, 1)
+fog_density = 0.012
+
+[node name="StaticSkySegment" type="Node3D"]
+script = ExtResource("1_segment")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("env_night")
+
+[node name="Road" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 24, 0.05, 0)
+size = Vector3(56, 0.1, 7)
+material = SubResource("asphalt_mat")
+use_collision = true
+
+[node name="RoadLine" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 24, 0.11, 0)
+size = Vector3(56, 0.02, 0.25)
+material = SubResource("yellow_line_mat")
+
+[node name="GrassNorth" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 24, 0.02, -9)
+size = Vector3(56, 0.06, 10)
+material = SubResource("grass_mat")
+use_collision = true
+
+[node name="GrassSouth" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 24, 0.02, 9)
+size = Vector3(56, 0.06, 10)
+material = SubResource("grass_mat")
+use_collision = true
+
+[node name="MoonLight" type="DirectionalLight3D" parent="."]
+transform = Transform3D(-0.65, 0.35, 0.67, 0, -0.88, 0.47, -0.76, -0.31, -0.57, 30, 20, 0)
+light_color = Color(0.7, 0.75, 0.85, 1)
+light_energy = 0.25
+shadow_enabled = true
+
+[node name="StaticSky" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40, 0, 0)
+script = ExtResource("2_sky")
+
+[node name="BendSign" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 33, 1.2, -3.5)
+size = Vector3(0.1, 1.6, 0.5)
+material = SubResource("house_mat")
+
+[node name="House1" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 42, 2.2, -8)
+size = Vector3(6, 4.4, 6)
+material = SubResource("house_mat")
+use_collision = true
+
+[node name="House1Roof" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 42, 4.8, -8)
+size = Vector3(6.8, 0.8, 6.8)
+material = SubResource("house_roof_mat")
+
+[node name="House2" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 50, 2.2, -8)
+size = Vector3(6, 4.4, 6)
+material = SubResource("house_mat")
+use_collision = true
+
+[node name="House2Roof" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 50, 4.8, -8)
+size = Vector3(6.8, 0.8, 6.8)
+material = SubResource("house_roof_mat")
+
+[node name="House3" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 50, 2.2, 8)
+size = Vector3(6, 4.4, 6)
+material = SubResource("house_mat")
+use_collision = true
+
+[node name="House3Roof" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 50, 4.8, 8)
+size = Vector3(6.8, 0.8, 6.8)
+material = SubResource("house_roof_mat")
+
+[node name="ExitArea" type="Area3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 52, 1.5, 0)
+collision_layer = 4
+collision_mask = 2
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ExitArea"]
+shape = SubResource("exit_shape")
+
+[node name="Player" type="CharacterBody3D" parent="." groups=["player"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0.5, 0)
+script = ExtResource("4_player")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Player"]
+shape = SubResource("player_shape")
+
+[node name="CameraRig" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 11, 18)
+script = ExtResource("3_rig")
+
+[node name="PortableRadio" type="Node" parent="."]
+
+[node name="RadioTuner" type="Node" parent="PortableRadio"]
+script = ExtResource("5_tuner")
+band_config = ExtResource("7_band")
+
+[node name="SignalStrength" type="Node" parent="PortableRadio"]
+script = ExtResource("6_signal")
+radio_tuner = NodePath("../RadioTuner")
+
+[node name="RadioStatic" type="Node" parent="PortableRadio"]
+script = ExtResource("8_static")
+radio_tuner = NodePath("../RadioTuner")
+signal_strength = NodePath("../SignalStrength")
+
+[node name="ReversedFragments" type="Node" parent="PortableRadio"]
+script = ExtResource("10_frag")
+bus_name = "RADIO_AMBIENT"
+
+[node name="OutdoorAmbience" type="Node" parent="."]
+script = ExtResource("9_amb")
+bus_name = "ROOM_TONE"

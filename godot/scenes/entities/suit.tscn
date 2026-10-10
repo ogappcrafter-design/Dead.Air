@@ -1,6 +1,10 @@
-[gd_scene load_steps=5 format=3 uid="uid://suitentity125"]
+[gd_scene load_steps=6 format=3 uid="uid://suitentity125"]
 
-[ext_resource type="Script" path="res://src/entities/suit.gd" id="1_suit"]
+[ext_resource type="Script" uid="uid://be2qdmaf14jm1" path="res://src/entities/suit.gd" id="1_suit"]
+
+[sub_resource type="CapsuleShape3D" id="suit_shape"]
+radius = 0.35
+height = 1.8
 
 [sub_resource type="StandardMaterial3D" id="mat_suit"]
 resource_local_to_scene = true
@@ -21,8 +25,14 @@ roughness = 0.85
 metallic = 0.0
 
 [node name="Suit" type="CharacterBody3D"]
+collision_layer = 8
+collision_mask = 1
 script = ExtResource("1_suit")
 cast_shadows = false
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("suit_shape")
 
 [node name="Body" type="CSGBox3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)

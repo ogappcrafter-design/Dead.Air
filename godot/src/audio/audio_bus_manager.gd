@@ -39,7 +39,11 @@ const FX_DREAD_LAYER_LOWPASS := 0  # LowPass=0
 
 # ─── Baseline volume snapshot ─────────────────────────────────────────
 # Stored at _ready() so ducking can restore to baseline when released.
-var _baseline_volumes: Dictionary[int, float] = {}
+# NOTE: plain Dictionary — typed Dictionary[int, float] is a Godot 4.4+
+# feature; this project targets 4.3 and the typed form fails to parse,
+# silently breaking the whole AudioBusManager autoload (and every
+# silence/duck/hide-mute path that depends on it).
+var _baseline_volumes: Dictionary = {}
 
 # ─── Active duck states ───────────────────────────────────────────────
 var _call_active: bool = false
