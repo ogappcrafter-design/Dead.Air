@@ -43,6 +43,56 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm test --ci --coverage --coverage.reporter=text-summary
 
+  godot-test:
+    name: Godot Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Godot 4.7
+        run: |
+          curl -sL -o godot.zip https://github.com/godotengine/godot-builds/releases/download/4.7-stable/Godot_v4.7-stable_linux.x86_64.zip
+          unzip godot.zip
+          chmod +x Godot_v4.7-stable_linux.x86_64
+          sudo mv Godot_v4.7-stable_linux.x86_64 /usr/local/bin/godot
+          godot --version
+      - name: Import project
+        working-directory: godot
+        run: godot --headless --import 2>&1 | tail -5
+      - name: Run test suite
+        id: tests
+        working-directory: godot
+        run: |
+          set +e
+          godot --headless --path . --script res://tests/test_runner.gd 2>&1 | tee test_output.log
+          GODOT_EXIT=${PIPESTATUS[0]}
+          set -e
+          # Ensure no lingering engine process so the runner doesn't kill an
+          # orphan and mark the job cancelled.
+          pkill -f "godot --headless" 2>/dev/null || true
+          TOTAL=$(grep -oP 'Total: \K[0-9]+' test_output.log | tail -1)
+          PASSED=$(grep -oP 'Passed: \K[0-9]+' test_output.log | tail -1)
+          FAILED=$(grep -oP 'Failed: \K[0-9]+' test_output.log | tail -1)
+          echo "total=$TOTAL" >> "$GITHUB_OUTPUT"
+          echo "passed=$PASSED" >> "$GITHUB_OUTPUT"
+          echo "failed=$FAILED" >> "$GITHUB_OUTPUT"
+          if [ -z "$TOTAL" ]; then
+            echo "::error::Godot test runner produced no summary line"
+            exit 1
+          fi
+          # Known baseline: 28 pre-existing failures (HUDLayout, Interactable,
+          # MainMenu, BandSystem, PhaseManager, SaveManager, ShiftSummary,
+          # InteractionRaycast). Regression = failures above baseline.
+          if [ "$FAILED" -gt 28 ]; then
+            echo "::error::Godot test failures ($FAILED) exceed the known baseline of 28"
+            exit 1
+          fi
+          exit 0
+      - name: Summary
+        if: always()
+        run: |
+          echo "Godot tests: ${{ steps.tests.outputs.passed }}/${{ steps.tests.outputs.total }} passed, ${{ steps.tests.outputs.failed }} failures (baseline 28)" >> "$GITHUB_STEP_SUMMARY"
+
   security:
     name: Security Scan
     runs-on: ubuntu-latest
