@@ -56,6 +56,10 @@ High contrast + text size: `HighContrastManager` (`godot/src/ui/high_contrast_ma
 
 The shader's `ca_radial_amount` / `signal_scanline_drift` uniforms (DEA-142) were restored by DEA-145 — they were removed in the companion sync only because their driver was gone; DEA-145's `compute_params` drives them again.
 
+## Endless Night (DEA-86, mobile app)
+
+`useEndlessNight` hook (`hooks/useEndlessNight.ts`, mounted on the radio screen) drives the endless run loop: auto-starts after the first completed shift, schedules calls at `getEndlessCallInterval` (escalation-scaled, 25s floor), idle sanity drain, and submits the run to the leaderboard on game-over. Rare events use id base **6000** in `callManagerInstance` (keep that range reserved); core bands are 0–4 (the five fragment libraries all support the advanced call-type set). Game-over fires inside `gameStateSlice.decreaseSanity` **before** the no_rest wipe — keep that ordering.
+
 ## Maintaining this file
 
 Keep this file for knowledge useful to almost every future agent session in this project.
