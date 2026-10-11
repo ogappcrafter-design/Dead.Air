@@ -5,6 +5,9 @@ import {
   SHIFTS_PER_ESCALATION,
   SANITY_DRAIN_ESCALATION_PER_LEVEL,
   ESCALATION_CALL_TYPES,
+  RARE_EVENT_CHANCE,
+  ENDLESS_SHIFT_CALL_BASE_INTERVAL_MS,
+  ENDLESS_SHIFT_CALL_MIN_INTERVAL_MS,
   canStartEndlessNight,
   startEndlessNight,
   getEscalationLevel,
@@ -14,6 +17,9 @@ import {
   onShiftCompleted,
   onGameOver,
   endEndlessNight,
+  selectRareEvent,
+  getEndlessDrainMultiplier,
+  getEndlessCallInterval,
 } from '@/engine/progression/EndlessNight';
 
 describe('constants', () => {
@@ -214,5 +220,112 @@ describe('endEndlessNight', () => {
     const result = endEndlessNight(state);
     expect(result.endlessScore).toBe(7);
     expect(result.endlessHighScore).toBe(10);
+  });
+});
+
+// --- DEA-86: procedural depth helpers ---
+
+describe('RARE_EVENT_CHANCE', () => {
+  it('is 0.2 and in (0, 1)', () => {
+    expect(RARE_EVENT_CHANCE).toBe(0.2);
+    expect(RARE_EVENT_CHANCE).toBeGreaterThan(0);
+    expect(RARE_EVENT_CHANCE).toBeLessThan(1);
+  });
+});
+
+describe('selectRareEvent', () => {
+  it('never spawns a rare event at level 0 (no advanced types unlocked)', () => {
+    for (let roll = 0; roll < 1; roll += 0.01) {
+      const r = selectRareEvent(0, roll, 0);
+      expect(r.isRareEvent).toBe(false);
+      expect(r.callType).toBeNull();
+      expect(r.band).toBeNull();
+    }
+  });
+
+  it('spawns a rare event when the roll is under RARE_EVENT_CHANCE', () => {
+    const r = selectRareEvent(1, 0.05, 0.5);
+    expect(r.isRareEvent).toBe(true);
+    expect(r.callType).not.toBeNull();
+    expect(r.band).not.toBeNull();
+    expect(r.band).toBeGreaterThanOrEqual(0);
+    expect(r.band).toBeLessThan(5);
+  });
+
+  it('does not spawn a rare event when the roll is at or above RARE_EVENT_CHANCE', () => {
+    expect(selectRareEvent(1, RARE_EVENT_CHANCE, 0.5).isRareEvent).toBe(false);
+    expect(selectRareEvent(1, 0.99, 0.5).isRareEvent).toBe(false);
+  });
+
+  it('only picks call types unlocked at the escalation level', () => {
+    // Level 2 unlocks MULTI_CALLER, TIMING, PUZZLE — never CONVERSATION/DEAD_AIR.
+    const allowed = new Set(['MULTI_CALLER', 'TIMING', 'PUZZLE']);
+    for (let roll = 0; roll < RARE_EVENT_CHANCE; roll += 0.005) {
+      const r = selectRareEvent(2, roll, 0.5);
+      if (r.isRareEvent) {
+        expect(allowed.has(r.callType as string)).toBe(true);
+      }
+    }
+  });
+
+  it('covers every unlocked type across the rare-event roll range at level 1', () => {
+    const seen = new Set<string>();
+    for (let i = 0; i < 200; i++) {
+      const r = selectRareEvent(1, (i / 200) * RARE_EVENT_CHANCE, 0.5);
+      if (r.isRareEvent && r.callType !== null) {
+        seen.add(r.callType);
+      }
+    }
+    expect(seen).toEqual(new Set(['MULTI_CALLER', 'TIMING']));
+  });
+
+  it('always targets a core band (0-4)', () => {
+    for (let bandRoll = 0; bandRoll < 1; bandRoll += 0.01) {
+      const r = selectRareEvent(3, 0.01, bandRoll);
+      if (r.isRareEvent && r.band !== null) {
+        expect(r.band).toBeGreaterThanOrEqual(0);
+        expect(r.band).toBeLessThan(5);
+      }
+    }
+  });
+});
+
+describe('getEndlessDrainMultiplier', () => {
+  it('returns the difficulty multiplier unchanged at level 0', () => {
+    expect(getEndlessDrainMultiplier(0.7, 0)).toBeCloseTo(0.7, 5);
+    expect(getEndlessDrainMultiplier(1, 0)).toBeCloseTo(1, 5);
+    expect(getEndlessDrainMultiplier(1.5, 0)).toBeCloseTo(1.5, 5);
+  });
+
+  it('multiplies difficulty × escalation (insomniac level 2 → 1.2)', () => {
+    expect(getEndlessDrainMultiplier(1, 2)).toBeCloseTo(1.2, 5);
+  });
+
+  it('multiplies difficulty × escalation (no_rest level 3 → 1.95)', () => {
+    expect(getEndlessDrainMultiplier(1.5, 3)).toBeCloseTo(1.95, 5);
+  });
+});
+
+describe('getEndlessCallInterval', () => {
+  it('is the base interval at level 0 with a 1.0 frequency multiplier', () => {
+    expect(getEndlessCallInterval(0, 1)).toBe(ENDLESS_SHIFT_CALL_BASE_INTERVAL_MS);
+  });
+
+  it('scales with the call-frequency multiplier', () => {
+    // night_owl (1.3) at level 0 → 180s * 1.3 = 234s
+    expect(getEndlessCallInterval(0, 1.3)).toBeCloseTo(234_000, 0);
+  });
+
+  it('shortens as escalation level rises', () => {
+    const l0 = getEndlessCallInterval(0, 1);
+    const l5 = getEndlessCallInterval(5, 1);
+    expect(l5).toBeCloseTo(l0 / 1.5, 0);
+    expect(l5).toBeLessThan(l0);
+  });
+
+  it('never goes below the floor', () => {
+    // 180s / (1 + 0.1 * 70) = 22.5s < 25s → clamped to the floor
+    expect(getEndlessCallInterval(70, 1)).toBe(ENDLESS_SHIFT_CALL_MIN_INTERVAL_MS);
+    expect(getEndlessCallInterval(100, 0.1)).toBe(ENDLESS_SHIFT_CALL_MIN_INTERVAL_MS);
   });
 });

@@ -134,3 +134,32 @@ export const useLeaderboardStore = create<LeaderboardState>()(
 );
 
 export { generateCallSign };
+
+// --- DEA-86: Endless Night leaderboard submission ---
+
+/**
+ * DEA-86: Achievement label for an Endless Night score (shifts survived).
+ * Tiers mirror the escalation weather names so a posted run reads like a
+ * report from the night.
+ */
+export function endlessAchievementLabel(score: number): string {
+  if (score >= 25) return 'Signal Collapsed';
+  if (score >= 20) return 'Anomalous Static';
+  if (score >= 15) return 'Electrical Storm';
+  if (score >= 10) return 'Storm Survivor';
+  if (score >= 5) return 'Overcast Listener';
+  return 'Night Shift';
+}
+
+/**
+ * DEA-86: Submit a finished Endless Night run score to the local
+ * leaderboard. `callSign` falls back to a generated sign when the player
+ * has not set one.
+ */
+export function submitEndlessScore(score: number, callSign: string): void {
+  useLeaderboardStore.getState().addEntry({
+    callSign: callSign.trim() !== '' ? callSign.trim() : generateCallSign(),
+    score,
+    achievement: endlessAchievementLabel(score),
+  });
+}

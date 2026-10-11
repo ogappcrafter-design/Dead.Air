@@ -17,6 +17,14 @@ import { ATMOSPHERIC_PACKS } from '@/data/atmosphericPacks';
 import { ProceduralCallGenerator } from './ProceduralCallGenerator';
 import { SEASONAL_ID_BASE } from '@/engine/progression/SeasonalCallInjector';
 import { ALL_DLC_CALLS } from '@/data/tapePacks';
+import {
+  LIVING_FRAGMENTS,
+  LIMINAL_FRAGMENTS,
+  LOST_FRAGMENTS,
+  CLASSIFIED_FRAGMENTS,
+  REDACTED_FRAGMENTS,
+} from '@/data/fragments';
+import type { CallType } from '@/lib/constants';
 import type { Band } from '@/lib/constants';
 import type { CallData } from './types';
 
@@ -92,6 +100,75 @@ ATMOSPHERIC_FRAGMENTS.forEach((lib, i) => {
  */
 export function registerDailyCall(call: CallData): void {
   registry.set(call.id, call);
+}
+
+// --- DEA-86: Endless Night rare event calls ---
+
+/**
+ * Id base for Endless Night rare event calls. The space 6000+ is reserved
+ * for the Endless Night generator (sacred 0-17, procedural 1000+, seasonal
+ * 15000+, atmospheric 2000/3000/4000, daily 50000+).
+ */
+export const ENDLESS_RARE_EVENT_ID_BASE = 6000;
+
+// Core-band fragment libraries that support every advanced call type.
+// Rare events only ever spawn on these bands so a forced call type can
+// never produce an unrenderable call.
+const ENDLESS_RARE_EVENT_LIBRARIES = [
+  LIVING_FRAGMENTS,
+  LIMINAL_FRAGMENTS,
+  LOST_FRAGMENTS,
+  CLASSIFIED_FRAGMENTS,
+  REDACTED_FRAGMENTS,
+] as const;
+
+let _endlessCallIds: number[] = [];
+let _endlessNextId = ENDLESS_RARE_EVENT_ID_BASE;
+
+/**
+ * DEA-86: Generate a unique procedural rare event call for an Endless
+ * Night run and register it in the call registry.
+ *
+ * `forcedType` is the advanced call type chosen by the escalation level
+ * (see `selectRareEvent`). `band` is a core band index 0-4 — the generator
+ * picks the matching library, so the call lands on the requested band.
+ * Each call gets the next id in the 6000+ space, never colliding.
+ *
+ * Returns the registered call, or null if the band is out of range.
+ */
+export function registerEndlessRareEventCall(forcedType: string, band: number): CallData | null {
+  if (band < 0 || band >= ENDLESS_RARE_EVENT_LIBRARIES.length) {
+    return null;
+  }
+  const generator = new ProceduralCallGenerator(
+    [ENDLESS_RARE_EVENT_LIBRARIES[band]!],
+    undefined,
+    _endlessNextId,
+  );
+  const call = generator.generate(band, { forceType: forcedType as CallType });
+  _endlessNextId += 1;
+  _endlessCallIds.push(call.id);
+  registry.set(call.id, call);
+  return call;
+}
+
+/**
+ * DEA-86: Remove all Endless Night rare event calls from the registry.
+ * Called when a run ends (game over or quit) so leftover calls cannot
+ * leak into a later normal play session. Also resets the id cursor so a
+ * subsequent run can reuse the low ids without unbounded growth.
+ */
+export function clearEndlessRareEventCalls(): void {
+  for (const id of _endlessCallIds) {
+    registry.delete(id);
+  }
+  _endlessCallIds = [];
+  _endlessNextId = ENDLESS_RARE_EVENT_ID_BASE;
+}
+
+/** All currently-registered endless rare event call ids (test-only). */
+export function getEndlessRareEventCallIds(): readonly number[] {
+  return _endlessCallIds;
 }
 
 export function refreshExpansionCalls(

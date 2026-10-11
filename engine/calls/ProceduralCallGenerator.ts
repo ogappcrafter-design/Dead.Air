@@ -98,7 +98,10 @@ export class ProceduralCallGenerator {
    *              ids from CHOICE_GATES are excluded from the id space.
    * @returns A valid CallData with a unique procedural id.
    */
-  generate(band: number, options?: { choiceHistory?: ChoiceHistorySnapshot }): CallData {
+  generate(
+    band: number,
+    options?: { choiceHistory?: ChoiceHistorySnapshot; forceType?: CallType },
+  ): CallData {
     let library = this.getLibrary(band);
     // DEA-56: When choiceHistory is provided, select from branches whose
     // prerequisites are met. Falls back to the default library when no
@@ -110,7 +113,14 @@ export class ProceduralCallGenerator {
       }
     }
     const variation = this.getVariation(band);
-    const callType = this.pickCallType(library);
+    // DEA-86: forceType pins the call type (used for Endless Night rare
+    // events). Falls back to a random supported type when the forced type
+    // is not in this library's callTypes list.
+    const forced = options?.forceType;
+    const callType =
+      forced !== undefined && library.callTypes.includes(forced)
+        ? forced
+        : this.pickCallType(library);
     const id = this.nextId++;
 
     const call: CallData = {
@@ -223,7 +233,7 @@ export class ProceduralCallGenerator {
   generateBatch(
     band: number,
     count: number,
-    options?: { choiceHistory?: ChoiceHistorySnapshot },
+    options?: { choiceHistory?: ChoiceHistorySnapshot; forceType?: CallType },
   ): CallData[] {
     const calls: CallData[] = [];
     for (let i = 0; i < count; i++) {
@@ -239,7 +249,7 @@ export class ProceduralCallGenerator {
    */
   generateAcrossBands(
     countPerBand: number,
-    options?: { choiceHistory?: ChoiceHistorySnapshot },
+    options?: { choiceHistory?: ChoiceHistorySnapshot; forceType?: CallType },
   ): CallData[] {
     const calls: CallData[] = [];
     for (const band of this.fragmentsByBand.keys()) {

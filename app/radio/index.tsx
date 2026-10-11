@@ -11,6 +11,8 @@ import { TutorialIndicator } from '@/components/tutorial/TutorialIndicator';
 import { TutorialTransition } from '@/components/tutorial/TutorialTransition';
 import { useDailyCall } from '@/hooks/useDailyCall';
 import { useDlcFragmentCalls } from '@/hooks/useDlcFragmentCalls';
+import { useEndlessNight } from '@/hooks/useEndlessNight';
+import { EndlessNightOverlay } from '@/components/endless/EndlessNightOverlay';
 import CRTView from '../../components/shared/CRTView';
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 
@@ -22,10 +24,12 @@ export default function RadioScreen() {
 
   useDailyCall();
   useDlcFragmentCalls();
+  useEndlessNight();
 
   return (
     <CRTView intensity={0.3}>
       <View style={styles.container}>
+        <EndlessNightOverlay />
         {tutorial.isActive && <TutorialIndicator />}
         <RadioBody />
         <StreakIndicator />

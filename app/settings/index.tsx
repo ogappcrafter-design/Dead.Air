@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Pressable, Switch, ScrollView, TextInput } from
 import { router } from 'expo-router';
 import { colors, fonts, spacing } from '../../lib/theme';
 import { useSettingsStore } from '../../store/useSettingsStore';
+import { useGameStore } from '../../store/useGameStore';
 import { useTutorialStore } from '../../store/useTutorialStore';
 import { useAnalyticsStore } from '../../store/useAnalyticsStore';
 import { useStoreStore } from '../../store/useStoreStore';
@@ -45,6 +46,18 @@ export default function SettingsScreen() {
   const setSfxVolume = useSettingsStore((s) => s.setSfxVolume);
   const staticEnabled = useSettingsStore((s) => s.staticEnabled);
   const setStaticEnabled = useSettingsStore((s) => s.setStaticEnabled);
+
+  // DEA-86: Endless Night control state.
+  const endlessActive = useGameStore((s) => s.endlessModeActive);
+  const endlessGameOver = useGameStore((s) => s.endlessGameOver);
+  const endlessScore = useGameStore((s) => s.endlessScore);
+  const endlessHighScore = useGameStore((s) => s.endlessHighScore);
+  const escalationLevel = useGameStore((s) => s.escalationLevel);
+  const endlessWeather = useGameStore((s) => s.endlessWeather);
+  const shiftsCompleted = useGameStore((s) => s.shiftsCompleted);
+  const ngPlusActive = useGameStore((s) => s.ngPlusActive);
+  const startEndless = useGameStore((s) => s.startEndlessNightMode);
+  const endEndless = useGameStore((s) => s.endEndlessNightMode);
 
   const analyticsEnabled = useAnalyticsStore((s) => s.enabled);
   const setAnalyticsEnabled = useAnalyticsStore((s) => s.setEnabled);
@@ -386,6 +399,72 @@ export default function SettingsScreen() {
             </Pressable>
           );
         })}
+      </View>
+
+      <View style={styles.card} testID="endless-night-card">
+        <Text style={styles.sectionLabel}>ENDLESS NIGHT</Text>
+
+        {endlessActive ? (
+          <>
+            <View style={styles.row}>
+              <Text style={styles.rowLabel}>SHIFTS SURVIVED</Text>
+              <Text style={styles.statusValue}>
+                {endlessScore} (BEST {endlessHighScore})
+              </Text>
+            </View>
+            <View style={styles.row}>
+              <Text style={styles.rowLabel}>ESCALATION</Text>
+              <Text style={styles.statusValue}>
+                LVL {escalationLevel} — {endlessWeather.toUpperCase()}
+              </Text>
+            </View>
+            <View style={styles.row}>
+              <Text style={styles.rowLabel}>STATUS</Text>
+              <Text
+                style={[styles.statusValue, endlessGameOver ? styles.textRed : styles.textGreen]}
+              >
+                {endlessGameOver ? 'SIGNAL LOST' : 'ON AIR'}
+              </Text>
+            </View>
+            <Pressable
+              testID="endless-quit"
+              style={({ pressed }) => [styles.restoreBtn, pressed && styles.restoreBtnPressed]}
+              onPress={endEndless}
+              accessible
+              accessibilityRole="button"
+              accessibilityLabel="Quit Endless Night"
+              accessibilityHint="End the current run. Your best score is kept."
+            >
+              <Text style={styles.restoreBtnText} numberOfLines={1}>
+                QUIT NIGHT
+              </Text>
+            </Pressable>
+          </>
+        ) : (
+          <>
+            {shiftsCompleted < 1 ? (
+              <Text style={styles.note}>
+                COMPLETE ONE NIGHT SHIFT TO UNLOCK THE ENDLESS FREQUENCY.
+              </Text>
+            ) : ngPlusActive ? (
+              <Text style={styles.note}>UNAVAILABLE WHILE A NEW GAME+ RUN IS ACTIVE.</Text>
+            ) : (
+              <Pressable
+                testID="endless-start"
+                style={({ pressed }) => [styles.restoreBtn, pressed && styles.restoreBtnPressed]}
+                onPress={startEndless}
+                accessible
+                accessibilityRole="button"
+                accessibilityLabel="Start Endless Night"
+                accessibilityHint="Begin a survival run. Sanity drains and strangeness escalates until the signal is lost."
+              >
+                <Text style={styles.restoreBtnText} numberOfLines={1}>
+                  START ENDLESS NIGHT
+                </Text>
+              </Pressable>
+            )}
+          </>
+        )}
       </View>
 
       <View style={styles.card}>

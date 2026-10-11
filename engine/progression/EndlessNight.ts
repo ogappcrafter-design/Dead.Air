@@ -20,6 +20,35 @@ export const SHIFTS_PER_ESCALATION = 5;
 export const SANITY_DRAIN_ESCALATION_PER_LEVEL = 0.1;
 
 /**
+ * DEA-86: Probability that an idle window in an Endless Night run spawns a
+ * rare event call instead of a normal shift call. Rare events are unique
+ * procedural variants (advanced call types) that only exist during a run.
+ */
+export const RARE_EVENT_CHANCE = 0.2;
+
+/**
+ * DEA-86: Base interval (ms) between shift calls during an Endless Night
+ * run. Divided by the escalation multiplier so escalation makes the night
+ * feel faster as well as deadlier. 180s at level 0 → 25s (floor) by level 10.
+ */
+export const ENDLESS_SHIFT_CALL_BASE_INTERVAL_MS = 180_000;
+
+/** Floor for the shift-call interval regardless of escalation speed-up. */
+export const ENDLESS_SHIFT_CALL_MIN_INTERVAL_MS = 25_000;
+
+/**
+ * DEA-86: Seconds of idle sanity drain between calls, applied continuously
+ * at ENDLESS_IDLE_DRAIN_PER_SECOND via the run hook.
+ */
+export const ENDLESS_IDLE_DRAIN_PER_SECOND = 0.2;
+
+/**
+ * DEA-86: Seconds of real time between ambient idle-drain ticks in the run
+ * hook. Keeps the store update rate low while feeling continuous.
+ */
+export const ENDLESS_IDLE_DRAIN_TICK_MS = 1_000;
+
+/**
  * Escalation level → call type IDs that become available.
  * Level 0: base calls only.
  * Level 1 (shifts 5+): MULTI_CALLER, TIMING.
@@ -176,4 +205,86 @@ export function endEndlessNight(state: EndlessNightState): EndlessNightState {
     ...state,
     endlessModeActive: false,
   };
+}
+
+// --- DEA-86: procedural depth helpers ---
+
+/** A single rare event selection result. */
+export interface RareEventSelection {
+  /** True when a rare event should spawn this idle window. */
+  isRareEvent: boolean;
+  /** Advanced call type for the rare event (only meaningful when isRareEvent). */
+  callType: string | null;
+  /** Band index (0-4 core bands) for the rare event. */
+  band: number | null;
+}
+
+/**
+ * DEA-86: Decide whether the current idle window spawns a rare event call,
+ * and which type/band to use.
+ *
+ * Rare events use advanced call types unlocked by the current escalation
+ * level (from `ESCALATION_CALL_TYPES`). When no advanced types are unlocked
+ * yet (level 0), no rare event can spawn — base calls only, per the
+ * `ESCALATION_CALL_TYPES[0] = []` contract.
+ *
+ * `rngRoll` gates the spawn (roll < RARE_EVENT_CHANCE) and, once spawned,
+ * is normalized to [0,1) to pick the type — so every unlocked type is
+ * reachable, not just the first slice of the list. `bandRoll` (0..1) picks
+ * the core band.
+ *
+ * Pure: driven by the injected rolls, so tests are deterministic.
+ */
+export function selectRareEvent(
+  escalationLevel: number,
+  rngRoll: number,
+  bandRoll: number,
+): RareEventSelection {
+  const types = getEscalationCallTypes(escalationLevel);
+  if (types.length === 0 || rngRoll >= RARE_EVENT_CHANCE) {
+    return { isRareEvent: false, callType: null, band: null };
+  }
+  // Normalize the spawn roll to [0,1) so every unlocked type is reachable.
+  const normalized = rngRoll / RARE_EVENT_CHANCE;
+  const callType = types[Math.floor(normalized * types.length) % types.length] ?? null;
+  if (callType === null) {
+    return { isRareEvent: false, callType: null, band: null };
+  }
+  // Core bands only (0-4): they are the bands with full advanced-type
+  // fragment coverage, so a rare event can never produce an unrenderable call.
+  const band = Math.floor(bandRoll * 5) % 5;
+  return { isRareEvent: true, callType, band };
+}
+
+/**
+ * DEA-86: Compose the effective sanity-drain multiplier for an Endless
+ * Night run. Stacks the base difficulty multiplier with the escalation
+ * multiplier, mirroring how NG+ stacks on top of base difficulty
+ * (see `getNgPlusDifficultyConfig`).
+ *
+ * E.g. insomniac (1.0) at level 2 → 1.0 * 1.2 = 1.2.
+ *      no_rest (1.5) at level 3 → 1.5 * 1.3 = 1.95.
+ */
+export function getEndlessDrainMultiplier(
+  difficultyMultiplier: number,
+  escalationLevel: number,
+): number {
+  return difficultyMultiplier * getEscalationSanityDrainMultiplier(escalationLevel);
+}
+
+/**
+ * DEA-86: Real-time interval between shift calls during an Endless Night
+ * run, in milliseconds. Escalation shortens the interval (faster night)
+ * with a floor so the loop stays playable.
+ *
+ * E.g. level 0 → 180s, level 5 → 120s, level 70 → 25s (floor).
+ */
+export function getEndlessCallInterval(
+  escalationLevel: number,
+  callFrequencyMultiplier: number,
+): number {
+  const scaled =
+    (ENDLESS_SHIFT_CALL_BASE_INTERVAL_MS * callFrequencyMultiplier) /
+    getEscalationSanityDrainMultiplier(escalationLevel);
+  return Math.max(ENDLESS_SHIFT_CALL_MIN_INTERVAL_MS, scaled);
 }
