@@ -159,6 +159,54 @@ const SKIN_REGISTRY: Record<string, Skin> = {
       comfortable: 14,
     },
   },
+  pirate_radio: {
+    id: 'pirate_radio',
+    name: 'Pirate Radio',
+    description: 'Contraband crystal set, midnight transmissions only.',
+    price: 0.99,
+    colors: {
+      background: '#14100A',
+      surface: '#2A2014',
+      text: '#E8D5A0',
+      textSecondary: '#B89B5A',
+      accent: '#FFC400',
+      border: '#3E3018',
+      power: '#FFC400',
+      station: '#FFD700',
+    },
+    fonts: {
+      primary: 'Georgia',
+      secondary: 'Courier New',
+    },
+    spacing: {
+      compact: 4,
+      comfortable: 16,
+    },
+  },
+  hospital_intercom: {
+    id: 'hospital_intercom',
+    name: 'Hospital Intercom',
+    description: 'Sterile wall unit from an abandoned ward. Still paging.',
+    price: 0.99,
+    colors: {
+      background: '#0B1113',
+      surface: '#14232A',
+      text: '#CFE5E5',
+      textSecondary: '#6E9C9C',
+      accent: '#2EC4B6',
+      border: '#1E3A40',
+      power: '#2EC4B6',
+      station: '#5EEAD4',
+    },
+    fonts: {
+      primary: 'Courier',
+      secondary: 'Helvetica',
+    },
+    spacing: {
+      compact: 4,
+      comfortable: 18,
+    },
+  },
 };
 
 export const SKINS: Record<string, Skin> = SKIN_REGISTRY;

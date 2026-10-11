@@ -13,16 +13,18 @@ import {
 import { HOLIDAY_DLC_CALLS } from '../../data/tapePacks/holidayCalls';
 import { NUMBERS_STATION_DLC_CALLS } from '../../data/tapePacks/numbersStationCalls';
 import { VOICES_BEYOND_DLC_CALLS } from '../../data/tapePacks/voicesBeyondCalls';
+import { MERCY_GENERAL_DLC_CALLS } from '../../data/tapePacks/mercyGeneralCalls';
 import { DLC_TAPES } from '../../data/tapes';
 import type { CallData } from '../../engine/calls/types';
 
 const HOLIDAY_ID = 'com.deadair.tape_pack_holiday';
 const NUMBERS_ID = 'com.deadair.tape_pack_numbers_station';
 const VOICES_ID = 'com.deadair.tape_pack_voices_beyond';
+const MERCY_ID = 'com.deadair.tape_pack_mercy_general';
 
 describe('TAPE_PACKS registry', () => {
-  it('contains exactly 3 tape packs', () => {
-    expect(TAPE_PACKS).toHaveLength(3);
+  it('contains exactly 4 tape packs', () => {
+    expect(TAPE_PACKS).toHaveLength(4);
   });
 
   it('has unique product IDs', () => {
@@ -83,6 +85,21 @@ describe('TAPE_PACKS registry', () => {
     expect(pack).toBeDefined();
     expect(pack!.calls.every((c) => c.band === 2)).toBe(true);
   });
+
+  it('Mercy General pack uses band 0 (LIVING)', () => {
+    const pack = getTapePackByProductId(MERCY_ID);
+    expect(pack).toBeDefined();
+    expect(pack!.calls.every((c) => c.band === 0)).toBe(true);
+  });
+
+  it('Mercy General pack tapes (031-035) resolve in the DLC tape registry', () => {
+    const pack = getTapePackByProductId(MERCY_ID);
+    expect(pack).toBeDefined();
+    const dlcTapeIds = new Set(DLC_TAPES.map((t) => t.id));
+    for (const tape of pack!.tapes) {
+      expect(dlcTapeIds.has(tape.id)).toBe(true);
+    }
+  });
 });
 
 describe('getTapePackByProductId', () => {
@@ -108,8 +125,8 @@ describe('getTapePackByPackId', () => {
 });
 
 describe('ALL_DLC_CALLS', () => {
-  it('contains all 9 DLC calls (3 per pack)', () => {
-    expect(ALL_DLC_CALLS).toHaveLength(9);
+  it('contains all 12 DLC calls (3 per pack)', () => {
+    expect(ALL_DLC_CALLS).toHaveLength(12);
   });
 
   it('includes holiday calls with IDs 200-202', () => {
@@ -127,6 +144,11 @@ describe('ALL_DLC_CALLS', () => {
     expect(ids).toEqual([400, 401, 402]);
   });
 
+  it('includes mercy general calls with IDs 500-502', () => {
+    const ids = ALL_DLC_CALLS.filter((c) => c.sourcePackId === MERCY_ID).map((c) => c.id);
+    expect(ids).toEqual([500, 501, 502]);
+  });
+
   it('every call has a sourcePackId', () => {
     for (const call of ALL_DLC_CALLS) {
       expect(call.sourcePackId).toBeDefined();
@@ -135,8 +157,8 @@ describe('ALL_DLC_CALLS', () => {
 });
 
 describe('ALL_DLC_FRAGMENTS', () => {
-  it('contains at least 3 fragment libraries (1 per pack)', () => {
-    expect(ALL_DLC_FRAGMENTS.length).toBeGreaterThanOrEqual(3);
+  it('contains at least 4 fragment libraries (1 per pack)', () => {
+    expect(ALL_DLC_FRAGMENTS.length).toBeGreaterThanOrEqual(4);
   });
 
   it('includes fragments for band 0 (Holiday/LIVING)', () => {
@@ -149,6 +171,12 @@ describe('ALL_DLC_FRAGMENTS', () => {
 
   it('includes fragments for band 2 (Voices Beyond/LOST)', () => {
     expect(ALL_DLC_FRAGMENTS.some((f) => f.band === 2)).toBe(true);
+  });
+
+  it('includes fragments for band 0 (Mercy General/LIVING, second library)', () => {
+    // Mercy General also uses band 0; there are now two band-0 DLC libraries.
+    const band0 = ALL_DLC_FRAGMENTS.filter((f) => f.band === 0);
+    expect(band0.length).toBeGreaterThanOrEqual(2);
   });
 });
 
@@ -163,9 +191,9 @@ describe('getDlcCallsForOwnedPacks', () => {
     expect(calls.every((c) => c.sourcePackId === HOLIDAY_ID)).toBe(true);
   });
 
-  it('returns 9 calls when all 3 packs owned', () => {
-    const calls = getDlcCallsForOwnedPacks([HOLIDAY_ID, NUMBERS_ID, VOICES_ID]);
-    expect(calls).toHaveLength(9);
+  it('returns 12 calls when all 4 packs owned', () => {
+    const calls = getDlcCallsForOwnedPacks([HOLIDAY_ID, NUMBERS_ID, VOICES_ID, MERCY_ID]);
+    expect(calls).toHaveLength(12);
   });
 
   it('ignores unknown product IDs', () => {
@@ -185,9 +213,9 @@ describe('getDlcFragmentsForOwnedPacks', () => {
     expect(frags.every((f) => f.band === 0)).toBe(true);
   });
 
-  it('returns fragments for all 3 packs when all owned', () => {
-    const frags = getDlcFragmentsForOwnedPacks([HOLIDAY_ID, NUMBERS_ID, VOICES_ID]);
-    expect(frags.length).toBeGreaterThanOrEqual(3);
+  it('returns fragments for all 4 packs when all owned', () => {
+    const frags = getDlcFragmentsForOwnedPacks([HOLIDAY_ID, NUMBERS_ID, VOICES_ID, MERCY_ID]);
+    expect(frags.length).toBeGreaterThanOrEqual(4);
   });
 });
 
@@ -196,6 +224,7 @@ describe('DLC call data integrity', () => {
     ...HOLIDAY_DLC_CALLS,
     ...NUMBERS_STATION_DLC_CALLS,
     ...VOICES_BEYOND_DLC_CALLS,
+    ...MERCY_GENERAL_DLC_CALLS,
   ] as CallData[];
 
   it('every DLC call has required fields', () => {

@@ -255,6 +255,47 @@ export const DLC_TAPES: TapeInfo[] = [
     duration: '9:11',
     rarity: 'legendary',
   },
+  // Mercy General Pack
+  {
+    id: 'tape-031',
+    title: 'Ward Four East',
+    description: 'The monitors never stopped. The patients never left.',
+    band: 'LIVING',
+    duration: '4:47',
+    rarity: 'rare',
+  },
+  {
+    id: 'tape-032',
+    title: 'The Night Shift Log',
+    description: 'Every entry since 1987 is in your handwriting.',
+    band: 'LIVING',
+    duration: '3:29',
+    rarity: 'rare',
+  },
+  {
+    id: 'tape-033',
+    title: 'Patient Room 17',
+    description: 'The isolation unit was demolished in the nineties. The page came through anyway.',
+    band: 'CLASSIFIED',
+    duration: '5:58',
+    rarity: 'rare',
+  },
+  {
+    id: 'tape-034',
+    title: 'Mercy Evacuation',
+    description: 'The order said all clear. The hallway said otherwise.',
+    band: 'LOST',
+    duration: '6:24',
+    rarity: 'rare',
+  },
+  {
+    id: 'tape-035',
+    title: 'The Intercom Voice',
+    description: 'It counts the floors. It never reaches the top. It never reaches the bottom.',
+    band: '████████',
+    duration: '8:08',
+    rarity: 'legendary',
+  },
 ];
 
 // Combined array for lookups across base + DLC

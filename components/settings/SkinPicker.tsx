@@ -23,6 +23,10 @@ function skinProductId(skinId: string): string | null {
       return PRODUCT_IDS.SKIN_SPACE_AGE_BLUE;
     case 'digital_pixel':
       return PRODUCT_IDS.SKIN_DIGITAL_PIXEL;
+    case 'pirate_radio':
+      return PRODUCT_IDS.SKIN_PIRATE_RADIO;
+    case 'hospital_intercom':
+      return PRODUCT_IDS.SKIN_HOSPITAL_INTERCOM;
     default:
       return null;
   }

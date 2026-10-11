@@ -30,13 +30,18 @@ export const PRODUCT_IDS = {
   ATMOS_RAIN_NIGHT: 'com.deadair.atmos_rain_night',
   ATMOS_WINTER_STATIC: 'com.deadair.atmos_winter_static',
   ATMOS_DEEP_SPACE: 'com.deadair.atmos_deep_space',
+  ATMOS_TRAIN_STATION: 'com.deadair.atmos_train_station',
+  ATMOS_ABANDONED_HOSPITAL: 'com.deadair.atmos_abandoned_hospital',
   SKIN_VINTAGE_WOOD: 'com.deadair.skin.vintage_wood',
   SKIN_MILITARY_GREEN: 'com.deadair.skin.military_green',
   SKIN_SPACE_AGE_BLUE: 'com.deadair.skin.space_age_blue',
   SKIN_DIGITAL_PIXEL: 'com.deadair.skin.digital_pixel',
+  SKIN_PIRATE_RADIO: 'com.deadair.skin.pirate_radio',
+  SKIN_HOSPITAL_INTERCOM: 'com.deadair.skin.hospital_intercom',
   TAPE_PACK_HOLIDAY: 'com.deadair.tape_pack_holiday',
   TAPE_PACK_NUMBERS_STATION: 'com.deadair.tape_pack_numbers_station',
   TAPE_PACK_VOICES_BEYOND: 'com.deadair.tape_pack_voices_beyond',
+  TAPE_PACK_MERCY_GENERAL: 'com.deadair.tape_pack_mercy_general',
 } as const;
 
 export const SKIN_PRODUCT_IDS = PURCHASABLE_SKIN_IDS.map((skinId) => `com.deadair.skin.${skinId}`);
@@ -45,6 +50,7 @@ export const TAPE_PACK_IDS = [
   PRODUCT_IDS.TAPE_PACK_HOLIDAY,
   PRODUCT_IDS.TAPE_PACK_NUMBERS_STATION,
   PRODUCT_IDS.TAPE_PACK_VOICES_BEYOND,
+  PRODUCT_IDS.TAPE_PACK_MERCY_GENERAL,
 ] as const;
 
 export const ALL_PRODUCT_IDS = [
@@ -53,6 +59,8 @@ export const ALL_PRODUCT_IDS = [
   PRODUCT_IDS.ATMOS_RAIN_NIGHT,
   PRODUCT_IDS.ATMOS_WINTER_STATIC,
   PRODUCT_IDS.ATMOS_DEEP_SPACE,
+  PRODUCT_IDS.ATMOS_TRAIN_STATION,
+  PRODUCT_IDS.ATMOS_ABANDONED_HOSPITAL,
   ...SKIN_PRODUCT_IDS,
   ...TAPE_PACK_IDS,
 ];
@@ -62,6 +70,8 @@ const ATMOS_PACK_IDS: Record<string, string> = {
   [PRODUCT_IDS.ATMOS_RAIN_NIGHT]: 'rain_night',
   [PRODUCT_IDS.ATMOS_WINTER_STATIC]: 'winter_static',
   [PRODUCT_IDS.ATMOS_DEEP_SPACE]: 'deep_space',
+  [PRODUCT_IDS.ATMOS_TRAIN_STATION]: 'train_station',
+  [PRODUCT_IDS.ATMOS_ABANDONED_HOSPITAL]: 'abandoned_hospital',
 };
 
 // ---- Module-level state (not exported) ----

@@ -79,7 +79,9 @@ registry.set(_dailyResult.call.id, _dailyResult.call);
 
 // Generate atmospheric DLC calls and register them (DEA-30).
 // Each pack gets a unique idBase to avoid collision with base game IDs.
-const _atmosIdBases = [2000, 3000, 4000];
+// (DEA-93: 5000s/7000s reserved for the train station + hospital packs;
+// 6000+ is Endless Night, 15000+ seasonal, 50000+ daily.)
+const _atmosIdBases = [2000, 3000, 4000, 5000, 7000];
 const atmosphericCallPackMap = new Map<number, string>();
 ATMOSPHERIC_FRAGMENTS.forEach((lib, i) => {
   const packId = ATMOSPHERIC_PACKS[i]?.id;

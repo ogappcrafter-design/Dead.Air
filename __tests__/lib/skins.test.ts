@@ -12,19 +12,21 @@ import {
 
 describe('skin registry', () => {
   describe('SKIN_IDS', () => {
-    it('includes all 5 skins', () => {
-      expect(SKIN_IDS).toHaveLength(5);
+    it('includes all 7 skins', () => {
+      expect(SKIN_IDS).toHaveLength(7);
       expect(SKIN_IDS).toContain('default');
       expect(SKIN_IDS).toContain('vintage_wood');
       expect(SKIN_IDS).toContain('military_green');
       expect(SKIN_IDS).toContain('space_age_blue');
       expect(SKIN_IDS).toContain('digital_pixel');
+      expect(SKIN_IDS).toContain('pirate_radio');
+      expect(SKIN_IDS).toContain('hospital_intercom');
     });
   });
 
   describe('PURCHASABLE_SKIN_IDS', () => {
-    it('includes 4 purchasable skins (excludes default)', () => {
-      expect(PURCHASABLE_SKIN_IDS).toHaveLength(4);
+    it('includes 6 purchasable skins (excludes default)', () => {
+      expect(PURCHASABLE_SKIN_IDS).toHaveLength(6);
       expect(PURCHASABLE_SKIN_IDS).not.toContain('default');
     });
 
@@ -98,6 +100,8 @@ describe('skin registry', () => {
       expect(getSkin('default').id).toBe('default');
       expect(getSkin('vintage_wood').id).toBe('vintage_wood');
       expect(getSkin('digital_pixel').id).toBe('digital_pixel');
+      expect(getSkin('pirate_radio').id).toBe('pirate_radio');
+      expect(getSkin('hospital_intercom').id).toBe('hospital_intercom');
     });
 
     it('returns default skin for unknown id', () => {

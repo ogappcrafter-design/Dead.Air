@@ -7,9 +7,13 @@ import type { FragmentLibrary } from '../fragments/types';
 import { RAIN_NIGHT_PROFILE } from '../../engine/audio/profiles/rainNight';
 import { WINTER_STATIC_PROFILE } from '../../engine/audio/profiles/winterStatic';
 import { DEEP_SPACE_PROFILE } from '../../engine/audio/profiles/deepSpace';
+import { TRAIN_STATION_PROFILE } from '../../engine/audio/profiles/trainStation';
+import { ABANDONED_HOSPITAL_PROFILE } from '../../engine/audio/profiles/abandonedHospital';
 import { RAIN_NIGHT_FRAGMENTS } from '../fragments/rainNight';
 import { WINTER_STATIC_FRAGMENTS } from '../fragments/winterStatic';
 import { DEEP_SPACE_FRAGMENTS } from '../fragments/deepSpace';
+import { TRAIN_STATION_FRAGMENTS } from '../fragments/trainStation';
+import { ABANDONED_HOSPITAL_FRAGMENTS } from '../fragments/abandonedHospital';
 
 export interface AtmosphericPack {
   id: string;
@@ -48,6 +52,25 @@ export const ATMOSPHERIC_PACKS: AtmosphericPack[] = [
     price: '$1.99',
     ambientProfile: DEEP_SPACE_PROFILE,
     fragments: DEEP_SPACE_FRAGMENTS,
+  },
+  {
+    id: 'train_station',
+    name: 'Last Train',
+    description:
+      'Midnight departures on a platform that no longer exists. Calls from the schedule.',
+    productId: 'com.deadair.atmos_train_station',
+    price: '$1.99',
+    ambientProfile: TRAIN_STATION_PROFILE,
+    fragments: TRAIN_STATION_FRAGMENTS,
+  },
+  {
+    id: 'abandoned_hospital',
+    name: 'Mercy General',
+    description: 'A hospital that never closed. Calls from the night shift, four east.',
+    productId: 'com.deadair.atmos_abandoned_hospital',
+    price: '$1.99',
+    ambientProfile: ABANDONED_HOSPITAL_PROFILE,
+    fragments: ABANDONED_HOSPITAL_FRAGMENTS,
   },
 ];
 

@@ -25,8 +25,8 @@ import {
 import { PRODUCT_IDS } from '@/lib/iap';
 
 describe('Atmospheric pack registry', () => {
-  it('has exactly 3 packs', () => {
-    expect(ATMOSPHERIC_PACKS).toHaveLength(3);
+  it('has exactly 5 packs', () => {
+    expect(ATMOSPHERIC_PACKS).toHaveLength(5);
   });
 
   it('all packs have unique ids', () => {
@@ -71,6 +71,20 @@ describe('Atmospheric pack registry', () => {
       const pack = getAtmosphericPack('rain_night');
       expect(pack).toBeDefined();
       expect(pack?.name).toBe('Rain Night');
+    });
+
+    it('returns the DEA-93 train station pack', () => {
+      const pack = getAtmosphericPack('train_station');
+      expect(pack).toBeDefined();
+      expect(pack?.name).toBe('Last Train');
+      expect(pack?.ambientProfile.id).toBe('train_station');
+    });
+
+    it('returns the DEA-93 abandoned hospital pack', () => {
+      const pack = getAtmosphericPack('abandoned_hospital');
+      expect(pack).toBeDefined();
+      expect(pack?.name).toBe('Mercy General');
+      expect(pack?.ambientProfile.id).toBe('abandoned_hospital');
     });
 
     it('returns undefined for unknown id', () => {

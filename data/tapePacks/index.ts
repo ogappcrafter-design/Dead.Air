@@ -11,10 +11,12 @@ import type { CallData } from '../../engine/calls/types';
 import { HOLIDAY_DLC_CALLS } from './holidayCalls';
 import { NUMBERS_STATION_DLC_CALLS } from './numbersStationCalls';
 import { VOICES_BEYOND_DLC_CALLS } from './voicesBeyondCalls';
+import { MERCY_GENERAL_DLC_CALLS } from './mercyGeneralCalls';
 
 import { HOLIDAY_DLC_FRAGMENTS } from '../fragments/holidayDLC';
 import { NUMBERS_STATION_DLC_FRAGMENTS } from '../fragments/numbersStationDLC';
 import { VOICES_BEYOND_DLC_FRAGMENTS } from '../fragments/voicesBeyondDLC';
+import { MERCY_GENERAL_DLC_FRAGMENTS } from '../fragments/mercyGeneralDLC';
 
 /** A purchasable tape pack DLC. */
 export interface TapePackDefinition {
@@ -75,14 +77,24 @@ export const TAPE_PACKS: TapePackDefinition[] = [
     productId: 'com.deadair.tape_pack_voices_beyond',
     title: 'Voices From Beyond',
     description:
-      'S\u00e9ances, spirit boxes, messages from the other side \u2014 5 tapes and 3 calls from the static.',
+      'Séances, spirit boxes, messages from the other side — 5 tapes and 3 calls from the static.',
     price: '$1.99',
     tapes: tapesForPack(['tape-026', 'tape-027', 'tape-028', 'tape-029', 'tape-030']),
     fragmentLibraries: [VOICES_BEYOND_DLC_FRAGMENTS],
     calls: VOICES_BEYOND_DLC_CALLS,
   },
+  {
+    packId: 'tape_pack_mercy_general',
+    productId: 'com.deadair.tape_pack_mercy_general',
+    title: 'Mercy General',
+    description:
+      'The abandoned hospital that never closed. Night shifts, the intercom, the ward that pages — 5 tapes and 3 calls.',
+    price: '$1.99',
+    tapes: tapesForPack(['tape-031', 'tape-032', 'tape-033', 'tape-034', 'tape-035']),
+    fragmentLibraries: [MERCY_GENERAL_DLC_FRAGMENTS],
+    calls: MERCY_GENERAL_DLC_CALLS,
+  },
 ];
-
 /** Product ID \u2192 pack definition lookup. */
 const TAPE_PACK_BY_PRODUCT_ID: Record<string, TapePackDefinition> = Object.fromEntries(
   TAPE_PACKS.map((pack) => [pack.productId, pack]),
