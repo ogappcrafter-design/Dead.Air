@@ -48,8 +48,9 @@ pnpm-debug.*
 tsbuildinfo/
 *.tsbuildinfo
 
-# Godot-generated UID sidecars (auto-created by Godot 4.4+, regenerable)
-*.gd.uid
+# Note: Godot .gd.uid sidecar files are TRACKED, not ignored. Scenes and
+# resources reference scripts by uid=, and regenerating a sidecar produces
+# a new uid, which would break those references. Do not add *.gd.uid here.
 
 # Cache
 .cache/

@@ -51,6 +51,11 @@ Answer the call. Or don't. Either way, something heard you.
 
 ---
 
+> **[!NOTE]**
+> **Godot rebuild in progress:** this repository also contains a full **Godot 4.7 rebuild** of the game under [`godot/`](./godot) (detailed in [`godot/README.md`](./godot/README.md)). The rebuild replaces the React Native/Expo app as the game's engine: all playable content (Phases 1–4, four endings) is implemented there. The Expo app remains the shipped mobile predecessor.
+
+---
+
 ## 🎮 Features
 
 |     | Feature                           | Description                                                                                        |
