@@ -1,0 +1,551 @@
+[gd_scene load_steps=37 format=3 uid="uid://bp3neighscene1"]
+
+[ext_resource type="Script" uid="uid://byfya25euxxwe" path="res://src/entities/player.gd" id="1_player"]
+[ext_resource type="Script" uid="uid://bnhl1nrqqywda" path="res://src/core/radio_tuner.gd" id="2_tuner"]
+[ext_resource type="Script" uid="uid://b2ojlbnvs1xnr" path="res://src/core/signal_strength.gd" id="3_signal"]
+[ext_resource type="Resource" uid="uid://11e914f432000" path="res://src/data/band_config.tres" id="4_band"]
+[ext_resource type="Script" uid="uid://cn3ic8sfogvs3" path="res://src/audio/radio_static.gd" id="5_static"]
+[ext_resource type="Script" uid="uid://be6swwtavc18m" path="res://src/visual/camera_rig.gd" id="6_rig"]
+[ext_resource type="Script" path="res://src/levels/neighborhood_segment.gd" id="7_seg"]
+[ext_resource type="Script" path="res://src/visual/camera_zone.gd" id="8_zone"]
+[ext_resource type="Script" path="res://src/visual/camera_angle.gd" id="9_angle"]
+[ext_resource type="Script" path="res://src/core/interactable.gd" id="10_inter"]
+
+[sub_resource type="StandardMaterial3D" id="asphalt_mat"]
+albedo_color = Color(0.13, 0.13, 0.15, 1)
+roughness = 0.95
+[sub_resource type="StandardMaterial3D" id="grass_mat"]
+albedo_color = Color(0.08, 0.11, 0.07, 1)
+roughness = 1.0
+[sub_resource type="StandardMaterial3D" id="houseA_mat"]
+albedo_color = Color(0.22, 0.19, 0.15, 1)
+roughness = 0.85
+[sub_resource type="StandardMaterial3D" id="houseB_mat"]
+albedo_color = Color(0.15, 0.15, 0.18, 1)
+roughness = 0.9
+[sub_resource type="StandardMaterial3D" id="houseC_mat"]
+albedo_color = Color(0.18, 0.2, 0.17, 1)
+roughness = 0.9
+[sub_resource type="StandardMaterial3D" id="houseE_mat"]
+albedo_color = Color(0.14, 0.12, 0.11, 1)
+roughness = 0.95
+[sub_resource type="StandardMaterial3D" id="roof_mat"]
+albedo_color = Color(0.1, 0.09, 0.1, 1)
+roughness = 0.9
+[sub_resource type="StandardMaterial3D" id="interior_mat"]
+albedo_color = Color(0.2, 0.16, 0.11, 1)
+roughness = 0.85
+[sub_resource type="StandardMaterial3D" id="window_mat"]
+albedo_color = Color(0.05, 0.06, 0.08, 1)
+roughness = 0.2
+metallic = 0.3
+[sub_resource type="StandardMaterial3D" id="garden_mat"]
+albedo_color = Color(0.08, 0.11, 0.07, 1)
+roughness = 1.0
+[sub_resource type="StandardMaterial3D" id="tomato_mat"]
+albedo_color = Color(0.75, 0.15, 0.08, 1)
+roughness = 0.6
+[sub_resource type="StandardMaterial3D" id="shed_mat"]
+albedo_color = Color(0.2, 0.14, 0.1, 1)
+roughness = 0.9
+[sub_resource type="StandardMaterial3D" id="hole_mat"]
+albedo_color = Color(0.01, 0.01, 0.01, 1)
+roughness = 1.0
+[sub_resource type="Environment" id="env_night"]
+background_mode = 1
+ambient_light_color = Color(0.06, 0.07, 0.1, 1)
+ambient_light_energy = 0.3
+fog_enabled = true
+fog_light_color = Color(0.04, 0.04, 0.07, 1)
+fog_density = 0.014
+[sub_resource type="BoxShape3D" id="zone_shape"]
+size = Vector3(4, 3, 6)
+[sub_resource type="BoxShape3D" id="zone_shape_wide"]
+size = Vector3(6, 3, 6)
+[sub_resource type="BoxShape3D" id="hole_shape"]
+size = Vector3(6, 3, 6)
+[sub_resource type="BoxShape3D" id="shed_shape"]
+size = Vector3(4, 3, 4)
+[sub_resource type="BoxShape3D" id="player_shape"]
+size = Vector3(0.5, 1.0, 0.5)
+[sub_resource type="BoxShape3D" id="dig_shape"]
+size = Vector3(2, 1, 2)
+[sub_resource type="BoxMesh" id="shadow_mesh"]
+size = Vector3(0.8, 1.8, 0.5)
+
+[sub_resource type="Resource" id="ang_street_west"]
+script = ExtResource("9_angle")
+angle_id = "street_west"
+position = Vector3(-5, 3.5, 12)
+rotation_degrees = Vector3(0, 0, 0)
+fov = 70.0
+max_pan_degrees = 15.0
+max_tilt_degrees = 5.0
+tracking_strength = 0.5
+tracking_lerp_speed = 4.0
+[sub_resource type="Resource" id="ang_houseA"]
+script = ExtResource("9_angle")
+angle_id = "houseA"
+position = Vector3(15, 2.5, 11)
+rotation_degrees = Vector3(-8, 0, 0)
+fov = 65.0
+max_pan_degrees = 15.0
+max_tilt_degrees = 5.0
+tracking_strength = 0.5
+tracking_lerp_speed = 4.0
+[sub_resource type="Resource" id="ang_houseB"]
+script = ExtResource("9_angle")
+angle_id = "houseB"
+position = Vector3(35, 2.5, 11)
+rotation_degrees = Vector3(-8, 0, 0)
+fov = 65.0
+max_pan_degrees = 15.0
+max_tilt_degrees = 5.0
+tracking_strength = 0.5
+tracking_lerp_speed = 4.0
+[sub_resource type="Resource" id="ang_houseC"]
+script = ExtResource("9_angle")
+angle_id = "houseC"
+position = Vector3(55, 2.5, 11)
+rotation_degrees = Vector3(-8, 0, 0)
+fov = 65.0
+max_pan_degrees = 15.0
+max_tilt_degrees = 5.0
+tracking_strength = 0.5
+tracking_lerp_speed = 4.0
+[sub_resource type="Resource" id="ang_lot"]
+script = ExtResource("9_angle")
+angle_id = "lot"
+position = Vector3(78, 3.0, 12)
+rotation_degrees = Vector3(0, 0, 0)
+fov = 70.0
+max_pan_degrees = 15.0
+max_tilt_degrees = 5.0
+tracking_strength = 0.5
+tracking_lerp_speed = 4.0
+
+[node name="Neighborhood" type="Node3D"]
+script = ExtResource("7_seg")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("env_night")
+
+[node name="Road" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40, 0.05, 0)
+size = Vector3(100, 0.1, 7)
+material = SubResource("asphalt_mat")
+use_collision = true
+
+[node name="GrassNorth" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40, 0.02, -10)
+size = Vector3(100, 0.06, 13)
+material = SubResource("grass_mat")
+use_collision = true
+
+[node name="GrassSouth" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40, 0.02, 10)
+size = Vector3(100, 0.06, 13)
+material = SubResource("grass_mat")
+use_collision = true
+
+[node name="MoonLight" type="DirectionalLight3D" parent="."]
+transform = Transform3D(-0.65, 0.35, 0.67, 0, -0.88, 0.47, -0.76, -0.31, -0.57, 40, 20, 0)
+light_color = Color(0.7, 0.75, 0.85, 1)
+light_energy = 0.22
+shadow_enabled = true
+
+[node name="HouseA" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 0, 0)
+
+[node name="Body" type="CSGBox3D" parent="HouseA"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.2, 0)
+size = Vector3(8, 4.4, 10)
+material = SubResource("houseA_mat")
+use_collision = true
+
+[node name="Roof" type="CSGBox3D" parent="HouseA"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.8, 0)
+size = Vector3(9, 0.8, 11)
+material = SubResource("roof_mat")
+
+[node name="Doorway" type="CSGBox3D" parent="HouseA"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, -5.05)
+size = Vector3(1.6, 2.5, 0.1)
+material = SubResource("window_mat")
+
+[node name="WindowFront" type="CSGBox3D" parent="HouseA"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.5, 2.0, -5.05)
+size = Vector3(1.8, 1.4, 0.08)
+material = SubResource("window_mat")
+
+[node name="DoorZone" type="Area3D" parent="HouseA"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, -6.5)
+collision_layer = 4
+collision_mask = 2
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="HouseA/DoorZone"]
+shape = SubResource("zone_shape")
+
+[node name="DoorTarget" type="Node3D" parent="HouseA"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, -6.5)
+
+[node name="Interior" type="Node3D" parent="HouseA"]
+
+[node name="Floor" type="CSGBox3D" parent="HouseA/Interior"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 0)
+size = Vector3(7.8, 0.1, 9.8)
+material = SubResource("interior_mat")
+use_collision = true
+
+[node name="Garden" type="Node3D" parent="HouseA"]
+
+[node name="Plot" type="CSGBox3D" parent="HouseA/Garden"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.02, -8)
+size = Vector3(6, 0.05, 4)
+material = SubResource("garden_mat")
+
+[node name="Tomatoes" type="CSGBox3D" parent="HouseA/Garden"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, -8)
+size = Vector3(2, 0.6, 1.5)
+material = SubResource("tomato_mat")
+
+[node name="Evidence" type="Area3D" parent="HouseA"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 1, -2)
+collision_layer = 4
+collision_mask = 2
+script = ExtResource("10_inter")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="HouseA/Evidence"]
+shape = SubResource("zone_shape")
+
+[node name="HouseB" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 35, 0, 0)
+
+[node name="Body" type="CSGBox3D" parent="HouseB"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.2, 0)
+size = Vector3(8, 4.4, 10)
+material = SubResource("houseB_mat")
+use_collision = true
+
+[node name="Roof" type="CSGBox3D" parent="HouseB"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.8, 0)
+size = Vector3(9, 0.8, 11)
+material = SubResource("roof_mat")
+
+[node name="Doorway" type="CSGBox3D" parent="HouseB"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, -5.05)
+size = Vector3(1.6, 2.5, 0.1)
+material = SubResource("window_mat")
+
+[node name="WindowFront" type="CSGBox3D" parent="HouseB"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.5, 2.0, -5.05)
+size = Vector3(1.8, 1.4, 0.08)
+material = SubResource("window_mat")
+
+[node name="DoorZone" type="Area3D" parent="HouseB"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, -6.5)
+collision_layer = 4
+collision_mask = 2
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="HouseB/DoorZone"]
+shape = SubResource("zone_shape")
+
+[node name="DoorTarget" type="Node3D" parent="HouseB"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, -6.5)
+
+[node name="Interior" type="Node3D" parent="HouseB"]
+
+[node name="Floor" type="CSGBox3D" parent="HouseB/Interior"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 0)
+size = Vector3(7.8, 0.1, 9.8)
+material = SubResource("interior_mat")
+use_collision = true
+
+[node name="Garden" type="Node3D" parent="HouseB"]
+
+[node name="Plot" type="CSGBox3D" parent="HouseB/Garden"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.02, -8)
+size = Vector3(6, 0.05, 4)
+material = SubResource("garden_mat")
+
+[node name="Tomatoes" type="CSGBox3D" parent="HouseB/Garden"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, -8)
+size = Vector3(2, 0.6, 1.5)
+material = SubResource("tomato_mat")
+
+[node name="Evidence" type="Area3D" parent="HouseB"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 1, -2)
+collision_layer = 4
+collision_mask = 2
+script = ExtResource("10_inter")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="HouseB/Evidence"]
+shape = SubResource("zone_shape")
+
+[node name="TapeRecorder" type="CSGBox3D" parent="HouseB"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5, 0.9, -2)
+size = Vector3(0.6, 0.25, 0.4)
+
+[node name="ArchiveWall" type="CSGBox3D" parent="HouseB"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.5, 1.5, 2)
+size = Vector3(4, 2.4, 0.15)
+
+[node name="CollectorShadow" type="Node3D" parent="HouseB"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.5, 1.0, 3.2)
+visible = false
+
+[node name="ShadowBody" type="MeshInstance3D" parent="HouseB/CollectorShadow"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+mesh = SubResource("shadow_mesh")
+transparency = 0.7
+
+[node name="DigSpot" type="Area3D" parent="HouseB"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, -8)
+collision_layer = 4
+collision_mask = 2
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="HouseB/DigSpot"]
+shape = SubResource("dig_shape")
+
+[node name="HouseC" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 55, 0, 0)
+
+[node name="Body" type="CSGBox3D" parent="HouseC"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.2, 0)
+size = Vector3(8, 4.4, 10)
+material = SubResource("houseC_mat")
+use_collision = true
+
+[node name="Roof" type="CSGBox3D" parent="HouseC"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.8, 0)
+size = Vector3(9, 0.8, 11)
+material = SubResource("roof_mat")
+
+[node name="Doorway" type="CSGBox3D" parent="HouseC"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, -5.05)
+size = Vector3(1.6, 2.5, 0.1)
+material = SubResource("window_mat")
+
+[node name="WindowFront" type="CSGBox3D" parent="HouseC"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.5, 2.0, -5.05)
+size = Vector3(1.8, 1.4, 0.08)
+material = SubResource("window_mat")
+
+[node name="DoorZone" type="Area3D" parent="HouseC"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, -6.5)
+collision_layer = 4
+collision_mask = 2
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="HouseC/DoorZone"]
+shape = SubResource("zone_shape")
+
+[node name="DoorTarget" type="Node3D" parent="HouseC"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, -6.5)
+
+[node name="Interior" type="Node3D" parent="HouseC"]
+
+[node name="Floor" type="CSGBox3D" parent="HouseC/Interior"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 0)
+size = Vector3(7.8, 0.1, 9.8)
+material = SubResource("interior_mat")
+use_collision = true
+
+[node name="Garden" type="Node3D" parent="HouseC"]
+
+[node name="Plot" type="CSGBox3D" parent="HouseC/Garden"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.02, -8)
+size = Vector3(6, 0.05, 4)
+material = SubResource("garden_mat")
+
+[node name="Tomatoes" type="CSGBox3D" parent="HouseC/Garden"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, -8)
+size = Vector3(2, 0.6, 1.5)
+material = SubResource("tomato_mat")
+
+[node name="Evidence" type="Area3D" parent="HouseC"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, -3)
+collision_layer = 4
+collision_mask = 2
+script = ExtResource("10_inter")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="HouseC/Evidence"]
+shape = SubResource("zone_shape")
+
+[node name="HouseE" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0, 0)
+
+[node name="Body" type="CSGBox3D" parent="HouseE"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.2, 0)
+size = Vector3(8, 4.4, 10)
+material = SubResource("houseE_mat")
+use_collision = true
+
+[node name="Roof" type="CSGBox3D" parent="HouseE"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.8, 0)
+size = Vector3(9, 0.8, 11)
+material = SubResource("roof_mat")
+
+[node name="Doorway" type="CSGBox3D" parent="HouseE"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, -5.05)
+size = Vector3(1.6, 2.5, 0.1)
+material = SubResource("window_mat")
+
+[node name="WindowFront" type="CSGBox3D" parent="HouseE"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.5, 2.0, -5.05)
+size = Vector3(1.8, 1.4, 0.08)
+material = SubResource("window_mat")
+
+[node name="DoorZone" type="Area3D" parent="HouseE"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, -6.5)
+collision_layer = 4
+collision_mask = 2
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="HouseE/DoorZone"]
+shape = SubResource("zone_shape")
+
+[node name="DoorTarget" type="Node3D" parent="HouseE"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, -6.5)
+
+[node name="HouseF" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 75, 0, 0)
+
+[node name="Body" type="CSGBox3D" parent="HouseF"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.2, 0)
+size = Vector3(8, 4.4, 10)
+material = SubResource("houseE_mat")
+use_collision = true
+
+[node name="Roof" type="CSGBox3D" parent="HouseF"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.8, 0)
+size = Vector3(9, 0.8, 11)
+material = SubResource("roof_mat")
+
+[node name="Doorway" type="CSGBox3D" parent="HouseF"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, -5.05)
+size = Vector3(1.6, 2.5, 0.1)
+material = SubResource("window_mat")
+
+[node name="WindowFront" type="CSGBox3D" parent="HouseF"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.5, 2.0, -5.05)
+size = Vector3(1.8, 1.4, 0.08)
+material = SubResource("window_mat")
+
+[node name="DoorZone" type="Area3D" parent="HouseF"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, -6.5)
+collision_layer = 4
+collision_mask = 2
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="HouseF/DoorZone"]
+shape = SubResource("zone_shape")
+
+[node name="DoorTarget" type="Node3D" parent="HouseF"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, -6.5)
+
+[node name="EmptyLot" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 85, 0, 0)
+
+[node name="Hole" type="CSGBox3D" parent="EmptyLot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -2, 0)
+size = Vector3(4, 4, 4)
+material = SubResource("hole_mat")
+
+[node name="HoleZone" type="Area3D" parent="EmptyLot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+collision_layer = 4
+collision_mask = 2
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="EmptyLot/HoleZone"]
+shape = SubResource("hole_shape")
+
+[node name="Shed" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 0, -12)
+
+[node name="Body" type="CSGBox3D" parent="Shed"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+size = Vector3(4, 3, 4)
+material = SubResource("shed_mat")
+use_collision = true
+
+[node name="ShedZone" type="Area3D" parent="Shed"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+collision_layer = 4
+collision_mask = 2
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Shed/ShedZone"]
+shape = SubResource("shed_shape")
+
+[node name="CZStreetWest" type="Area3D" parent="." groups=["camera_zone"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 1.5, 0)
+script = ExtResource("8_zone")
+camera_angle = SubResource("ang_street_west")
+use_transition = true
+zone_priority = 0
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="CZStreetWest"]
+shape = SubResource("zone_shape_wide")
+
+[node name="CZHouseA" type="Area3D" parent="." groups=["camera_zone"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 1.5, 0)
+script = ExtResource("8_zone")
+camera_angle = SubResource("ang_houseA")
+use_transition = true
+zone_priority = 0
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="CZHouseA"]
+shape = SubResource("zone_shape_wide")
+
+[node name="CZHouseB" type="Area3D" parent="." groups=["camera_zone"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 35, 1.5, 0)
+script = ExtResource("8_zone")
+camera_angle = SubResource("ang_houseB")
+use_transition = true
+zone_priority = 0
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="CZHouseB"]
+shape = SubResource("zone_shape_wide")
+
+[node name="CZHouseC" type="Area3D" parent="." groups=["camera_zone"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 55, 1.5, 0)
+script = ExtResource("8_zone")
+camera_angle = SubResource("ang_houseC")
+use_transition = true
+zone_priority = 0
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="CZHouseC"]
+shape = SubResource("zone_shape_wide")
+
+[node name="CZLot" type="Area3D" parent="." groups=["camera_zone"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 85, 1.5, 0)
+script = ExtResource("8_zone")
+camera_angle = SubResource("ang_lot")
+use_transition = true
+zone_priority = 0
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="CZLot"]
+shape = SubResource("zone_shape_wide")
+
+[node name="Player" type="CharacterBody3D" parent="." groups=["player"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+script = ExtResource("1_player")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Player"]
+shape = SubResource("player_shape")
+
+[node name="CameraRig" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.5, 12)
+script = ExtResource("6_rig")
+
+[node name="PortableRadio" type="Node" parent="."]
+
+[node name="RadioTuner" type="Node" parent="PortableRadio"]
+script = ExtResource("2_tuner")
+band_config = ExtResource("4_band")
+
+[node name="SignalStrength" type="Node" parent="PortableRadio"]
+script = ExtResource("3_signal")
+radio_tuner = NodePath("../RadioTuner")
+
+[node name="RadioStatic" type="Node" parent="PortableRadio"]
+script = ExtResource("5_static")
+radio_tuner = NodePath("../RadioTuner")
+signal_strength = NodePath("../SignalStrength")

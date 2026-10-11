@@ -6,6 +6,7 @@ All notable changes to Dead Air are documented here. The format follows [Keep a 
 
 ### Added
 
+- **Godot 4.7 rebuild (`godot/`) — complete** (PRs #178, #179): all playable content — five station shifts, four Phase 2 segments, four Phase 3 locations, the four Phase 4 descent steps, and all four endings (THE SIGNAL, THE RELAY, DEAD AIR, THE WITNESS). 697-test suite plus 18 visual verification drivers. Accessibility: radio text mode, colorblind-safe band glyphs, call-type pulse patterns
 - GitHub Actions CI: lint/format/typecheck, jest with coverage reporting, and Trivy secret scanning, running on every push and PR to `master`
 - Circular-dependency gate (`pnpm run deps:circular`) enforced in CI
 - Dependabot config for npm and GitHub Actions ecosystems with grouped update PRs

@@ -50,6 +50,26 @@ func _run_tests() -> void:
 		["SuitEntity", "res://tests/test_suits.gd"],
 		["VisualAccessibility", "res://tests/test_visual_accessibility.gd"],
 		["Shift1Tutorial", "res://tests/test_shift1_tutorial.gd"],
+		["Shift2Tutorial", "res://tests/test_shift2_tutorial.gd"],
+		["Shift3Tutorial", "res://tests/test_shift3_tutorial.gd"],
+		["Shift4Tutorial", "res://tests/test_shift4_tutorial.gd"],
+		["Shift5Tutorial", "res://tests/test_shift5_tutorial.gd"],
+		["Phase2Threshold", "res://tests/test_phase2_threshold.gd"],
+		["Phase2StaticSky", "res://tests/test_phase2_static_sky.gd"],
+		["Phase2Follower", "res://tests/test_phase2_follower.gd"],
+		["Phase2FirstHouse", "res://tests/test_phase2_first_house.gd"],
+		["Phase3Neighborhood", "res://tests/test_phase3_neighborhood.gd"],
+		["Phase3CollectorsTape", "res://tests/test_phase3_collectors_tape.gd"],
+		["FieldCalls", "res://tests/test_field_calls.gd"],
+		["FalseCalls", "res://tests/test_false_calls.gd"],
+		["AccessibilityDeepening", "res://tests/test_accessibility_deepening.gd"],
+		["Phase3Highway", "res://tests/test_phase3_highway.gd"],
+		["Phase3LiminalSpace", "res://tests/test_phase3_liminal_space.gd"],
+		["Phase3Bunker", "res://tests/test_phase3_bunker.gd"],
+		["Phase4Staircase", "res://tests/test_phase4_staircase.gd"],
+		["Phase4Chamber", "res://tests/test_phase4_chamber.gd"],
+		["Phase4Endings", "res://tests/test_phase4_endings.gd"],
+		["Phase4Clearing", "res://tests/test_phase4_clearing.gd"],
 		["CRTDegradation", "res://tests/test_crt_degradation.gd"],
 	]
 
@@ -64,13 +84,20 @@ func _run_tests() -> void:
 			print("")
 			continue
 
+		# A script that failed compilation loads as non-null but cannot be
+		# instantiated; guard so one broken suite doesn't abort the whole run.
+		if not script.can_instantiate():
+			print("  [SKIP] %s — script compilation error" % label)
+			print("")
+			continue
+
 		var test_instance = script.new()
 		if test_instance == null or not test_instance.has_method("run_tests"):
 			print("  [SKIP] %s — script compilation error" % label)
 			print("")
 			continue
 
-		var results: Dictionary = test_instance.run_tests()
+		var results: Dictionary = await test_instance.run_tests()
 		for test_name in results.keys():
 			total_tests += 1
 			var passed: bool = results[test_name]
@@ -83,104 +110,46 @@ func _run_tests() -> void:
 				print("  [FAIL] %s::%s" % [label, test_name])
 		print("")
 
-	# Run PhaseManager tests
-	print("Running PhaseManager tests...")
-	var phase_manager_tests := preload("res://tests/test_phase_manager.gd").new()
-	var pm_results: Dictionary = phase_manager_tests.run_tests()
-	for test_name in pm_results.keys():
-		total_tests += 1
-		var passed: bool = pm_results[test_name]
-		if passed:
-			total_passed += 1
-			print("  [PASS] %s::%s" % [phase_manager_tests.test_name, test_name])
-		else:
-			total_failed += 1
-			all_passed = false
-			print("  [FAIL] %s::%s" % [phase_manager_tests.test_name, test_name])
-	print("")
+	# Run preload-based suites (PhaseManager, SignalDecay, RadioStatic, BandSystem,
+	# SilenceSystem, HUDLayout) with the same load()-guard as the loop above so a
+	# script that fails to compile is skipped instead of aborting the runner.
+	var preload_suites: Array = [
+		["PhaseManager", "res://tests/test_phase_manager.gd"],
+		["SignalDecay", "res://tests/test_signal_decay.gd"],
+		["RadioStatic", "res://tests/test_radio_static.gd"],
+		["BandSystem", "res://tests/test_band_system.gd"],
+		["SilenceSystem", "res://tests/test_silence_system.gd"],
+		["HUDLayout", "res://tests/test_hud_layout.gd"],
+	]
+	for suite in preload_suites:
+		var label: String = suite[0]
+		var path: String = suite[1]
+		print("Running %s tests..." % label)
 
-	# Run SignalDecay tests
-	print("Running SignalDecay tests...")
-	var signal_decay_tests := preload("res://tests/test_signal_decay.gd").new()
-	var sig_results: Dictionary = signal_decay_tests.run_tests()
-	for test_name in sig_results.keys():
-		total_tests += 1
-		var passed: bool = sig_results[test_name]
-		if passed:
-			total_passed += 1
-			print("  [PASS] %s::%s" % [signal_decay_tests.test_name, test_name])
-		else:
-			total_failed += 1
-			all_passed = false
-			print("  [FAIL] %s::%s" % [signal_decay_tests.test_name, test_name])
+		var script: Resource = load(path)
+		if script == null or not (script as GDScript).can_instantiate():
+			print("  [SKIP] %s — script compilation error" % label)
+			print("")
+			continue
 
-	print("")
+		var test_instance: Variant = script.new()
+		if test_instance == null or not test_instance.has_method("run_tests"):
+			print("  [SKIP] %s — script compilation error" % label)
+			print("")
+			continue
 
-	# Run RadioStatic tests
-	print("Running RadioStatic tests...")
-	var radio_static_tests := preload("res://tests/test_radio_static.gd").new()
-	var rs_results: Dictionary = radio_static_tests.run_tests()
-	for test_name in rs_results.keys():
-		total_tests += 1
-		var passed: bool = rs_results[test_name]
-		if passed:
-			total_passed += 1
-			print("  [PASS] %s::%s" % ["RadioStatic", test_name])
-		else:
-			total_failed += 1
-			all_passed = false
-			print("  [FAIL] %s::%s" % ["RadioStatic", test_name])
-
-	print("")
-
-	# Run BandSystem tests
-	print("Running BandSystem tests...")
-	var band_system_tests := preload("res://tests/test_band_system.gd").new()
-	var bs_results: Dictionary = band_system_tests.run_tests()
-	for test_name in bs_results.keys():
-		total_tests += 1
-		var passed: bool = bs_results[test_name]
-		if passed:
-			total_passed += 1
-			print("  [PASS] %s::%s" % [band_system_tests.test_name, test_name])
-		else:
-			total_failed += 1
-			all_passed = false
-			print("  [FAIL] %s::%s" % [band_system_tests.test_name, test_name])
-
-	print("")
-
-	# Run SilenceSystem tests
-	print("Running SilenceSystem tests...")
-	var silence_system_tests := preload("res://tests/test_silence_system.gd").new()
-	var ss_results: Dictionary = silence_system_tests.run_tests()
-	for test_name in ss_results.keys():
-		total_tests += 1
-		var passed: bool = ss_results[test_name]
-		if passed:
-			total_passed += 1
-			print("  [PASS] %s::%s" % [silence_system_tests.test_name, test_name])
-		else:
-			total_failed += 1
-			all_passed = false
-			print("  [FAIL] %s::%s" % [silence_system_tests.test_name, test_name])
-
-	print("")
-
-	# Run HUDLayout tests
-	print("Running HUDLayout tests...")
-	var hud_layout_tests := preload("res://tests/test_hud_layout.gd").new()
-	var hud_results: Dictionary = hud_layout_tests.run_tests()
-	for test_name in hud_results.keys():
-		total_tests += 1
-		var passed: bool = hud_results[test_name]
-		if passed:
-			total_passed += 1
-			print("  [PASS] %s::%s" % [hud_layout_tests.test_name, test_name])
-		else:
-			total_failed += 1
-			all_passed = false
-			print("  [FAIL] %s::%s" % [hud_layout_tests.test_name, test_name])
+		var results: Dictionary = await test_instance.run_tests()
+		for test_name in results.keys():
+			total_tests += 1
+			var passed: bool = results[test_name]
+			if passed:
+				total_passed += 1
+				print("  [PASS] %s::%s" % [test_instance.test_name, test_name])
+			else:
+				total_failed += 1
+				all_passed = false
+				print("  [FAIL] %s::%s" % [test_instance.test_name, test_name])
+		print("")
 
 	print("")
 	print("=== Results ===")

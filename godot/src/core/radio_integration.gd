@@ -8,14 +8,8 @@ extends Node
 ## Reference to the RadioTuner node.
 @export var radio_tuner: RadioTuner
 
-## Reference to the SignalStrength node.
-@export var signal_strength: SignalStrength
-
 ## Reference to the FrequencyDial UI control.
 @export var frequency_dial: FrequencyDial
-
-## Reference to the DreadComposure node.
-@export var dread_composure: DreadComposure
 
 ## Reference to the DifficultyManager node.
 @export var difficulty_manager: DifficultyManager
@@ -31,6 +25,8 @@ var _last_auto_band: int = -1
 
 
 func _ready() -> void:
+	# SignalStrength and DreadComposure are owned by the CallManager autoload
+	# (single instances; see call_manager.gd _create_sub_systems).
 	_connect_components()
 
 
@@ -47,6 +43,17 @@ func _process(delta: float) -> void:
 
 ## Connect all component signals for integration.
 func _connect_components() -> void:
+	# Wire CallManager-owned SignalStrength/DreadComposure to this RadioTuner
+	# so the single instances reference the same tuner the scene uses.
+	if CallManager and radio_tuner != null:
+		var ss := CallManager.get_signal_strength()
+		if ss:
+			ss.radio_tuner = radio_tuner
+		var dc := CallManager.get_dread_composure()
+		if dc:
+			dc.signal_strength = ss
+			dc.radio_tuner = radio_tuner
+
 	if radio_tuner == null:
 		push_warning("RadioIntegration: No radio_tuner assigned.")
 		return
@@ -55,14 +62,6 @@ func _connect_components() -> void:
 	if auto_detect_band and radio_tuner.band_config != null:
 		radio_tuner.frequency_changed.connect(_on_frequency_changed)
 
-	# SignalStrength references RadioTuner
-	if signal_strength != null:
-		signal_strength.radio_tuner = radio_tuner
-
-	# DreadComposure references SignalStrength and RadioTuner
-	if dread_composure != null:
-		dread_composure.signal_strength = signal_strength
-		dread_composure.radio_tuner = radio_tuner
 
 	# FrequencyDial references RadioTuner
 	if frequency_dial != null:

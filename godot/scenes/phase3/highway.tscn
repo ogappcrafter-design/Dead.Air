@@ -1,0 +1,255 @@
+[gd_scene load_steps=18 format=3 uid="uid://bp3highway1"]
+
+[ext_resource type="Script" uid="uid://byfya25euxxwe" path="res://src/entities/player.gd" id="1_player"]
+[ext_resource type="Script" uid="uid://bnhl1nrqqywda" path="res://src/core/radio_tuner.gd" id="2_tuner"]
+[ext_resource type="Script" uid="uid://b2ojlbnvs1xnr" path="res://src/core/signal_strength.gd" id="3_signal"]
+[ext_resource type="Resource" uid="uid://11e914f432000" path="res://src/data/band_config.tres" id="4_band"]
+[ext_resource type="Script" uid="uid://cn3ic8sfogvs3" path="res://src/audio/radio_static.gd" id="5_static"]
+[ext_resource type="Script" uid="uid://be6swwtavc18m" path="res://src/visual/camera_rig.gd" id="6_rig"]
+[ext_resource type="Script" path="res://src/levels/highway_segment.gd" id="7_seg"]
+[sub_resource type="StandardMaterial3D" id="asphalt_mat"]
+albedo_color = Color(0.13, 0.13, 0.15, 1)
+roughness = 0.95
+[sub_resource type="StandardMaterial3D" id="dirt_mat"]
+albedo_color = Color(0.18, 0.14, 0.09, 1)
+roughness = 1.0
+[sub_resource type="StandardMaterial3D" id="grass_mat"]
+albedo_color = Color(0.07, 0.09, 0.06, 1)
+roughness = 1.0
+[sub_resource type="StandardMaterial3D" id="pole_mat"]
+albedo_color = Color(0.15, 0.15, 0.16, 1)
+roughness = 0.8
+metallic = 0.5
+[sub_resource type="StandardMaterial3D" id="sign_mat"]
+albedo_color = Color(0.1, 0.3, 0.15, 1)
+roughness = 0.7
+[sub_resource type="StandardMaterial3D" id="fog_env"]
+albedo_color = Color(0.04, 0.04, 0.05, 1)
+[sub_resource type="Environment" id="env_fog"]
+background_mode = 1
+ambient_light_color = Color(0.05, 0.05, 0.07, 1)
+ambient_light_energy = 0.25
+fog_enabled = true
+fog_light_color = Color(0.04, 0.04, 0.06, 1)
+fog_density = 0.06
+[sub_resource type="BoxShape3D" id="player_shape"]
+size = Vector3(0.5, 1.0, 0.5)
+
+[node name="Highway" type="Node3D"]
+script = ExtResource("7_seg")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("env_fog")
+[node name="Road" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 110, 0.05, 0)
+size = Vector3(240, 0.1, 8)
+material = SubResource("asphalt_mat")
+use_collision = true
+
+[node name="GrassN" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 110, 0.02, -6)
+size = Vector3(240, 0.06, 4)
+material = SubResource("grass_mat")
+
+[node name="GrassS" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 110, 0.02, 6)
+size = Vector3(240, 0.06, 4)
+material = SubResource("grass_mat")
+
+[node name="LightPole0" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.0, 5.0)
+size = Vector3(0.15, 6.0, 0.15)
+material = SubResource("pole_mat")
+
+[node name="LampHead0" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6.0, 4.5)
+size = Vector3(0.5, 0.2, 1.0)
+material = SubResource("pole_mat")
+
+[node name="LightPole1" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11.25, 3.0, 5.0)
+size = Vector3(0.15, 6.0, 0.15)
+material = SubResource("pole_mat")
+
+[node name="LampHead1" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11.25, 6.0, 4.5)
+size = Vector3(0.5, 0.2, 1.0)
+material = SubResource("pole_mat")
+
+[node name="LightPole2" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.25, 3.0, 5.0)
+size = Vector3(0.15, 6.0, 0.15)
+material = SubResource("pole_mat")
+
+[node name="LampHead2" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.25, 6.0, 4.5)
+size = Vector3(0.5, 0.2, 1.0)
+material = SubResource("pole_mat")
+
+[node name="LightPole3" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 36.75, 3.0, 5.0)
+size = Vector3(0.15, 6.0, 0.15)
+material = SubResource("pole_mat")
+
+[node name="LampHead3" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 36.75, 6.0, 4.5)
+size = Vector3(0.5, 0.2, 1.0)
+material = SubResource("pole_mat")
+
+[node name="LightPole4" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 111.75, 3.0, 5.0)
+size = Vector3(0.15, 6.0, 0.15)
+material = SubResource("pole_mat")
+
+[node name="LampHead4" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 111.75, 6.0, 4.5)
+size = Vector3(0.5, 0.2, 1.0)
+material = SubResource("pole_mat")
+
+[node name="LightPole5" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 115.5, 3.0, 5.0)
+size = Vector3(0.15, 6.0, 0.15)
+material = SubResource("pole_mat")
+
+[node name="LampHead5" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 115.5, 6.0, 4.5)
+size = Vector3(0.5, 0.2, 1.0)
+material = SubResource("pole_mat")
+
+[node name="LightPole6" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 165.5, 3.0, 5.0)
+size = Vector3(0.15, 6.0, 0.15)
+material = SubResource("pole_mat")
+
+[node name="LampHead6" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 165.5, 6.0, 4.5)
+size = Vector3(0.5, 0.2, 1.0)
+material = SubResource("pole_mat")
+
+[node name="LightPole7" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 173.0, 3.0, 5.0)
+size = Vector3(0.15, 6.0, 0.15)
+material = SubResource("pole_mat")
+
+[node name="LampHead7" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 173.0, 6.0, 4.5)
+size = Vector3(0.5, 0.2, 1.0)
+material = SubResource("pole_mat")
+
+[node name="LightPole8" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 188.0, 3.0, 5.0)
+size = Vector3(0.15, 6.0, 0.15)
+material = SubResource("pole_mat")
+
+[node name="LampHead8" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 188.0, 6.0, 4.5)
+size = Vector3(0.5, 0.2, 1.0)
+material = SubResource("pole_mat")
+
+[node name="LightPole9" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 215.5, 3.0, 5.0)
+size = Vector3(0.15, 6.0, 0.15)
+material = SubResource("pole_mat")
+
+[node name="LampHead9" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 215.5, 6.0, 4.5)
+size = Vector3(0.5, 0.2, 1.0)
+material = SubResource("pole_mat")
+
+[node name="LightPole10" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 217.5, 3.0, 5.0)
+size = Vector3(0.15, 6.0, 0.15)
+material = SubResource("pole_mat")
+
+[node name="LampHead10" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 217.5, 6.0, 4.5)
+size = Vector3(0.5, 0.2, 1.0)
+material = SubResource("pole_mat")
+
+[node name="LightPole11" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 228.75, 3.0, 5.0)
+size = Vector3(0.15, 6.0, 0.15)
+material = SubResource("pole_mat")
+
+[node name="LampHead11" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 228.75, 6.0, 4.5)
+size = Vector3(0.5, 0.2, 1.0)
+material = SubResource("pole_mat")
+
+[node name="RouteSign" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 0, 5.5)
+
+[node name="SignPost" type="CSGBox3D" parent="RouteSign"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+size = Vector3(0.15, 3.0, 0.15)
+material = SubResource("pole_mat")
+
+[node name="SignBoard" type="CSGBox3D" parent="RouteSign"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, 0)
+size = Vector3(3.5, 1.2, 0.1)
+material = SubResource("sign_mat")
+
+[node name="SignText" type="Label3D" parent="RouteSign"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, 0.1)
+text = "WELCOME TO ROUTE 9"
+font_size = 96
+modulate = Color(1, 1, 1, 1)
+
+[node name="DirtRoad" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 60, 0, 0)
+
+[node name="Branch" type="CSGBox3D" parent="DirtRoad"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.03, 6)
+size = Vector3(3, 0.06, 12)
+material = SubResource("dirt_mat")
+visible = false
+
+visible = false
+[node name="RadioTower" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 200, 0, -30)
+
+[node name="TowerBody" type="CSGBox3D" parent="RadioTower"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 15, 0)
+size = Vector3(0.5, 30, 0.5)
+material = SubResource("pole_mat")
+
+[node name="TowerLight" type="OmniLight3D" parent="RadioTower"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 30, 0)
+light_color = Color(1, 0.2, 0.2, 1)
+light_energy = 0.0
+omni_range = 40.0
+
+[node name="MoonLight" type="DirectionalLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 100, 20, 0)
+light_color = Color(0.6, 0.65, 0.8, 1)
+light_energy = 0.15
+shadow_enabled = true
+transform = Transform3D(-0.65, 0.35, 0.67, 0, -0.88, 0.47, -0.76, -0.31, -0.57, 100, 20, 0)
+
+[node name="Player" type="CharacterBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+groups=["player"]
+script = ExtResource("1_player")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Player"]
+shape = SubResource("player_shape")
+
+[node name="CameraRig" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30, 6, 12)
+script = ExtResource("6_rig")
+
+[node name="PortableRadio" type="Node" parent="."]
+
+[node name="RadioTuner" type="Node" parent="PortableRadio"]
+script = ExtResource("2_tuner")
+band_config = ExtResource("4_band")
+
+[node name="SignalStrength" type="Node" parent="PortableRadio"]
+script = ExtResource("3_signal")
+radio_tuner = NodePath("../RadioTuner")
+
+[node name="RadioStatic" type="Node" parent="PortableRadio"]
+script = ExtResource("5_static")
+radio_tuner = NodePath("../RadioTuner")
+signal_strength = NodePath("../SignalStrength")
+

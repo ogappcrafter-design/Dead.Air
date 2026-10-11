@@ -31,13 +31,6 @@ func _ready() -> void:
 	_apply_settings()
 
 
-func _process(_delta: float) -> void:
-	# Re-apply text size to labels that may have been created dynamically
-	# (HUD elements are built in _ready of their own scripts)
-	# This is a light touch — only re-scales if the scale changed.
-	pass
-
-
 # ─── Signal wiring ───────────────────────────────────────────────────
 
 

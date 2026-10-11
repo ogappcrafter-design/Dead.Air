@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3]
 
-[ext_resource type="Script" path="res://src/ui/shift_summary.gd" id="1_shift_summary"]
+[ext_resource type="Script" uid="uid://crdm08vinmixj" path="res://src/ui/shift_summary.gd" id="1_shift_summary"]
 
 [node name="ShiftSummary" type="Control"]
 script = ExtResource("1_shift_summary")

@@ -14,6 +14,8 @@ func run_tests() -> Dictionary:
 	results["test_main_menu_emits_new_game_signal"] = test_main_menu_emits_new_game_signal()
 	results["test_main_menu_continue_disabled_no_saves"] = test_main_menu_continue_disabled_no_saves()
 	results["test_main_menu_settings_emits_signal"] = test_main_menu_settings_emits_signal()
+	results["test_main_menu_completion_label_no_marker"] = test_main_menu_completion_label_no_marker()
+	results["test_main_menu_completion_label_with_marker"] = test_main_menu_completion_label_with_marker()
 	return results
 
 
@@ -106,6 +108,37 @@ func test_main_menu_settings_emits_signal() -> bool:
 	return signal_received
 
 
+func test_main_menu_completion_label_no_marker() -> bool:
+	# Ensure no marker exists before this test.
+	if FileAccess.file_exists("user://ending_marker.txt"):
+		DirAccess.remove_absolute("user://ending_marker.txt")
+	var menu := MainMenu.new()
+	Engine.get_main_loop().root.add_child(menu)
+	var labels := _find_labels(menu, "")
+	var completion_hidden := true
+	for label in labels:
+		if label.text.begins_with("COMPLETED"):
+			completion_hidden = false
+	menu.queue_free()
+	return completion_hidden
+
+
+func test_main_menu_completion_label_with_marker() -> bool:
+	var dir := DirAccess.open("user://")
+	var f := FileAccess.open("user://ending_marker.txt", FileAccess.WRITE)
+	f.store_string("THE_RELAY")
+	f.close()
+	var menu := MainMenu.new()
+	Engine.get_main_loop().root.add_child(menu)
+	var found := false
+	for label in _find_labels(menu, "COMPLETED — THE RELAY"):
+		found = true
+		break
+	menu.queue_free()
+	DirAccess.remove_absolute("user://ending_marker.txt")
+	return found
+
+
 # --- Helpers ---
 
 
@@ -121,7 +154,8 @@ func _find_buttons(node: Node) -> Array[Button]:
 func _find_labels(node: Node, text: String) -> Array[Label]:
 	var labels: Array[Label] = []
 	for child in node.get_children(true):
-		if child is Label and (child as Label).text == text:
-			labels.append(child)
+		var label := child as Label
+		if label != null and (text == "" or label.text == text):
+			labels.append(label)
 		labels.append_array(_find_labels(child, text))
 	return labels

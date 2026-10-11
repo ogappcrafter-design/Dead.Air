@@ -1,0 +1,129 @@
+[gd_scene load_steps=12 format=3 uid="uid://bp4chamber01"]
+
+[ext_resource type="Script" uid="uid://byfya25euxxwe" path="res://src/entities/player.gd" id="1_player"]
+[ext_resource type="Script" uid="uid://bnhl1nrqqywda" path="res://src/core/radio_tuner.gd" id="2_tuner"]
+[ext_resource type="Script" uid="uid://b2ojlbnvs1xnr" path="res://src/core/signal_strength.gd" id="3_signal"]
+[ext_resource type="Resource" uid="uid://11e914f432000" path="res://src/data/band_config.tres" id="4_band"]
+[ext_resource type="Script" uid="uid://cn3ic8sfogvs3" path="res://src/audio/radio_static.gd" id="5_static"]
+[ext_resource type="Script" path="res://src/levels/chamber_segment.gd" id="6_seg"]
+[sub_resource type="StandardMaterial3D" id="earth_mat"]
+albedo_color = Color(0.3, 0.24, 0.18, 1)
+roughness = 1.0
+[sub_resource type="StandardMaterial3D" id="wood_mat"]
+albedo_color = Color(0.25, 0.18, 0.12, 1)
+roughness = 0.9
+[sub_resource type="StandardMaterial3D" id="brass_mat"]
+albedo_color = Color(0.55, 0.42, 0.20, 1)
+roughness = 0.35
+metallic = 0.85
+[sub_resource type="StandardMaterial3D" id="crystal_mat"]
+albedo_color = Color(0.7, 0.8, 0.9, 1)
+roughness = 0.1
+metallic = 0.3
+[sub_resource type="Environment" id="env_chamber"]
+background_mode = 1
+ambient_light_color = Color(0.2, 0.18, 0.15, 1)
+ambient_light_energy = 0.5
+[sub_resource type="BoxShape3D" id="player_shape"]
+size = Vector3(0.5, 1.0, 0.5)
+
+[node name="Chamber" type="Node3D"]
+script = ExtResource("6_seg")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("env_chamber")
+[node name="Floor" type="CSGCylinder3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -200.05, 0)
+radius = 10.0
+height = 0.1
+sides = 32
+material = SubResource("earth_mat")
+use_collision = true
+
+[node name="Wall" type="CSGCylinder3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -197.5, 0)
+radius = 10.0
+height = 5.0
+sides = 32
+material = SubResource("earth_mat")
+use_collision = true
+
+[node name="Ceiling" type="CSGCylinder3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -195, 0)
+radius = 10.0
+height = 0.1
+sides = 32
+material = SubResource("earth_mat")
+
+[node name="Dais" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -200, 0)
+
+[node name="Platform" type="CSGCylinder3D" parent="Dais"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.15, 0)
+radius = 3.0
+height = 0.3
+sides = 16
+material = SubResource("wood_mat")
+use_collision = true
+
+[node name="Desk" type="CSGBox3D" parent="Dais"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.75, 0)
+size = Vector3(2.2, 0.9, 1.0)
+material = SubResource("wood_mat")
+use_collision = true
+
+[node name="Console" type="CSGBox3D" parent="Dais"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.3, -0.2)
+size = Vector3(1.8, 0.5, 0.6)
+material = SubResource("brass_mat")
+
+[node name="Crystal" type="CSGBox3D" parent="Dais"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.8, 0)
+size = Vector3(0.4, 0.4, 0.4)
+material = SubResource("crystal_mat")
+
+[node name="Microphone" type="CSGCylinder3D" parent="Dais"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.7, 1.35, 0.2)
+radius = 0.05
+height = 0.4
+sides = 8
+material = SubResource("brass_mat")
+
+[node name="Chair" type="CSGBox3D" parent="Dais"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.55, 0.9)
+size = Vector3(0.6, 1.0, 0.6)
+material = SubResource("wood_mat")
+
+[node name="KeyLight" type="SpotLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -196.5, 0)
+light_color = Color(0.9, 0.8, 0.6, 1)
+light_energy = 2.0
+spot_range = 8.0
+spot_angle = 40.0
+transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, 0, -196.5, 0)
+
+[node name="Player" type="CharacterBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, -200.5, 4)
+groups=["player"]
+script = ExtResource("1_player")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Player"]
+shape = SubResource("player_shape")
+
+[node name="CameraRig" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -197, 10)
+
+[node name="PortableRadio" type="Node" parent="."]
+
+[node name="RadioTuner" type="Node" parent="PortableRadio"]
+script = ExtResource("2_tuner")
+band_config = ExtResource("4_band")
+
+[node name="SignalStrength" type="Node" parent="PortableRadio"]
+script = ExtResource("3_signal")
+radio_tuner = NodePath("../RadioTuner")
+
+[node name="RadioStatic" type="Node" parent="PortableRadio"]
+script = ExtResource("5_static")
+radio_tuner = NodePath("../RadioTuner")
+signal_strength = NodePath("../SignalStrength")

@@ -1,7 +1,7 @@
 ; band_config.tres — All 8 bands: 5 sacred + 3 extended (GDD v2 spec)
 ; Source: docs/plans/redesign-gdd.md GDD v2 Band Specs
 ; Godot 4 / format=3
-[gd_resource type="Resource" script_class="BandConfig" load_steps=11 format=3]
+[gd_resource type="Resource" script_class="BandConfig" load_steps=11 uid="uid://11e914f432000" format=3]
 
 [ext_resource type="Script" path="res://src/data/band_config.gd" id="1"]
 [ext_resource type="Script" path="res://src/data/band_data.gd" id="2"]

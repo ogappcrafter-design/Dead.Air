@@ -95,10 +95,11 @@ func _init_slots() -> void:
 
 
 func _find_references() -> void:
-	# RadioTuner and DreadComposure are not autoloads — they are instantiated
-	# by the game scene. We search the tree for them.
+	# DreadComposure/SignalStrength are owned by the CallManager autoload;
+	# RadioTuner lives in the game scene (RadioConsole/RadioTuner).
+	if CallManager:
+		_dread_composure = CallManager.get_dread_composure()
 	_radio_tuner = _find_node_of_type("RadioTuner")
-	_dread_composure = _find_node_of_type("DreadComposure")
 
 
 func _find_node_of_type(class_name_str: String) -> Node:

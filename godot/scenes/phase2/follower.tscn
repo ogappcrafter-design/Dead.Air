@@ -1,0 +1,170 @@
+[gd_scene load_steps=20 format=3 uid="uid://bp2follower01"]
+
+[ext_resource type="Script" uid="uid://bp2followerscr" path="res://src/levels/follower_segment.gd" id="1_segment"]
+[ext_resource type="Script" uid="uid://be6swwtavc18m" path="res://src/visual/camera_rig.gd" id="2_rig"]
+[ext_resource type="Script" uid="uid://byfya25euxxwe" path="res://src/entities/player.gd" id="3_player"]
+[ext_resource type="Script" uid="uid://be2qdmaf14jm1" path="res://src/entities/suit.gd" id="4_suit"]
+[ext_resource type="Script" uid="uid://bnhl1nrqqywda" path="res://src/core/radio_tuner.gd" id="5_tuner"]
+[ext_resource type="Script" uid="uid://b2ojlbnvs1xnr" path="res://src/core/signal_strength.gd" id="6_signal"]
+[ext_resource type="Resource" uid="uid://11e914f432000" path="res://src/data/band_config.tres" id="7_band"]
+[ext_resource type="Script" uid="uid://cn3ic8sfogvs3" path="res://src/audio/radio_static.gd" id="8_static"]
+
+[sub_resource type="StandardMaterial3D" id="asphalt_mat"]
+albedo_color = Color(0.13, 0.13, 0.15, 1)
+roughness = 0.95
+
+[sub_resource type="StandardMaterial3D" id="grass_mat"]
+albedo_color = Color(0.08, 0.11, 0.07, 1)
+roughness = 1.0
+
+[sub_resource type="StandardMaterial3D" id="house_mat"]
+albedo_color = Color(0.16, 0.14, 0.12, 1)
+roughness = 0.9
+
+[sub_resource type="StandardMaterial3D" id="house_roof_mat"]
+albedo_color = Color(0.1, 0.09, 0.1, 1)
+roughness = 0.9
+
+[sub_resource type="StandardMaterial3D" id="interior_mat"]
+albedo_color = Color(0.2, 0.16, 0.11, 1)
+roughness = 0.85
+
+[sub_resource type="StandardMaterial3D" id="couch_mat"]
+albedo_color = Color(0.25, 0.18, 0.14, 1)
+roughness = 0.8
+
+[sub_resource type="StandardMaterial3D" id="window_mat"]
+albedo_color = Color(0.05, 0.06, 0.08, 1)
+roughness = 0.2
+metallic = 0.3
+
+[sub_resource type="BoxShape3D" id="door_shape"]
+size = Vector3(3.0, 3.0, 6.0)
+
+[sub_resource type="BoxShape3D" id="player_shape"]
+size = Vector3(0.5, 1.0, 0.5)
+
+[sub_resource type="Environment" id="env_night"]
+background_mode = 1
+ambient_light_color = Color(0.06, 0.07, 0.1, 1)
+ambient_light_energy = 0.3
+fog_enabled = true
+fog_light_color = Color(0.04, 0.04, 0.07, 1)
+fog_density = 0.014
+
+[node name="FollowerSegment" type="Node3D"]
+script = ExtResource("1_segment")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("env_night")
+
+[node name="Road" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 25, 0.05, 0)
+size = Vector3(50, 0.1, 7)
+material = SubResource("asphalt_mat")
+use_collision = true
+
+[node name="GrassNorth" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 25, 0.02, -9)
+size = Vector3(50, 0.06, 10)
+material = SubResource("grass_mat")
+use_collision = true
+
+[node name="GrassSouth" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 25, 0.02, 9)
+size = Vector3(50, 0.06, 10)
+material = SubResource("grass_mat")
+use_collision = true
+
+[node name="MoonLight" type="DirectionalLight3D" parent="."]
+transform = Transform3D(-0.65, 0.35, 0.67, 0, -0.88, 0.47, -0.76, -0.31, -0.57, 25, 20, 0)
+light_color = Color(0.7, 0.75, 0.85, 1)
+light_energy = 0.22
+shadow_enabled = true
+
+[node name="House" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40, 0, 0)
+
+[node name="Body" type="CSGBox3D" parent="House"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.2, 0)
+size = Vector3(8, 4.4, 10)
+material = SubResource("house_mat")
+use_collision = true
+
+[node name="Roof" type="CSGBox3D" parent="House"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.8, 0)
+size = Vector3(9, 0.8, 11)
+material = SubResource("house_roof_mat")
+
+[node name="Doorway" type="CSGBox3D" parent="House"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.05, 1.25, 0)
+size = Vector3(0.1, 2.5, 1.6)
+material = SubResource("house_mat")
+
+[node name="WindowNorth" type="CSGBox3D" parent="House"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.05, 2.0, -3.0)
+size = Vector3(0.08, 1.2, 1.6)
+material = SubResource("window_mat")
+
+[node name="WindowSouth" type="CSGBox3D" parent="House"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.05, 2.0, 3.0)
+size = Vector3(0.08, 1.2, 1.6)
+material = SubResource("window_mat")
+
+[node name="Interior" type="Node3D" parent="House"]
+
+[node name="Floor" type="CSGBox3D" parent="House/Interior"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 0)
+size = Vector3(7.8, 0.1, 9.8)
+material = SubResource("interior_mat")
+use_collision = true
+
+[node name="Couch" type="CSGBox3D" parent="House/Interior"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0.5, 0)
+size = Vector3(1.2, 0.8, 2.4)
+material = SubResource("couch_mat")
+use_collision = true
+
+[node name="DoorTrigger" type="Area3D" parent="House"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 1.5, 0)
+collision_layer = 4
+collision_mask = 2
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="House/DoorTrigger"]
+shape = SubResource("door_shape")
+
+[node name="WindowShadow" type="DirectionalLight3D" parent="House"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5, -10)
+light_color = Color(1, 1, 1, 1)
+light_energy = 0.0
+shadow_enabled = false
+
+[node name="Player" type="CharacterBody3D" parent="." groups=["player"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0.5, 0)
+script = ExtResource("3_player")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Player"]
+shape = SubResource("player_shape")
+
+[node name="CameraRig" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 2.2, 4.5)
+script = ExtResource("2_rig")
+
+[node name="Follower" type="CharacterBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 0.5, 0)
+script = ExtResource("4_suit")
+
+[node name="PortableRadio" type="Node" parent="."]
+
+[node name="RadioTuner" type="Node" parent="PortableRadio"]
+script = ExtResource("5_tuner")
+band_config = ExtResource("7_band")
+
+[node name="SignalStrength" type="Node" parent="PortableRadio"]
+script = ExtResource("6_signal")
+radio_tuner = NodePath("../RadioTuner")
+
+[node name="RadioStatic" type="Node" parent="PortableRadio"]
+script = ExtResource("8_static")
+radio_tuner = NodePath("../RadioTuner")
+signal_strength = NodePath("../SignalStrength")

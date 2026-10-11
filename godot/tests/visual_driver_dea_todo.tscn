@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://bdeatododriver"]
+
+[ext_resource type="Script" path="res://tests/visual_driver_dea_todo.gd" id="1_driver"]
+
+[node name="VisualDriver" type="Node"]
+script = ExtResource("1_driver")

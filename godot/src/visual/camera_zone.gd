@@ -35,11 +35,6 @@ var _is_active: bool = false
 func _ready() -> void:
 	# Ensure monitoring is on
 	monitoring = true
-	# Only detect bodies (player), not other areas
-	match collision_mask:
-		0:
-			# Default to layer 1 if not set
-			collision_mask = 1
 	body_entered.connect(_on_body_entered)
 	body_exited.connect(_on_body_exited)
 

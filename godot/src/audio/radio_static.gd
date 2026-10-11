@@ -326,7 +326,8 @@ func _fill_static_buffer() -> void:
 	var frames_to_fill := _static_stream.get_frames_available()
 	if frames_to_fill <= 0:
 		return
-	var buf: PackedVector2Array = _static_stream.get_buffer()
+	var buf: PackedVector2Array = PackedVector2Array()
+	buf.resize(frames_to_fill)
 	var char_data := get_band_character(_current_band_id)
 	var noise_gain: float = char_data.get("noise_gain", 0.5)
 	var tier := get_signal_tier(_current_signal)
@@ -340,6 +341,7 @@ func _fill_static_buffer() -> void:
 		buf[i] = Vector2(sample, sample)
 
 
+	_static_stream.push_buffer(buf)
 func _fill_interference_buffer(delta: float) -> void:
 	if not _interference_stream:
 		return
@@ -359,7 +361,8 @@ func _fill_interference_buffer(delta: float) -> void:
 	var frames_to_fill := _interference_stream.get_frames_available()
 	if frames_to_fill <= 0:
 		return
-	var buf: PackedVector2Array = _interference_stream.get_buffer()
+	var buf: PackedVector2Array = PackedVector2Array()
+	buf.resize(frames_to_fill)
 	# Interference louder at low signal
 	var crackle_amp := lerpf(0.3, 0.8, 1.0 - _current_signal / 100.0)
 
@@ -370,13 +373,15 @@ func _fill_interference_buffer(delta: float) -> void:
 		buf[i] = Vector2(sample, sample)
 
 
+	_interference_stream.push_buffer(buf)
 func _fill_whisper_buffer() -> void:
 	if not _whisper_stream:
 		return
 	var frames_to_fill := _whisper_stream.get_frames_available()
 	if frames_to_fill <= 0:
 		return
-	var buf: PackedVector2Array = _whisper_stream.get_buffer()
+	var buf: PackedVector2Array = PackedVector2Array()
+	buf.resize(frames_to_fill)
 
 	for i in range(frames_to_fill):
 		var sample: float = 0.0
@@ -386,6 +391,7 @@ func _fill_whisper_buffer() -> void:
 		buf[i] = Vector2(sample, sample)
 
 
+	_whisper_stream.push_buffer(buf)
 func _fill_heartbeat_buffer(delta: float) -> void:
 	if not _heartbeat_stream:
 		return
@@ -403,7 +409,8 @@ func _fill_heartbeat_buffer(delta: float) -> void:
 	var frames_to_fill := _heartbeat_stream.get_frames_available()
 	if frames_to_fill <= 0:
 		return
-	var buf: PackedVector2Array = _heartbeat_stream.get_buffer()
+	var buf: PackedVector2Array = PackedVector2Array()
+	buf.resize(frames_to_fill)
 
 	# Low-frequency thump envelope
 	for i in range(frames_to_fill):
@@ -416,6 +423,7 @@ func _fill_heartbeat_buffer(delta: float) -> void:
 		buf[i] = Vector2(sample, sample)
 
 
+	_heartbeat_stream.push_buffer(buf)
 func _apply_filter() -> void:
 	if not _low_pass_filter or _low_pass_idx < 0:
 		return

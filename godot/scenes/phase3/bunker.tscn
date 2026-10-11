@@ -1,0 +1,166 @@
+[gd_scene load_steps=16 format=3 uid="uid://bp3bunker01"]
+
+[ext_resource type="Script" uid="uid://byfya25euxxwe" path="res://src/entities/player.gd" id="1_player"]
+[ext_resource type="Script" uid="uid://bnhl1nrqqywda" path="res://src/core/radio_tuner.gd" id="2_tuner"]
+[ext_resource type="Script" uid="uid://b2ojlbnvs1xnr" path="res://src/core/signal_strength.gd" id="3_signal"]
+[ext_resource type="Resource" uid="uid://11e914f432000" path="res://src/data/band_config.tres" id="4_band"]
+[ext_resource type="Script" uid="uid://cn3ic8sfogvs3" path="res://src/audio/radio_static.gd" id="5_static"]
+[ext_resource type="Script" path="res://src/levels/bunker_segment.gd" id="6_seg"]
+[sub_resource type="StandardMaterial3D" id="concrete_mat"]
+albedo_color = Color(0.22, 0.22, 0.2, 1)
+roughness = 0.95
+[sub_resource type="StandardMaterial3D" id="floor_mat"]
+albedo_color = Color(0.18, 0.18, 0.17, 1)
+roughness = 0.9
+[sub_resource type="StandardMaterial3D" id="metal_mat"]
+albedo_color = Color(0.3, 0.3, 0.32, 1)
+roughness = 0.4
+metallic = 0.7
+[sub_resource type="StandardMaterial3D" id="vault_mat"]
+albedo_color = Color(0.35, 0.3, 0.2, 1)
+roughness = 0.3
+metallic = 0.9
+[sub_resource type="StandardMaterial3D" id="desk_mat"]
+albedo_color = Color(0.25, 0.2, 0.15, 1)
+roughness = 0.8
+[sub_resource type="Environment" id="env_bunker"]
+background_mode = 1
+ambient_light_color = Color(0.08, 0.09, 0.09, 1)
+ambient_light_energy = 0.5
+fog_enabled = true
+fog_light_color = Color(0.05, 0.05, 0.05, 1)
+fog_density = 0.02
+[sub_resource type="BoxShape3D" id="player_shape"]
+size = Vector3(0.5, 1.0, 0.5)
+
+[node name="Bunker" type="Node3D"]
+script = ExtResource("6_seg")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("env_bunker")
+[node name="FloorMain" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+size = Vector3(20, 0.2, 24)
+material = SubResource("floor_mat")
+use_collision = true
+
+[node name="WallWest" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 1.5, 0)
+size = Vector3(0.3, 3, 24)
+material = SubResource("concrete_mat")
+use_collision = true
+
+[node name="WallEast" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 1.5, 0)
+size = Vector3(0.3, 3, 24)
+material = SubResource("concrete_mat")
+use_collision = true
+
+[node name="WallNorth" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, -10)
+size = Vector3(20, 3, 0.3)
+material = SubResource("concrete_mat")
+use_collision = true
+
+[node name="WallSouth" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 10)
+size = Vector3(20, 3, 0.3)
+material = SubResource("concrete_mat")
+use_collision = true
+
+[node name="Office" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 0, 6)
+
+[node name="Floor" type="CSGBox3D" parent="Office"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+size = Vector3(6, 0.2, 6)
+material = SubResource("floor_mat")
+use_collision = true
+
+[node name="Desk" type="CSGBox3D" parent="Office"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.4, 0)
+size = Vector3(2, 0.8, 1)
+material = SubResource("desk_mat")
+use_collision = true
+
+[node name="CentralChamber" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -4)
+
+[node name="TapeMachine" type="Node3D" parent="CentralChamber"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+
+[node name="Machine" type="CSGBox3D" parent="CentralChamber/TapeMachine"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
+size = Vector3(1.5, 1.2, 1)
+material = SubResource("metal_mat")
+use_collision = true
+
+[node name="Vault" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -8)
+
+[node name="Door" type="CSGBox3D" parent="Vault"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+size = Vector3(2, 3, 0.4)
+material = SubResource("vault_mat")
+use_collision = true
+
+[node name="Storage" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, 6)
+
+[node name="Shelves" type="CSGBox3D" parent="Storage"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+size = Vector3(4, 2, 1)
+material = SubResource("metal_mat")
+use_collision = true
+
+[node name="Elevator" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 10)
+
+[node name="DoorFrame" type="CSGBox3D" parent="Elevator"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+size = Vector3(2.4, 3, 0.3)
+material = SubResource("metal_mat")
+
+[node name="AlarmLight" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 0)
+light_color = Color(1, 0.2, 0.1, 1)
+light_energy = 0.0
+omni_range = 15.0
+
+[node name="Light1" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.8, 4)
+light_color = Color(0.85, 0.9, 0.85, 1)
+light_energy = 1.0
+omni_range = 10.0
+
+[node name="Light2" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.8, -4)
+light_color = Color(0.85, 0.9, 0.85, 1)
+light_energy = 1.0
+omni_range = 10.0
+
+[node name="Player" type="CharacterBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 8)
+groups=["player"]
+script = ExtResource("1_player")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Player"]
+shape = SubResource("player_shape")
+
+[node name="CameraRig" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, 12)
+
+[node name="PortableRadio" type="Node" parent="."]
+
+[node name="RadioTuner" type="Node" parent="PortableRadio"]
+script = ExtResource("2_tuner")
+band_config = ExtResource("4_band")
+
+[node name="SignalStrength" type="Node" parent="PortableRadio"]
+script = ExtResource("3_signal")
+radio_tuner = NodePath("../RadioTuner")
+
+[node name="RadioStatic" type="Node" parent="PortableRadio"]
+script = ExtResource("5_static")
+radio_tuner = NodePath("../RadioTuner")
+signal_strength = NodePath("../SignalStrength")

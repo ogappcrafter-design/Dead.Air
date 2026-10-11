@@ -98,7 +98,7 @@ const PROCEDURAL_TEMPLATES: Array[Dictionary] = [
 	},
 ]
 
-# --- Shift definitions (V-Slice: shifts 1 + 2) ---
+# --- Shift definitions (Shifts 1-5 implemented) ---
 # Each shift: array of call specs. Scripted calls use {"id": N}. Procedural use {"procedural": true}.
 const SHIFT_DEFINITIONS: Array = [
 	# Shift 1
@@ -115,6 +115,29 @@ const SHIFT_DEFINITIONS: Array = [
 		{"id": 4},
 		{"id": 5},
 	],
+	# Shift 3 (GDD: no procedural opener — YESTERDAY'S CALL opens the night;
+	# breathers between calls: 45s, 30s, 60s)
+	[
+		{"id": 6, "breather": 45.0},
+		{"id": 7, "breather": 30.0},
+		{"id": 8, "breather": 60.0},
+		{"id": 9},
+	],
+	# Shift 4 (GDD: breathers 90s after GRAND, 45s after FREE SPIRIT, 30s after AGENT 7)
+	[
+		{"id": 10, "breather": 90.0},
+		{"id": 11, "breather": 45.0},
+		{"id": 12, "breather": 30.0},
+		{"id": 13},
+	],
+	# Shift 5 (GDD: breathers 20s after WHISTLEBLOWER, 15s after ORIGIN, 10s after
+	# YOU CALLED US — "almost none"; DEAD AIR is the final call, station goes dark)
+	[
+		{"id": 14, "breather": 20.0},
+		{"id": 15, "breather": 15.0},
+		{"id": 16, "breather": 10.0},
+		{"id": 17},
+	],
 ]
 
 # ---------------------------------------------------------------------------
@@ -127,6 +150,8 @@ func _ready() -> void:
 	_connectautoload_signals()
 	if BreatherSystem:
 		BreatherSystem.breather_ended.connect(_on_breather_ended)
+	if CallPlayer:
+		CallPlayer.call_display_complete.connect(_on_call_display_complete)
 
 
 func _process(delta: float) -> void:
@@ -272,6 +297,36 @@ func select_choice(index: int) -> void:
 	_resolve_call("choice_made")
 
 
+## Submit the result of a SIGNAL_DECODE puzzle (called by the decode UI).
+## Success: full sanityDelta and staticReward (mirrors the RN reference).
+## Failure: half the sanityDelta (truncated toward zero), no static reward.
+func submit_decode_result(decoded: bool) -> void:
+	if _state != CallState.ACTIVE and _state != CallState.CHOICE:
+		push_warning("CallManager: submit_decode_result called in state %d" % _state)
+		return
+	var outcome := "decoded" if decoded else "decode_failed"
+	if decoded:
+		var sanity_delta: float = float(_current_call.get("sanityDelta", 0.0))
+		if sanity_delta != 0.0 and _dread_composure:
+			_dread_composure.add_dread(-sanity_delta)
+			sanity_changed.emit(sanity_delta, _dread_composure.dread)
+		var reward: int = int(_current_call.get("staticReward", 0))
+		if reward > 0:
+			static_rewarded.emit(reward)
+		# Tape award for decode calls (Tape #11 for ARIA-9)
+		if bool(_current_call.get("tape", false)) and TapeInventory:
+			var tape_name: String = str(_current_call.get("tapeName", ""))
+			var tape_id := _resolve_tape_id(tape_name)
+			TapeInventory.collect_tape(tape_id, _current_call)
+			tape_awarded.emit(tape_id, tape_name)
+	else:
+		var fail_delta: float = floor(float(_current_call.get("sanityDelta", 0.0)) / 2.0)
+		if fail_delta != 0.0 and _dread_composure:
+			_dread_composure.add_dread(-fail_delta)
+			sanity_changed.emit(fail_delta, _dread_composure.dread)
+	_resolve_call(outcome)
+
+
 # ---------------------------------------------------------------------------
 # State machine
 # ---------------------------------------------------------------------------
@@ -326,7 +381,11 @@ func _enter_state(new_state: CallState) -> void:
 				_breather_active = false
 			elif BreatherSystem:
 				_breather_active = true
-				BreatherSystem.start_breather()
+				# Use the per-call breather duration from GDD (e.g. shift 4:
+				# 90s after GRAND, 45s after FREE SPIRIT, 30s after AGENT 7);
+				# -1.0 falls back to the difficulty-scaled default.
+				var per_call: Variant = _current_call.get("breather")
+				BreatherSystem.start_breather(float(per_call) if per_call != null else -1.0)
 			else:
 				_cooldown_timer = COOLDOWN_DURATION
 				_breather_active = false
@@ -353,6 +412,22 @@ func _on_breather_ended() -> void:
 		_advance_queue()
 
 
+## CallPlayer finished presenting the call's lines. If the call has choices,
+## enter the CHOICE state so select_choice() becomes legal. SIGNAL_DECODE
+## calls instead wait for the decode UI's submit_decode_result(). Calls with
+## neither choices nor decode resolve naturally here.
+func _on_call_display_complete(call_data: Dictionary) -> void:
+	if _state != CallState.ACTIVE:
+		return
+	if _current_call.get("type", "") == "SIGNAL_DECODE":
+		return  # decode UI drives resolution via submit_decode_result()
+	var choices: Array = _current_call.get("choices", [])
+	if not choices.is_empty():
+		_enter_state(CallState.CHOICE)
+	else:
+		_resolve_call("played_out")
+
+
 # ---------------------------------------------------------------------------
 # Call resolution
 # ---------------------------------------------------------------------------
@@ -363,6 +438,10 @@ func _resolve_call(outcome: String) -> void:
 
 	# Trigger stingers based on call type / outcome
 	_trigger_call_stingers(_current_call, outcome)
+
+	# Shift 5: the layout shifts between every call (GDD)
+	if StationDegradation and StationDegradation.has_method("on_call_completed"):
+		StationDegradation.on_call_completed()
 
 	# Check if this was the last call in the shift
 	_is_last_call_in_shift = (_current_call_index >= _shift_queue.size() - 1)
@@ -390,6 +469,18 @@ func _trigger_call_stingers(call_data: Dictionary, outcome: String) -> void:
 # ---------------------------------------------------------------------------
 
 
+## Resolve a tapeName (e.g. "Tape #11 — ARIA-9 Transcript") to the canonical
+## tape-XXX id used by TapeLibrary, tape pickups, and save data. Falls back to
+## the name itself when the library is unavailable or doesn't contain it.
+func _resolve_tape_id(tape_name: String) -> String:
+	var library := load("res://src/data/tapes.tres") as TapeLibrary
+	if library:
+		var data: TapeData = library.get_tape_by_name(tape_name)
+		if data:
+			return data.tape_id
+	return tape_name
+
+
 func _apply_choice_effects(choice: Dictionary) -> void:
 	# Sanity delta
 	var sanity_delta: float = choice.get("sanityDelta", 0.0)
@@ -397,10 +488,10 @@ func _apply_choice_effects(choice: Dictionary) -> void:
 		_dread_composure.add_dread(-sanity_delta)  # positive sanityDelta reduces dread
 		sanity_changed.emit(sanity_delta, _dread_composure.dread)
 
-	# Tape award
-	var tape_id: String = choice.get("tape", "")
-	var tape_name: String = choice.get("tapeName", "")
-	if tape_id != "" and TapeInventory:
+	# Tape award (calls.json uses tape: bool + tapeName: String, matching RN)
+	var tape_name: String = str(choice.get("tapeName", ""))
+	if bool(choice.get("tape", false)) and tape_name != "" and TapeInventory:
+		var tape_id := _resolve_tape_id(tape_name)
 		TapeInventory.collect_tape(tape_id, _current_call)
 		tape_awarded.emit(tape_id, tape_name)
 
@@ -441,7 +532,12 @@ func _build_shift_queue(shift_num: int) -> Array[Dictionary]:
 			if call_data.is_empty():
 				push_warning("CallManager: call id %d not found in CallData" % call_id)
 			else:
-				queue.append(call_data)
+				# Carry per-call breather duration from the shift definition
+				# (GDD specifies per-gap breathers, e.g. shift 3: 45/30/60s).
+				var call := call_data.duplicate()
+				if spec.has("breather"):
+					call["breather"] = float(spec["breather"])
+				queue.append(call)
 
 	return queue
 

@@ -159,6 +159,9 @@ var _hiding: bool = false
 var _breath_holding: bool = false
 
 var _relocate_timer: float = 0.0
+## APPROACH visual stutter state (GDD: 1-2 frame position jumps).
+var _stutter_timer: float = 1.0
+var _stutter_freeze: float = 0.0
 var _relocate_target: Vector3 = Vector3.ZERO
 
 var _rng: RandomNumberGenerator = RandomNumberGenerator.new()
@@ -211,36 +214,13 @@ func _resolve_references() -> void:
 		var players := get_tree().get_nodes_in_group("player")
 		if players.size() > 0:
 			_player = players[0]
-	# DreadComposure and SignalStrength are scene-tree children (not autoloads).
-	# Resolve via recursive tree search, following the recording_manager pattern.
-	_dread_composure = _find_node_of_type("DreadComposure")
-	_signal_strength = _find_node_of_type("SignalStrength")
-	# PhaseManager and StingerSystem ARE autoloads.
+	# Resolve singletons via the documented owners: DreadComposure/SignalStrength
+	# are owned by the CallManager autoload; PhaseManager and StingerSystem are autoloads.
+	if CallManager:
+		_dread_composure = CallManager.get_dread_composure()
+		_signal_strength = CallManager.get_signal_strength()
 	_phase_manager = get_tree().root.get_node_or_null("/root/PhaseManager")
 	_stinger_system = get_tree().root.get_node_or_null("/root/StingerSystem")
-
-
-func _find_node_of_type(class_name_str: String) -> Node:
-	var root := get_tree().current_scene
-	if root == null:
-		root = get_tree().root
-	if root == null:
-		return null
-	return _find_node_recursive(root, class_name_str)
-
-
-func _find_node_recursive(node: Node, class_name_str: String) -> Node:
-	if node.is_class(class_name_str) or node.get_class() == class_name_str:
-		return node
-	if node.has_method("get_script") and node.get_script() != null:
-		var script = node.get_script()
-		if script.has_method("get_global_name") and script.get_global_name() == class_name_str:
-			return node
-	for child in node.get_children():
-		var found = _find_node_recursive(child, class_name_str)
-		if found != null:
-			return found
-	return null
 
 
 ## ─── Appearance ────────────────────────────────────────────────────────
@@ -252,9 +232,9 @@ func _setup_appearance() -> void:
 	for child in get_children():
 		if child is GeometryInstance3D:
 			(child as GeometryInstance3D).cast_shadow = (
-				GeometryInstance3D.SHADOW_OFF
+				GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 				if not cast_shadows
-				else GeometryInstance3D.SHADOW_CAST_AND_RECEIVE
+				else GeometryInstance3D.SHADOW_CASTING_SETTING_ON
 			)
 
 
@@ -402,6 +382,13 @@ func _trigger_relocate() -> void:
 		_relocate_target = safe_areas[idx]
 	else:
 		_relocate_target = _get_player_pos()
+	# Screen cuts to static for the 0.5s relocation (GDD: "screen cuts to
+	# static for 0.5 sec, then player is in new location").
+	var fx := StaticTransition.new()
+	fx.name = "RelocateStatic"
+	if _player != null and _player.is_inside_tree():
+		_player.get_tree().root.add_child(fx)
+		fx.play(0.5)
 	# Teleport player immediately (the relocate state is a brief "carry" animation window).
 	if _player != null and _player.has_method("set_global_position"):
 		_player.set_global_position(_relocate_target)
@@ -458,7 +445,7 @@ func _get_effective_range(base_range: float) -> float:
 	var dread := 0.0
 	if _dread_composure != null:
 		dread = _dread_composure.dread
-	var bonus := floor(dread / 10.0) * DREAD_RANGE_BONUS_PER_10
+	var bonus: float = floor(dread / 10.0) * DREAD_RANGE_BONUS_PER_10
 	return base_range + bonus
 
 
@@ -563,6 +550,21 @@ func _move_toward(target: Vector3, speed: float, delta: float) -> void:
 	if dist < 0.01:
 		return
 	var dir := to_target.normalized()
+
+	# APPROACH stutter (GDD: 1-2 frame position jump, "as if dropping
+	# frames"). Every 0.7-1.5s the suit jumps slightly ahead and freezes
+	# for a couple of frames. Other states walk smoothly.
+	if _state == State.APPROACH:
+		_stutter_timer -= delta
+		if _stutter_freeze > 0.0:
+			_stutter_freeze -= delta
+			return
+		if _stutter_timer <= 0.0:
+			_stutter_timer = _rng.randf_range(0.7, 1.5)
+			_stutter_freeze = _rng.randf_range(0.03, 0.06)
+			global_position += dir * speed * 0.1
+			return
+
 	# Smooth, human walk — never robotic, never running.
 	var move := dir * speed * delta
 	if move.length() > dist:

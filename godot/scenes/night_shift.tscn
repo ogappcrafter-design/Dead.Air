@@ -1,43 +1,13 @@
 [gd_scene load_steps=8 format=3 uid="uid://bnightshift01"]
 
-[ext_resource type="PackedScene" path="res://scenes/station/station.tscn" id="1_station"]
-[ext_resource type="PackedScene" path="res://scenes/radio_integration.tscn" id="2_radio"]
-[ext_resource type="Script" path="res://src/ui/hud_layout.gd" id="3_hud"]
-[ext_resource type="Script" path="res://src/ui/interact_prompt.gd" id="4_prompt"]
-[ext_resource type="Script" path="res://src/core/game_director.gd" id="5_director"]
-[ext_resource type="Script" path="res://src/core/shift_stub.gd" id="6_shift"]
-[ext_resource type="Script" path="res://src/core/degradation_stub.gd" id="7_degradation"]
-
-[sub_resource type="GDScript" id="8_test_runner"]
-script/source = "extends Node
-
-func _ready() -> void:
-	if not OS.is_debug_build():
-		return
-	var test_script := load(\"res://tests/test_night_integration.gd\")
-	if test_script == null:
-		print(\"[TestRunner] test_night_integration.gd not found\")
-		return
-	var test_instance := test_script.new()
-	if not test_instance.has_method(\"run_tests\"):
-		print(\"[TestRunner] test script missing run_tests()\")
-		return
-	var results := test_instance.run_tests()
-	var passed := 0
-	var total := 0
-	for test_name in results:
-		total += 1
-		if results[test_name]:
-			passed += 1
-			print(\"[TestRunner] PASS: %s\" % test_name)
-		else:
-			print(\"[TestRunner] FAIL: %s\" % test_name)
-	print(\"[TestRunner] Results: %d/%d passed\" % [passed, total])
-	if passed == total:
-		print(\"[TestRunner] All integration tests PASSED\")
-	else:
-		push_warning(\"[TestRunner] %d tests FAILED\" % (total - passed))
-"
+[ext_resource type="PackedScene" uid="uid://bstation00root" path="res://scenes/station/station.tscn" id="1_station"]
+[ext_resource type="PackedScene" uid="uid://0a8a6e3dd5739" path="res://scenes/radio_integration.tscn" id="2_radio"]
+[ext_resource type="Script" uid="uid://c5ho67s4e1xau" path="res://src/ui/hud_layout.gd" id="3_hud"]
+[ext_resource type="Script" uid="uid://b481gwfwqk0ki" path="res://src/ui/interact_prompt.gd" id="4_prompt"]
+[ext_resource type="Script" uid="uid://bg6a11555yiob" path="res://src/core/game_director.gd" id="5_director"]
+[ext_resource type="Script" uid="uid://qpon4pjyakdi" path="res://src/core/shift_stub.gd" id="6_shift"]
+[ext_resource type="Script" uid="uid://damg7dd4dbqv" path="res://src/core/degradation_stub.gd" id="7_degradation"]
+[ext_resource type="Script" uid="uid://duc1ns6ihmhvr" path="res://tests/night_integration_runner.gd" id="8_test_runner"]
 
 [node name="NightShift" type="Node3D"]
 
@@ -51,8 +21,8 @@ anchor_bottom = 1.0
 mouse_filter = 2
 script = ExtResource("3_hud")
 radio_tuner = NodePath("../RadioConsole/RadioTuner")
-signal_strength = NodePath("../RadioConsole/SignalStrength")
-dread_composure = NodePath("../RadioConsole/DreadComposure")
+signal_strength = NodePath("/root/CallManager/SignalStrength")
+dread_composure = NodePath("/root/CallManager/DreadComposure")
 tape_inventory = NodePath("/root/TapeInventory")
 
 [node name="InteractionUI" type="CanvasLayer" parent="."]
@@ -83,4 +53,4 @@ script = ExtResource("7_degradation")
 script = ExtResource("5_director")
 
 [node name="TestRunner" type="Node" parent="."]
-script = SubResource("8_test_runner")
+script = ExtResource("8_test_runner")

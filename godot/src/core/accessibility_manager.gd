@@ -18,6 +18,7 @@ signal hearing_impaired_toggled(enabled: bool)
 signal reduce_horror_toggled(enabled: bool)
 signal hold_breath_mode_toggled(toggle_mode: bool)
 signal pause_override_toggled(enabled: bool)
+signal radio_text_mode_toggled(enabled: bool)
 signal volume_changed(bus_key: String, percent: float)
 signal dead_air_indicator_changed(active: bool)
 signal dread_vignette_changed(intensity: float)
@@ -198,6 +199,8 @@ var hearing_impaired_mode: bool = false
 var reduce_audio_horror: bool = false
 var hold_breath_toggle_mode: bool = false
 var pause_anywhere: bool = false
+## DEA-88: radio text mode — persistent transcript for deaf/HoH players.
+var radio_text_mode: bool = false
 
 # ─── DEA-146: Visual accessibility state ─────────────────────────────
 var camera_shake_reduction: int = 0  # 0, 50, or 100 percent
@@ -293,6 +296,7 @@ func _load_settings() -> void:
 	# Controls section
 	hold_breath_toggle_mode = config.get_value(SECTION_CONTROLS, "hold_breath_toggle_mode", false)
 	pause_anywhere = config.get_value(SECTION_CONTROLS, "pause_anywhere", false)
+	radio_text_mode = config.get_value(SECTION_AUDIO, "radio_text_mode", false)
 
 	# DEA-146: Visual section
 	camera_shake_reduction = int(config.get_value(SECTION_VISUAL, "camera_shake_reduction", 0))
@@ -326,6 +330,7 @@ func save_settings() -> void:
 	# Controls section
 	config.set_value(SECTION_CONTROLS, "hold_breath_toggle_mode", hold_breath_toggle_mode)
 	config.set_value(SECTION_CONTROLS, "pause_anywhere", pause_anywhere)
+	config.set_value(SECTION_AUDIO, "radio_text_mode", radio_text_mode)
 
 	# DEA-146: Visual section
 	config.set_value(SECTION_VISUAL, "camera_shake_reduction", camera_shake_reduction)
@@ -510,6 +515,13 @@ func set_hold_breath_toggle_mode(toggle: bool) -> void:
 	hold_breath_toggle_mode = toggle
 	hold_breath_mode_toggled.emit(toggle)
 
+
+## DEA-88: toggle radio text mode (persistent transcript panel).
+func set_radio_text_mode(enabled: bool) -> void:
+	if radio_text_mode == enabled:
+		return
+	radio_text_mode = enabled
+	radio_text_mode_toggled.emit(enabled)
 
 func set_pause_anywhere(enabled: bool) -> void:
 	pause_anywhere = enabled

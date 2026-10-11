@@ -53,25 +53,9 @@ func _ready() -> void:
 
 
 func _find_dread_composure() -> DreadComposure:
-	var root := get_tree().current_scene
-	if root == null:
-		root = get_tree().root
-	if root == null:
-		return null
-	return _find_node_recursive(root) as DreadComposure
-
-
-func _find_node_recursive(node: Node) -> Node:
-	if node.is_class("DreadComposure") or node.get_class() == "DreadComposure":
-		return node
-	if node.has_method("get_script") and node.get_script() != null:
-		var script = node.get_script()
-		if script.has_method("get_global_name") and script.get_global_name() == "DreadComposure":
-			return node
-	for child in node.get_children():
-		var found = _find_node_recursive(child)
-		if found != null:
-			return found
+	# DreadComposure is owned by the CallManager autoload.
+	if CallManager:
+		return CallManager.get_dread_composure() as DreadComposure
 	return null
 
 

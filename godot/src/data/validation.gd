@@ -10,13 +10,16 @@ const CallTypes = preload("res://src/data/call_types.gd")
 
 # Expected values from RN source (data/calls.js)
 const EXPECTED_CALL_COUNT = 18
-const EXPECTED_BAND_COUNT = 5
+# 8 bands: 5 sacred (RN parity) + 3 extended (GDD v2 spec).
+# Sacred band fields are still asserted against the RN values below.
+const EXPECTED_BAND_COUNT = 8
 const EXPECTED_TAPE_COUNT = 15
 const EXPECTED_CALL_TYPES = [
 	"RIGHT_ANSWER", "DEAD_AIR", "JUST_LISTEN", "SIGNAL_DECODE",
 	"STAY_CALM", "RECORDING", "MULTI_CALLER", "TIMING",
 	"PUZZLE", "CONVERSATION"
 ]
+# Sacred bands (0-4): values from RN source (data/calls.js)
 const EXPECTED_BAND_NAMES = ["LIVING", "LIMINAL", "LOST", "CLASSIFIED", "████████"]
 const EXPECTED_BAND_FREQS = ["88.7 FM", "102.3 FM", "117.8 AM", "███.█ FM", "???.?"]
 const EXPECTED_BAND_COLORS = [
@@ -27,6 +30,15 @@ const EXPECTED_BAND_COLORS = [
 	Color(1.0, 1.0, 1.0, 1.0),      # ████████ #FFFFFF
 ]
 const EXPECTED_BAND_UNLOCKS = [0, 4, 8, 12, 15]
+# Extended bands (5-7): values from GDD v2 spec (docs/plans/redesign-gdd.md Band table)
+const EXPECTED_EXTENDED_BAND_NAMES = ["WEATHER", "PIRATE", "HISTORICAL"]
+const EXPECTED_EXTENDED_BAND_FREQS = ["162.0 FM", "166.0 FM", "170.0 FM"]
+const EXPECTED_EXTENDED_BAND_COLORS = [
+	Color(0.27, 0.53, 1.0, 1.0),    # WEATHER #4488FF
+	Color(1.0, 0.27, 1.0, 1.0),     # PIRATE #FF44FF
+	Color(0.53, 0.53, 0.53, 1.0),   # HISTORICAL #888888
+]
+const EXPECTED_EXTENDED_BAND_UNLOCKS = [8, 10, 100]
 const EXPECTED_TAPE_NAMES = [
 	"Tape #1 — The Wrong Number",
 	"Tape #2 — The Collector's Archive",
@@ -117,7 +129,7 @@ func _validate_calls() -> void:
 	# Check band range
 	for call in call_data.calls:
 		_assert_true(call["band"] >= 0 and call["band"] < EXPECTED_BAND_COUNT,
-			"Call %d band in range [0,4]" % call["id"], "call[%d].band" % call["id"])
+			"Call %d band in range [0,%d]" % [call["id"], EXPECTED_BAND_COUNT - 1], "call[%d].band" % call["id"])
 
 	# Check all types are valid (string membership check)
 	for call in call_data.calls:
@@ -156,7 +168,7 @@ func _validate_call_types() -> void:
 	# Verify to_string roundtrips
 	for type_name in EXPECTED_CALL_TYPES:
 		var enum_val: int = CallTypes.from_string(type_name)
-		var back: String = CallTypes.to_string(enum_val)
+		var back: String = CallTypes.name_of(enum_val)
 		_assert_eq(back, type_name, "CallType roundtrip '%s'" % type_name, "roundtrip.%s" % type_name)
 
 
@@ -169,10 +181,19 @@ func _validate_band_config() -> void:
 	for i in range(EXPECTED_BAND_COUNT):
 		var band = band_config.bands[i]
 		_assert_eq(band.id, i, "Band %d id" % i, "band[%d].id" % i)
-		_assert_eq(band.name, EXPECTED_BAND_NAMES[i], "Band %d name" % i, "band[%d].name" % i)
-		_assert_eq(band.freq, EXPECTED_BAND_FREQS[i], "Band %d freq" % i, "band[%d].freq" % i)
-		_assert_color_approx_eq(band.color, EXPECTED_BAND_COLORS[i], "Band %d color" % i, "band[%d].color" % i)
-		_assert_eq(band.unlock_at, EXPECTED_BAND_UNLOCKS[i], "Band %d unlock_at" % i, "band[%d].unlock_at" % i)
+		if i < EXPECTED_BAND_NAMES.size():
+			# Sacred bands: RN parity values
+			_assert_eq(band.name, EXPECTED_BAND_NAMES[i], "Band %d name" % i, "band[%d].name" % i)
+			_assert_eq(band.freq, EXPECTED_BAND_FREQS[i], "Band %d freq" % i, "band[%d].freq" % i)
+			_assert_color_approx_eq(band.color, EXPECTED_BAND_COLORS[i], "Band %d color" % i, "band[%d].color" % i)
+			_assert_eq(band.unlock_at, EXPECTED_BAND_UNLOCKS[i], "Band %d unlock_at" % i, "band[%d].unlock_at" % i)
+		else:
+			# Extended bands: GDD v2 spec values
+			var j := i - EXPECTED_BAND_NAMES.size()
+			_assert_eq(band.name, EXPECTED_EXTENDED_BAND_NAMES[j], "Band %d name" % i, "band[%d].name" % i)
+			_assert_eq(band.freq, EXPECTED_EXTENDED_BAND_FREQS[j], "Band %d freq" % i, "band[%d].freq" % i)
+			_assert_color_approx_eq(band.color, EXPECTED_EXTENDED_BAND_COLORS[j], "Band %d color" % i, "band[%d].color" % i)
+			_assert_eq(band.unlock_at, EXPECTED_EXTENDED_BAND_UNLOCKS[j], "Band %d unlock_at" % i, "band[%d].unlock_at" % i)
 		_assert_true(band.vibe.length() > 0, "Band %d vibe non-empty" % i, "band[%d].vibe" % i)
 
 

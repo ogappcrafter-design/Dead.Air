@@ -9,3 +9,10 @@ Thumbs.db
 # Editor-specific
 *.tmp
 ~tmp.*
+
+# Generated validation artifacts (run_validation output)
+src/data/validation_results.csv
+src/data/validation_results.*.translation
+
+# Export output
+build/

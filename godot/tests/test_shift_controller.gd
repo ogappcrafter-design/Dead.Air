@@ -136,7 +136,10 @@ func test_shift_data_definitions() -> bool:
 func test_is_shift_implemented() -> bool:
 	if not ShiftController.is_shift_implemented(1) or not ShiftController.is_shift_implemented(2):
 		return false
-	if ShiftController.is_shift_implemented(3) or ShiftController.is_shift_implemented(5):
+	if not ShiftController.is_shift_implemented(3) or not ShiftController.is_shift_implemented(4) \
+			or not ShiftController.is_shift_implemented(5):
+		return false
+	if ShiftController.is_shift_implemented(6):
 		return false
 	if ShiftController.is_shift_implemented(0) or ShiftController.is_shift_implemented(-1):
 		return false
@@ -293,14 +296,14 @@ func test_call_sequence_complete() -> bool:
 
 func test_unimplemented_shift_rejected() -> bool:
 	_reset()
-	ShiftController.start_shift(3)  # Shift 3 is not implemented
+	ShiftController.start_shift(6)  # Shift 6 is out of range — not implemented
 
 	if ShiftController.is_shift_active():
 		return false
 	if ShiftController.get_current_shift() != 0:
 		return false
 
-	ShiftController.start_shift(5)  # Shift 5 is not implemented
+	ShiftController.start_shift(7)  # Out of range entirely
 
 	if ShiftController.is_shift_active():
 		return false

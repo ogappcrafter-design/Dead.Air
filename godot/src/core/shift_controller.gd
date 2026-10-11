@@ -7,7 +7,7 @@ extends Node
 ## State machine: PRE_SHIFT → CALLS_ACTIVE → POST_SHIFT → SHIFT_TRANSITION
 ## Each shift: free exploration → scheduled calls → free exploration → time skip
 ##
-## Shifts 1-2 are implemented; Shifts 3-5 are stubbed as "not implemented".
+## Shifts 1-5 are implemented.
 
 # ─── Signals ────────────────────────────────────────────────────────────────
 
@@ -17,6 +17,7 @@ signal call_sequence_complete
 signal shift_complete(shift_number: int)
 signal band_unlocked(band_name: String)
 signal final_call_starting
+signal phase2_transition_ready  # Shift 5 completed; Phase 2 can begin (DEA-117)
 
 # ─── Enums ──────────────────────────────────────────────────────────────────
 
@@ -33,9 +34,9 @@ const PRE_SHIFT_DURATION: float = 120.0  # 2 minutes of free exploration
 const POST_SHIFT_DURATION: float = 0.0  # 0 = wait for player input
 const SHIFT_TRANSITION_DURATION: float = 3.0  # Short time-skip transition
 
-const MAX_IMPLEMENTED_SHIFTS: int = 2  # Shifts 1-2 implemented; 3-5 stubbed
+const MAX_IMPLEMENTED_SHIFTS: int = 5  # Shifts 1-5 implemented
 
-# ─── Shift Data (hardcoded for Shifts 1-2) ──────────────────────────────────
+# ─── Shift Data (hardcoded for implemented shifts) ──────────────────────────
 
 const SHIFT_DATA: Array = [
 	# Shift 1
@@ -55,6 +56,35 @@ const SHIFT_DATA: Array = [
 		"dread_meter_visible": true,
 		"save_unlocked": true,
 		"tutorial": true,
+	},
+	# Shift 3 (GDD: no procedural opener; 4 scripted calls; recording unlocked)
+	{
+		"shift_number": 3,
+		"bands": ["LIVING", "LIMINAL", "LOST"],
+		"calls": [6, 7, 8, 9],
+		"dread_meter_visible": true,
+		"save_unlocked": true,
+		"tutorial": true,
+	},
+	# Shift 4 (GDD: CLASSIFIED unlocks; decode tutorial; 4 scripted calls)
+	{
+		"shift_number": 4,
+		"bands": ["LIVING", "LIMINAL", "LOST", "CLASSIFIED"],
+		"calls": [10, 11, 12, 13],
+		"dread_meter_visible": true,
+		"save_unlocked": true,
+		"tutorial": true,
+	},
+	# Shift 5 (GDD: all bands, no tutorial, no save, dread starts at 40,
+	# final call DEAD AIR then the station goes dark)
+	{
+		"shift_number": 5,
+		"bands": ["LIVING", "LIMINAL", "LOST", "CLASSIFIED", "████████"],
+		"calls": [14, 15, 16, 17],
+		"dread_meter_visible": true,
+		"save_unlocked": false,
+		"tutorial": false,
+		"starting_dread": 40.0,
 	},
 ]
 
@@ -186,6 +216,13 @@ func start_shift(shift_number: int = 1) -> void:
 	# Apply per-shift permanent CRT degradation (DEA-145)
 	_apply_crt_degradation(shift_number)
 
+	# Shift 5 starts at dread 40 (GDD: carried from Shift 4)
+	var starting_dread: Variant = data.get("starting_dread")
+	if starting_dread != null and CallManager:
+		var dc: Node = CallManager.get_dread_composure()
+		if dc and dc.has_method("set_dread"):
+			dc.set_dread(float(starting_dread))
+
 	# Toggle save availability (forward-compatible: call if method exists)
 	if SaveManager and SaveManager.has_method("set_save_available"):
 		SaveManager.set_save_available(_save_available)
@@ -258,6 +295,10 @@ func _complete_shift() -> void:
 	shift_complete.emit(completed_shift)
 	_set_phase(ShiftPhase.PRE_SHIFT)  # Reset for next shift
 
+	# The point of no return: after Shift 5, Phase 2 begins (DEA-117).
+	if completed_shift >= MAX_IMPLEMENTED_SHIFTS:
+		phase2_transition_ready.emit()
+
 
 # ─── Signal Handlers ─────────────────────────────────────────────────────────
 
@@ -302,9 +343,13 @@ func _unlock_bands_for_shift(shift_number: int) -> void:
 
 
 func _apply_station_degradation(shift_number: int) -> void:
-	# StationState is an autoload; check for apply_degradation method
-	if StationState and StationState.has_method("apply_degradation"):
-		StationState.apply_degradation(shift_number)
+	# StationDegradation owns the per-shift wrongness schedule (mirror delay,
+	# CRT glitches, E1/E2). Guarded for headless tests where autoloads may be
+	# absent. StationState tracks registered nodes and shift number separately.
+	if StationDegradation and StationDegradation.has_method("apply_degradation"):
+		StationDegradation.apply_degradation(shift_number)
+	if StationState and StationState.has_method("set_shift"):
+		StationState.set_shift(shift_number)
 
 
 # ─── Internal: CRT Degradation (DEA-145) ─────────────────────────────────────
