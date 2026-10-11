@@ -62,6 +62,7 @@ func _run_tests() -> void:
 		["Phase3CollectorsTape", "res://tests/test_phase3_collectors_tape.gd"],
 		["FieldCalls", "res://tests/test_field_calls.gd"],
 		["FalseCalls", "res://tests/test_false_calls.gd"],
+		["AccessibilityDeepening", "res://tests/test_accessibility_deepening.gd"],
 		["Phase3Highway", "res://tests/test_phase3_highway.gd"],
 		["Phase3LiminalSpace", "res://tests/test_phase3_liminal_space.gd"],
 		["Phase3Bunker", "res://tests/test_phase3_bunker.gd"],

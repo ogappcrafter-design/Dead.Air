@@ -17,6 +17,7 @@ func run_tests() -> Dictionary:
 	results["test_tower_reach_completes"] = await test_tower_reach_completes()
 	results["test_tower_proximity_enters_tower_phase"] = await test_tower_proximity_enters_tower_phase()
 	results["test_reset_restores_phase1"] = await test_reset_restores_phase1()
+	results["test_birds_and_hum_audio_layers"] = await test_birds_and_hum_audio_layers()
 	return results
 
 # ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -131,3 +132,20 @@ func test_reset_restores_phase1() -> bool:
 func _wait_frames(count: int) -> void:
 	for i in range(count):
 		await (Engine.get_main_loop() as SceneTree).process_frame
+
+
+func test_birds_and_hum_audio_layers() -> bool:
+	var scene: PackedScene = load("res://scenes/phase4/clearing.tscn")
+	var seg: Node = scene.instantiate()
+	var tree: SceneTree = Engine.get_main_loop() as SceneTree
+	tree.root.add_child(seg)
+	await _wait_frames(3)
+	var birds: Node = seg.get_node_or_null("ReversedBirds")
+	var hum: Node = seg.get_node_or_null("TowerHum")
+	var ok: bool = birds != null and hum != null
+	if ok:
+		# Both layers are playing (stream generators start on setup).
+		ok = birds.playing and hum.playing
+	seg._reset_for_testing()
+	seg.queue_free()
+	return ok

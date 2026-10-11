@@ -86,6 +86,9 @@ var _static_beat_phase := 0.0
 var _footstep_player: AudioStreamPlayer
 var _footstep_phase := 0.0
 var _footstep_stream: AudioStreamGeneratorPlayback
+var _whisper_player: AudioStreamPlayer
+var _whisper_phase := 0.0
+var _whisper_stream: AudioStreamGeneratorPlayback
 const AUDIO_SR := 44100.0
 const FOOTSTEP_DELAY := 1.0
 var _footstep_ring_buffer: Array = []
@@ -136,6 +139,15 @@ func _setup_audio() -> void:
 	_footstep_player.bus = "Master"
 	_footstep_player.volume_db = -20.0
 	add_child(_footstep_player)
+
+	# Whispers: faint breathy bursts from nowhere, louder with depth
+	# (GDD: whispers; no room tone, no music on the staircase).
+	_whisper_player = AudioStreamPlayer.new()
+	_whisper_player.name = "DescentWhispers"
+	_whisper_player.stream = _make_generator()
+	_whisper_player.bus = "Master"
+	_whisper_player.volume_db = -26.0
+	add_child(_whisper_player)
 
 
 func _make_generator() -> AudioStreamGenerator:
@@ -221,6 +233,7 @@ func _process(delta: float) -> void:
 	_check_bottom()
 	_update_static_audio(delta)
 	_update_footstep_audio(delta)
+	_update_whisper_audio(delta)
 	_update_camera()
 
 
@@ -352,6 +365,43 @@ func _fill_footstep_buffer(delta: float) -> void:
 	_footstep_stream.push_buffer(buf)
 
 
+## Whispers: faint breathy bursts — syllable-shaped noise with a low
+## voiced undertone, arriving in irregular bursts, louder with depth.
+func _update_whisper_audio(delta: float) -> void:
+	if _whisper_player == null:
+		return
+	if _whisper_stream == null:
+		_whisper_player.play()
+		_whisper_stream = _whisper_player.get_stream_playback()
+	_fill_whisper_buffer(delta)
+
+
+func _fill_whisper_buffer(delta: float) -> void:
+	if _whisper_stream == null:
+		return
+	var frames := _whisper_stream.get_frames_available()
+	if frames <= 0:
+		return
+	var buf := PackedVector2Array()
+	buf.resize(frames)
+	var depth_scale := 0.4 + 0.6 * _descent_fraction
+	for i in range(frames):
+		_whisper_phase += 1.0 / AUDIO_SR
+		var s := 0.0
+		# Burst every ~2.7s, 0.9s long: breathy shaped noise + low tone.
+		var burst_t := fmod(_whisper_phase, 2.7)
+		if burst_t < 0.9:
+			var p := burst_t / 0.9
+			var env := sin(p * PI)
+			# Breath: filtered noise feel via fast amplitude flutter.
+			var flutter := 0.5 + 0.5 * sin(_whisper_phase * 90.0)
+			s += flutter * env * 0.05 * depth_scale
+			# Voiced undertone, too low to parse as words.
+			s += sin(_whisper_phase * 105.0 * TAU) * env * 0.03 * depth_scale
+		buf[i] = Vector2(s, s)
+	_whisper_stream.push_buffer(buf)
+
+
 ## --- Helpers ---
 
 func _face_player(direction: Vector3) -> void:
@@ -452,6 +502,9 @@ func _reset_for_testing() -> void:
 	if _footstep_player:
 		_footstep_player.stop()
 		_footstep_stream = null
+	if _whisper_player:
+		_whisper_player.stop()
+		_whisper_stream = null
 	if _player:
 		_player.global_position = Vector3(0, -1, 0)
 	_restore_world()

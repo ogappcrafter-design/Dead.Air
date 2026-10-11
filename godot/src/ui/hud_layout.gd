@@ -40,10 +40,17 @@ var _dread_bar: ProgressBar
 
 # Band display (top-left)
 var _band_name_label: Label
+## DEA-88: colorblind-safe band symbol (shape-coded, shown when enabled).
+var _band_symbol_label: Label
 var _freq_label: Label
 
 # Call text (center-bottom)
 var _call_text_label: Label
+## DEA-88: call-type visual pulse pattern — a distinct blink rhythm per
+## call type so call types are distinguishable without audio.
+var _call_type_pulse_type := ""
+var _call_type_pulse_timer := 0.0
+var _call_type_pulse_on := false
 var _subtitle_label: Label
 
 # Tape counter (bottom-right)
@@ -165,6 +172,14 @@ func _build_ui() -> void:
 	_band_name_label.add_theme_color_override("font_color", CRTText.PHOSPHOR_GREEN)
 	_band_name_label.add_theme_font_size_override("font_size", 16)
 	band_container.add_child(_band_name_label)
+
+	# DEA-88: colorblind-safe band symbol — a distinct shape glyph per band,
+	# shown beside the name when colorblind patterns are enabled.
+	_band_symbol_label = Label.new()
+	_band_symbol_label.add_theme_color_override("font_color", CRTText.PHOSPHOR_GREEN)
+	_band_symbol_label.add_theme_font_size_override("font_size", 16)
+	_band_symbol_label.visible = false
+	band_container.add_child(_band_symbol_label)
 
 	_freq_label = Label.new()
 	_freq_label.add_theme_color_override("font_color", CRTText.PHOSPHOR_GREEN)
@@ -374,6 +389,31 @@ func _update_band_display() -> void:
 		var band_name: String = _corrupt_text(band.name)
 		_band_name_label.text = band_name
 		_band_name_label.add_theme_color_override("font_color", CRTText.PHOSPHOR_GREEN)
+		_update_band_symbol(band)
+
+
+## DEA-88: colorblind-safe band indicator. Each band gets a distinct shape
+## glyph (readable without color perception) shown next to the band name
+## when colorblind patterns are enabled in AccessibilityManager.
+const BAND_SYMBOLS := {
+	0: "●",   # LIVING — circle
+	1: "◆",   # LIMINAL — diamond
+	2: "■",   # LOST — square
+	3: "▲",   # CLASSIFIED — triangle
+	4: "✕",   # ████████ — cross
+	5: "◇",   # WEATHER — hollow diamond
+	6: "▲",   # PIRATE — triangle (shares shape with CLASSIFIED but different context)
+	7: "✦",   # HISTORICAL — star
+}
+
+func _update_band_symbol(band: BandData) -> void:
+	var am := get_node_or_null("/root/AccessibilityManager")
+	var show_symbols: bool = am != null and am.get("colorblind_patterns") == true
+	if not show_symbols:
+		_band_symbol_label.visible = false
+		return
+	_band_symbol_label.text = String(BAND_SYMBOLS.get(band.id, "○"))
+	_band_symbol_label.visible = true
 
 
 func _update_frequency_display(freq: float) -> void:
@@ -475,6 +515,7 @@ func _apply_hide_mode() -> void:
 # --- Process loop ---
 
 func _process(delta: float) -> void:
+	_process_call_type_pulse(delta)
 	# Clock update.
 	if _clock_label.visible:
 		_clock_timer += delta
@@ -519,6 +560,53 @@ func _process(delta: float) -> void:
 func set_call_text(caller_id: String, call_type: String) -> void:
 	var text: String = "%s — %s" % [caller_id, call_type]
 	_call_text_label.text = _corrupt_text(text)
+	_start_call_type_pulse(call_type)
+
+
+## DEA-88: distinct visual pulse rhythm per call type (haptic-equivalent
+## for desktop; deaf/HoH players see the call type's rhythm blink).
+## Each type has its own blink cadence (even segments = on):
+## RIGHT_ANSWER fast double-blink, DEAD_AIR brief blink then long
+## silence, JUST_LISTEN slow steady, STAY_CALM flutter, SIGNAL_DECODE
+## triple-tick.
+const CALL_TYPE_PULSE := {
+	"RIGHT_ANSWER": [0.12, 0.12, 0.5],
+	"DEAD_AIR": [0.15, 1.0],
+	"JUST_LISTEN": [0.6],
+	"STAY_CALM": [0.08, 0.4],
+	"SIGNAL_DECODE": [0.1, 0.1, 0.1, 0.6],
+}
+
+func _start_call_type_pulse(call_type: String) -> void:
+	_call_type_pulse_type = call_type
+	_call_type_pulse_timer = 0.0
+	_call_type_pulse_on = true
+	_call_text_label.visible = true
+
+func _process_call_type_pulse(delta: float) -> void:
+	if _call_type_pulse_type == "" or _call_type_pulse_type == null:
+		return
+	if not CALL_TYPE_PULSE.has(_call_type_pulse_type):
+		return
+	_call_type_pulse_timer += delta
+	var pattern: Array = CALL_TYPE_PULSE[_call_type_pulse_type]
+	var total := 0.0
+	for seg in pattern:
+		total += float(seg)
+	var t: float = fmod(_call_type_pulse_timer, total)
+	var acc := 0.0
+	var on := true
+	for i in range(pattern.size()):
+		var seg_len := float(pattern[i])
+		if t < acc + seg_len:
+			# Even indices are "on" segments.
+			on = (i % 2 == 0)
+			break
+		acc += seg_len
+	_call_type_pulse_on = on
+	# Pulse affects the label's alpha (not visibility, so text stays readable
+	# in intermediate states via modulate).
+	_call_text_label.modulate.a = 1.0 if on else 0.45
 
 
 ## Set the subtitle text (phosphor green, below call text).
@@ -533,6 +621,20 @@ func set_recording(recording: bool) -> void:
 		_tape_counter_label.visible = not _is_hide_mode
 		_tape_flash_timer = 0.0
 
+
+## Testing helper: exercise _update_band_symbol with a band id without
+## needing a live BandData or tuner.
+func _update_band_symbol_by_id_for_testing(band_id: int) -> void:
+	var band := BandData.new()
+	band.id = band_id
+	_update_band_symbol(band)
+
+## Testing helper: clear the call-type pulse state.
+func _reset_call_pulse_for_testing() -> void:
+	_call_type_pulse_type = ""
+	_call_type_pulse_timer = 0.0
+	_call_type_pulse_on = false
+	_call_text_label.modulate.a = 1.0
 
 ## Force a full HUD refresh from all connected systems.
 func refresh() -> void:

@@ -17,6 +17,7 @@ func run_tests() -> Dictionary:
 	results["test_bottom_reaches_completion"] = await test_bottom_reaches_completion()
 	results["test_descent_impossible_depth"] = await test_descent_impossible_depth()
 	results["test_reset_restores_phase1"] = await test_reset_restores_phase1()
+	results["test_whisper_audio_layer"] = await test_whisper_audio_layer()
 	return results
 
 # ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -158,3 +159,18 @@ func test_reset_restores_phase1() -> bool:
 func _wait_frames(count: int) -> void:
 	for i in range(count):
 		await (Engine.get_main_loop() as SceneTree).process_frame
+
+
+func test_whisper_audio_layer() -> bool:
+	var scene: PackedScene = load("res://scenes/phase4/staircase.tscn")
+	var seg: Node = scene.instantiate()
+	var tree: SceneTree = Engine.get_main_loop() as SceneTree
+	tree.root.add_child(seg)
+	await _wait_frames(3)
+	var whisper: Node = seg.get_node_or_null("DescentWhispers")
+	var ok: bool = whisper != null
+	if ok:
+		ok = whisper.playing
+	seg._reset_for_testing()
+	seg.queue_free()
+	return ok

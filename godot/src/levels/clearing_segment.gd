@@ -71,9 +71,16 @@ var _origin_stream: AudioStreamGeneratorPlayback
 var _wind_player: AudioStreamPlayer
 var _wind_phase := 0.0
 var _wind_stream: AudioStreamGeneratorPlayback
+var _birds_player: AudioStreamPlayer
+var _birds_phase := 0.0
+var _birds_stream: AudioStreamGeneratorPlayback
+var _hum_player: AudioStreamPlayer3D
+var _hum_phase := 0.0
+var _hum_stream: AudioStreamGeneratorPlayback
 const AUDIO_SR := 44100.0
 const ORIGIN_HZ := 105.0      # formal male voice, distant
 const WIND_HZ := 400.0
+const TOWER_HUM_HZ := 55.0
 
 
 func _ready() -> void:
@@ -129,6 +136,26 @@ func _setup_audio() -> void:
 	_wind_player.bus = "Master"
 	_wind_player.volume_db = -22.0
 	add_child(_wind_player)
+
+	# Birds, reversed: chirps played backwards — bright descending sweep,
+	# the wrongness audible but almost subliminal (GDD: reversed birds).
+	_birds_player = AudioStreamPlayer.new()
+	_birds_player.name = "ReversedBirds"
+	_birds_player.stream = _make_generator()
+	_birds_player.bus = "Master"
+	_birds_player.volume_db = -18.0
+	add_child(_birds_player)
+
+	# Tower hum: low electrical drone from the tower itself.
+	_hum_player = AudioStreamPlayer3D.new()
+	_hum_player.name = "TowerHum"
+	_hum_player.stream = _make_generator()
+	_hum_player.bus = "Master"
+	_hum_player.unit_size = 6.0
+	_hum_player.max_distance = 30.0
+	if _tower:
+		_hum_player.position = _tower.position + Vector3(0, 4, 0)
+	add_child(_hum_player)
 
 
 func _make_generator() -> AudioStreamGenerator:
@@ -332,6 +359,8 @@ func _process(delta: float) -> void:
 			_process_tower(delta)
 	_update_origin_audio(delta)
 	_update_wind_audio(delta)
+	_update_birds_audio(delta)
+	_update_hum_audio(delta)
 	_process_false_calls(delta)
 	_check_fragment_proximity()
 	_check_tower_reach()
@@ -439,6 +468,64 @@ func _fill_wind_buffer(delta: float) -> void:
 	_wind_stream.push_buffer(buf)
 
 
+## Birds, reversed: chirps that sweep downward (a reversed rising chirp).
+func _update_birds_audio(delta: float) -> void:
+	if _birds_player == null:
+		return
+	if _birds_stream == null:
+		_birds_player.play()
+		_birds_stream = _birds_player.get_stream_playback()
+	_fill_birds_buffer(delta)
+
+
+func _fill_birds_buffer(delta: float) -> void:
+	if _birds_stream == null:
+		return
+	var frames := _birds_stream.get_frames_available()
+	if frames <= 0:
+		return
+	var buf := PackedVector2Array()
+	buf.resize(frames)
+	for i in range(frames):
+		_birds_phase += 1.0 / AUDIO_SR
+		var s := 0.0
+		# Chirp every ~3.4s: a reversed bird chirp — frequency falls fast
+		# while the envelope rises (backwards of the natural pattern).
+		var chirp_t := fmod(_birds_phase, 3.4)
+		if chirp_t < 0.5:
+			var p := chirp_t / 0.5
+			var hz := 3200.0 - 2400.0 * p  # falling pitch
+			var env := p * p  # rising envelope
+			s = sin(_birds_phase * hz * TAU) * 0.08 * env
+		buf[i] = Vector2(s, s)
+	_birds_stream.push_buffer(buf)
+
+
+## Tower hum: low electrical drone, faint harmonics.
+func _update_hum_audio(delta: float) -> void:
+	if _hum_player == null:
+		return
+	if _hum_stream == null:
+		_hum_player.play()
+		_hum_stream = _hum_player.get_stream_playback()
+	_fill_hum_buffer(delta)
+
+
+func _fill_hum_buffer(delta: float) -> void:
+	if _hum_stream == null:
+		return
+	var frames := _hum_stream.get_frames_available()
+	if frames <= 0:
+		return
+	var buf := PackedVector2Array()
+	buf.resize(frames)
+	for i in range(frames):
+		_hum_phase += TOWER_HUM_HZ * TAU / AUDIO_SR
+		var s := (sin(_hum_phase) * 0.6 + sin(_hum_phase * 2.0) * 0.2 + sin(_hum_phase * 3.0) * 0.1) * 0.25
+		buf[i] = Vector2(s, s)
+	_hum_stream.push_buffer(buf)
+
+
 ## --- Helpers ---
 
 func _face_player(direction: Vector3) -> void:
@@ -528,6 +615,12 @@ func _reset_for_testing() -> void:
 	if _wind_player:
 		_wind_player.stop()
 		_wind_stream = null
+	if _birds_player:
+		_birds_player.stop()
+		_birds_stream = null
+	if _hum_player:
+		_hum_player.stop()
+		_hum_stream = null
 	_restore_world()
 	if PhaseManager:
 		PhaseManager.set_phase(PhaseEnums.Phase.PHASE_1_STATION)
