@@ -45,3 +45,27 @@ export const logger = {
     });
   },
 };
+
+/**
+ * Structured logger compatible with pino/bunyan logging interfaces.
+ */
+export const structuredLogger = {
+  level: MIN_LEVEL,
+  info(obj: Record<string, unknown>, msg?: string) {
+    logger.info((obj.context as string) || 'structured', msg || JSON.stringify(obj));
+  },
+  error(obj: Record<string, unknown>, msg?: string) {
+    logger.error((obj.context as string) || 'structured', msg || '', obj.err);
+  },
+};
+
+/**
+ * Lightweight metrics telemetry recorder (opentelemetry compatible interface).
+ */
+export const metrics = {
+  record(name: string, value: number, attributes?: Record<string, string | number>) {
+    if (__DEV__) {
+      logger.debug('opentelemetry:metrics', `${name}=${value}`, attributes);
+    }
+  },
+};
