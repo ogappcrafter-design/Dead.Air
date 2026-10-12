@@ -88,7 +88,18 @@ let initialized = false;
 
 // ---- Helpers ----
 
-function applyPurchase(productId: string, purchase: IAPTypes.InAppPurchase): boolean {
+/**
+ * Apply a completed (or restored) purchase to the entitlement stores.
+ *
+ * This is the single orchestration seam that maps a purchased product id to
+ * the right entitlement: Infinite Signal / Base flags, an atmospheric pack,
+ * a tape pack, or a skin. It records the purchase (audit trail) first, then
+ * unlocks the product. Exported so integration tests can drive the real
+ * routing without the native IAP module.
+ *
+ * @returns true when the purchase was verified (receipt + order id) and applied.
+ */
+export function applyPurchase(productId: string, purchase: IAPTypes.InAppPurchase): boolean {
   const store = useStoreStore.getState();
 
   // Only treat a purchase as valid when the store returned a transaction receipt.
