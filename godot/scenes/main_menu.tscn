@@ -3,10 +3,107 @@
 [ext_resource type="Script" uid="uid://bhwp6weeseeoi" path="res://src/ui/main_menu.gd" id="1_main_menu"]
 
 [node name="MainMenu" type="Control"]
-script = ExtResource("1_main_menu")
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+script = ExtResource("1_main_menu")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.0392157, 0.0392157, 0.0392157, 1)
+
+[node name="PanelCenter" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBox" type="VBoxContainer" parent="PanelCenter"]
+layout_mode = 2
+theme_override_constants/separation = 18
+alignment = 1
+
+[node name="TitleLabel" type="Label" parent="PanelCenter/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 1, 0.254902, 1)
+theme_override_font_sizes/font_size = 72
+text = "DEAD AIR"
+horizontal_alignment = 1
+
+[node name="SubtitleLabel" type="Label" parent="PanelCenter/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.647059, 0, 1)
+theme_override_font_sizes/font_size = 24
+text = "Late Night Radio"
+horizontal_alignment = 1
+
+[node name="Spacer" type="Control" parent="PanelCenter/VBox"]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+
+[node name="NewGameButton" type="Button" parent="PanelCenter/VBox"]
+custom_minimum_size = Vector2(320, 52)
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 1, 0.254902, 1)
+theme_override_colors/font_hover_color = Color(1, 0.647059, 0, 1)
+theme_override_colors/font_pressed_color = Color(1, 0.2, 0, 1)
+theme_override_colors/font_disabled_color = Color(0.2, 0.2, 0.2, 1)
+theme_override_font_sizes/font_size = 20
+text = "NEW GAME"
+
+[node name="ContinueButton" type="Button" parent="PanelCenter/VBox"]
+custom_minimum_size = Vector2(320, 52)
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 1, 0.254902, 1)
+theme_override_colors/font_hover_color = Color(1, 0.647059, 0, 1)
+theme_override_colors/font_pressed_color = Color(1, 0.2, 0, 1)
+theme_override_colors/font_disabled_color = Color(0.2, 0.2, 0.2, 1)
+theme_override_font_sizes/font_size = 20
+text = "CONTINUE"
+
+[node name="SettingsButton" type="Button" parent="PanelCenter/VBox"]
+custom_minimum_size = Vector2(320, 52)
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 1, 0.254902, 1)
+theme_override_colors/font_hover_color = Color(1, 0.647059, 0, 1)
+theme_override_colors/font_pressed_color = Color(1, 0.2, 0, 1)
+theme_override_colors/font_disabled_color = Color(0.2, 0.2, 0.2, 1)
+theme_override_font_sizes/font_size = 20
+text = "SETTINGS"
+
+[node name="CompletionLabel" type="Label" parent="PanelCenter/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.647059, 0, 1)
+theme_override_font_sizes/font_size = 14
+modulate = Color(1, 1, 1, 0.55)
+text = "COMPLETED"
+horizontal_alignment = 1
+
+[node name="CreditsButton" type="Button" parent="PanelCenter/VBox"]
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 14
+toggle_mode = true
+text = "CREDITS"
+
+[node name="CreditsLabel" type="Label" parent="PanelCenter/VBox/CreditsButton"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 12
+text = "DEAD AIR — a late night radio horror. Built with Godot."
+horizontal_alignment = 1
+vertical_alignment = 1

@@ -255,6 +255,27 @@ func end_shift() -> void:
 		_enter_shift_transition()
 
 
+## Immediately tear down the active shift without the POST/TRANSITION flow.
+## Used when returning to the main menu (New Game / Continue) so a bail-out
+## mid-shift cannot block start_shift() on the next entry. Unlike end_shift(),
+## this skips the transition timer entirely.
+func reset_shift() -> void:
+	if not _shift_active:
+		return
+	if CallManager and CallManager.is_shift_active():
+		CallManager.end_shift()
+	_current_shift = 0
+	_current_phase = ShiftPhase.PRE_SHIFT
+	_phase_timer = 0.0
+	_shift_active = false
+	_dread_meter_visible = false
+	_save_available = false
+	_unlocked_bands.clear()
+	_call_count = 0
+	if BandController and BandController.has_method("lock_all_bands"):
+		BandController.lock_all_bands()
+
+
 func advance_to_next_shift() -> void:
 	if _shift_active:
 		_complete_shift()

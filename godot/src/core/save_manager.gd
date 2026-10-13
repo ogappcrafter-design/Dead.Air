@@ -173,6 +173,12 @@ func delete_all_saves() -> int:
 	return count
 
 
+## Reset all in-memory save state for tests: delete every save on disk and
+## clear the index.
+func _reset_for_testing() -> void:
+	delete_all_saves()
+
+
 ## Rebuild the save index from files on disk.
 func _rebuild_index() -> void:
 	_save_index.clear()
