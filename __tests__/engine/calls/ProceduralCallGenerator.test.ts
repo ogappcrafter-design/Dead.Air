@@ -16,6 +16,10 @@ import {
 import { ALL_FRAGMENTS, BAND_VARIATIONS } from '@/data/fragments';
 import { CALLS } from '@/data/calls';
 import { getCallPool } from '@/engine/progression/InfiniteSignal';
+import {
+  SEASONAL_CALLS_PER_EVENT,
+  SEASONAL_ID_BASE,
+} from '@/engine/progression/SeasonalCallInjector';
 import type { CallData } from '@/engine/calls/types';
 import type { CallType } from '@/lib/constants';
 import type { FragmentLibrary, BandVariation } from '@/data/fragments/types';
@@ -338,23 +342,32 @@ describe('ProceduralCallGenerator', () => {
 describe('IAP gate behavior (DEA-78 / DEA-79)', () => {
   const sacredCalls = CALLS as unknown as CallData[];
 
+  // Pin the clock to an off-season date (mid-June) so these assertions count
+  // only the 18 sacred + procedural calls. `getCallPool` appends seasonal
+  // calls (4 per active window, ids >= SEASONAL_ID_BASE) whenever `now` falls
+  // in the Halloween/Christmas/New Year windows, which otherwise inflates the
+  // procedural count by 4 for part of the year. Same convention as
+  // __tests__/store/useStoreStore.test.ts; seasonal injection has its own
+  // assertion below.
+  const OFF_SEASON = new Date(2026, 5, 15);
+
   it('non-owners get exactly 18 sacred calls', () => {
-    const pool = getCallPool(sacredCalls, false);
+    const pool = getCallPool(sacredCalls, false, undefined, { now: OFF_SEASON });
     expect(pool.length).toBe(18);
   });
 
   it('owners get more than 18 calls (sacred + procedural)', () => {
-    const pool = getCallPool(sacredCalls, true);
+    const pool = getCallPool(sacredCalls, true, undefined, { now: OFF_SEASON });
     expect(pool.length).toBeGreaterThan(18);
   });
 
   it('owners get the sacred 18 plus 48 procedural (6 per band × 8 bands)', () => {
-    const pool = getCallPool(sacredCalls, true);
+    const pool = getCallPool(sacredCalls, true, undefined, { now: OFF_SEASON });
     expect(pool.length).toBe(18 + 48);
   });
 
   it('non-owner pool contains only sacred call ids (0..17)', () => {
-    const pool = getCallPool(sacredCalls, false);
+    const pool = getCallPool(sacredCalls, false, undefined, { now: OFF_SEASON });
     for (const call of pool) {
       expect(call.id).toBeGreaterThanOrEqual(0);
       expect(call.id).toBeLessThan(18);
@@ -362,7 +375,7 @@ describe('IAP gate behavior (DEA-78 / DEA-79)', () => {
   });
 
   it('owner pool contains sacred ids (0..17) and procedural ids (>= 1000)', () => {
-    const pool = getCallPool(sacredCalls, true);
+    const pool = getCallPool(sacredCalls, true, undefined, { now: OFF_SEASON });
     const sacredIds = pool.filter((c) => c.id < 18).map((c) => c.id);
     const proceduralIds = pool.filter((c) => c.id >= 1000).map((c) => c.id);
 
@@ -377,13 +390,16 @@ describe('IAP gate behavior (DEA-78 / DEA-79)', () => {
 
   it('getCallPool returns a new array (does not mutate input)', () => {
     const input: CallData[] = [...sacredCalls];
-    const pool = getCallPool(input, false);
+    const pool = getCallPool(input, false, undefined, { now: OFF_SEASON });
     expect(pool).not.toBe(input);
     expect(input.length).toBe(18);
   });
 
   it('getCallPool with custom proceduralCountPerBand', () => {
-    const pool = getCallPool(sacredCalls, true, undefined, { proceduralCountPerBand: 2 });
+    const pool = getCallPool(sacredCalls, true, undefined, {
+      now: OFF_SEASON,
+      proceduralCountPerBand: 2,
+    });
     // 18 sacred + (2 per band × 8 bands) = 34
     expect(pool.length).toBe(18 + 16);
   });
@@ -391,11 +407,26 @@ describe('IAP gate behavior (DEA-78 / DEA-79)', () => {
   it('getCallPool with custom fragments (smaller library)', () => {
     const singleBandFragments: FragmentLibrary[] = [ALL_FRAGMENTS[0]!];
     const pool = getCallPool(sacredCalls, true, undefined, {
+      now: OFF_SEASON,
       fragments: singleBandFragments,
       proceduralCountPerBand: 5,
     });
     // 18 sacred + 5 procedural (only 1 band in fragments)
     expect(pool.length).toBe(18 + 5);
+  });
+
+  it('getCallPool appends seasonal calls in their own id range', () => {
+    // 25 Oct sits inside the Halloween window: 4 seasonal calls are appended
+    // on top of the procedural pool, with ids >= SEASONAL_ID_BASE so they can
+    // never be mistaken for procedural or sacred ids.
+    const pool = getCallPool(sacredCalls, true, undefined, { now: new Date(2026, 9, 25) });
+    const seasonalIds = pool.filter((c) => c.id >= SEASONAL_ID_BASE).map((c) => c.id);
+    expect(seasonalIds.length).toBe(SEASONAL_CALLS_PER_EVENT);
+    expect(pool.length).toBe(18 + 48 + SEASONAL_CALLS_PER_EVENT);
+    // The procedural band stays exactly 48 even while a season is active.
+    expect(pool.filter((c) => c.id >= PROCEDURAL_ID_BASE && c.id < SEASONAL_ID_BASE).length).toBe(
+      48,
+    );
   });
 });
 

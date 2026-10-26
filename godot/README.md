@@ -17,6 +17,10 @@ Where the GDD and a Linear issue disagree, the GDD wins.
 
 Remaining work is polish and release engineering — see the project board.
 
+## Engine Version
+
+`config/features=4.3` is retained as the project's minimum supported feature set (no 4.4+ APIs are used); CI installs and exports with Godot 4.7-stable, whose forward-compatible runtime/templates produce the release artifacts.
+
 ## Predecessor
 
 The React Native / Expo app in the repository root (`../`) is the shipped predecessor. This Godot project is the engine rebuild and lives entirely under `godot/`. Do not modify files outside this directory as part of the Godot migration.

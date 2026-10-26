@@ -1,0 +1,158 @@
+name: Godot Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag (e.g. v1.0.0; leave empty to use the workflow run ref)'
+        required: false
+        type: string
+
+concurrency:
+  group: godot-release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  godot-test:
+    name: Godot Tests (baseline 28)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Godot 4.7
+        run: |
+          curl -sL -o godot.zip https://github.com/godotengine/godot-builds/releases/download/4.7-stable/Godot_v4.7-stable_linux.x86_64.zip
+          echo "0b1a6c54c2c619c12e169fe9241edda4b81080b519451cec2984bf0d2c6cb73c  godot.zip" | sha256sum -c -
+          unzip -q godot.zip
+          chmod +x Godot_v4.7-stable_linux.x86_64
+          sudo mv Godot_v4.7-stable_linux.x86_64 /usr/local/bin/godot
+          godot --version
+      - name: Import project
+        working-directory: godot
+        run: godot --headless --import 2>&1 | tail -5
+      - name: Run test suite
+        id: tests
+        working-directory: godot
+        run: |
+          set +e
+          godot --headless --path . --script res://tests/test_runner.gd 2>&1 | tee test_output.log
+          GODOT_EXIT=${PIPESTATUS[0]}
+          set -e
+          pkill -f "godot --headless" 2>/dev/null || true
+          TOTAL=$(grep -oP 'Total: \K[0-9]+' test_output.log | tail -1)
+          PASSED=$(grep -oP 'Passed: \K[0-9]+' test_output.log | tail -1)
+          FAILED=$(grep -oP 'Failed: \K[0-9]+' test_output.log | tail -1)
+          echo "total=$TOTAL" >> "$GITHUB_OUTPUT"
+          echo "passed=$PASSED" >> "$GITHUB_OUTPUT"
+          echo "failed=$FAILED" >> "$GITHUB_OUTPUT"
+          if [ -z "$TOTAL" ]; then
+            echo "::error::Godot test runner produced no summary line"
+            exit 1
+          fi
+          if [ "$FAILED" -gt 28 ]; then
+            echo "::error::Godot test failures ($FAILED) exceed the known baseline of 28"
+            exit 1
+          fi
+          exit 0
+      - name: Summary
+        if: always()
+        run: |
+          echo "Godot tests: ${{ steps.tests.outputs.passed }}/${{ steps.tests.outputs.total }} passed, ${{ steps.tests.outputs.failed }} failures (baseline 28)" >> "$GITHUB_STEP_SUMMARY"
+
+  godot-export:
+    name: Godot Export (Linux + Windows)
+    needs: godot-test
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Compute release tag
+        id: tag
+        run: |
+          TAG="${{ github.event.inputs.tag }}"
+          if [ -z "$TAG" ]; then TAG="${{ github.ref_name }}"; fi
+          if [ -z "$TAG" ] || [ "$TAG" = "master" ] || [ "$TAG" = "main" ]; then TAG="dev"; fi
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "Releasing as $TAG"
+
+      - name: Install Godot 4.7
+        run: |
+          curl -sL -o godot.zip https://github.com/godotengine/godot-builds/releases/download/4.7-stable/Godot_v4.7-stable_linux.x86_64.zip
+          echo "0b1a6c54c2c619c12e169fe9241edda4b81080b519451cec2984bf0d2c6cb73c  godot.zip" | sha256sum -c -
+          unzip -q godot.zip
+          chmod +x Godot_v4.7-stable_linux.x86_64
+          sudo mv Godot_v4.7-stable_linux.x86_64 /usr/local/bin/godot
+          godot --version
+
+      - name: Install export templates
+        run: |
+          mkdir -p "$HOME/.local/share/godot/export_templates/4.7.stable"
+          curl -sL -o templates.tpz https://github.com/godotengine/godot-builds/releases/download/4.7-stable/Godot_v4.7-stable_export_templates.tpz
+          echo "9714459dc071907c0f3d5f17d608faf69e7cda21331fc5d39c4503ffa4e99eec  templates.tpz" | sha256sum -c -
+          mkdir -p "$HOME/.local/share/godot/export_templates/4.7.stable"
+          unzip -q templates.tpz -d "$HOME/.local/share/godot/export_templates/4.7.stable"
+          # The tpz ships its files under a top-level templates/ directory;
+          # flatten it so they sit directly in the version dir.
+          if [ -d "$HOME/.local/share/godot/export_templates/4.7.stable/templates" ]; then
+            mv "$HOME/.local/share/godot/export_templates/4.7.stable/templates"/* "$HOME/.local/share/godot/export_templates/4.7.stable/"
+            rmdir "$HOME/.local/share/godot/export_templates/4.7.stable/templates"
+          fi
+
+      - name: Import project
+        working-directory: godot
+        run: godot --headless --import 2>&1 | tail -5
+
+      - name: Export Linux Desktop
+        working-directory: godot
+        run: |
+          mkdir -p ../build
+          godot --headless --export-release "Linux Desktop" ../build/deadair.x86_64
+          ls -lh ../build
+
+      - name: Export Windows Desktop
+        working-directory: godot
+        run: |
+          mkdir -p ../build
+          godot --headless --export-release "Windows Desktop" ../build/deadair.exe
+          ls -lh ../build
+
+      - name: Smoke test Linux binary
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq xvfb
+          timeout 10s xvfb-run -a ./build/deadair.x86_64; EC=$?
+          echo "linux smoke exit=$EC (124 = survived 10s idle)"
+          if [ "$EC" -ne 124 ]; then
+            echo "::error::Linux binary exited $EC (expected 124 = timeout)"
+            exit 1
+          fi
+
+      - name: SHA-256 sidecars
+        working-directory: build
+        run: |
+          sha256sum deadair.x86_64 > deadair.x86_64.sha256
+          sha256sum deadair.exe > deadair.exe.sha256
+          cat deadair.x86_64.sha256 deadair.exe.sha256
+
+      - name: Upload Linux artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: deadair-${{ steps.tag.outputs.tag }}-linux-x86_64
+          path: |
+            build/deadair.x86_64
+            build/deadair.x86_64.sha256
+
+      - name: Upload Windows artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: deadair-${{ steps.tag.outputs.tag }}-windows-x86_64
+          path: |
+            build/deadair.exe
+            build/deadair.exe.sha256
