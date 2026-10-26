@@ -150,3 +150,83 @@ echo "exit=$?"   # 124 means it survived idle; anything else is a (near-)immedia
 The exported build embeds its `.pck` (`binary_format/embed_pck=true`), leaves `scenes/test/*` out of the payload (`exclude_filter`), and starts at `res://scenes/main_menu.tscn`. The CRT post-process (`src/visual/crt_postprocess.gd`) ships as compiled bytecode, so no editor-only paths are required.
 
 Expected artifact sizes are ~60–90 MB per platform (see the release PR for recorded values).
+
+## Community preset backend (DEA-95 Phase 1)
+
+Phase 1 ships the backend starting point for shared frequency presets: a
+Cloudflare Worker API (`worker/community/`), a D1 schema
+(`migrations/0001_community.sql`), shared Zod contracts
+(`lib/community/schema.ts`), and an offline-safe client
+(`lib/community/client.ts`). Presets only — custom calls stay behind the
+Infinite Signal gate, and user-generated call content is deferred until the
+store-policy work lands.
+
+### Feature flag
+
+Community ships dark on both sides:
+
+| Side   | Variable                        | Default | Notes                                                    |
+| ------ | ------------------------------- | ------- | -------------------------------------------------------- |
+| App    | `EXPO_PUBLIC_COMMUNITY_ENABLED` | off     | Only `on` enables it.                                    |
+| Worker | `COMMUNITY_ENABLED`             | `off`   | Set per environment in `wrangler.toml`; defaults to off. |
+
+The Worker flag is independent of the app flag, so a client build cannot turn
+the API on by itself. `/community/health` stays reachable while the flag is off
+and reports `{ "enabled": false }` so the app can confirm the switch.
+
+### Local database and tests
+
+The opt-in `community` environment in `wrangler.toml` declares `COMMUNITY_DB`
+with a placeholder `database_id`. The default PWA deployment has no database
+binding. Nothing in this phase creates or touches remote infrastructure.
+
+```bash
+# Apply the migration to a local D1 database.
+pnpm dlx wrangler d1 migrations apply deadair-community --local --env community
+
+# Unit + integration tests (memory and SQLite stores, no remote D1 needed).
+pnpm test tests/worker/community tests/lib/community --runInBand
+```
+
+To wire a real deployment later: `pnpm dlx wrangler d1 create deadair-community`,
+paste the returned id into `wrangler.toml` under `env.community.d1_databases`,
+set `ADMIN_TOKEN` with `pnpm dlx wrangler secret put ADMIN_TOKEN --env community`,
+then apply the migration with `--remote --env community`. Select `--env community`
+when deploying this environment, and enable `env.community.vars.COMMUNITY_ENABLED`
+only after the store-policy and moderation work lands. This repository
+intentionally carries no deployment credentials.
+
+### API surface
+
+All routes live under `/community` and are JSON. Device auth uses
+`Authorization: Bearer <token>` from `POST /auth/device`; only the token hash is
+stored. Admin routes use the `X-Admin-Token` secret.
+
+| Method | Route                                  | Auth   | Purpose                                      |
+| ------ | -------------------------------------- | ------ | -------------------------------------------- |
+| GET    | `/community/health`                    | —      | Flag status                                  |
+| POST   | `/community/auth/device`               | —      | Register a device, receive token             |
+| GET    | `/community/auth/device`               | Device | Device profile                               |
+| GET    | `/community/presets`                   | —      | List/search (`q`, `band`, `limit`, `cursor`) |
+| POST   | `/community/presets`                   | Device | Create a preset                              |
+| GET    | `/community/presets/:id`               | —      | Read one preset                              |
+| PATCH  | `/community/presets/:id`               | Owner  | Update a preset                              |
+| DELETE | `/community/presets/:id`               | Owner  | Delete a preset                              |
+| POST   | `/community/presets/:id/report`        | Device | Report a preset (once per device)            |
+| GET    | `/community/admin/reports`             | Admin  | Moderation queue                             |
+| POST   | `/community/admin/reports/:id/resolve` | Admin  | Resolve/dismiss a report                     |
+| POST   | `/community/admin/presets/:id/hide`    | Admin  | Hide a preset                                |
+| POST   | `/community/admin/presets/:id/restore` | Admin  | Restore a preset                             |
+
+### Offline-safe client
+
+`CommunityClient` caches successful list results by their complete query
+(search, band, limit, and cursor), and falls back to the matching result when
+the network is unavailable, returning `{ source: 'cache', stale: true }`.
+An uncached query returns an empty result with the error code. The cache is
+injected (`asyncStorageCommunityCache` in the app, `createMemoryCache()` in
+tests) so storage stays out of the pure client. Reading a preset by ID requires
+a network connection; cached list entries already contain the tuning payload
+for offline use. Requests and local input validation surface a `CommunityError`
+with a stable `code` (`community_disabled`, `unauthorized`, `forbidden`,
+`validation_failed`, `rate_limited`, `network_error`, `timeout`, …).
