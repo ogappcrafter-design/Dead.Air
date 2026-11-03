@@ -29,6 +29,17 @@ export const CALL_TYPES = [
 ] as const;
 export type CallType = (typeof CALL_TYPES)[number];
 
+/**
+ * Friend codes are local-only handles (DEA-33). The format is shared with the
+ * community preset API so a shared custom frequency can carry the code of the
+ * player who authored it.
+ */
+export const FRIEND_CODE_PREFIX = 'DA';
+export const FRIEND_CODE_LENGTH = 5;
+/** Excludes visually ambiguous characters (I, O, 0, 1). */
+export const FRIEND_CODE_CHARSET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+export const FRIEND_CODE_PATTERN = /^DA-[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{5}$/;
+
 export const ENTITLEMENT_PRODUCT_IDS = {
   BASE: 'com.deadair.base',
   INFINITE_SIGNAL: 'com.deadair.infinite_signal',

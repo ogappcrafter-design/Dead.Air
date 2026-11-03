@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect } from 'react';
 import { useTutorialStore, type TutorialStep } from '@/store/useTutorialStore';
 import { callManager } from '@/engine/calls/callManagerInstance';
 import { TUTORIAL_CALL_IDS } from '@/data/tutorialCalls';
@@ -21,12 +21,6 @@ export function useTutorialController() {
   const setStep = useTutorialStore((s) => s.setStep);
   const complete = useTutorialStore((s) => s.complete);
 
-  const startTutorialCall = useCallback((callId: number) => {
-    const mgr = callManager;
-    if (mgr.getCallState() !== 'idle') return;
-    mgr.startCall(callId);
-  }, []);
-
   useEffect(() => {
     if (skipped || step === 'completed') return;
 
@@ -48,9 +42,20 @@ export function useTutorialController() {
     if (callId === undefined) return;
 
     const delay = step === 'call-1' ? 500 : 800;
-    const timer = setTimeout(() => startTutorialCall(callId), delay);
-    return () => clearTimeout(timer);
-  }, [step, skipped, setStep, complete, startTutorialCall]);
+    let unsubscribe: (() => void) | undefined;
+    const timer = setTimeout(() => {
+      if (callManager.startCall(callId)) return;
+      unsubscribe = callManager.subscribe((state) => {
+        if (state !== 'idle') return;
+        unsubscribe?.();
+        callManager.startCall(callId);
+      });
+    }, delay);
+    return () => {
+      clearTimeout(timer);
+      unsubscribe?.();
+    };
+  }, [step, skipped, setStep, complete]);
 
   useEffect(() => {
     if (skipped || step === 'completed' || step === 'transition') return;
@@ -59,14 +64,17 @@ export function useTutorialController() {
     const nextStep = STEP_AFTER[currentStep];
     if (nextStep === undefined) return;
 
-    let prevState = callManager.getCallState();
+    let tutorialCallCompleted = false;
     let transitionTimer: ReturnType<typeof setTimeout> | null = null;
 
-    const unsub = callManager.subscribe((state) => {
-      if (prevState === 'completed' && state === 'idle') {
+    const unsub = callManager.subscribe((state, call) => {
+      if (state === 'completed') {
+        tutorialCallCompleted = call?.call.id === STEP_TO_CALL_ID[currentStep];
+      }
+      if (tutorialCallCompleted && state === 'idle') {
+        tutorialCallCompleted = false;
         transitionTimer = setTimeout(() => setStep(nextStep), 300);
       }
-      prevState = state;
     });
 
     return () => {

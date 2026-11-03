@@ -16,6 +16,7 @@ import type {
   PresetQuery,
   PresetStatus,
   ReportStatus,
+  VerifiedEntitlement,
 } from './types';
 
 function compareDescending(a: CommunityPreset, b: CommunityPreset): number {
@@ -32,8 +33,15 @@ export function createMemoryStore(): CommunityStore {
   const presets = new Map<string, CommunityPreset>();
   const reports = new Map<string, CommunityReport>();
   const creations: Array<{ authorId: string; createdAt: number }> = [];
+  const entitlements = new Map<string, VerifiedEntitlement>();
 
   const store: CommunityStore = {
+    async bindEntitlement(input) {
+      const existing = entitlements.get(input.purchaseHash);
+      if (existing && existing.deviceId !== input.deviceId) return false;
+      entitlements.set(input.purchaseHash, { ...input });
+      return true;
+    },
     async createDevice(input) {
       const record: CommunityDeviceRecord = {
         id: input.id,
@@ -96,6 +104,7 @@ export function createMemoryStore(): CommunityStore {
       const filtered = Array.from(presets.values())
         .filter((preset) => preset.status === 'published')
         .filter((preset) => (query.band ? preset.band === query.band : true))
+        .filter((preset) => (query.friendCode ? preset.friendCode === query.friendCode : true))
         .filter((preset) => {
           if (!term) return true;
           return [preset.name, preset.description, ...preset.tags].some((value) =>

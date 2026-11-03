@@ -1,22 +1,24 @@
-const CODE_PREFIX = 'DA';
-const CODE_LENGTH = 5;
-const CHARSET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+import {
+  FRIEND_CODE_CHARSET,
+  FRIEND_CODE_LENGTH,
+  FRIEND_CODE_PATTERN,
+  FRIEND_CODE_PREFIX,
+} from '../lib/constants';
 
 function randomChar(): string {
-  return CHARSET[Math.floor(Math.random() * CHARSET.length)] ?? 'A';
+  return FRIEND_CODE_CHARSET[Math.floor(Math.random() * FRIEND_CODE_CHARSET.length)] ?? 'A';
 }
 
 export function generateFriendCode(): string {
   let code = '';
-  for (let i = 0; i < CODE_LENGTH; i++) {
+  for (let i = 0; i < FRIEND_CODE_LENGTH; i++) {
     code += randomChar();
   }
-  return `${CODE_PREFIX}-${code}`;
+  return `${FRIEND_CODE_PREFIX}-${code}`;
 }
 
 export function validateFriendCode(code: string): boolean {
-  const regex = new RegExp(`^${CODE_PREFIX}-[${CHARSET}]{${CODE_LENGTH}}$`);
-  return regex.test(code);
+  return FRIEND_CODE_PATTERN.test(code);
 }
 
 export function isValidFriendCodeFormat(code: string): boolean {

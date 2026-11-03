@@ -63,6 +63,18 @@ export default function RadioScreen() {
             </Text>
           </Pressable>
           <Pressable
+            testID="radio-nav-forge"
+            style={({ pressed }) => [styles.navBtn, pressed && styles.navBtnPressed]}
+            onPress={() => router.push('/mod')}
+            accessible
+            accessibilityRole="button"
+            accessibilityLabel="Open frequency forge"
+          >
+            <Text style={styles.navLabel} numberOfLines={1}>
+              ⌬ FORGE
+            </Text>
+          </Pressable>
+          <Pressable
             testID="radio-nav-settings"
             style={({ pressed }) => [styles.navBtn, pressed && styles.navBtnPressed]}
             onPress={() => router.push('/settings')}
@@ -85,6 +97,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   navRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     justifyContent: 'center',
     gap: spacing.sm,
     padding: spacing.sm,

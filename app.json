@@ -15,7 +15,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.daggerstuff.deadair",
-      "inAppPurchases": ["com.daggerstuff.deadair.infinitesignal.ios"]
+      "inAppPurchases": ["com.deadair.infinite_signal"]
     },
     "android": {
       "adaptiveIcon": {
@@ -23,7 +23,7 @@
         "backgroundColor": "#000000"
       },
       "package": "com.daggerstuff.deadair",
-      "inAppPurchases": ["com.daggerstuff.deadair.infinitesignal.android"]
+      "inAppPurchases": ["com.deadair.infinite_signal"]
     },
     "web": {
       "favicon": "./assets/favicon.png"

@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import { useIsFocused } from 'expo-router';
 import { callManager } from '@/engine/calls/callManagerInstance';
 import type { CallTypeRoute } from '@/engine/calls/CallManager';
 import type { ActiveCall, CallLifecycleState, CallOutcome } from '@/engine/calls/types';
@@ -15,6 +16,10 @@ import { ConversationCall } from '@/components/calls/ConversationCall';
 import { useSanityEffect } from '../../hooks/useSanityEffect';
 
 export function ActiveCallDispatcher() {
+  // Only the focused screen renders the call. Expo Router keeps previous
+  // screens mounted, so without this guard a second dispatcher behind the
+  // current screen would run duplicate call timers.
+  const isFocused = useIsFocused();
   // SanityEffect drives the visual overlay during active calls; it derives
   // its target from the game store internally, so no argument is needed.
   useSanityEffect();
@@ -33,7 +38,7 @@ export function ActiveCallDispatcher() {
   // where route/activeCall flip between null and a real call.
   const onComplete = useCallback((outcome: CallOutcome) => callManager.endCall(outcome), []);
 
-  if (!route || !activeCall) return null;
+  if (!isFocused || !route || !activeCall) return null;
 
   switch (route) {
     case 'JUST_LISTEN':

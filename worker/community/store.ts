@@ -36,6 +36,7 @@ const PRESET_COLUMNS = [
   'frequency',
   'payload',
   'tags',
+  'friend_code',
   'schema_version',
   'status',
   'report_count',
@@ -62,6 +63,7 @@ interface PresetRow {
   frequency: number;
   payload: string;
   tags: string;
+  friend_code: string | null;
   schema_version: number;
   status: string;
   report_count: number;
@@ -102,6 +104,7 @@ function rowToPreset(row: PresetRow): CommunityPreset {
     frequency: row.frequency,
     payload: presetPayloadSchema.parse(JSON.parse(row.payload)),
     tags: presetTagsSchema.parse(JSON.parse(row.tags)),
+    friendCode: row.friend_code ?? null,
     schemaVersion: row.schema_version,
     status: row.status as PresetStatus,
     reportCount: row.report_count,
@@ -126,6 +129,25 @@ function rowToReport(row: ReportRow): CommunityReport {
 
 export function createD1Store(db: D1DatabaseLike): CommunityStore {
   const store: CommunityStore = {
+    async bindEntitlement(input) {
+      const row = await db
+        .prepare(
+          `INSERT INTO community_entitlements (purchase_hash, device_id, platform, active, verified_at)
+         VALUES (?, ?, ?, ?, ?)
+         ON CONFLICT(purchase_hash) DO UPDATE SET active = excluded.active, verified_at = excluded.verified_at
+         WHERE device_id = excluded.device_id
+         RETURNING purchase_hash`,
+        )
+        .bind(
+          input.purchaseHash,
+          input.deviceId,
+          input.platform,
+          input.active ? 1 : 0,
+          input.verifiedAt,
+        )
+        .first();
+      return row !== null;
+    },
     async createDevice(input) {
       await db
         .prepare(
@@ -181,8 +203,8 @@ export function createD1Store(db: D1DatabaseLike): CommunityStore {
         .prepare(
           `INSERT INTO community_presets
              (id, author_id, author_name, name, description, band, frequency, payload, tags,
-              schema_version, status, report_count, created_at, updated_at)
-           SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+              friend_code, schema_version, status, report_count, created_at, updated_at)
+           SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
            WHERE (SELECT COUNT(*) FROM community_preset_creations
                   WHERE author_id = ? AND created_at >= ?) < ?
            RETURNING id`,
@@ -197,6 +219,7 @@ export function createD1Store(db: D1DatabaseLike): CommunityStore {
           preset.frequency,
           JSON.stringify(preset.payload),
           JSON.stringify(preset.tags),
+          preset.friendCode,
           preset.schemaVersion,
           preset.status,
           preset.reportCount,
@@ -225,6 +248,11 @@ export function createD1Store(db: D1DatabaseLike): CommunityStore {
       if (query.band) {
         conditions.push('band = ?');
         params.push(query.band);
+      }
+
+      if (query.friendCode) {
+        conditions.push('friend_code = ?');
+        params.push(query.friendCode);
       }
 
       const term = (query.q ?? '').trim();
@@ -280,6 +308,10 @@ export function createD1Store(db: D1DatabaseLike): CommunityStore {
       if (patch.tags !== undefined) {
         assignments.push('tags = ?');
         params.push(JSON.stringify(patch.tags));
+      }
+      if (patch.friendCode !== undefined) {
+        assignments.push('friend_code = ?');
+        params.push(patch.friendCode);
       }
       if (patch.payload !== undefined) {
         assignments.push('payload = ?', 'band = ?', 'frequency = ?');

@@ -15,6 +15,7 @@ export interface PublicPreset {
   payload: CommunityPreset['payload'];
   tags: string[];
   authorName: string;
+  friendCode: string | null;
   schemaVersion: number;
   status: PresetStatus;
   reportCount: number;
@@ -30,6 +31,7 @@ export function toPublicPreset(preset: CommunityPreset): PublicPreset {
     payload: preset.payload,
     tags: preset.tags,
     authorName: preset.authorName,
+    friendCode: preset.friendCode,
     schemaVersion: preset.schemaVersion,
     status: preset.status,
     reportCount: preset.reportCount,

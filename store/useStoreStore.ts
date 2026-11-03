@@ -13,6 +13,7 @@ export interface PurchaseRecord {
   orderId: string;
   purchaseTime: number;
   transactionReceipt: string | null;
+  purchaseToken?: string;
 }
 
 export type IAPErrorKind =
@@ -67,10 +68,10 @@ export const useStoreStore = create<StoreState>()(
 
       setInfiniteSignal: (owned) => {
         if (owned) {
-          // Grant only if a matching purchase record with a receipt exists.
-          // applyPurchase adds the record before calling this setter.
           const hasValidPurchase = get().purchases.some(
-            (p) => p.productId === ENTITLEMENT_PRODUCT_IDS.INFINITE_SIGNAL && p.transactionReceipt,
+            (p) =>
+              p.productId === ENTITLEMENT_PRODUCT_IDS.INFINITE_SIGNAL &&
+              (p.transactionReceipt || p.purchaseToken),
           );
           if (!hasValidPurchase) return;
         }
@@ -80,7 +81,9 @@ export const useStoreStore = create<StoreState>()(
       setBase: (owned) => {
         if (owned) {
           const hasValidPurchase = get().purchases.some(
-            (p) => p.productId === ENTITLEMENT_PRODUCT_IDS.BASE && p.transactionReceipt,
+            (p) =>
+              p.productId === ENTITLEMENT_PRODUCT_IDS.BASE &&
+              (p.transactionReceipt || p.purchaseToken),
           );
           if (!hasValidPurchase) return;
         }

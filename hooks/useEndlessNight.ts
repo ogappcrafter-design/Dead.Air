@@ -260,9 +260,21 @@ export function useEndlessNight(): void {
         callAtStartRef.id = call.call.id;
         return;
       }
+      if (state === 'idle') {
+        const g = useGameStore.getState();
+        if (g.endlessModeActive && !g.endlessGameOver) {
+          scheduleNextCall(CALL_GAP_MS);
+        }
+        return;
+      }
       if (state === 'completed') {
         const g = useGameStore.getState();
-        if (!g.endlessModeActive || g.endlessGameOver) {
+        if (
+          !g.endlessModeActive ||
+          g.endlessGameOver ||
+          call?.call.sourceCustomFrequencyId !== undefined ||
+          call?.call.isTutorial === true
+        ) {
           callAtStartRef.id = -1;
           return;
         }
@@ -273,7 +285,6 @@ export function useEndlessNight(): void {
         }
         callAtStartRef.id = -1;
         g.incrementEndlessScore();
-        scheduleNextCall(CALL_GAP_MS);
       }
     });
 

@@ -155,11 +155,18 @@ Expected artifact sizes are ~60–90 MB per platform (see the release PR for rec
 
 Phase 1 ships the backend starting point for shared frequency presets: a
 Cloudflare Worker API (`worker/community/`), a D1 schema
-(`migrations/0001_community.sql`), shared Zod contracts
+(`migrations/0001_community.sql`, extended by
+`migrations/0002_custom_frequencies.sql`), shared Zod contracts
 (`lib/community/schema.ts`), and an offline-safe client
-(`lib/community/client.ts`). Presets only — custom calls stay behind the
-Infinite Signal gate, and user-generated call content is deferred until the
-store-policy work lands.
+(`lib/community/client.ts`).
+
+DEA-89 adds player-authored custom frequencies on the same surface: a preset
+payload may carry a `composition` + `difficulty` pair assembled from the
+existing band fragment libraries, and an optional `friendCode` for social
+sharing. The Infinite Signal boundary is enforced in the app: composing,
+publishing, and playing custom calls require ownership, while any player may
+browse and install a shared frequency read-only. Legacy tuning-only presets
+remain valid and are not installable as playable calls.
 
 ### Feature flag
 
@@ -202,21 +209,21 @@ All routes live under `/community` and are JSON. Device auth uses
 `Authorization: Bearer <token>` from `POST /auth/device`; only the token hash is
 stored. Admin routes use the `X-Admin-Token` secret.
 
-| Method | Route                                  | Auth   | Purpose                                      |
-| ------ | -------------------------------------- | ------ | -------------------------------------------- |
-| GET    | `/community/health`                    | —      | Flag status                                  |
-| POST   | `/community/auth/device`               | —      | Register a device, receive token             |
-| GET    | `/community/auth/device`               | Device | Device profile                               |
-| GET    | `/community/presets`                   | —      | List/search (`q`, `band`, `limit`, `cursor`) |
-| POST   | `/community/presets`                   | Device | Create a preset                              |
-| GET    | `/community/presets/:id`               | —      | Read one preset                              |
-| PATCH  | `/community/presets/:id`               | Owner  | Update a preset                              |
-| DELETE | `/community/presets/:id`               | Owner  | Delete a preset                              |
-| POST   | `/community/presets/:id/report`        | Device | Report a preset (once per device)            |
-| GET    | `/community/admin/reports`             | Admin  | Moderation queue                             |
-| POST   | `/community/admin/reports/:id/resolve` | Admin  | Resolve/dismiss a report                     |
-| POST   | `/community/admin/presets/:id/hide`    | Admin  | Hide a preset                                |
-| POST   | `/community/admin/presets/:id/restore` | Admin  | Restore a preset                             |
+| Method | Route                                  | Auth   | Purpose                                                    |
+| ------ | -------------------------------------- | ------ | ---------------------------------------------------------- |
+| GET    | `/community/health`                    | —      | Flag status                                                |
+| POST   | `/community/auth/device`               | —      | Register a device, receive token                           |
+| GET    | `/community/auth/device`               | Device | Device profile                                             |
+| GET    | `/community/presets`                   | —      | List/search (`q`, `band`, `friendCode`, `limit`, `cursor`) |
+| POST   | `/community/presets`                   | Device | Create a preset                                            |
+| GET    | `/community/presets/:id`               | —      | Read one preset                                            |
+| PATCH  | `/community/presets/:id`               | Owner  | Update a preset                                            |
+| DELETE | `/community/presets/:id`               | Owner  | Delete a preset                                            |
+| POST   | `/community/presets/:id/report`        | Device | Report a preset (once per device)                          |
+| GET    | `/community/admin/reports`             | Admin  | Moderation queue                                           |
+| POST   | `/community/admin/reports/:id/resolve` | Admin  | Resolve/dismiss a report                                   |
+| POST   | `/community/admin/presets/:id/hide`    | Admin  | Hide a preset                                              |
+| POST   | `/community/admin/presets/:id/restore` | Admin  | Restore a preset                                           |
 
 ### Offline-safe client
 
@@ -230,3 +237,43 @@ a network connection; cached list entries already contain the tuning payload
 for offline use. Requests and local input validation surface a `CommunityError`
 with a stable `code` (`community_disabled`, `unauthorized`, `forbidden`,
 `validation_failed`, `rate_limited`, `network_error`, `timeout`, …).
+
+### Custom frequency payload
+
+A composed preset adds two optional fields to `payload`:
+
+- `composition` — `{ band, callType, openingIndex, middleIndices, closingIndex, choiceIndices? }`.
+  Fragment indices reference the band's existing library; `choiceIndices` is
+  required for `RIGHT_ANSWER` and forbidden otherwise.
+- `difficulty` — `{ sanityDelta, staticReward, signal }`, clamped to the
+  band's `BAND_VARIATIONS` range.
+
+Both fields travel together. The app and the Worker validate them with the same
+engine helper (`engine/calls/CustomFrequency.ts`), so a recipe accepted by the
+client passes API recipe validation too; custom publishing also requires store verification. `friendCode` is an optional
+top-level `DA-XXXXX` value and doubles as a `GET /community/presets` filter.
+
+### Verified Infinite Signal publishing
+
+Apply `migrations/0003_verified_entitlements.sql` with the other D1 migrations before enabling custom-call publishing. No deployment or store credentials are included in this change.
+
+Both POST and PATCH require a device bearer token and a top-level `entitlementProof` for composition-bearing presets. PATCH checks the resulting payload, including metadata-only edits to an existing custom call. Tuning-only presets and public reads require no purchase. Removing composition returns a preset to ordinary tuning-only behavior.
+
+The native app reads purchase history when the player presses Publish and submits either `{ platform: "apple", transactionId }` or `{ platform: "google", purchaseToken }`. Each write contacts the store again, so a previous verified record or local ownership flag never authorizes a new write. Web publishing has no store proof and is unavailable. Apple restore may prompt for App Store credentials.
+
+Configure these Worker bindings in the community environment, keeping all private keys in Worker secrets (never `EXPO_PUBLIC_*` or committed files):
+
+| Binding                                                | Value                                                                                                                                   |
+| ------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `APPLE_BUNDLE_ID`                                      | `com.daggerstuff.deadair`, matching `app.json` and App Store Connect                                                                    |
+| `APPLE_ISSUER_ID`, `APPLE_KEY_ID`, `APPLE_PRIVATE_KEY` | App Store Connect In-App Purchase API issuer, key ID and PKCS#8 ES256 private key                                                       |
+| `GOOGLE_PACKAGE_NAME`                                  | `com.daggerstuff.deadair`, matching `app.json` and Play Console                                                                         |
+| `GOOGLE_CLIENT_EMAIL`, `GOOGLE_PRIVATE_KEY`            | Service account email and PKCS#8 RSA private key authorized for the app's purchases in Play Console, with Android Publisher API enabled |
+
+The expected non-consumable product is `ENTITLEMENT_PRODUCT_IDS.INFINITE_SIGNAL` (`com.deadair.infinite_signal`) on both stores. Configure that exact product before release. Only production purchases are accepted; sandbox, test-card, rental and consumed purchases do not grant publishing access. Missing platform configuration returns `verification_not_configured` (503); rejected/revoked proofs return `purchase_invalid` (403); store outages, bad credentials or malformed store responses return `verification_unavailable` (503). The Forge displays the returned failure and retains the local draft.
+
+Apple verification uses [Get Transaction Info](https://developer.apple.com/documentation/appstoreserverapi/get-transaction-info) with [an ES256 API JWT](https://developer.apple.com/documentation/appstoreserverapi/generating-json-web-tokens-for-api-requests). The Worker decodes only the transaction returned directly by Apple's authenticated HTTPS API, never a client-supplied JWS. It checks application, product, transaction, production environment, non-consumable ownership and revocation. Google uses [service-account OAuth](https://developers.google.com/identity/protocols/oauth2/service-account) and [ProductPurchaseV2](https://developers.google.com/android-publisher/api-ref/rest/v3/purchases.productsv2/getproductpurchasev2), scoped to the configured package, checking product, PURCHASED state, unrefunded quantity and non-consumption.
+
+D1 retains only a SHA-256 purchase fingerprint, community device ID, platform, last verified active status and timestamp. Raw receipts, purchase tokens and store responses are not retained or logged by verification. A purchase fingerprint binds to one community device token; preserve that token across app updates. Reinstalling and losing it cannot automatically rebind the purchase, since this design has no accounts or migration service. Operator-assisted recovery must check the purchaser's ownership before removing an old binding. Records represent the last check; revocation is rechecked before every custom write.
+
+Deterministic tests exercise mocked store responses, real JWT signing, native proof extraction, both write boundaries and D1 persistence. Live Apple/Google validation is untested without store credentials. Production release still requires a credentialed store integration check and updated store privacy declarations.

@@ -58,6 +58,8 @@ export interface CommunityPreset {
   frequency: number;
   payload: PresetPayload;
   tags: string[];
+  /** DEA-89: optional author friend code attached to the preset. */
+  friendCode: string | null;
   schemaVersion: number;
   status: PresetStatus;
   reportCount: number;
@@ -79,6 +81,7 @@ export interface CommunityReport {
 export interface PresetQuery {
   q?: string;
   band?: string;
+  friendCode?: string;
   limit: number;
   cursor?: string;
 }
@@ -89,10 +92,11 @@ export interface PresetPage {
 }
 
 export type PresetPatch = Partial<
-  Pick<CommunityPreset, 'name' | 'description' | 'payload' | 'tags'>
+  Pick<CommunityPreset, 'name' | 'description' | 'payload' | 'tags' | 'friendCode'>
 >;
 
 export interface CommunityStore {
+  bindEntitlement(input: VerifiedEntitlement): Promise<boolean>;
   createDevice(input: {
     id: string;
     tokenHash: string;
@@ -132,6 +136,21 @@ export interface CommunityEnv {
   ADMIN_TOKEN?: string;
   COMMUNITY_ALLOWED_ORIGIN?: string;
   COMMUNITY_STORE?: CommunityStore;
+  APPLE_BUNDLE_ID?: string;
+  APPLE_ISSUER_ID?: string;
+  APPLE_KEY_ID?: string;
+  APPLE_PRIVATE_KEY?: string;
+  GOOGLE_PACKAGE_NAME?: string;
+  GOOGLE_CLIENT_EMAIL?: string;
+  GOOGLE_PRIVATE_KEY?: string;
+}
+
+export interface VerifiedEntitlement {
+  purchaseHash: string;
+  deviceId: string;
+  platform: 'apple' | 'google';
+  active: boolean;
+  verifiedAt: number;
 }
 
 export interface RequestContext {

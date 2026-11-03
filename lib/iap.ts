@@ -8,6 +8,7 @@ import { useStoreStore, IAPErrorState, PurchaseRecord } from '../store/useStoreS
 import { useSkinStore, skinIdFromProductId } from '../store/useSkinStore';
 import { PURCHASABLE_SKIN_IDS } from './skins';
 import { ENTITLEMENT_PRODUCT_IDS } from './constants';
+import type { EntitlementProof } from './community/schema';
 
 // Type-only import: erased at compile time, never crashes on web.
 import type * as IAPTypes from 'expo-in-app-purchases';
@@ -102,13 +103,10 @@ let initialized = false;
 export function applyPurchase(productId: string, purchase: IAPTypes.InAppPurchase): boolean {
   const store = useStoreStore.getState();
 
-  // Only treat a purchase as valid when the store returned a transaction receipt.
-  // A PURCHASED/RESTORED event without a receipt is not proof of entitlement, so we
-  // must not persist it or unlock the product.
-  if (!purchase.transactionReceipt || !purchase.orderId) {
+  if ((!purchase.transactionReceipt && !purchase.purchaseToken) || !purchase.orderId) {
     store.setError({
       kind: 'declined',
-      message: 'Purchase could not be verified. No transaction receipt was provided.',
+      message: 'Purchase could not be verified. No store proof was provided.',
     });
     return false;
   }
@@ -117,7 +115,8 @@ export function applyPurchase(productId: string, purchase: IAPTypes.InAppPurchas
     productId,
     orderId: purchase.orderId,
     purchaseTime: purchase.purchaseTime,
-    transactionReceipt: purchase.transactionReceipt,
+    transactionReceipt: purchase.transactionReceipt ?? null,
+    purchaseToken: purchase.purchaseToken,
   };
   store.addPurchase(record);
 
@@ -408,4 +407,32 @@ export async function disconnectIAP(): Promise<void> {
   useStoreStore.getState().setConnected(false);
   initialized = false;
   purchaseListener = null;
+}
+
+export async function getInfiniteSignalPublishingProof(): Promise<EntitlementProof> {
+  const IAP = getIAP();
+  if (!IAP || (Platform.OS !== 'ios' && Platform.OS !== 'android')) {
+    throw new Error('Publishing requires a native Apple or Google Infinite Signal purchase.');
+  }
+  await initIAP();
+  const result = await IAP.getPurchaseHistoryAsync();
+  if (result.responseCode !== IAP.IAPResponseCode.OK) {
+    throw new Error('Could not read purchase proof. Reconnect to the store and try again.');
+  }
+  const purchase = result.results?.find(
+    (entry) =>
+      entry.productId === PRODUCT_IDS.INFINITE_SIGNAL &&
+      (Platform.OS === 'android' ||
+        entry.purchaseState === IAP.InAppPurchaseState.PURCHASED ||
+        entry.purchaseState === IAP.InAppPurchaseState.RESTORED),
+  );
+  if (Platform.OS === 'ios' && purchase?.orderId) {
+    return { platform: 'apple', transactionId: purchase.originalOrderId || purchase.orderId };
+  }
+  if (Platform.OS === 'android' && purchase?.purchaseToken) {
+    return { platform: 'google', purchaseToken: purchase.purchaseToken };
+  }
+  throw new Error(
+    'Infinite Signal purchase proof is missing. Restore purchases before publishing.',
+  );
 }

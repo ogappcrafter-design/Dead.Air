@@ -14,6 +14,7 @@ import {
   type PresetPayload,
 } from '../../../lib/community/schema';
 import { authenticate, optionalDevice } from '../auth';
+import { requirePublishingEntitlement } from '../entitlement';
 import { decodeCursor } from '../cursor';
 import {
   errorResponse,
@@ -47,6 +48,7 @@ function parseQuery(ctx: RequestContext): PresetQuery | Response {
   const query: PresetQuery = { limit: parsed.data.limit };
   if (parsed.data.q) query.q = parsed.data.q;
   if (parsed.data.band) query.band = parsed.data.band;
+  if (parsed.data.friendCode) query.friendCode = parsed.data.friendCode;
   if (parsed.data.cursor) query.cursor = parsed.data.cursor;
   return query;
 }
@@ -87,6 +89,10 @@ export async function createPreset(ctx: RequestContext): Promise<Response> {
   if (!parsed.ok) return parsed.response;
 
   const input = parsed.value;
+  if (input.payload.composition) {
+    const denied = await requirePublishingEntitlement(ctx, auth.device.id, input.entitlementProof);
+    if (denied) return denied;
+  }
   if (!isFrequencyInBand(input.payload)) {
     return errorResponse('band_mismatch', 'Frequency does not fall inside the declared band.', 400);
   }
@@ -102,6 +108,7 @@ export async function createPreset(ctx: RequestContext): Promise<Response> {
     frequency: input.payload.frequency,
     payload: input.payload,
     tags: input.tags ?? [],
+    friendCode: input.friendCode ?? null,
     schemaVersion: COMMUNITY_SCHEMA_VERSION,
     status: 'published',
     reportCount: 0,
@@ -134,7 +141,11 @@ export async function updatePreset(ctx: RequestContext, presetId: string): Promi
   const parsed = await parseJsonBody(ctx.request, updatePresetInputSchema);
   if (!parsed.ok) return parsed.response;
 
-  const patch = parsed.value;
+  const { entitlementProof, ...patch } = parsed.value;
+  if ((patch.payload ?? existing.payload).composition) {
+    const denied = await requirePublishingEntitlement(ctx, auth.device.id, entitlementProof);
+    if (denied) return denied;
+  }
   if (patch.payload && !isFrequencyInBand(patch.payload)) {
     return errorResponse('band_mismatch', 'Frequency does not fall inside the declared band.', 400);
   }

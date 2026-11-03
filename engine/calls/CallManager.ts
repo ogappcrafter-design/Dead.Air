@@ -88,6 +88,12 @@ export interface CallManagerConfig {
   ownsAtmosphericPack?(packId: string): boolean;
   /** Maps atmospheric call IDs to their pack IDs for ownership checks in startCall. */
   callPackMap?: Map<number, string>;
+  /**
+   * DEA-89: gate for player-authored custom frequency calls. Return false to
+   * refuse playback (non-owners, or a band the player has not unlocked).
+   * Calls without `sourceCustomFrequencyId` are unaffected.
+   */
+  canPlayCustomCall?(call: CallData): boolean;
 }
 
 /** Map call.type to handler route label. Wave 2 renderers register here. */
@@ -124,6 +130,7 @@ export class CallManager {
   private readonly onCallReset?: (activeCall: ActiveCall | null) => void;
   private readonly ownsAtmosphericPack?: (packId: string) => boolean;
   private readonly callPackMap?: Map<number, string>;
+  private readonly canPlayCustomCall?: (call: CallData) => boolean;
   private audio: CallManagerAudioAccess | null;
 
   private state: CallLifecycleState = 'idle';
@@ -140,6 +147,7 @@ export class CallManager {
     this.onCallReset = config.onCallReset;
     this.ownsAtmosphericPack = config.ownsAtmosphericPack;
     this.callPackMap = config.callPackMap;
+    this.canPlayCustomCall = config.canPlayCustomCall;
   }
 
   // --- Lifecycle ---
@@ -167,6 +175,16 @@ export class CallManager {
     if (
       call.sourcePackId !== undefined &&
       !this.stores.getOwnedTapePacks().includes(call.sourcePackId)
+    ) {
+      return false;
+    }
+    // DEA-89: player-authored frequencies are Infinite Signal content. The
+    // gate lives at the playback boundary so a non-owner can never start one
+    // even if a registry entry leaks in.
+    if (
+      call.sourceCustomFrequencyId !== undefined &&
+      this.canPlayCustomCall !== undefined &&
+      !this.canPlayCustomCall(call)
     ) {
       return false;
     }
@@ -232,6 +250,12 @@ export class CallManager {
     const reward = Math.max(0, Math.round(outcome.staticReward * outcome.staticMultiplier));
     if (reward > 0) {
       this.stores.addStatic(reward);
+    }
+
+    if (call.sourceCustomFrequencyId !== undefined) {
+      this.stores.setCurrentCall(null);
+      this.transition('idle', null);
+      return;
     }
 
     // Tape unlock.

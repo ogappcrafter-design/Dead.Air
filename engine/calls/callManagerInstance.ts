@@ -15,6 +15,11 @@ import { useStoreStore } from '@/store/useStoreStore';
 import { ATMOSPHERIC_FRAGMENTS } from '@/data/fragments';
 import { ATMOSPHERIC_PACKS } from '@/data/atmosphericPacks';
 import { ProceduralCallGenerator } from './ProceduralCallGenerator';
+import {
+  CUSTOM_FREQUENCY_MAX_SAVED,
+  buildCustomFrequencyCall,
+  type CustomFrequency,
+} from './CustomFrequency';
 import { SEASONAL_ID_BASE } from '@/engine/progression/SeasonalCallInjector';
 import { ALL_DLC_CALLS } from '@/data/tapePacks';
 import {
@@ -26,6 +31,7 @@ import {
 } from '@/data/fragments';
 import type { CallType } from '@/lib/constants';
 import type { Band } from '@/lib/constants';
+import { BANDS } from '@/lib/constants';
 import type { CallData } from './types';
 
 // Build the registry from sacred calls plus the owner's procedural pool.
@@ -173,6 +179,55 @@ export function getEndlessRareEventCallIds(): readonly number[] {
   return _endlessCallIds;
 }
 
+/**
+ * DEA-89: id base for player-authored custom frequency calls.
+ *
+ * Reserved spaces: sacred 0-17, procedural 1000+, atmospheric
+ * 2000/3000/4000/5000/7000, endless 6000+, seasonal 15000+, daily 50000+.
+ * 20000+ is intentionally unused and sized to CUSTOM_FREQUENCY_MAX_SAVED.
+ */
+export const CUSTOM_FREQUENCY_CALL_ID_BASE = 20_000;
+
+const _customCallIds = new Set<number>();
+
+/**
+ * Register a saved/installed custom frequency in the live call registry.
+ * Returns null for non-owners, invalid slots, or invalid frequencies.
+ *
+ * @param slot stable list index 0..CUSTOM_FREQUENCY_MAX_SAVED-1; the registry
+ *             id is `CUSTOM_FREQUENCY_CALL_ID_BASE + slot`.
+ */
+export function registerCustomFrequencyCall(
+  frequency: CustomFrequency,
+  slot: number,
+): CallData | null {
+  if (!useStoreStore.getState().hasInfiniteSignal) return null;
+  if (!Number.isInteger(slot) || slot < 0 || slot >= CUSTOM_FREQUENCY_MAX_SAVED) return null;
+
+  const callId = CUSTOM_FREQUENCY_CALL_ID_BASE + slot;
+  try {
+    const call = buildCustomFrequencyCall(frequency, callId);
+    registry.set(callId, call);
+    _customCallIds.add(callId);
+    return call;
+  } catch {
+    return null;
+  }
+}
+
+/** Remove every custom frequency call from the live registry. */
+export function clearCustomFrequencyCalls(): void {
+  for (const id of _customCallIds) {
+    registry.delete(id);
+  }
+  _customCallIds.clear();
+}
+
+/** All currently-registered custom frequency call ids (test-only). */
+export function getCustomFrequencyCallIds(): readonly number[] {
+  return [..._customCallIds];
+}
+
 export function refreshExpansionCalls(
   hasInfiniteSignal: boolean,
   ownedTapePacks: ReadonlyArray<string>,
@@ -182,7 +237,11 @@ export function refreshExpansionCalls(
   }
   _expansionCallIds = new Set();
 
-  if (!hasInfiniteSignal) return;
+  // DEA-89: losing the entitlement also removes player-authored calls.
+  if (!hasInfiniteSignal) {
+    clearCustomFrequencyCalls();
+    return;
+  }
 
   const pool = getCallPool(CALLS as unknown as CallData[], true, undefined, { ownedTapePacks });
 
@@ -300,6 +359,9 @@ export const callManager = initCallManager({
   bands,
   ownsAtmosphericPack: (packId) => useStoreStore.getState().ownedAtmosphericPacks.includes(packId),
   callPackMap: atmosphericCallPackMap,
+  canPlayCustomCall: (call) =>
+    useStoreStore.getState().hasInfiniteSignal &&
+    useGameStore.getState().unlockedBands.includes(BANDS[call.band] as Band),
   onAchievementsCheck: (stats) => useAchievementStore.getState().checkAndUnlock(stats),
   onCallReset: (activeCall) => {
     if (activeCall === null) {

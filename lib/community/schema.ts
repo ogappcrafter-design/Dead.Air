@@ -12,9 +12,22 @@
  */
 
 import { z } from 'zod';
-import { BANDS } from '../constants';
+import { BANDS, FRIEND_CODE_PATTERN } from '../constants';
+import {
+  CUSTOM_CALL_TYPES,
+  CUSTOM_FREQUENCY_MAX_CHOICES,
+  CUSTOM_FREQUENCY_MAX_MIDDLE_LINES,
+  CUSTOM_FREQUENCY_MIN_CHOICES,
+  CUSTOM_FREQUENCY_MIN_MIDDLE_LINES,
+  validateCustomFrequency,
+  type CustomFrequency,
+} from '../../engine/calls/CustomFrequency';
 
-export const COMMUNITY_SCHEMA_VERSION = 1;
+/**
+ * Payload schema version. v2 adds the optional `composition` / `difficulty`
+ * pair used by DEA-89 custom frequencies. v1 tuning-only presets remain valid.
+ */
+export const COMMUNITY_SCHEMA_VERSION = 2;
 
 export const MIN_PRESET_FREQUENCY = 87.5;
 export const MAX_PRESET_FREQUENCY = 172;
@@ -49,6 +62,50 @@ export type PresetStatus = (typeof PRESET_STATUSES)[number];
 export type ReportReason = (typeof REPORT_REASONS)[number];
 export type ReportStatus = (typeof REPORT_STATUSES)[number];
 
+/** A friend code attached to a shared preset (DEA-89). */
+export const friendCodeSchema = z
+  .string()
+  .trim()
+  .toUpperCase()
+  .refine((code) => FRIEND_CODE_PATTERN.test(code), {
+    message: 'friendCode must match DA-XXXXX',
+  });
+
+/**
+ * DEA-89 fragment composition. Structural bounds are enforced here; the
+ * band-specific fragment indices and difficulty ranges are checked by the
+ * shared semantic validator in `engine/calls/CustomFrequency.ts` so the app
+ * and the Worker accept exactly the same recipes.
+ */
+export const customFrequencyCompositionSchema = z
+  .object({
+    band: z.number().int().min(0).max(4),
+    callType: z.enum(CUSTOM_CALL_TYPES),
+    openingIndex: z.number().int().nonnegative(),
+    middleIndices: z
+      .array(z.number().int().nonnegative())
+      .min(CUSTOM_FREQUENCY_MIN_MIDDLE_LINES)
+      .max(CUSTOM_FREQUENCY_MAX_MIDDLE_LINES),
+    closingIndex: z.number().int().nonnegative(),
+    choiceIndices: z
+      .array(z.number().int().nonnegative())
+      .min(CUSTOM_FREQUENCY_MIN_CHOICES)
+      .max(CUSTOM_FREQUENCY_MAX_CHOICES)
+      .optional(),
+  })
+  .strict();
+
+export const customFrequencyDifficultySchema = z
+  .object({
+    sanityDelta: z.number().int(),
+    staticReward: z.number().int().nonnegative(),
+    signal: z.number().int().min(0).max(5),
+  })
+  .strict();
+
+export type CustomFrequencyCompositionPayload = z.infer<typeof customFrequencyCompositionSchema>;
+export type CustomFrequencyDifficultyPayload = z.infer<typeof customFrequencyDifficultySchema>;
+
 /** The tuning state a preset captures. */
 export const presetPayloadSchema = z
   .object({
@@ -58,8 +115,54 @@ export const presetPayloadSchema = z
     staticLevel: z.number().finite().min(0).max(100).optional(),
     tone: z.enum(PRESET_TONES).optional(),
     notes: z.string().trim().max(PRESET_NOTES_MAX_LENGTH).optional(),
+    /** DEA-89: optional custom-call recipe. Both fields travel together. */
+    composition: customFrequencyCompositionSchema.optional(),
+    difficulty: customFrequencyDifficultySchema.optional(),
   })
-  .strict();
+  .strict()
+  .superRefine((payload, ctx) => {
+    const hasComposition = payload.composition !== undefined;
+    const hasDifficulty = payload.difficulty !== undefined;
+    if (hasComposition !== hasDifficulty) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: hasComposition ? ['difficulty'] : ['composition'],
+        message: 'composition and difficulty must be provided together',
+      });
+      return;
+    }
+    if (!hasComposition || !hasDifficulty) return;
+
+    if (BANDS.indexOf(payload.band) !== payload.composition!.band) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['composition', 'band'],
+        message: 'composition band must match the preset band',
+      });
+    }
+
+    // Reuse the engine validator so fragment indices, call-type support, and
+    // band difficulty bounds cannot drift between the client and the Worker.
+    const candidate: CustomFrequency = {
+      id: 'preset',
+      name: 'preset',
+      frequency: payload.frequency,
+      volume: payload.volume,
+      composition: payload.composition!,
+      difficulty: payload.difficulty!,
+      origin: 'local',
+      schemaVersion: COMMUNITY_SCHEMA_VERSION,
+      createdAt: 0,
+      updatedAt: 0,
+    };
+    for (const issue of validateCustomFrequency(candidate).issues) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: issue.path.split('.'),
+        message: issue.message,
+      });
+    }
+  });
 
 export const presetTagsSchema = z
   .array(z.string().trim().toLowerCase().min(1).max(PRESET_TAG_MAX_LENGTH))
@@ -79,12 +182,24 @@ const presetNameSchema = z
     { message: 'name must contain 3 to 60 characters without NUL' },
   );
 
+export const entitlementProofSchema = z.discriminatedUnion('platform', [
+  z
+    .object({ platform: z.literal('apple'), transactionId: z.string().regex(/^\d{1,40}$/) })
+    .strict(),
+  z.object({ platform: z.literal('google'), purchaseToken: z.string().min(1).max(4096) }).strict(),
+]);
+
+export type EntitlementProof = z.infer<typeof entitlementProofSchema>;
+
 export const createPresetInputSchema = z
   .object({
     name: presetNameSchema,
     description: z.string().trim().max(PRESET_DESCRIPTION_MAX_LENGTH).optional(),
     payload: presetPayloadSchema,
     tags: presetTagsSchema.optional(),
+    /** DEA-89: author friend code used to share the frequency socially. */
+    friendCode: friendCodeSchema.optional(),
+    entitlementProof: entitlementProofSchema.optional(),
   })
   .strict();
 
@@ -94,9 +209,11 @@ export const updatePresetInputSchema = z
     description: z.string().trim().max(PRESET_DESCRIPTION_MAX_LENGTH).optional(),
     payload: presetPayloadSchema.optional(),
     tags: presetTagsSchema.optional(),
+    friendCode: friendCodeSchema.optional(),
+    entitlementProof: entitlementProofSchema.optional(),
   })
   .strict()
-  .refine((value) => Object.keys(value).length > 0, {
+  .refine((value) => Object.keys(value).some((key) => key !== 'entitlementProof'), {
     message: 'at least one field is required',
   });
 
@@ -118,6 +235,8 @@ export const presetQuerySchema = z
   .object({
     q: z.string().trim().max(SEARCH_QUERY_MAX_LENGTH).optional(),
     band: bandSchema.optional(),
+    /** DEA-89: browse the frequencies a friend shared. */
+    friendCode: friendCodeSchema.optional(),
     limit: z.coerce.number().int().min(1).max(PRESET_MAX_LIMIT).default(PRESET_DEFAULT_LIMIT),
     cursor: z.string().min(1).max(128).optional(),
   })
@@ -131,6 +250,7 @@ export const presetSchema = z.object({
   payload: presetPayloadSchema,
   tags: presetTagsSchema,
   authorName: z.string(),
+  friendCode: friendCodeSchema.nullable().optional(),
   schemaVersion: z.number().int().positive(),
   status: z.enum(PRESET_STATUSES),
   reportCount: z.number().int().nonnegative(),

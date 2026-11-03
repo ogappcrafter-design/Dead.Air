@@ -55,6 +55,7 @@ export default function RootLayout() {
               <Stack.Screen name="radio" />
               <Stack.Screen name="tapes" />
               <Stack.Screen name="store" />
+              <Stack.Screen name="mod" />
               <Stack.Screen name="settings" />
             </Stack>
             <StatusBar style="light" />

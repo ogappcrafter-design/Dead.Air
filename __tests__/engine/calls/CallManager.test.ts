@@ -556,6 +556,61 @@ describe('CallManager singleton', () => {
   });
 });
 
+// --- DEA-89: custom frequency playback gate ---
+
+describe('CallManager custom frequency gate', () => {
+  it('refuses a custom frequency call when the ownership gate returns false', () => {
+    const custom = makeCall({ id: 20_000, sourceCustomFrequencyId: 'local:test' });
+    const registry = new Map<number, CallData>([[custom.id, custom]]);
+    const cm = new CallManager(makeConfig({ registry, canPlayCustomCall: () => false }));
+    expect(cm.startCall(custom.id)).toBe(false);
+    expect(cm.getCallState()).toBe('idle');
+  });
+
+  it('starts a custom frequency call when the gate allows it', () => {
+    const custom = makeCall({ id: 20_000, sourceCustomFrequencyId: 'local:test' });
+    const registry = new Map<number, CallData>([[custom.id, custom]]);
+    const cm = new CallManager(makeConfig({ registry, canPlayCustomCall: () => true }));
+    expect(cm.startCall(custom.id)).toBe(true);
+    expect(cm.getCurrentCall()?.call.sourceCustomFrequencyId).toBe('local:test');
+  });
+
+  it('leaves built-in calls unaffected by the custom gate', () => {
+    const cm = new CallManager(makeConfig({ canPlayCustomCall: () => false }));
+    expect(cm.startCall(1)).toBe(true);
+  });
+
+  it('does not advance progression for a custom frequency call', () => {
+    const stores = makeStores();
+    const custom = makeCall({ id: 20_000, sourceCustomFrequencyId: 'local:test' });
+    const registry = new Map<number, CallData>([[custom.id, custom]]);
+    const cm = new CallManager(makeConfig({ registry, stores, canPlayCustomCall: () => true }));
+
+    const completionSubscriber = jest.fn();
+    cm.subscribe((state) => {
+      if (state === 'completed') completionSubscriber();
+    });
+    expect(cm.startCall(custom.id)).toBe(true);
+    cm.endCall({
+      sanityDelta: -1,
+      staticReward: 5,
+      staticMultiplier: 1,
+      tapeUnlocked: 'custom-tape',
+      bandUnlocked: 'LIMINAL',
+    });
+    expect(completionSubscriber).toHaveBeenCalledTimes(1);
+    expect(stores.addTape).not.toHaveBeenCalled();
+
+    // Tuned outcome still applies.
+    expect(stores.decreaseSanity).toHaveBeenCalledWith(1);
+    expect(stores.addStatic).toHaveBeenCalledWith(5);
+    // Progression bookkeeping does not.
+    expect(stores.markCallReceived).not.toHaveBeenCalled();
+    expect(stores.unlockBand).not.toHaveBeenCalled();
+    expect(cm.getCallState()).toBe('idle');
+  });
+});
+
 // --- Lazy import helpers so tests stay independent of module-eval order ---
 
 // Re-import lazily to avoid hoisting the singleton initialization before reset.

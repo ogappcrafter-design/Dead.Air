@@ -3,7 +3,7 @@
 // applying migrations/0001_community.sql first. This proves the migration and
 // the store's queries work together on the engine D1 is built on.
 
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 
@@ -81,8 +81,13 @@ class SqliteD1 implements D1DatabaseLike {
 
 function createDatabase(): DatabaseSync {
   const db = new DatabaseSync(':memory:');
-  const migrationPath = join(__dirname, '..', '..', '..', 'migrations', '0001_community.sql');
-  db.exec(readFileSync(migrationPath, 'utf8'));
+  const migrationsDir = join(__dirname, '..', '..', '..', 'migrations');
+  const migrationFiles = readdirSync(migrationsDir)
+    .filter((file) => file.endsWith('.sql'))
+    .sort();
+  for (const file of migrationFiles) {
+    db.exec(readFileSync(join(migrationsDir, file), 'utf8'));
+  }
   return db;
 }
 
@@ -97,6 +102,7 @@ function preset(id: string, overrides: Partial<CommunityPreset> = {}): Community
     frequency: 99.5,
     payload: { frequency: 99.5, band: 'LOST', volume: 0.6 },
     tags: ['night'],
+    friendCode: null,
     schemaVersion: 1,
     status: 'published',
     reportCount: 0,
@@ -107,6 +113,29 @@ function preset(id: string, overrides: Partial<CommunityPreset> = {}): Community
 }
 
 describe('D1 store against the real migration', () => {
+  it('persists purchase ownership and rejects rebinding across devices', async () => {
+    const db = createDatabase();
+    const store = createD1Store(new SqliteD1(db));
+    for (const id of ['owner', 'other'])
+      await store.createDevice({ id, tokenHash: id, displayName: id, createdAt: 1 });
+    const entitlement = {
+      purchaseHash: 'hash',
+      deviceId: 'owner',
+      platform: 'apple' as const,
+      active: true,
+      verifiedAt: 1,
+    };
+    expect(await store.bindEntitlement(entitlement)).toBe(true);
+    expect(await store.bindEntitlement({ ...entitlement, deviceId: 'other' })).toBe(false);
+    const reloaded = createD1Store(new SqliteD1(db));
+    expect(await reloaded.bindEntitlement({ ...entitlement, active: false, verifiedAt: 2 })).toBe(
+      true,
+    );
+    expect(
+      db.prepare('SELECT device_id, active, verified_at FROM community_entitlements').get(),
+    ).toMatchObject({ device_id: 'owner', active: 0, verified_at: 2 });
+  });
+
   it('stores and reads back a preset created by one device for another', async () => {
     const store = createD1Store(new SqliteD1(createDatabase()));
 

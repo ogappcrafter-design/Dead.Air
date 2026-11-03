@@ -90,6 +90,11 @@ export interface CallData {
   /** DEA-32: ID of the tape pack this call belongs to. Used to filter calls
    *  from unowned DLC packs. Undefined for base-game calls. */
   sourcePackId?: string;
+
+  /** DEA-89: local id of the player-authored custom frequency that produced
+   *  this call. Present only on calls registered by the frequency forge; the
+   *  live CallManager uses it to enforce the Infinite Signal gate. */
+  sourceCustomFrequencyId?: string;
 }
 
 /** Active call lifecycle state machine. */
