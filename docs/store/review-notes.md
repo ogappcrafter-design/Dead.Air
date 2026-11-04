@@ -22,7 +22,7 @@ This file is what we hand to Apple App Review and Google Play Policy reviewers w
 ## Audio is synthesized, not real broadcasts
 
 - All caller voices, static, scanlines, and ambient beds are produced at runtime by the on-device audio engine in `engine/audio/`. They are not clips from any third-party library.
-- The `RECORD_AUDIO` / `NSMicrophoneUsageDescription` permission is used only for real-time audio **processing** of the microphone input through the audio engine's voice-processing chain. Audio is **not recorded**. Audio is **not stored**. Audio is **not transmitted**. Looking at the code in `lib/errorTracking.ts`/`lib/analytics.ts` confirms nothing audio-related ever leaves the device or the audio rendering graph.
+- The `RECORD_AUDIO` / `NSMicrophoneUsageDescription` permission is used only for real-time audio **processing** of the microphone input: an energy/RMS voice-activity check that drives the "stay calm — do not speak" mechanic during calls. Audio is **not recorded**. Audio is **not stored**. Audio is **not transmitted**. Looking at the code in `engine/audio/capture/` and `lib/errorTracking.ts`/`lib/analytics.ts` confirms nothing audio-related ever leaves the device or is written to disk.
 
 ## Authored call text and custom frequencies
 

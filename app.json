@@ -15,7 +15,10 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.daggerstuff.deadair",
-      "inAppPurchases": ["com.deadair.infinite_signal"]
+      "inAppPurchases": ["com.deadair.infinite_signal"],
+      "infoPlist": {
+        "NSMicrophoneUsageDescription": "Dead Air listens for your voice during calls so speaking has consequences. Audio is processed on-device in real time and is never recorded, stored, or sent anywhere."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -23,7 +26,8 @@
         "backgroundColor": "#000000"
       },
       "package": "com.daggerstuff.deadair",
-      "inAppPurchases": ["com.deadair.infinite_signal"]
+      "inAppPurchases": ["com.deadair.infinite_signal"],
+      "permissions": ["RECORD_AUDIO"]
     },
     "web": {
       "favicon": "./assets/favicon.png"
