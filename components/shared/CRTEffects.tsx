@@ -7,7 +7,7 @@
 // reduced, 0 for off) instead of 80. ScanlineMode controls density/visibility
 // for performance scaling.
 
-import React, { type JSX } from 'react';
+import React, { type JSX, type ReactNode } from 'react';
 import { View, StyleSheet } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -28,6 +28,12 @@ export interface OverlayProps {
 export interface ScanlineOverlayProps extends OverlayProps {
   /** Scanline density mode. 'off' renders nothing. */
   mode?: ScanlineMode;
+  /**
+   * DEA-91: content that lives *inside* the scanline layer, riding the same
+   * drift as the raster. Used by the ARG glyph trace so the code is part of
+   * the visual treatment rather than an overlay pasted on top of it.
+   */
+  trace?: ReactNode;
 }
 
 const FULL_SCANLINE_COUNT = 20;
@@ -48,6 +54,7 @@ const REDUCED_SCANLINE_COUNT = 10;
 export function ScanlineOverlay({
   intensity,
   mode = 'full',
+  trace,
 }: ScanlineOverlayProps): JSX.Element | null {
   const opacity = Math.min(1, Math.max(0, intensity));
   if (mode === 'off' || opacity === 0) {
@@ -88,6 +95,7 @@ export function ScanlineOverlay({
             ]}
           />
         ))}
+        {trace}
       </Animated.View>
     </View>
   );

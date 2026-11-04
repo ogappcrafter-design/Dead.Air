@@ -22,6 +22,7 @@ import {
 } from './CustomFrequency';
 import { SEASONAL_ID_BASE } from '@/engine/progression/SeasonalCallInjector';
 import { ALL_DLC_CALLS } from '@/data/tapePacks';
+import { ARG_HIDDEN_CALL, ARG_HIDDEN_CALL_ID } from '@/data/arg';
 import {
   LIVING_FRAGMENTS,
   LIMINAL_FRAGMENTS,
@@ -177,6 +178,20 @@ export function clearEndlessRareEventCalls(): void {
 /** All currently-registered endless rare event call ids (test-only). */
 export function getEndlessRareEventCallIds(): readonly number[] {
   return _endlessCallIds;
+}
+
+// --- DEA-91: in-fiction ARG hidden call ---
+
+/**
+ * Register the ARG trail's hidden call in the live registry.
+ *
+ * Idempotent, and deliberately lazy: the row does not exist until the player
+ * has resolved the trail and tuned the carrier, so no other code path (pool
+ * selection, scheduler, daily rotation) can ever reach it. Mirrors the
+ * registerDailyCall / registerEndlessRareEventCall precedent.
+ */
+export function registerArgHiddenCall(): void {
+  registry.set(ARG_HIDDEN_CALL_ID, ARG_HIDDEN_CALL.call);
 }
 
 /**
