@@ -500,6 +500,25 @@ export class WebAudioBridge implements PlatformBridge {
     return new WebBridgeAudioBuffer(buf);
   }
 
+  /**
+   * Build a playback source from raw mono PCM (DEA-94 call-voice synthesis).
+   * Resampling to the context rate is delegated to the browser by creating
+   * the buffer at the source rate.
+   */
+  createPcmSource(
+    ctx: BridgeAudioContext,
+    samples: Float32Array,
+    sampleRate: number,
+  ): BridgeBufferSourceNode {
+    const native = this.nativeCtx(ctx);
+    const length = Math.max(1, samples.length);
+    const buf = native.createBuffer(1, length, Math.max(1, Math.round(sampleRate)));
+    buf.getChannelData(0).set(samples.subarray(0, length));
+    const source = native.createBufferSource();
+    source.buffer = buf;
+    return new WebBridgeBufferSource(source, native);
+  }
+
   connect(src: BridgeAudioNode, dst: BridgeAudioNode): void {
     (src as WebBridgeNode<WebAudioNode>).node.connect((dst as WebBridgeNode<WebAudioNode>).node);
   }

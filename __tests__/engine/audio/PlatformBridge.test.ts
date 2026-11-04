@@ -4,6 +4,7 @@ import {
   bandVoicePreset,
   isWebBridge,
   isNativeBridge,
+  supportsPcmPlayback,
 } from '../../../engine/audio/PlatformBridge';
 import { makeMockBridge } from '../../../__mocks__/engine/audio/mockBridge';
 import { Band } from '../../../lib/constants';
@@ -104,6 +105,18 @@ describe('PlatformBridge contract', () => {
       n.setQ(1.5);
       n.setGain(3);
       expect(typeof n.disconnect).toBe('function');
+    });
+  });
+
+  describe('supportsPcmPlayback', () => {
+    it('is true for bridges that can play raw PCM', () => {
+      expect(supportsPcmPlayback(makeMockBridge('web'))).toBe(true);
+    });
+
+    it('is false for bridges without createPcmSource', () => {
+      const bridge = makeMockBridge('native');
+      delete (bridge as { createPcmSource?: unknown }).createPcmSource;
+      expect(supportsPcmPlayback(bridge)).toBe(false);
     });
   });
 });

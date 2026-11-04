@@ -213,6 +213,23 @@ export interface PlatformBridge {
   /** Decode an encoded audio asset (loaded from a URI/path) into a buffer. */
   decodeAudio(ctx: BridgeAudioContext, data: ArrayBuffer | string): Promise<BridgeAudioBuffer>;
 
+  /**
+   * Optional: create a playback source from raw mono PCM samples.
+   *
+   * Used by the DEA-94 on-device call-voice synthesizer, which renders speech
+   * locally and plays it through the VoiceProcessor chain. Bridges that cannot
+   * synthesize buffers simply omit this method — callers must check
+   * `supportsPcmPlayback(bridge)` and fall back to text-only rendering.
+   *
+   * `samples` are in [-1, 1] at `sampleRate`; the bridge is responsible for
+   * any resampling to the context's native rate.
+   */
+  createPcmSource?(
+    ctx: BridgeAudioContext,
+    samples: Float32Array,
+    sampleRate: number,
+  ): BridgeBufferSourceNode;
+
   /** Connect src → dst. Both must originate from this bridge. */
   connect(src: BridgeAudioNode, dst: BridgeAudioNode): void;
 
@@ -235,3 +252,10 @@ export const isWebBridge = (b: PlatformBridge): boolean => b.platform === 'web';
  * Type guard: bridge is native platform.
  */
 export const isNativeBridge = (b: PlatformBridge): boolean => b.platform === 'native';
+
+/**
+ * True when the bridge can play raw PCM buffers (DEA-94 voice synthesis).
+ * Bridges without `createPcmSource` degrade to text-only call rendering.
+ */
+export const supportsPcmPlayback = (b: PlatformBridge): boolean =>
+  typeof b.createPcmSource === 'function';

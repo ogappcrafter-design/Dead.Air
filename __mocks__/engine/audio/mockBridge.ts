@@ -234,6 +234,33 @@ export const makeMockBridge = (platform: 'web' | 'native' = 'web'): PlatformBrid
         length: 44100,
       }),
     ),
+    createPcmSource: jest.fn(
+      (_c: BridgeAudioContext, samples: Float32Array, sampleRate: number): MockBufferSource => {
+        const n = makeNode('pcm-source') as MockBufferSource;
+        n.lastLoop = null;
+        n.started = false;
+        n.start = (when?: number) => {
+          n.started = true;
+          n.ops.push({ kind: 'start', args: [when] });
+        };
+        n.stop = (when?: number) => {
+          n.started = false;
+          n.ops.push({ kind: 'stop', args: [when] });
+        };
+        n.setLoop = (loop: boolean) => {
+          n.lastLoop = loop;
+          n.ops.push({ kind: 'setLoop', args: [loop] });
+        };
+        n.connect = (target: BridgeAudioNode) => {
+          n.ops.push({
+            kind: 'connect',
+            args: [(target as MockNode).id, (target as MockNode).kind],
+          });
+        };
+        n.ops.push({ kind: 'buffer', args: [samples.length, sampleRate] });
+        return n;
+      },
+    ),
     connect: jest.fn((_src: BridgeAudioNode, _dst: BridgeAudioNode): void => {}),
     connectToDestination: jest.fn((_src: BridgeAudioNode, _c: BridgeAudioContext): void => {}),
     disconnectAll: jest.fn((_n: BridgeAudioNode): void => {}),

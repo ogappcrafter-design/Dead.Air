@@ -446,6 +446,21 @@ export class WebPlatformBridge implements PlatformBridge {
     );
   }
 
+  /** Build a playback source from raw mono PCM (DEA-94 call-voice synthesis). */
+  createPcmSource(
+    ctx: BridgeAudioContext,
+    samples: Float32Array,
+    sampleRate: number,
+  ): BridgeBufferSourceNode {
+    const audioCtx = (ctx as WebAudioContext).getNativeContext();
+    const length = Math.max(1, samples.length);
+    const buffer = audioCtx.createBuffer(1, length, Math.max(1, Math.round(sampleRate)));
+    buffer.getChannelData(0).set(samples.subarray(0, length));
+    const source = audioCtx.createBufferSource();
+    source.buffer = buffer;
+    return new WebBufferSourceNode(source);
+  }
+
   connect(src: BridgeAudioNode, dst: BridgeAudioNode): void {
     if (src instanceof WebAudioNode && dst instanceof WebAudioNode) {
       src.node.connect(dst.node);
