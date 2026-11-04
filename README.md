@@ -64,6 +64,8 @@ Answer the call. Or don't. Either way, something heard you.
 | 📞  | **5 call types**                  | Just Listen · Dead Air · Right Answer · Signal Decode · Stay Calm                                  |
 | 🧠  | **Sanity + Static economy**       | Every choice shifts your sanity and earns static — your choices have weight                        |
 | 🎵  | **Real-time audio synthesis**     | Web Audio API engine: static synth → distortion → reverb → spatial processing                      |
+| 🗣️  | **Voiced calls**                  | Every call line is spoken on-device through the radio voice chain — web and native, no cloud TTS   |
+| 🎙️  | **Microphone flinch**             | Speak during a Stay Calm call and you flinch like a tap; the mic is optional, tap-only if denied   |
 | 📼  | **15 collectible tapes**          | Archive every transmission. Rarity tiers from `common` to `legendary`                              |
 | 🔄  | **New Game+**                     | Unlocks after the meta-ending — harder difficulty modifiers and exclusive content                  |
 | 🌑  | **Endless Night**                 | Survival mode with escalating strangeness every 5 shifts                                           |
@@ -74,6 +76,7 @@ Answer the call. Or don't. Either way, something heard you.
 | 📱  | **Cross-platform**                | iOS · Android · Web PWA — single codebase                                                          |
 | 🖥️  | **CRT aesthetic**                 | Amber and green on near-black, scanlines, glow text                                                |
 | 📤  | **Share & community**             | Share transcripts as images, anonymous leaderboard, call of the day, friend codes — all local-only |
+| 🔧  | **Frequency Forge**               | Compose calls from band fragments, tune difficulty, save locally, share by friend code             |
 
 ---
 
@@ -159,6 +162,7 @@ Every transmission is a different kind of encounter.
 deadair/
 ├── app/                        # Expo Router screens
 │   ├── radio/                  #   Main radio interface
+│   ├── mod/                    #   Frequency Forge: compose, save & share custom calls
 │   ├── tapes/                  #   Tape collection archive
 │   ├── store/                  #   In-app store
 │   └── settings/               #   Settings & achievements
@@ -174,9 +178,9 @@ deadair/
 │   ├── share/                  #   Transcript sharing via OS share sheet
 │   └── shared/                 #   CRT effects, error boundaries
 ├── engine/                     # Framework-agnostic game logic
-│   ├── audio/                  #   Web Audio API: synth, effects, latency
-│   ├── calls/                  #   Call manager, scheduler, variation engine
-│   └── progression/            #   Bands, tapes, achievements, NG+, Endless Night, Tape Mastery
+│   ├── audio/                  #   Synth, effects, latency, call-voice synthesis, mic capture
+│   ├── calls/                  #   Call manager, scheduler, variation engine, custom frequencies
+│   └── progression/            #   Bands, tapes, achievements, NG+, Endless Night, Tape Mastery, seasons
 ├── store/                      # Zustand state stores
 │   ├── useGameStore.ts         #   Sanity, static, tapes, bands, NG+, Endless Night, Tape Mastery
 │   ├── useRadioStore.ts        #   Frequency, signal strength
@@ -192,6 +196,7 @@ deadair/
 │   ├── bands.ts                #   5 frequency bands
 │   ├── calls.js                #   18 hand-written transmissions
 │   ├── tapes.ts                #   15 collectible tapes
+│   ├── seasons/                #   Season 1 "Hold Music" calls, tapes, ending, prologue
 │   ├── ngPlusContent.ts        #   NG+-exclusive tapes & calls
 │   └── tapeMasteryLayers.ts    #   Hidden audio layer data (Surface/Depth/Abyss)
 ├── hooks/                      # React hooks
@@ -217,7 +222,7 @@ StaticSynth → Distortion → Reverb → Spatial → Master Gain → Output
 
 - **Real-time synthesis** — infinite variation, no pre-recorded loops
 - **Latency profiling** — adaptive performance config per platform
-- **Platform bridge** — Web Audio API (web) / expo-av (native)
+- **Platform bridge** — Web Audio API (web) / `expo-audio` offline PCM graph (native)
 - **Graceful degradation** — enters `closed` state if audio unavailable
 
 </details>
