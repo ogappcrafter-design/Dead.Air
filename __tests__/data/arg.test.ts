@@ -87,6 +87,27 @@ describe('ARG trail data', () => {
     }
   });
 
+  it('paces every piece by time held on the band, not by a shift counter', () => {
+    // The NightShift loop is not mounted on the radio screen, so
+    // gameStore.shiftsCompleted only ever reaches 1. A shift gate would make
+    // the whole trail unreachable dead content.
+    for (const piece of [...ARG_TRACES, ...ARG_FRAGMENTS]) {
+      expect(piece.condition.minDwellSeconds).toBeGreaterThan(0);
+      expect(piece.condition).not.toHaveProperty('minShift');
+    }
+  });
+
+  it('raises the dwell requirement along the trail', () => {
+    const traceDwell = ARG_TRACES.map((trace) => trace.condition.minDwellSeconds);
+    const fragmentDwell = ARG_FRAGMENTS.map((fragment) => fragment.condition.minDwellSeconds);
+    for (let i = 1; i < traceDwell.length; i++) {
+      expect(traceDwell[i]).toBeGreaterThan(traceDwell[i - 1]!);
+    }
+    for (let i = 1; i < fragmentDwell.length; i++) {
+      expect(fragmentDwell[i]).toBeGreaterThan(fragmentDwell[i - 1]!);
+    }
+  });
+
   it('chains the trail: each piece depends on the one before it', () => {
     const [t1, t2, t3] = ARG_TRACES;
     expect(t1?.condition.requiresTraceIds).toBeUndefined();

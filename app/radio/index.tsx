@@ -49,8 +49,10 @@ export default function RadioScreen() {
           activeFragment={argTrail.activeFragment}
           log={argTrail.log}
           resolved={argTrail.resolved}
+          hiddenCallArmed={argTrail.hiddenCallArmed}
           onDecode={argTrail.decodeTrace}
           onFile={argTrail.fileFragment}
+          onAnswer={argTrail.answerHiddenCall}
         />
         <ErrorBoundary>
           <ActiveCallDispatcher />

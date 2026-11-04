@@ -20,8 +20,19 @@ describe('ScanlineTrace', () => {
   it('renders one mono row per matrix row', async () => {
     const grid = buildTraceGrid(ARG_TRACES[0]!, 4);
     const view = await render(<ScanlineTrace grid={grid} intensity={0.3} />);
-    expect(view.getByTestId('arg-scanline-trace')).toBeTruthy();
-    expect(view.getAllByText(/^[█·]{13}$/)).toHaveLength(glyphMatrixRows(grid).length);
+    // The matrix is hidden from accessibility on purpose (it is a picture, not
+    // text), so the queries must opt into hidden elements.
+    expect(view.getByTestId('arg-scanline-trace', { includeHiddenElements: true })).toBeTruthy();
+    // Every rendered row must match the matrix exactly — the cells are the
+    // artifact, so a sheared or trimmed row would break hand-decoding.
+    const rows = glyphMatrixRows(grid);
+    expect(rows).toHaveLength(13);
+    for (const row of rows) {
+      // Rows may repeat in a 13x13 field, so match the multiset, not the first.
+      expect(view.getAllByText(row, { includeHiddenElements: true }).length).toBeGreaterThanOrEqual(
+        1,
+      );
+    }
   });
 });
 
@@ -33,8 +44,10 @@ describe('ArgSignalBleed', () => {
         activeFragment={null}
         log={EMPTY_LOG}
         resolved={false}
+        hiddenCallArmed={false}
         onDecode={() => null}
         onFile={() => undefined}
+        onAnswer={() => undefined}
       />,
     );
     expect(view.toJSON()).toBeNull();
@@ -51,8 +64,10 @@ describe('ArgSignalBleed', () => {
         activeFragment={null}
         log={EMPTY_LOG}
         resolved={false}
+        hiddenCallArmed={false}
         onDecode={onDecode}
         onFile={() => undefined}
+        onAnswer={() => undefined}
       />,
     );
 
@@ -75,8 +90,10 @@ describe('ArgSignalBleed', () => {
         activeFragment={fragment}
         log={EMPTY_LOG}
         resolved={false}
+        hiddenCallArmed={false}
         onDecode={() => null}
         onFile={onFile}
+        onAnswer={() => undefined}
       />,
     );
 
@@ -86,6 +103,29 @@ describe('ArgSignalBleed', () => {
       fireEvent.press(view.getByTestId('arg-file-fragment'));
     });
     expect(onFile).toHaveBeenCalledTimes(1);
+  });
+
+  it('offers ANSWER when the resolved trail is tuned to the carrier', async () => {
+    const onAnswer = jest.fn();
+
+    const view = await render(
+      <ArgSignalBleed
+        activeTrace={null}
+        activeFragment={null}
+        log={EMPTY_LOG}
+        resolved={true}
+        hiddenCallArmed
+        onDecode={() => null}
+        onFile={() => undefined}
+        onAnswer={onAnswer}
+      />,
+    );
+
+    expect(view.getByText('CARRIER LIVE — 104.7')).toBeTruthy();
+    await act(async () => {
+      fireEvent.press(view.getByTestId('arg-answer-carrier'));
+    });
+    expect(onAnswer).toHaveBeenCalledTimes(1);
   });
 
   it('shows the collected log collapsed, then expands it', async () => {
@@ -101,8 +141,10 @@ describe('ArgSignalBleed', () => {
         activeFragment={null}
         log={log}
         resolved={false}
+        hiddenCallArmed={false}
         onDecode={() => null}
         onFile={() => undefined}
+        onAnswer={() => undefined}
       />,
     );
 

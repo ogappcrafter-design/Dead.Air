@@ -63,36 +63,48 @@ the trace id.
 
 ## The trail
 
-All conditions read state the shipped app already carries: `useRadioStore`
-(band, frequency), `useGameStore` (completed shifts, static, `receivedCalls`).
+All conditions read state the shipped app actually advances: `useRadioStore`
+(band, frequency), `useGameStore` (static, `receivedCalls`), plus a session
+dwell counter for time held on the band.
 
-| #   | Piece                      | Band       | Shift          | Static | Prior unlock                        | Reward                                        |
+| #   | Piece                      | Band       | Dwell          | Static | Prior unlock                        | Reward                                        |
 | --- | -------------------------- | ---------- | -------------- | ------ | ----------------------------------- | --------------------------------------------- |
-| 1   | Trace `RELAY 23 11.04.87`  | CLASSIFIED | ≥ 3            | ≥ 35   | call 12                             | register row 23                               |
-| 2   | Bleed "count"              | CLASSIFIED | ≥ 4            | ≥ 45   | call 12                             | the register's arithmetic is wrong on purpose |
-| 3   | Trace `RELAY 46 104.7`     | CLASSIFIED | ≥ 5            | ≥ 55   | call 13, row 23                     | register row 46                               |
-| 4   | Bleed "date"               | CLASSIFIED | ≥ 6            | ≥ 65   | call 13, row 23, count bleed        | the date is a door, not a record              |
-| 5   | Trace `RELAY 47 UNLISTED`  | CLASSIFIED | ≥ 7            | ≥ 75   | call 14 or Season 1's 16005, row 46 | register row 47                               |
-| 6   | Bleed "carrier"            | CLASSIFIED | ≥ 8            | ≥ 85   | same, row 46, date bleed            | tune the carrier, not the station             |
+| 1   | Trace `RELAY 23 11.04.87`  | CLASSIFIED | ≥ 10s          | ≥ 35   | call 12                             | register row 23                               |
+| 2   | Bleed "count"              | CLASSIFIED | ≥ 15s          | ≥ 45   | call 12                             | the register's arithmetic is wrong on purpose |
+| 3   | Trace `RELAY 46 104.7`     | CLASSIFIED | ≥ 20s          | ≥ 55   | call 13, row 23                     | register row 46                               |
+| 4   | Bleed "date"               | CLASSIFIED | ≥ 25s          | ≥ 65   | call 13, row 23, count bleed        | the date is a door, not a record              |
+| 5   | Trace `RELAY 47 UNLISTED`  | CLASSIFIED | ≥ 30s          | ≥ 75   | call 14 or Season 1's 16005, row 46 | register row 47                               |
+| 6   | Bleed "carrier"            | CLASSIFIED | ≥ 35s          | ≥ 85   | same, row 46, date bleed            | tune the carrier, not the station             |
 | 7   | **Hidden call** `RELAY·47` | CLASSIFIED | trail resolved | —      | tuned to **104.7**                  | the unlisted row answers                      |
 
 The assembled answer is **designation 47 · date 11.04.87 · carrier 104.7**.
 Rows 46 and 47 share a carrier, which is why the register could list one and
 not the other; the count stays correct because the row was left blank.
 
-Tuning is the deliberate act. The hidden call only arms while the player holds
-CLASSIFIED at 104.7 — the console prints one decimal, so a displayed `104.7`
-always falls inside the ±0.05 window.
+Tuning is the deliberate act. Holding CLASSIFIED at 104.7 — the console prints
+one decimal, so a displayed `104.7` always falls inside the ±0.05 window — arms
+a `CARRIER LIVE` prompt. The player presses **ANSWER**; the call is never
+auto-started, so the one-shot payoff cannot be spent by tuning past the carrier
+while looking at something else.
 
 ### Temporal axis
 
-The brief asked for "time in the shift". The app tracks completed shifts
-(`shiftsCompleted`), but the `NightShift` engine is not mounted on the radio
-screen, so there is no intra-shift clock to read without inventing one. The
-trail therefore uses **shift index** as its temporal axis and **accumulated
-static** as its depth gauge — static is the game's own measure of how far into
-the night the player has gone, which makes the condition discoverable in
-fiction rather than arbitrary.
+The brief asked for "time in the shift". The first cut used
+`gameStore.shiftsCompleted` — and that was wrong: `incrementShiftsCompleted` is
+only called from `useNightShift.endShift`, and `useNightShift` is not mounted on
+the radio screen, so the counter only ever reaches 1 (the tutorial-completion
+effect in `useEndlessNight`). Gating on it made **every piece of the trail
+unreachable dead content**.
+
+The temporal axis is therefore **dwell: seconds held on the CLASSIFIED band this
+session**. It is measurable, it advances every session, it resets when the
+player tunes away (the carrier has to be held, not visited), and it is exactly
+what the fiction asks — the trace panel's hint, "hold still and read it", is
+literal. **Accumulated static** stays as the depth gauge: the deeper into the
+static, the more the carrier bleeds.
+
+Dwell is tracked in the hook (5-second tick, so the radio does not re-render
+every second) and is deliberately session-scoped rather than persisted.
 
 ## Silent degradation
 
@@ -103,17 +115,21 @@ fiction rather than arbitrary.
   removes it. That is consistent with the contract: a player who turns the CRT
   off is not investigating.
 - The hidden call is registered lazily (`registerArgHiddenCall`) only when the
-  resolved trail is tuned to the carrier, so no pool, scheduler, daily rotation
-  or achievement path can ever reach it.
+  player answers an armed carrier, so no pool, scheduler, daily rotation or
+  achievement path can ever reach it.
 
 ## Determinism
 
 `engine/arg/GlyphCodec.ts` seeds the dither field with
-`arg:<traceId>:shift:<shiftNumber>` through the repo's existing
-`SeededRNG` (mulberry32). The same trace on the same shift renders an identical
-matrix; the payload never varies across shifts — only the noise around it. Both
-properties are tested (`__tests__/engine/arg/GlyphCodec.test.ts`), alongside a
-full encode → decode round-trip for every authored payload.
+`arg:<traceId>:phase:<receivedCalls.length>` through the repo's existing
+`SeededRNG` (mulberry32). The same trace at the same phase renders an identical
+matrix; the payload never varies as the phase advances — only the noise around
+it. Both properties are tested (`__tests__/engine/arg/GlyphCodec.test.ts`),
+alongside a full encode → decode round-trip for every authored payload.
+
+Unlit cells render as spaces, never middle dots: a missing or non-monospaced
+glyph would change the advance width and shear the grid, destroying
+hand-decoding.
 
 ## Files
 
