@@ -1,8 +1,19 @@
 // __tests__/engine/audio/CallVoiceEngine.test.ts
+jest.mock('expo-audio', () => ({
+  createAudioPlayer: jest.fn(),
+  setAudioModeAsync: jest.fn(async () => {}),
+  setIsAudioActiveAsync: jest.fn(async () => {}),
+}));
+
 import { CallVoiceEngine, DEFAULT_LINE_WINDOW_MS } from '../../../engine/audio/CallVoiceEngine';
 import { makeMockBridge } from '../../../__mocks__/engine/audio/mockBridge';
 import type { BridgeAudioContext, BridgeAudioNode } from '../../../engine/audio/PlatformBridge';
 import { voiceProfileFor } from '../../../engine/audio/tts/VoiceProfile';
+import {
+  NativePlatformBridge,
+  type NativePcmPlayerHandle,
+} from '../../../engine/audio/platform/native/NativePlatformBridge';
+import { VoiceProcessor } from '../../../engine/audio/VoiceProcessor';
 
 const profile = voiceProfileFor({ id: 3, callerId: 'TEST-3', band: 0, signal: 5 }, { sanity: 100 });
 
@@ -16,6 +27,38 @@ const makeCtx = (): BridgeAudioContext => ({
 });
 
 const makeSink = (): BridgeAudioNode => ({ kind: 'sink', disconnect: () => {} });
+
+interface CapturedPlayer extends NativePcmPlayerHandle {
+  readonly uri: string;
+  playCalls: number;
+  removeCalls: number;
+}
+
+const makeNativePlayerFactory = (): {
+  factory: (uri: string) => CapturedPlayer;
+  players: CapturedPlayer[];
+} => {
+  const players: CapturedPlayer[] = [];
+  const factory = (uri: string): CapturedPlayer => {
+    const player: CapturedPlayer = {
+      uri,
+      playCalls: 0,
+      removeCalls: 0,
+      loop: false,
+      volume: 1,
+      play() {
+        player.playCalls += 1;
+      },
+      pause() {},
+      remove() {
+        player.removeCalls += 1;
+      },
+    };
+    players.push(player);
+    return player;
+  };
+  return { factory, players };
+};
 
 describe('CallVoiceEngine', () => {
   afterEach(() => {
@@ -141,5 +184,49 @@ describe('CallVoiceEngine', () => {
     await expect(promise).resolves.toBeUndefined();
 
     expect(engine.getStats().playedLines).toBe(2);
+  });
+
+  it('plays synthesized speech through the native bridge (DEA-94 native path)', async () => {
+    jest.useFakeTimers();
+    const { factory, players } = makeNativePlayerFactory();
+    const bridge = new NativePlatformBridge({ createPlayer: factory });
+    const ctx = makeCtx();
+    const masterGain = bridge.createMasterGain(ctx);
+    const processor = new VoiceProcessor(bridge, ctx, masterGain);
+    processor.applyPresetForBand('LOST');
+
+    const engine = new CallVoiceEngine({ bridge, ctx, destination: processor.getInput() });
+    expect(engine.isSupported()).toBe(true);
+
+    const promise = engine.speakLine('the signal is forming', profile, 500);
+    await jest.advanceTimersByTimeAsync(2000);
+
+    await expect(promise).resolves.toBe(true);
+    expect(players).toHaveLength(1);
+    expect(players[0]?.uri.startsWith('data:audio/wav;base64,')).toBe(true);
+    expect(players[0]?.playCalls).toBe(1);
+    expect(engine.getStats().playedLines).toBe(1);
+
+    processor.dispose();
+  });
+
+  it('keeps native playback silent when the player cannot start', async () => {
+    jest.useFakeTimers();
+    const bridge = new NativePlatformBridge({
+      createPlayer: () => {
+        throw new Error('no audio device');
+      },
+    });
+    const engine = new CallVoiceEngine({
+      bridge,
+      ctx: makeCtx(),
+      destination: makeSink(),
+    });
+
+    const promise = engine.speakLine('hello', profile, 400);
+    await jest.advanceTimersByTimeAsync(2000);
+
+    // A refused buffer is silent, not fatal — the call continues text-only.
+    await expect(promise).resolves.toBe(false);
   });
 });

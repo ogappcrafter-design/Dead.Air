@@ -142,7 +142,7 @@ const FEATURE_MATRIX: Readonly<Record<BridgePlatform, Partial<Record<PlatformFea
       blurBackdrop: true, // CSS backdrop-filter
     }),
     native: Object.freeze({
-      audioContext: true, // expo-av path (not installed yet)
+      audioContext: true, // expo-audio PCM path (offline graph, call voices)
       haptics: true, // expo-haptics path (not installed yet)
       fileSystem: true, // expo-file-system path (not installed yet)
       keepAwake: true, // expo-keep-awake path (not installed yet)

@@ -8,17 +8,18 @@
 //     account, key, or per-request cost.
 //   - Rendered PCM is played into `VoiceProcessor.getInput()`, so every line
 //     gets the same EQ → compressor → bitcrush treatment as recorded audio.
-//   - Graceful degradation: native (no PCM bridge yet), SSR, a closed audio
-//     context, an unsupported bridge, or voice volume 0 all leave the call
-//     completely text-only. Playback failures are swallowed — a call must
-//     never break because a voice could not render.
+//     Web runs that chain live; native renders it offline into a WAV buffer
+//     played through expo-audio (see platform/native/NativePlatformBridge).
+//   - Graceful degradation: SSR, a closed audio context, an unsupported
+//     bridge, or voice volume 0 all leave the call completely text-only.
+//     Playback failures are swallowed — a call must never break because a
+//     voice could not render.
 //
 // The hook only *accompanies* the call UI: it fits each line into the existing
 // 2500 ms line window but never changes renderers' timers, outcomes, or sanity
 // effects.
 
 import { useEffect, useMemo } from 'react';
-import { Platform } from 'react-native';
 import { BANDS, type Band } from '../lib/constants';
 import type { CallData } from '../engine/calls/types';
 import { interpolateCallLines } from '../lib/callInterpolation';
@@ -103,7 +104,6 @@ export function useCallVoice(call: CallData | null, options: CallVoiceOptions = 
     if (!enabled || call === null || baseProfile === null) return;
     if (lines.length === 0) return;
     if (voiceVolume <= 0) return;
-    if (Platform.OS !== 'web') return;
 
     let cancelled = false;
     let engine: CallVoiceEngine | null = null;

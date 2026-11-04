@@ -36,7 +36,7 @@ only knows roughly what each platform supports.
 
 | Feature        | web | native | Notes                                                                                |
 | -------------- | --- | ------ | ------------------------------------------------------------------------------------ |
-| `audioContext` | ✓   | ✓      | Web: Web Audio API. Native: would-be `expo-av` (not installed).                      |
+| `audioContext` | ✓   | ✓      | Web: Web Audio API. Native: `expo-audio` PCM path (offline graph, call voices).      |
 | `haptics`      | ✗   | ✓      | Web: no haptics API wired. Native: would-be `expo-haptics`.                          |
 | `fileSystem`   | ✗   | ✓      | Native: would-be `expo-file-system`.                                                 |
 | `keepAwake`    | ✗   | ✓      | Native: would-be `expo-keep-awake`.                                                  |
