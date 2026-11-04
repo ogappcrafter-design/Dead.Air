@@ -2,7 +2,7 @@
 // DEA-85 Season 1 tape collection. Ids tape-s1-001..005 sit outside the base
 // range (001..015), the DLC range (016..035), and NG+ (ngp-001..003).
 
-import type { TapeInfo } from '../../tapes';
+import type { TapeInfo } from '../../tapes/types';
 
 export const SEASON_1_TAPE_IDS = [
   'tape-s1-001',

@@ -1,13 +1,7 @@
 import { SEASON_1_TAPES } from './seasons/season1/tapes';
+import type { TapeInfo } from './tapes/types';
 
-export interface TapeInfo {
-  id: string;
-  title: string;
-  description: string;
-  band: string;
-  duration: string;
-  rarity: 'common' | 'uncommon' | 'rare' | 'legendary';
-}
+export type { TapeInfo } from './tapes/types';
 
 export const TAPES: TapeInfo[] = [
   {

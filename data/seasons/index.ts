@@ -5,7 +5,7 @@
 
 import type { Band } from '../../lib/constants';
 import type { CallData } from '../../engine/calls/types';
-import type { TapeInfo } from '../tapes';
+import type { TapeInfo } from '../tapes/types';
 import { SEASON_1_CALLS, SEASON_1_CALL_IDS } from './season1/holdMusic';
 import { SEASON_1_TAPES, SEASON_1_TAPE_IDS } from './season1/tapes';
 import { SEASON_1_ENDING } from './season1/ending';
