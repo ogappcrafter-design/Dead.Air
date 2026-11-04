@@ -83,6 +83,15 @@ describe('GlyphCodec', () => {
     }
   });
 
+  it('uses only font-safe monospace glyphs so the grid cannot shear', () => {
+    // A missing or non-monospaced unlit glyph would change the advance width
+    // and destroy hand-decoding, so unlit cells are spaces, never dots.
+    const rows = glyphMatrixRows(encodeGlyphMatrix('RELAY 47 UNLISTED', 'seed'));
+    for (const row of rows) {
+      expect(row).toMatch(/^[█ ]{13}$/);
+    }
+  });
+
   it('exposes an alphabet that covers every authored payload character', () => {
     for (const trace of ARG_TRACES) {
       for (const char of trace.payload) {

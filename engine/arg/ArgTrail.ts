@@ -41,8 +41,12 @@ export const ARG_FREQUENCY_TOLERANCE = 0.05;
 export interface TrailContext {
   band: Band;
   frequency: number;
-  /** Completed shifts — the trail's temporal axis. */
-  shiftNumber: number;
+  /**
+   * Seconds held on the band this session — the trail's temporal axis.
+   * Deliberately not `shiftsCompleted`: the NightShift loop is not mounted on
+   * the radio screen, so that counter never advances past the tutorial.
+   */
+  dwellSeconds: number;
   /** Accumulated static 0..100 — the trail's depth gauge. */
   staticLevel: number;
   receivedCalls: readonly number[];
@@ -80,7 +84,7 @@ export function isArgConditionMet(
   progress: TrailProgress,
 ): boolean {
   if (context.band !== condition.band) return false;
-  if (context.shiftNumber < condition.minShift) return false;
+  if (context.dwellSeconds < condition.minDwellSeconds) return false;
   if (context.staticLevel < condition.minStatic) return false;
   if (
     condition.requiresAnyCalls.length > 0 &&
@@ -119,14 +123,18 @@ export function getActiveFragment(
   return null;
 }
 
-/** Deterministic dither seed for a trace on a given shift. */
-export function traceSeed(traceId: ArgTraceId, shiftNumber: number): string {
-  return `arg:${traceId}:shift:${shiftNumber}`;
+/**
+ * Deterministic dither seed. The phase advances with the player's received-call
+ * count, so the noise field settles and shifts as the night goes on while the
+ * payload stays fixed.
+ */
+export function traceSeed(traceId: ArgTraceId, ditherPhase: number): string {
+  return `arg:${traceId}:phase:${ditherPhase}`;
 }
 
-/** The glyph matrix a trace renders on a given shift. */
-export function buildTraceGrid(trace: ArgTraceSpec, shiftNumber: number): GlyphGrid {
-  return encodeGlyphMatrix(trace.payload, traceSeed(trace.id, shiftNumber));
+/** The glyph matrix a trace renders at a given dither phase. */
+export function buildTraceGrid(trace: ArgTraceSpec, ditherPhase: number): GlyphGrid {
+  return encodeGlyphMatrix(trace.payload, traceSeed(trace.id, ditherPhase));
 }
 
 /**
@@ -135,11 +143,11 @@ export function buildTraceGrid(trace: ArgTraceSpec, shiftNumber: number): GlyphG
  * artifact is genuinely decodable from a screenshot, not a lookup keyed on the
  * trace id.
  */
-export function resolveTraceArtifact(trace: ArgTraceSpec, shiftNumber: number): DecodedArtifact {
-  const grid = buildTraceGrid(trace, shiftNumber);
+export function resolveTraceArtifact(trace: ArgTraceSpec, ditherPhase: number): DecodedArtifact {
+  const grid = buildTraceGrid(trace, ditherPhase);
   const payload = decodeGlyphMatrix(grid);
   if (payload === null) {
-    throw new Error(`ArgTrail: trace ${trace.id} did not decode on shift ${shiftNumber}`);
+    throw new Error(`ArgTrail: trace ${trace.id} did not decode at phase ${ditherPhase}`);
   }
   const row = getRegistryRow(trace.registryRow);
   if (row === undefined) {

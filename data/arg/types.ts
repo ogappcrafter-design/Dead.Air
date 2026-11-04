@@ -25,15 +25,17 @@ export interface RegistryRow {
 
 /**
  * When a piece of the trail is visible. Every field is read from state the
- * shipped app already carries:
+ * shipped app actually advances:
  *
  * - `band` — the radio's current band (useRadioStore).
- * - `minShift` — the trail's temporal axis. The app tracks completed shifts
- *   (gameStore.shiftsCompleted); the NightShift engine is not mounted on the
- *   radio screen, so there is no intra-shift clock to read.
+ * - `minDwellSeconds` — the trail's temporal axis: seconds held on the band
+ *   this session. The app has no advancing shift clock — the NightShift loop
+ *   is not mounted on the radio screen, so `gameStore.shiftsCompleted` only
+ *   ever reaches 1 (the tutorial) — so "time in the shift" is carried as time
+ *   on the carrier, which is both measurable and true to the fiction: hold
+ *   still on the band and the interference resolves.
  * - `minStatic` — the player's accumulated static (gameStore.static). The
- *   deeper into the static, the more the carrier bleeds: the ARG's own
- *   currency doubles as its depth gauge.
+ *   deeper into the static, the more the carrier bleeds.
  * - `requiresAnyCalls` — any-of prior call ids in receivedCalls, the same
  *   prerequisite shape data/unlockGraph.ts uses. Season ids are accepted
  *   alongside sacred ids so the trail keeps working once the Season 1
@@ -43,7 +45,7 @@ export interface RegistryRow {
  */
 export interface ArgCondition {
   readonly band: Band;
-  readonly minShift: number;
+  readonly minDwellSeconds: number;
   readonly minStatic: number;
   readonly requiresAnyCalls: readonly number[];
   readonly requiresTraceIds?: readonly ArgTraceId[];

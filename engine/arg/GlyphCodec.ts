@@ -30,9 +30,15 @@ export const GLYPH_MAX_CHARS = 19;
 /** Phosphor matrix. `true` = lit cell. Row-major, GLYPH_SIZE x GLYPH_SIZE. */
 export type GlyphGrid = boolean[][];
 
-/** Lit / unlit characters used to render a grid as text rows. */
+/**
+ * Lit / unlit characters used to render a grid as text rows. The unlit cell is
+ * a space, not a dot: a middle dot is missing from many mono fallbacks and
+ * renders at a different advance width, which would shear the matrix. Space and
+ * a block element keep every cell exactly one character wide in any monospace
+ * font.
+ */
 export const GLYPH_ON = '█';
-export const GLYPH_OFF = '·';
+export const GLYPH_OFF = ' ';
 
 const FINDER_ORIGINS: ReadonlyArray<readonly [number, number]> = [
   [0, 0],

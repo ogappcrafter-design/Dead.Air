@@ -1,9 +1,10 @@
 // __tests__/hooks/useArgTrail.test.ts
 // DEA-91: the hook hands the hidden call to the call manager exactly once,
 // only when the resolved trail is tuned to the carrier, and never while
-// another call is in progress.
+// another call is in progress. Visible pieces must also respect the dwell
+// gate — the carrier has to be held, not visited.
 
-import { act, renderHook, waitFor } from '@testing-library/react-native';
+import { act, renderHook } from '@testing-library/react-native';
 
 jest.mock('../../engine/calls/CallManager', () => ({
   getCallManager: jest.fn(),
@@ -31,12 +32,18 @@ const RESOLVED = {
 
 const setWorld = (overrides: { frequency?: number; resolved?: boolean } = {}): void => {
   useRadioStore.setState({ currentBand: 'CLASSIFIED', frequency: overrides.frequency ?? 104.7 });
-  useGameStore.setState({ shiftsCompleted: 9, static: 90, receivedCalls: [12, 13, 14] });
+  useGameStore.setState({ static: 90, receivedCalls: [12, 13, 14] });
   useArgTrailStore.setState(
     overrides.resolved === false
       ? { decodedTraceIds: [], heardFragmentIds: [], hiddenCallPlayed: false }
       : { ...RESOLVED, hiddenCallPlayed: false },
   );
+};
+
+const setEarlyWorld = (): void => {
+  useRadioStore.setState({ currentBand: 'CLASSIFIED', frequency: 103.0 });
+  useGameStore.setState({ static: 35, receivedCalls: [12] });
+  useArgTrailStore.setState({ decodedTraceIds: [], heardFragmentIds: [], hiddenCallPlayed: false });
 };
 
 beforeEach(() => {
@@ -49,69 +56,125 @@ beforeEach(() => {
   });
 });
 
-describe('useArgTrail — hidden call arming', () => {
-  it('registers and starts the hidden call when the trail is resolved on the carrier', async () => {
+describe('useArgTrail — hidden call', () => {
+  it('arms the carrier when the resolved trail is tuned to 104.7', async () => {
     setWorld();
-    await renderHook(() => useArgTrail());
+    const view = await renderHook(() => useArgTrail());
 
-    await waitFor(() => expect(mockStartCall).toHaveBeenCalledWith(ARG_HIDDEN_CALL_ID));
+    expect(view.result.current.hiddenCallArmed).toBe(true);
+    // Never auto-start: the payoff is one-shot and must be a deliberate answer.
+    expect(mockStartCall).not.toHaveBeenCalled();
+  });
+
+  it('answers the carrier once and records it', async () => {
+    setWorld();
+    const view = await renderHook(() => useArgTrail());
+
+    let started = false;
+    await act(async () => {
+      started = view.result.current.answerHiddenCall();
+    });
+
+    expect(started).toBe(true);
     expect(registerArgHiddenCall).toHaveBeenCalled();
+    expect(mockStartCall).toHaveBeenCalledWith(ARG_HIDDEN_CALL_ID);
     expect(useArgTrailStore.getState().hiddenCallPlayed).toBe(true);
   });
 
-  it('does nothing while the trail is unresolved', async () => {
+  it('does not arm while the trail is unresolved', async () => {
     setWorld({ resolved: false });
-    await renderHook(() => useArgTrail());
+    const view = await renderHook(() => useArgTrail());
 
+    expect(view.result.current.hiddenCallArmed).toBe(false);
+    let started = true;
+    await act(async () => {
+      started = view.result.current.answerHiddenCall();
+    });
+    expect(started).toBe(false);
     expect(mockStartCall).not.toHaveBeenCalled();
-    expect(useArgTrailStore.getState().hiddenCallPlayed).toBe(false);
   });
 
-  it('does nothing when the console is tuned elsewhere', async () => {
+  it('does not arm when the console is tuned elsewhere', async () => {
     setWorld({ frequency: 101.9 });
-    await renderHook(() => useArgTrail());
+    const view = await renderHook(() => useArgTrail());
 
-    expect(mockStartCall).not.toHaveBeenCalled();
+    expect(view.result.current.hiddenCallArmed).toBe(false);
   });
 
-  it('waits for the console to be idle instead of stealing a call', async () => {
+  it('refuses to answer while another call is in progress', async () => {
     setWorld();
     mockGetCallState.mockReturnValue('active');
-    await renderHook(() => useArgTrail());
+    const view = await renderHook(() => useArgTrail());
 
+    let started = true;
+    await act(async () => {
+      started = view.result.current.answerHiddenCall();
+    });
+
+    expect(started).toBe(false);
     expect(mockStartCall).not.toHaveBeenCalled();
     expect(useArgTrailStore.getState().hiddenCallPlayed).toBe(false);
   });
 });
 
 describe('useArgTrail — visible pieces', () => {
-  it('exposes the first trace and its matrix on the CLASSIFIED band', async () => {
-    useRadioStore.setState({ currentBand: 'CLASSIFIED', frequency: 103.0 });
-    useGameStore.setState({ shiftsCompleted: 3, static: 35, receivedCalls: [12] });
-    useArgTrailStore.setState({
-      decodedTraceIds: [],
-      heardFragmentIds: [],
-      hiddenCallPlayed: false,
-    });
+  beforeEach(() => {
+    jest.useFakeTimers();
+  });
 
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  it('withholds the first trace until the carrier has been held', async () => {
+    setEarlyWorld();
     const view = await renderHook(() => useArgTrail());
+
+    expect(view.result.current.activeTrace).toBeNull();
+
+    await act(async () => {
+      jest.advanceTimersByTime(10_000);
+    });
 
     expect(view.result.current.activeTrace?.id).toBe('trace-row-23');
     expect(view.result.current.traceGrid).toHaveLength(13);
-    // Bleeds start one shift later than the first trace.
+    // Bleeds start one dwell step later than the first trace.
     expect(view.result.current.activeFragment).toBeNull();
   });
 
+  it('resets the dwell clock when the player tunes away', async () => {
+    setEarlyWorld();
+    const view = await renderHook(() => useArgTrail());
+
+    await act(async () => {
+      jest.advanceTimersByTime(10_000);
+    });
+    expect(view.result.current.activeTrace?.id).toBe('trace-row-23');
+
+    await act(async () => {
+      useRadioStore.setState({ currentBand: 'LIVING', frequency: 88.0 });
+    });
+    expect(view.result.current.activeTrace).toBeNull();
+
+    await act(async () => {
+      useRadioStore.setState({ currentBand: 'CLASSIFIED', frequency: 103.0 });
+    });
+    expect(view.result.current.activeTrace).toBeNull();
+
+    await act(async () => {
+      jest.advanceTimersByTime(10_000);
+    });
+    expect(view.result.current.activeTrace?.id).toBe('trace-row-23');
+  });
+
   it('decodes a trace into its registry row and records it', async () => {
-    useRadioStore.setState({ currentBand: 'CLASSIFIED', frequency: 103.0 });
-    useGameStore.setState({ shiftsCompleted: 3, static: 35, receivedCalls: [12] });
-    useArgTrailStore.setState({
-      decodedTraceIds: [],
-      heardFragmentIds: [],
-      hiddenCallPlayed: false,
+    setEarlyWorld();
+    const view = await renderHook(() => useArgTrail());
+
+    await act(async () => {
+      jest.advanceTimersByTime(10_000);
     });
 
-    const view = await renderHook(() => useArgTrail());
     let artifactRow: number | undefined;
     await act(async () => {
       artifactRow = view.result.current.decodeTrace()?.row.row;
@@ -123,7 +186,7 @@ describe('useArgTrail — visible pieces', () => {
 
   it('stays silent on other bands', async () => {
     useRadioStore.setState({ currentBand: 'LIVING', frequency: 88.0 });
-    useGameStore.setState({ shiftsCompleted: 9, static: 90, receivedCalls: [12, 13, 14] });
+    useGameStore.setState({ static: 90, receivedCalls: [12, 13, 14] });
     useArgTrailStore.setState({
       decodedTraceIds: [],
       heardFragmentIds: [],
@@ -131,6 +194,10 @@ describe('useArgTrail — visible pieces', () => {
     });
 
     const view = await renderHook(() => useArgTrail());
+
+    await act(async () => {
+      jest.advanceTimersByTime(60_000);
+    });
 
     expect(view.result.current.activeTrace).toBeNull();
     expect(view.result.current.activeFragment).toBeNull();

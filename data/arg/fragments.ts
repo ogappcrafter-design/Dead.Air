@@ -12,7 +12,7 @@
 //   frag 2 — the date is a door, not a record
 //   frag 3 — tune the carrier, not the station
 //
-// Conditions mirror the traces (band + shift + static + prior call), so the
+// Conditions mirror the traces (band + dwell + static + prior call), so the
 // trail stays a single gesture: stay on CLASSIFIED, go deeper, pay attention.
 
 import type { ArgFragmentSpec } from './types';
@@ -29,7 +29,7 @@ export const ARG_FRAGMENTS: readonly ArgFragmentSpec[] = [
     ],
     condition: {
       band: 'CLASSIFIED',
-      minShift: 4,
+      minDwellSeconds: 15,
       minStatic: 45,
       requiresAnyCalls: [12],
     },
@@ -44,7 +44,7 @@ export const ARG_FRAGMENTS: readonly ArgFragmentSpec[] = [
     ],
     condition: {
       band: 'CLASSIFIED',
-      minShift: 6,
+      minDwellSeconds: 25,
       minStatic: 65,
       requiresAnyCalls: [13],
       requiresTraceIds: ['trace-row-23'],
@@ -61,7 +61,7 @@ export const ARG_FRAGMENTS: readonly ArgFragmentSpec[] = [
     ],
     condition: {
       band: 'CLASSIFIED',
-      minShift: 8,
+      minDwellSeconds: 35,
       minStatic: 85,
       requiresAnyCalls: [14, 16005],
       requiresTraceIds: ['trace-row-46'],

@@ -24,10 +24,14 @@ export interface ArgSignalBleedProps {
   activeFragment: ArgFragmentSpec | null;
   log: TrailLog;
   resolved: boolean;
+  /** True when the resolved trail is tuned to the carrier and unplayed. */
+  hiddenCallArmed: boolean;
   /** Runs the glyph round-trip and returns the artifact (or null). */
   onDecode: () => DecodedArtifact | null;
   /** Files the visible bleed. */
   onFile: () => void;
+  /** Answers the armed carrier. */
+  onAnswer: () => void;
 }
 
 export function ArgSignalBleed({
@@ -35,14 +39,16 @@ export function ArgSignalBleed({
   activeFragment,
   log,
   resolved,
+  hiddenCallArmed,
   onDecode,
   onFile,
+  onAnswer,
 }: ArgSignalBleedProps) {
   const [artifact, setArtifact] = useState<DecodedArtifact | null>(null);
   const [expanded, setExpanded] = useState(false);
 
   const collected = log.decodedRows.length + log.filedFragments.length;
-  const isLive = activeTrace !== null || activeFragment !== null;
+  const isLive = activeTrace !== null || activeFragment !== null || hiddenCallArmed;
   const hasLog = collected > 0;
 
   if (!isLive && artifact === null && !hasLog) {
@@ -126,6 +132,23 @@ export function ArgSignalBleed({
             accessibilityLabel="File this signal bleed"
           >
             <Text style={styles.action}>FILE IT ▸</Text>
+          </Pressable>
+        </View>
+      )}
+
+      {hiddenCallArmed && artifact === null && (
+        <View style={styles.block}>
+          <Text style={styles.prompt}>CARRIER LIVE — 104.7</Text>
+          <Text style={styles.hint}>Nothing on the band is calling. Something is waiting.</Text>
+          <Pressable
+            testID="arg-answer-carrier"
+            onPress={onAnswer}
+            hitSlop={8}
+            accessible
+            accessibilityRole="button"
+            accessibilityLabel="Answer the carrier at 104.7"
+          >
+            <Text style={styles.action}>ANSWER ▸</Text>
           </Pressable>
         </View>
       )}

@@ -36,7 +36,17 @@ export const ScanlineTrace = memo(function ScanlineTrace({
   const opacity = Math.min(0.42, 0.16 + Math.max(0, intensity) * 0.5);
 
   return (
-    <View style={[styles.root, { opacity }]} pointerEvents="none" testID="arg-scanline-trace">
+    <View
+      style={[styles.root, { opacity }]}
+      pointerEvents="none"
+      // The matrix is a picture, not text: keep screen readers from reading a
+      // wall of block glyphs. The DECODE action on the signal-bleed panel is
+      // the accessible path to the same artifact.
+      accessible={false}
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
+      testID="arg-scanline-trace"
+    >
       {rows.map((row, index) => (
         <Text key={index} style={styles.row} numberOfLines={1} allowFontScaling={false}>
           {row}

@@ -24,7 +24,8 @@ import { ARG_FRAGMENTS, ARG_HIDDEN_CALL_ID, ARG_TRACES, getArgTrace } from '../.
 const context = (overrides: Partial<TrailContext> = {}): TrailContext => ({
   band: 'CLASSIFIED',
   frequency: ARG_TARGET_FREQUENCY,
-  shiftNumber: 9,
+  // Comfortably past every dwell threshold in data/arg.
+  dwellSeconds: 60,
   staticLevel: 90,
   receivedCalls: [12, 13, 14],
   ...overrides,
@@ -49,12 +50,16 @@ describe('ArgTrail — trace gating', () => {
     }
   });
 
-  it('shows trace 1 once band, shift, static and the prior call line up', () => {
+  it('shows trace 1 once band, dwell, static and the prior call line up', () => {
     expect(getActiveTrace(context(), progress())?.id).toBe('trace-row-23');
   });
 
-  it('hides trace 1 one shift short', () => {
-    expect(getActiveTrace(context({ shiftNumber: 2 }), progress())).toBeNull();
+  it('hides trace 1 one dwell tick short', () => {
+    expect(getActiveTrace(context({ dwellSeconds: 5 }), progress())).toBeNull();
+  });
+
+  it('shows trace 1 exactly at its dwell threshold', () => {
+    expect(getActiveTrace(context({ dwellSeconds: 10 }), progress())?.id).toBe('trace-row-23');
   });
 
   it('hides trace 1 one static point short', () => {
@@ -86,16 +91,21 @@ describe('ArgTrail — trace gating', () => {
 
 describe('ArgTrail — signal bleed gating', () => {
   it('shows the count bleed at its threshold', () => {
-    const active = getActiveFragment(context({ shiftNumber: 4, staticLevel: 45 }), progress());
+    const active = getActiveFragment(context({ dwellSeconds: 15, staticLevel: 45 }), progress());
     expect(active?.id).toBe('frag-count-47');
   });
 
-  it('hides the count bleed below its threshold', () => {
-    expect(getActiveFragment(context({ shiftNumber: 4, staticLevel: 44 }), progress())).toBeNull();
+  it('hides the count bleed below its thresholds', () => {
+    expect(
+      getActiveFragment(context({ dwellSeconds: 15, staticLevel: 44 }), progress()),
+    ).toBeNull();
+    expect(
+      getActiveFragment(context({ dwellSeconds: 10, staticLevel: 45 }), progress()),
+    ).toBeNull();
   });
 
   it('requires the count bleed and trace 1 before the date bleed', () => {
-    const contextAt = context({ shiftNumber: 6, staticLevel: 65 });
+    const contextAt = context({ dwellSeconds: 25, staticLevel: 65 });
     expect(getActiveFragment(contextAt, progress())?.id).toBe('frag-count-47');
     expect(
       getActiveFragment(contextAt, progress({ heardFragmentIds: ['frag-count-47'] })),
@@ -109,7 +119,7 @@ describe('ArgTrail — signal bleed gating', () => {
   });
 
   it('requires trace 2 and the date bleed before the carrier bleed', () => {
-    const contextAt = context({ shiftNumber: 8, staticLevel: 85 });
+    const contextAt = context({ dwellSeconds: 35, staticLevel: 85 });
     const ready = progress({
       heardFragmentIds: ['frag-count-47', 'frag-date-door'],
       decodedTraceIds: ['trace-row-23', 'trace-row-46'],
@@ -148,13 +158,13 @@ describe('ArgTrail — artifact resolution', () => {
     }
   });
 
-  it('is deterministic per shift', () => {
+  it('is deterministic per dither phase', () => {
     const trace = getArgTrace('trace-row-46')!;
     expect(buildTraceGrid(trace, 5)).toEqual(buildTraceGrid(trace, 5));
-    expect(traceSeed(trace.id, 5)).toBe('arg:trace-row-46:shift:5');
+    expect(traceSeed(trace.id, 5)).toBe('arg:trace-row-46:phase:5');
   });
 
-  it('keeps the payload stable across shifts while the dither moves', () => {
+  it('keeps the payload stable across phases while the dither moves', () => {
     const trace = getArgTrace('trace-row-47')!;
     const a = buildTraceGrid(trace, 7);
     const b = buildTraceGrid(trace, 8);
