@@ -15,7 +15,7 @@
 // the radio screen. Tapes screen is declared in app/_layout.tsx Stack.
 
 import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import { FlatList, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ALL_TAPES as BASE_TAPE_NAMES, CALLS } from '../../data/calls';
 import { DLC_TAPE_NAMES, ALL_TAPES as ALL_TAPE_INFOS } from '../../data/tapes';
@@ -125,6 +125,10 @@ export default function TapesScreen() {
   const collectedSet = useMemo(() => new Set(collectedTapes), [collectedTapes]);
 
   const ensureAudioEngine = useCallback(() => {
+    // Tape drone audio is Web Audio only. Creating a web-bridge engine on
+    // native would leave the shared engine singleton permanently closed and
+    // starve the native call-voice path, so bail before touching it.
+    if (Platform.OS !== 'web') return null;
     let engine = getAudioEngine();
     if (engine === null) {
       try {

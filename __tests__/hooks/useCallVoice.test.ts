@@ -6,7 +6,7 @@ import { Platform } from 'react-native';
 import { renderHook, waitFor } from '@testing-library/react-native';
 import type { CallData } from '../../engine/calls/types';
 import { makeMockBridge } from '../../__mocks__/engine/audio/mockBridge';
-import type { BridgeAudioContext } from '../../engine/audio/PlatformBridge';
+import type { BridgeAudioContext, PlatformBridge } from '../../engine/audio/PlatformBridge';
 import { useSettingsStore } from '../../store/useSettingsStore';
 
 const mockBridge = makeMockBridge();
@@ -22,12 +22,12 @@ const ctx: BridgeAudioContext = {
 
 const masterGain = { kind: 'gain', disconnect: () => {}, setGain: () => {} };
 
-const makeAudioEngine = (ready: boolean) => ({
+const makeAudioEngine = (ready: boolean, bridge: PlatformBridge = mockBridge) => ({
   init: jest.fn(async () => {}),
   isReady: () => ready,
   getContext: () => (ready ? ctx : null),
   getMasterGain: () => (ready ? masterGain : null),
-  getBridge: () => mockBridge,
+  getBridge: () => bridge,
 });
 
 let mockAudioEngine = makeAudioEngine(true);
@@ -44,6 +44,8 @@ jest.mock('../../engine/audio/CallVoiceBridgeLoader', () => ({
 
 const { useCallVoice } =
   require('../../hooks/useCallVoice') as typeof import('../../hooks/useCallVoice');
+const { loadCallVoiceBridge } =
+  require('../../engine/audio/CallVoiceBridgeLoader') as typeof import('../../engine/audio/CallVoiceBridgeLoader');
 
 const call: CallData = {
   id: 1,
@@ -116,5 +118,21 @@ describe('useCallVoice', () => {
     );
     await waitFor(() => expect(mockBridge.createPcmSource).toHaveBeenCalled());
     expect(() => rerender({ enabled: false })).not.toThrow();
+  });
+
+  it('voices calls on native as well as web', async () => {
+    const nativeBridge = makeMockBridge('native');
+    (loadCallVoiceBridge as jest.Mock).mockResolvedValueOnce(nativeBridge);
+    mockAudioEngine = makeAudioEngine(true, nativeBridge);
+    Object.defineProperty(Platform, 'OS', { value: 'ios', configurable: true });
+
+    try {
+      await renderHook(() => useCallVoice(call));
+      await waitFor(() => expect(nativeBridge.createPcmSource).toHaveBeenCalled());
+      expect(nativeBridge.createBiquad).toHaveBeenCalled();
+      expect(nativeBridge.createCompressor).toHaveBeenCalled();
+    } finally {
+      Object.defineProperty(Platform, 'OS', { value: 'web', configurable: true });
+    }
   });
 });

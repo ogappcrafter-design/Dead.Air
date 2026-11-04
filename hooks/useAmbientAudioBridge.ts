@@ -11,6 +11,7 @@ import { getAtmosphericPack, DEFAULT_PACK_ID } from '@/data/atmosphericPacks';
 import { getAudioEngine } from '@/engine/audio/AudioEngine';
 import { AmbientLayer } from '@/engine/audio/AmbientLayer';
 import { createWebAudioBridge } from '@/engine/audio/WebAudioBridge';
+import { isWebBridge } from '@/engine/audio/PlatformBridge';
 import type { AmbientProfile } from '@/engine/audio/profiles/types';
 
 /**
@@ -28,7 +29,9 @@ export function useAmbientAudioBridge(): void {
     }
 
     // Ensure an AmbientLayer is attached to the engine.
-    if (engine.getAmbientLayer() === null) {
+    // The layer uses the legacy Web Audio bridge; never mix it with a native
+    // (offline/expo-audio) context.
+    if (engine.getAmbientLayer() === null && isWebBridge(engine.getBridge())) {
       const bridge = createWebAudioBridge();
       const ctx = engine.getContext();
       const master = engine.getMasterGain();

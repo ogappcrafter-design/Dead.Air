@@ -6,9 +6,10 @@
 // existing VoiceProcessor input so every line inherits EQ → compressor →
 // bitcrush. No network, no credentials, no native speech module.
 //
-// The engine degrades gracefully: bridges without `createPcmSource` (native
-// today) simply report `isSupported() === false` and the call UI stays
-// text-only.
+// The engine degrades gracefully: a bridge without `createPcmSource` simply
+// reports `isSupported() === false` and the call UI stays text-only. Web plays
+// through a live Web Audio graph; native renders the same VoiceProcessor chain
+// offline and plays the result via expo-audio.
 
 import {
   PlatformBridge,
@@ -92,7 +93,7 @@ export class CallVoiceEngine {
     this.cacheSize = Math.max(1, options.cacheSize ?? 16);
   }
 
-  /** True when this bridge can play raw PCM (web today; native degrades). */
+  /** True when this bridge can play raw PCM (web + native). */
   isSupported(): boolean {
     return supportsPcmPlayback(this.bridge);
   }
