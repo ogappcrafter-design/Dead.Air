@@ -12,7 +12,10 @@ import { TutorialTransition } from '@/components/tutorial/TutorialTransition';
 import { useDailyCall } from '@/hooks/useDailyCall';
 import { useDlcFragmentCalls } from '@/hooks/useDlcFragmentCalls';
 import { useEndlessNight } from '@/hooks/useEndlessNight';
+import { useArgTrail } from '@/hooks/useArgTrail';
 import { EndlessNightOverlay } from '@/components/endless/EndlessNightOverlay';
+import { ScanlineTrace } from '@/components/arg/ScanlineTrace';
+import { ArgSignalBleed } from '@/components/arg/ArgSignalBleed';
 import CRTView from '../../components/shared/CRTView';
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 
@@ -21,18 +24,34 @@ export default function RadioScreen() {
   const recentUnlock = useAchievementStore((s) => s.recentUnlock);
   const clearRecentUnlock = useAchievementStore((s) => s.clearRecentUnlock);
   const tutorial = useTutorialController();
+  const argTrail = useArgTrail();
 
   useDailyCall();
   useDlcFragmentCalls();
   useEndlessNight();
 
   return (
-    <CRTView intensity={0.3}>
+    <CRTView
+      intensity={0.3}
+      scanlineTrace={
+        argTrail.traceGrid !== null ? (
+          <ScanlineTrace grid={argTrail.traceGrid} intensity={0.3} />
+        ) : null
+      }
+    >
       <View style={styles.container}>
         <EndlessNightOverlay />
         {tutorial.isActive && <TutorialIndicator />}
         <RadioBody />
         <StreakIndicator />
+        <ArgSignalBleed
+          activeTrace={argTrail.activeTrace}
+          activeFragment={argTrail.activeFragment}
+          log={argTrail.log}
+          resolved={argTrail.resolved}
+          onDecode={argTrail.decodeTrace}
+          onFile={argTrail.fileFragment}
+        />
         <ErrorBoundary>
           <ActiveCallDispatcher />
         </ErrorBoundary>

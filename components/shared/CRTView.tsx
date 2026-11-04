@@ -26,6 +26,13 @@ import type { ScanlineMode } from './CRTEffects';
 export interface CRTViewProps extends ViewProps {
   /** 0..1 — 0 disables effects entirely (pass-through View). */
   intensity?: number;
+  /**
+   * DEA-91: content rendered inside the drifting scanline layer. The ARG glyph
+   * trace uses this so the code is part of the CRT treatment, not an overlay.
+   * Not rendered when the CRT is off (intensity 0, crtEnabled false, or
+   * scanline density 'off').
+   */
+  scanlineTrace?: ReactNode;
   children?: ReactNode;
   style?: ViewProps['style'];
 }
@@ -40,13 +47,20 @@ const TEAR_DISPLACEMENT = 4;
 /**
  * CRTView wraps children with layered CRT effects:
  *   - ScanlineOverlay: alternating dark horizontal lines
+ *   - scanlineTrace: DEA-91 ARG glyph matrix, rendered inside that layer
  *   - VignetteOverlay: edge darkening for screen curvature feel
  *   - PhosphorGlow: subtle amber bloom over content
  *   - Flicker: gentle opacity oscillation on the whole stack
  *
  * Pass-through when intensity===0 or useSettingsStore.crtEnabled===false.
  */
-function CRTView({ intensity = 0, children, style, ...rest }: CRTViewProps): JSX.Element {
+function CRTView({
+  intensity = 0,
+  scanlineTrace,
+  children,
+  style,
+  ...rest
+}: CRTViewProps): JSX.Element {
   const crtEnabled = useSettingsStore((s) => s.crtEnabled);
   const reducedMotion = useSettingsStore((s) => s.reducedMotion);
   const scanlineDensity = useSettingsStore((s) => s.scanlineDensity);
@@ -113,7 +127,7 @@ function CRTView({ intensity = 0, children, style, ...rest }: CRTViewProps): JSX
 
       {/* Effect overlays — pointerEvents none so touches reach children. */}
       {particleEffects && <PhosphorGlow intensity={intensity} mode={overlayMode} />}
-      <ScanlineOverlay intensity={intensity} mode={scanlineDensity} />
+      <ScanlineOverlay intensity={intensity} mode={scanlineDensity} trace={scanlineTrace} />
       <VignetteOverlay intensity={intensity} mode={overlayMode} />
 
       {/* Flicker wraps the visual stack only; not touch targets underneath. */}
