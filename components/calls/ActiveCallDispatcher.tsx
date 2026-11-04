@@ -14,6 +14,7 @@ import { TimingCall } from '@/components/calls/TimingCall';
 import { PuzzleCall } from '@/components/calls/PuzzleCall';
 import { ConversationCall } from '@/components/calls/ConversationCall';
 import { useSanityEffect } from '../../hooks/useSanityEffect';
+import { useCallVoice } from '../../hooks/useCallVoice';
 
 export function ActiveCallDispatcher() {
   // Only the focused screen renders the call. Expo Router keeps previous
@@ -37,6 +38,10 @@ export function ActiveCallDispatcher() {
   // declaring onComplete here keeps the hook order stable across renders
   // where route/activeCall flip between null and a real call.
   const onComplete = useCallback((outcome: CallOutcome) => callManager.endCall(outcome), []);
+
+  // DEA-94: voice the active call's lines through the voice-processing chain.
+  // Accompanies the text timers below; no call mechanics are changed.
+  useCallVoice(activeCall?.call ?? null, { enabled: isFocused });
 
   if (!isFocused || !route || !activeCall) return null;
 
