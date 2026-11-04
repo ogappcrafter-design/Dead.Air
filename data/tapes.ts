@@ -1,3 +1,5 @@
+import { SEASON_1_TAPES } from './seasons/season1/tapes';
+
 export interface TapeInfo {
   id: string;
   title: string;
@@ -298,8 +300,8 @@ export const DLC_TAPES: TapeInfo[] = [
   },
 ];
 
-// Combined array for lookups across base + DLC
-export const ALL_TAPES: TapeInfo[] = [...TAPES, ...DLC_TAPES];
+// Combined array for lookups across base + DLC + narrative seasons
+export const ALL_TAPES: TapeInfo[] = [...TAPES, ...DLC_TAPES, ...SEASON_1_TAPES];
 
 export const DLC_TAPE_NAMES: string[] = DLC_TAPES.map((t) => {
   const num = parseInt(t.id.replace('tape-', ''), 10);
