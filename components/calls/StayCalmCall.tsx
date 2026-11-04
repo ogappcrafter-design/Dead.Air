@@ -8,6 +8,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { computeStayCalmOutcome } from '@/engine/calls/renderers/StayCalmHandler';
 import type { CallData, CallOutcome } from '@/engine/calls/types';
+import { useVoiceFlinch } from '@/hooks/useVoiceFlinch';
 import { colors, fonts, spacing } from '@/lib/theme';
 
 interface StayCalmCallProps {
@@ -90,23 +91,29 @@ const StayCalmCall = memo(function StayCalmCall({
     setLineIndex(idx);
   }, [elapsedMs, lines.length, msPerLine]);
 
-  // Any press while in countdown = flinch.
-  const handlePress = useCallback(() => {
+  // Any press — or any voice picked up by the microphone — while in countdown
+  // means the player flinched. Both paths share `finish`, so the outcome and
+  // UI phases are identical; voice is only an alternative trigger.
+  const flinch = useCallback(() => {
     if (phase !== 'countdown' || completedRef.current) return;
     finish(false, 'flinched');
   }, [phase, finish]);
+
+  // DEA-90: the mic makes "do not speak" real. Lazy, silent on every failure,
+  // and disabled outside the countdown so nothing listens during other phases.
+  useVoiceFlinch({ active: phase === 'countdown', onVoiceDetected: flinch });
 
   const remainingSec = Math.max(0, Math.ceil((duration * 1000 - elapsedMs) / 1000));
   const progress = Math.min(1, elapsedMs / (duration * 1000));
 
   return (
     <Pressable
-      onPressIn={handlePress}
+      onPressIn={flinch}
       disabled={phase !== 'countdown'}
       style={styles.screen}
       accessibilityLabel="Stay calm — do not tap"
       accessibilityRole="button"
-      accessibilityHint="Do not press; wait for the countdown to complete"
+      accessibilityHint="Do not press or speak; wait for the countdown to complete"
     >
       <View style={styles.content}>
         {phase === 'countdown' && (
@@ -137,7 +144,7 @@ const StayCalmCall = memo(function StayCalmCall({
               <View style={[styles.progressBar, { width: `${progress * 100}%` }]} />
             </View>
 
-            <Text style={styles.hint}>do not move. do not tap.</Text>
+            <Text style={styles.hint}>do not move. do not speak.</Text>
           </>
         )}
 
