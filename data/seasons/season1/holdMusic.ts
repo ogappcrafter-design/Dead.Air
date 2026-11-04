@@ -1,0 +1,368 @@
+// data/seasons/season1/holdMusic.ts
+// DEA-85 Season 1 — TRANSMISSION 01: HOLD MUSIC.
+// data/calls.js is sacred and is never edited. This module exports the season's
+// eight calls as CallData; the runtime registers them when the season is active
+// (see engine/calls/callManagerInstance.ts, the _dlcEntries precedent).
+//
+// Ids 16000-16007 live in the reserved seasonal block (15000+). They must never
+// be registered through the InfiniteSignal pool filter, which only carries ids
+// below SEASONAL_ID_BASE.
+
+import type { CallData } from '../../../engine/calls/types';
+
+export const SEASON_1_CALL_IDS = [16000, 16001, 16002, 16003, 16004, 16005, 16006, 16007] as const;
+
+export const SEASON_1_CALLS: CallData[] = [
+  {
+    id: 16000,
+    band: 0, // LIVING
+    callerId: '555-0142',
+    callerName: 'ON HOLD',
+    signal: 4,
+    type: 'RIGHT_ANSWER',
+    staticReward: 45,
+    lines: [
+      'A woman. Forties. A kitchen behind her — a kettle just starting, a chair pulled out.',
+      '"Hi. Yes. I need to cancel a line."',
+      "\"It's in my father's name. He's been gone a long time. I've been paying it out of habit.\"",
+      '"Four dollars and twelve cents. Every month. For eleven years."',
+      '...',
+      '"I know. I know. I should have called before."',
+      '"The address on the bill isn\'t a house. It\'s a field. I drove out there once."',
+      '"There\'s a pole. Just a pole, in the grass."',
+      '...',
+      '"The music? It\'s your station, isn\'t it. I turned the radio on while I waited."',
+      "\"It's the same song they play when you're on hold. That's funny.\"",
+      '...',
+      '"Can I ask you something? When you find the account — will you tell them I\'m still on the line?"',
+      '"I don\'t want them to think I gave up."',
+    ],
+    choices: [
+      {
+        text: "I'll tell them.",
+        outcome:
+          'She exhales. "Thank you. That\'s all I wanted." Somewhere in the building, a transfer clicks. You did not press anything.',
+        sanityDelta: -8,
+        staticMult: 1.5,
+        tape: true,
+        tapeName: 'Tape #S1-1 — Position in Queue',
+        choiceTag: 's1_accept',
+      },
+      {
+        text: "There's no one here to tell.",
+        outcome:
+          '"Oh." A pause. "Then who am I talking to?" In her kitchen, the kettle begins to whistle. She does not hang up.',
+        sanityDelta: -5,
+        staticMult: 1.2,
+        tape: false,
+        choiceTag: 's1_deny',
+      },
+      {
+        text: "I'll close the account.",
+        outcome:
+          '"No — wait. Don\'t close it. If you close it, he can\'t—" The line cuts. The account stays open. It always stays open.',
+        sanityDelta: -12,
+        staticMult: 1.8,
+        tape: false,
+        choiceTag: 's1_close',
+      },
+    ],
+  },
+  {
+    id: 16001,
+    band: 0, // LIVING
+    callerId: 'DISPATCH',
+    callerName: 'RELAY 23',
+    signal: 3,
+    type: 'JUST_LISTEN',
+    staticReward: 55,
+    sanityDelta: -10,
+    tape: true,
+    tapeName: 'Tape #S1-2 — Relay 23',
+    lines: [
+      'A man. Businesslike. Tired the way people are tired at the end of a long shift.',
+      '"Relay twenty-three. Come back."',
+      '...',
+      '"Twenty-three. This is dispatch. Come back."',
+      '...',
+      '"You\'re not Twenty-Three."',
+      '"You accepted the transfer. It\'s logged. Eleven-oh-four, local."',
+      '"Do you know what you\'ve taken on?"',
+      '...',
+      '"It means the line is open. That\'s all it has ever meant."',
+      '"Hold, please."',
+      '...',
+      'You look at the console. The hold button is lit.',
+      'You did not press it.',
+      'Somewhere, a click that is not a hang-up.',
+    ],
+  },
+  {
+    id: 16002,
+    band: 1, // LIMINAL
+    callerId: 'HOLD',
+    callerName: 'PLEASE HOLD',
+    signal: 2,
+    type: 'DEAD_AIR',
+    staticReward: 75,
+    waitSeconds: 30,
+    sanityDelta: -18,
+    lines: [
+      'The hold music starts.',
+      'It is a song you know. You are certain you know it.',
+      'It is playing at the speed of a resting heart.',
+      '...',
+      'Thirty seconds. That is all you have to do.',
+      '...',
+      'The song has a verse you have never heard.',
+      'The verse is about a field, and a pole, and someone sitting in a car with the engine off.',
+      '...',
+      'You have never done that. You are sure you have never done that.',
+      '...',
+      'Do not hang up.',
+      '...',
+      'Very faint, under the strings, someone is counting.',
+      'Counting down.',
+      '...',
+      'You have moved up.',
+    ],
+  },
+  {
+    id: 16003,
+    band: 1, // LIMINAL
+    callerId: 'HOLD MUSIC',
+    callerName: 'PLEASE HOLD',
+    signal: 1,
+    type: 'STAY_CALM',
+    staticReward: 90,
+    duration: 20,
+    sanityPenalty: 25,
+    lines: [
+      '"Please continue to hold."',
+      '...',
+      '"Your call is important to us."',
+      '...',
+      'The music changes key. Nobody changed it.',
+      '"Please continue to hold."',
+      '...',
+      'You reach for the hold button. It is already pressed. It is warm.',
+      '...',
+      'There is a voice in the harmony now. It is not singing words.',
+      'It is singing your name. Softly. Correctly.',
+      '...',
+      '"Please continue to hold."',
+      '...',
+      'The voice stops. The music stops.',
+      'What is left is breathing.',
+      'It is keeping time.',
+      '...',
+      '"Please continue to hold."',
+      '...',
+      'On the monitor, the transcript of this call is already finished.',
+      'It is four minutes longer than the call.',
+    ],
+  },
+  {
+    id: 16004,
+    band: 2, // LOST
+    callerId: '1987',
+    callerName: 'STILL HOLDING',
+    signal: 2,
+    type: 'JUST_LISTEN',
+    staticReward: 140,
+    sanityDelta: 15,
+    tape: true,
+    tapeName: 'Tape #S1-3 — Hey, Bug',
+    lines: [
+      'The signal is thin. Old copper. A line that has been carrying the same call for a very long time.',
+      '"Hello? Am I — am I through?"',
+      '"I\'ve been holding. I don\'t mind. I had a lot to get ready."',
+      '"It\'s about my daughter. She was seven. She\'d be —"',
+      '...',
+      '"Well. I don\'t know. That\'s the thing I wanted to ask."',
+      '"I\'ve been practicing what to say. For when she picks up."',
+      '...',
+      '"Do you think she\'d still know my voice?"',
+      '"I\'ve been saying it the same way. Every day. So she\'d know it."',
+      '...',
+      'He clears his throat. Practices it once, quietly, for you.',
+      '"Hey, bug. It\'s me."',
+      '...',
+      "\"That's good, isn't it? That's the right way to start.\"",
+      '...',
+      '"One thing. If she asks — tell her I didn\'t hang up."',
+      '"I want her to know I didn\'t hang up."',
+      '...',
+      'The line does not close.',
+      'You sit with him a while. He practices. You listen.',
+      'It is the least anyone has done for him in thirty-nine years.',
+    ],
+  },
+  {
+    id: 16005,
+    band: 3, // CLASSIFIED
+    callerId: 'MAINT·04',
+    callerName: 'NETWORK MAINTENANCE',
+    signal: 5,
+    type: 'SIGNAL_DECODE',
+    staticReward: 110,
+    sanityDelta: -12,
+    intro:
+      'A maintenance channel. No caller. A carrier tone, then a voice reading a work order to nobody in particular. It lists one previous operator. The field for "reason for departure" has been left blank. When the order ends, the hold button on your console reads HELD. You do not remember it changing.',
+    sequence: [3, 1, 2, 0, 3],
+    decodedMessage: 'VACANCY CONFIRMED',
+  },
+  {
+    id: 16006,
+    band: 3, // CLASSIFIED
+    callerId: 'RELAY·23',
+    callerName: 'TWENTY-THREE',
+    signal: 4,
+    type: 'CONVERSATION',
+    staticReward: 150,
+    tape: true,
+    tapeName: 'Tape #S1-4 — End of Shift',
+    dialogueTree: [
+      {
+        speaker: 'TWENTY-THREE',
+        text: 'You picked up my line. Do you know what you have done?',
+        responses: [
+          {
+            text: "I answered a call. That's all.",
+            outcome: '"That\'s what I said. Eleven thousand nights ago."',
+            sanityDelta: -10,
+            staticMult: 1.5,
+            choiceTag: 's1_listen',
+          },
+          {
+            text: 'Who are you?',
+            outcome: '"The one who clocked out."',
+            sanityDelta: -15,
+            staticMult: 1.8,
+            choiceTag: 's1_seek',
+          },
+          {
+            text: 'Get off my line.',
+            outcome: 'She laughs, once. "It was never your line. I only left it open."',
+            sanityDelta: -8,
+            staticMult: 1.2,
+            choiceTag: 's1_guard',
+          },
+        ],
+      },
+      {
+        speaker: 'TWENTY-THREE',
+        text: 'I was nineteen. It was three in the morning. A man was talking about his daughter and I had a bus to catch.',
+        responses: [
+          {
+            text: "That's all? A bus?",
+            outcome:
+              '"That\'s all it takes. You\'d be surprised what a person will trade for a bus."',
+            sanityDelta: -18,
+            staticMult: 1.9,
+            choiceTag: 's1_listen',
+          },
+          {
+            text: 'You should have stayed.',
+            outcome: '"Yes." A long pause. "I know."',
+            sanityDelta: -22,
+            staticMult: 2.0,
+            choiceTag: 's1_seek',
+          },
+          {
+            text: 'What happened to the call?',
+            outcome: '"It stayed. It is still staying. Listen."',
+            sanityDelta: -20,
+            staticMult: 1.7,
+            choiceTag: 's1_listen',
+          },
+        ],
+      },
+      {
+        speaker: 'TWENTY-THREE',
+        text: 'I hear him sometimes. He says the same thing, over and over. "Hey, bug." I think she was seven. I think she is not seven now.',
+        responses: [
+          {
+            text: 'Her name is Diane.',
+            outcome:
+              'A silence long enough that you check the line. Then, very quietly: "You have her name. I never had her name."',
+            sanityDelta: -25,
+            staticMult: 2.2,
+            choiceTag: 's1_name',
+          },
+          {
+            text: 'I can connect them.',
+            outcome:
+              '"You can. Once. That\'s the whole job. That\'s the only thing the chair is for."',
+            sanityDelta: -20,
+            staticMult: 2.0,
+            choiceTag: 's1_seek',
+          },
+          {
+            text: "Then why didn't you?",
+            outcome: '"Because I didn\'t know her name. You do."',
+            sanityDelta: -23,
+            staticMult: 2.1,
+            choiceTag: 's1_listen',
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: 16007,
+    band: 4, // ████████
+    callerId: 'ALL LINES',
+    callerName: 'THE QUEUE',
+    signal: 0,
+    type: 'RIGHT_ANSWER',
+    staticReward: 400,
+    lines: [
+      'Every line opens at once.',
+      'Not static. Voices. None of them speaking to you.',
+      'A woman asking about a bill. A man practicing a name. Someone breathing in time.',
+      'Under all of it, the music.',
+      'A voice you recognize as dispatch, calm, reading from a work order:',
+      '"Relay twenty-three. Status."',
+      '...',
+      '"Relay twenty-three. Status."',
+      '...',
+      'The console has two buttons now.',
+      'One is labelled HELD.',
+      'The other is labelled TRANSFER.',
+      '...',
+      'The queue is not asking who you are.',
+      'It is asking what you will spend.',
+    ],
+    choices: [
+      {
+        text: 'Connect them.',
+        outcome:
+          'You press TRANSFER. Somewhere a phone rings in a kitchen where a kettle has been on for eleven years. The hold button goes dark. You did not know it could do that.',
+        sanityDelta: -40,
+        staticMult: 3.0,
+        tape: true,
+        tapeName: 'Tape #S1-5 — Hold Music',
+        choiceTag: 's1_connect',
+      },
+      {
+        text: 'I take the chair.',
+        outcome:
+          'You sit down. The chair is warm. It has been warm for thirty-nine years. The transfer completes without you, because it was never yours to refuse.',
+        sanityDelta: -35,
+        staticMult: 2.6,
+        tape: false,
+        choiceTag: 's1_chair',
+      },
+      {
+        text: 'I hang up.',
+        outcome:
+          'You put the phone down. It rings again before your hand leaves the receiver. You pick it up. You were always going to pick it up.',
+        sanityDelta: -30,
+        staticMult: 2.2,
+        tape: false,
+        choiceTag: 's1_hangup',
+      },
+    ],
+  },
+];
