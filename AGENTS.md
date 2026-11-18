@@ -60,6 +60,12 @@ The shader's `ca_radial_amount` / `signal_scanline_drift` uniforms (DEA-142) wer
 
 `useEndlessNight` hook (`hooks/useEndlessNight.ts`, mounted on the radio screen) drives the endless run loop: auto-starts after the first completed shift, schedules calls at `getEndlessCallInterval` (escalation-scaled, 25s floor), idle sanity drain, and submits the run to the leaderboard on game-over. Rare events use id base **6000** in `callManagerInstance` (keep that range reserved); core bands are 0–4 (the five fragment libraries all support the advanced call-type set). Game-over fires inside `gameStateSlice.decreaseSanity` **before** the no_rest wipe — keep that ordering.
 
+## Graphics Asset Pack
+
+`godot/assets/textures/` holds the generated art pack: 8 seamless environment textures, 2 backdrop textures, 4 props, and 6 key-art/concept images. `manifest.json` records prompts, sizes, intended material use, and provenance; `README.md` documents the mapping. `assets/icon.png`, `adaptive-icon.png`, `splash.png`, and `favicon.png` are real assets referenced by `app.json` (they were 1x1 placeholders before 2026-11-17).
+
+Godot 4.7 is installed at `/usr/local/bin/godot`, and `godot --headless --import` has generated `.import` sidecars for all 20 textures. Station scenes (`station/booth|hallway|bathroom|back_office|rooftop`), `phase3/bunker.tscn`, and `entities/suit.tscn` assign them; architecture materials use world triplanar mapping to keep texture orientation consistent across CSG box faces. Other phase scenes still use flat colors. Generated via the local 9router gateway with FLUX.2 Dev (`cf/@cf/black-forest-labs/flux-2-dev`) and post-processed with Pillow (1920x1080 key-art crops, roll-plus-feather seamless wrap, icon mat flood-fill). FLUX.2 [dev] is non-commercial: regenerate with FLUX.2 [klein] or FLUX.1 [schnell] (Apache-2.0) using `godot/assets/textures/regenerate.py` before shipping commercially.
+
 ## Maintaining this file
 
 Keep this file for knowledge useful to almost every future agent session in this project.
