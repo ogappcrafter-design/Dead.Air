@@ -59,6 +59,16 @@ func _diff(a: Image, b: Image) -> float:
 	return total / maxf(count, 1.0)
 
 
+## Park the camera inside the booth looking across the dust volume, so the
+## motes drift through the warm light cone in frame.
+func _aim_camera() -> void:
+	var cam := get_viewport().get_camera_3d()
+	if cam == null:
+		return
+	cam.global_position = Vector3(0, 1.7, 2.6)
+	if cam.has_method("look_at"):
+		cam.look_at(Vector3(0, 1.1, -1.5), Vector3.UP)
+
 func _finish() -> void:
 	var d01 := _diff(_frames[0], _frames[1])
 	var d12 := _diff(_frames[1], _frames[2])
