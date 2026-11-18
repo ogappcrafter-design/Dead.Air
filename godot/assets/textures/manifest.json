@@ -1,0 +1,242 @@
+{
+  "name": "Dead Air graphics asset pack",
+  "version": 1,
+  "created_at": "2026-11-17",
+  "art_direction": {
+    "era": "1970s American late-night radio station",
+    "genre": "psychological horror, analog CRT",
+    "palette": {
+      "background": "#0A0A0A",
+      "amber": "#FFA500",
+      "phosphor_green": "#00FF41",
+      "alert_red": "#FF3300"
+    },
+    "notes": "Stylized low-poly geometry with CRT post-processing on top; textures pre-graded warm, dark and slightly desaturated."
+  },
+  "generation": {
+    "gateway": "9router OpenAI-compatible /v1/images/generations",
+    "model": "cf/@cf/black-forest-labs/flux-2-dev",
+    "commercial_license": false,
+    "license_note": "FLUX.2 [dev] is non-commercial. Regenerate with cf/@cf/black-forest-labs/flux-2-klein-9b or cf/@cf/black-forest-labs/flux-1-schnell (Apache-2.0) before a commercial release.",
+    "post_process": "Pillow 13: 1920x1080 crops, roll-plus-feather seamless wrap, icon mat flood-fill, icon/splash derivatives"
+  },
+  "assets": [
+    {
+      "id": "wallpaper_1970s",
+      "path": "godot/assets/textures/environment/wallpaper_1970s.jpg",
+      "category": "environment",
+      "size": "1024x1024",
+      "seamless": true,
+      "intended_use": "Booth and hallway wall material",
+      "prompt": "Seamless tileable texture of faded 1970s wallpaper: muted amber and olive vertical stripes with small worn damask motifs, nicotine stains, water damage, aged paper. Flat orthographic texture scan, perfectly straight-on top-down view, even diffuse lighting, no shadows, no perspective, no border, no objects, no text, high detail, 1970s American analog aesthetic."
+    },
+    {
+      "id": "wood_panel",
+      "path": "godot/assets/textures/environment/wood_panel.jpg",
+      "category": "environment",
+      "size": "1024x1024",
+      "seamless": true,
+      "intended_use": "Wainscoting and console side panels",
+      "prompt": "Seamless tileable texture of dark stained walnut wood paneling from a 1970s radio station, vertical grain, fine scratches, dull varnish. Flat orthographic texture scan, perfectly straight-on top-down view, even diffuse lighting, no shadows, no perspective, no border, no objects, no text, high detail, 1970s American analog aesthetic."
+    },
+    {
+      "id": "carpet_shag",
+      "path": "godot/assets/textures/environment/carpet_shag.jpg",
+      "category": "environment",
+      "size": "1024x1024",
+      "seamless": true,
+      "intended_use": "Station floor material",
+      "prompt": "Seamless tileable texture of worn burnt-orange and brown shag carpet, 1970s, matted fibers, cigarette burns, faint traffic wear. Flat orthographic texture scan, perfectly straight-on top-down view, even diffuse lighting, no shadows, no perspective, no border, no objects, no text, high detail, 1970s American analog aesthetic."
+    },
+    {
+      "id": "ceiling_acoustic",
+      "path": "godot/assets/textures/environment/ceiling_acoustic.jpg",
+      "category": "environment",
+      "size": "1024x1024",
+      "seamless": true,
+      "intended_use": "Station ceiling material",
+      "prompt": "Seamless tileable texture of yellowed acoustic drop-ceiling tiles with pinholes, water stains, nicotine discoloration. Flat orthographic texture scan, perfectly straight-on top-down view, even diffuse lighting, no shadows, no perspective, no border, no objects, no text, high detail, 1970s American analog aesthetic."
+    },
+    {
+      "id": "concrete_bunker",
+      "path": "godot/assets/textures/environment/concrete_bunker.jpg",
+      "category": "environment",
+      "size": "1024x1024",
+      "seamless": true,
+      "intended_use": "Bunker, liminal and staircase wall material",
+      "prompt": "Seamless tileable texture of damp gray concrete bunker wall, mold streaks, hairline cracks, mineral stains. Flat orthographic texture scan, perfectly straight-on top-down view, even diffuse lighting, no shadows, no perspective, no border, no objects, no text, high detail, 1970s American analog aesthetic."
+    },
+    {
+      "id": "metal_locker",
+      "path": "godot/assets/textures/environment/metal_locker.jpg",
+      "category": "environment",
+      "size": "1024x1024",
+      "seamless": true,
+      "intended_use": "Lockers and back-office cabinet material",
+      "prompt": "Seamless tileable texture of olive-green painted steel locker doors, chipped paint, rust spots, scuffs, flat front view. Flat orthographic texture scan, perfectly straight-on top-down view, even diffuse lighting, no shadows, no perspective, no border, no objects, no text, high detail, 1970s American analog aesthetic."
+    },
+    {
+      "id": "desk_laminate",
+      "path": "godot/assets/textures/environment/desk_laminate.jpg",
+      "category": "environment",
+      "size": "1024x1024",
+      "seamless": true,
+      "intended_use": "Desk and console top material",
+      "prompt": "Seamless tileable texture of worn wood-grain laminate desktop, coffee rings, scratches, 1970s office. Flat orthographic texture scan, perfectly straight-on top-down view, even diffuse lighting, no shadows, no perspective, no border, no objects, no text, high detail, 1970s American analog aesthetic."
+    },
+    {
+      "id": "suit_wool",
+      "path": "godot/assets/textures/environment/suit_wool.jpg",
+      "category": "environment",
+      "size": "1024x1024",
+      "seamless": true,
+      "intended_use": "The Suit body material",
+      "prompt": "Seamless tileable macro texture of charcoal wool suit fabric, clearly visible fine diagonal twill weave, subtle gray sheen, evenly lit, flat orthographic top-down view, no shadows, no perspective, no objects, no text."
+    },
+    {
+      "id": "night_window",
+      "path": "godot/assets/textures/environment/night_window.jpg",
+      "category": "environment",
+      "size": "1024x1024",
+      "seamless": false,
+      "intended_use": "Booth window backdrop plane",
+      "prompt": "View through a rain-streaked window at night from inside a radio station, near-black sky, faint sodium-orange streetlight glow, condensation, no people, cinematic, flat front view, no text."
+    },
+    {
+      "id": "radio_faceplate",
+      "path": "godot/assets/textures/environment/radio_faceplate.jpg",
+      "category": "environment",
+      "size": "1024x1024",
+      "seamless": false,
+      "intended_use": "Console and radio faceplate decal",
+      "prompt": "Front view of a 1970s analog radio receiver faceplate, brushed aluminum, large amber-lit frequency dial window, black knobs, toggle switches, worn metal, orthographic product shot on pure black background, no readable text."
+    },
+    {
+      "id": "tape_label",
+      "path": "godot/assets/textures/props/tape_label.jpg",
+      "category": "props",
+      "size": "1024x1024",
+      "seamless": false,
+      "intended_use": "Cassette label for tape inventory or prop",
+      "prompt": "A single aged cassette tape label, cream paper, yellowed, handwritten pencil frequency numbers, coffee stain, torn corner, scanned flat on pure black background, orthographic top-down, no other objects."
+    },
+    {
+      "id": "on_air_sign",
+      "path": "godot/assets/textures/props/on_air_sign.jpg",
+      "category": "props",
+      "size": "1024x1024",
+      "seamless": false,
+      "intended_use": "Booth wall sign, emissive",
+      "prompt": "An illuminated ON AIR sign in a dark metal box, glowing amber letters, wall-mounted, 1970s radio station, pure black background, dramatic amber glow, straight-on view."
+    },
+    {
+      "id": "poster_missing",
+      "path": "godot/assets/textures/props/poster_missing.jpg",
+      "category": "props",
+      "size": "1024x1024",
+      "seamless": false,
+      "intended_use": "Station wall poster",
+      "prompt": "A faded 1970s paranormal radio station poster, graphic silhouette of a radio tower emitting concentric signal waves, amber and phosphor green ink on aged black paper, torn edges, flat scan on pure black background, no readable text."
+    },
+    {
+      "id": "crt_bezel_frame",
+      "path": "godot/assets/textures/props/crt_bezel_frame.jpg",
+      "category": "props",
+      "size": "1024x1024",
+      "seamless": false,
+      "intended_use": "CRT bezel overlay or 9-slice frame source",
+      "prompt": "A dark plastic CRT television bezel frame, rounded inner corners, centered black screen cutout, worn plastic, perfectly symmetric, straight-on orthographic, pure black background, no reflections, no text."
+    },
+    {
+      "id": "keyart_title",
+      "path": "godot/assets/textures/keyart/keyart_title.jpg",
+      "category": "keyart",
+      "size": "1920x1080",
+      "seamless": false,
+      "intended_use": "Main menu background",
+      "prompt": "Cinematic key art for a late-night radio horror game: a 1970s radio broadcast booth at 3 AM, empty chair at a mixing console, glowing amber CRT, microphone, tangled cables, rain on the window, thick shadows, fog, muted amber and phosphor green palette, grainy analog film, dread, no people, no text."
+    },
+    {
+      "id": "concept_booth",
+      "path": "godot/assets/textures/keyart/concept_booth.jpg",
+      "category": "keyart",
+      "size": "1920x1080",
+      "seamless": false,
+      "intended_use": "Booth environment modeling and lighting reference",
+      "prompt": "Stylized low-poly 3D environment concept art: 1970s radio broadcast booth interior, fixed camera angle from the doorway, console with glowing amber dials, acoustic foam, wood paneling, single desk lamp, dark, fog, survival horror, no people, no text."
+    },
+    {
+      "id": "concept_neighborhood",
+      "path": "godot/assets/textures/keyart/concept_neighborhood.jpg",
+      "category": "keyart",
+      "size": "1920x1080",
+      "seamless": false,
+      "intended_use": "Neighborhood environment modeling and lighting reference",
+      "prompt": "Stylized low-poly 3D environment concept art: quiet 1970s American suburban street at night, sodium streetlamps, fog, identical houses, a lone radio tower in the distance, fixed-camera survival horror framing, muted amber and phosphor green, no people, no text."
+    },
+    {
+      "id": "concept_bunker",
+      "path": "godot/assets/textures/keyart/concept_bunker.jpg",
+      "category": "keyart",
+      "size": "1920x1080",
+      "seamless": false,
+      "intended_use": "Bunker environment modeling and lighting reference",
+      "prompt": "Stylized low-poly 3D environment concept art: underground concrete bunker corridor, flickering single bulb, pipes, rusted doors, puddles, deep shadows, survival horror, no people, no text."
+    },
+    {
+      "id": "concept_liminal",
+      "path": "godot/assets/textures/keyart/concept_liminal.jpg",
+      "category": "keyart",
+      "size": "1920x1080",
+      "seamless": false,
+      "intended_use": "Liminal-space environment modeling and lighting reference",
+      "prompt": "Stylized low-poly 3D environment concept art: impossible liminal hallway that repeats into darkness, mismatched doors, buzzing fluorescent light, pale green glow, unsettling geometry, no people, no text."
+    },
+    {
+      "id": "concept_suit",
+      "path": "godot/assets/textures/keyart/concept_suit.jpg",
+      "category": "keyart",
+      "size": "1024x1024",
+      "seamless": false,
+      "intended_use": "The Suit enemy lighting and silhouette reference",
+      "prompt": "A faceless man in a charcoal suit standing in a doorway at the end of a dark hallway, backlit by a single amber bulb, no facial features, unsettling, cinematic horror, grainy analog film, no text."
+    },
+    {
+      "id": "app_icon",
+      "path": "assets/icon.png",
+      "category": "app",
+      "size": "1024x1024",
+      "seamless": false,
+      "intended_use": "Expo app icon",
+      "prompt": "Full-bleed square app icon, edge-to-edge pure black background, a retro 1970s radio tuning dial with an amber needle and concentric signal arcs, glowing amber, one phosphor green accent arc, minimal bold graphic, centered, no white border, no rounded corners, no text, high contrast, flat graphic."
+    },
+    {
+      "id": "app_adaptive_icon",
+      "path": "assets/adaptive-icon.png",
+      "category": "app",
+      "size": "1024x1024",
+      "seamless": false,
+      "intended_use": "Android adaptive icon foreground",
+      "derived_from": "app_icon",
+      "note": "Icon scaled to 676x676 and centered on 1024x1024 black for the adaptive safe zone."
+    },
+    {
+      "id": "app_splash",
+      "path": "assets/splash.png",
+      "category": "app",
+      "size": "1284x2778",
+      "seamless": false,
+      "intended_use": "Expo splash screen",
+      "prompt": "Vertical splash screen: centered glowing amber retro radio dial with concentric signal arcs on pure black, subtle CRT scanlines, faint phosphor green halo, lots of empty black space, minimal, no text."
+    },
+    {
+      "id": "app_favicon",
+      "path": "assets/favicon.png",
+      "category": "app",
+      "size": "48x48",
+      "seamless": false,
+      "intended_use": "Web favicon",
+      "derived_from": "app_icon"
+    }
+  ]
+}

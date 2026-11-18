@@ -1,6 +1,5 @@
-# Godot 4 editor cache and import artifacts
+# Godot 4 editor cache (.import sidecars are tracked for reproducible imports)
 .godot/
-*.import
 
 # OS files
 .DS_Store
