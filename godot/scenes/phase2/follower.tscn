@@ -9,12 +9,17 @@
 [ext_resource type="Resource" uid="uid://11e914f432000" path="res://src/data/band_config.tres" id="7_band"]
 [ext_resource type="Script" uid="uid://cn3ic8sfogvs3" path="res://src/audio/radio_static.gd" id="8_static"]
 
+
+[ext_resource type="Texture2D" path="res://assets/textures/environment/asphalt_rough.jpg" id="tex_asphalt_mat"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/grass_ground.jpg" id="tex_grass_mat"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/night_window.jpg" id="tex_window_mat"]
+
 [sub_resource type="StandardMaterial3D" id="asphalt_mat"]
-albedo_color = Color(0.13, 0.13, 0.15, 1)
+albedo_texture = ExtResource("tex_asphalt_mat")
 roughness = 0.95
 
 [sub_resource type="StandardMaterial3D" id="grass_mat"]
-albedo_color = Color(0.08, 0.11, 0.07, 1)
+albedo_texture = ExtResource("tex_grass_mat")
 roughness = 1.0
 
 [sub_resource type="StandardMaterial3D" id="house_mat"]
@@ -34,7 +39,7 @@ albedo_color = Color(0.25, 0.18, 0.14, 1)
 roughness = 0.8
 
 [sub_resource type="StandardMaterial3D" id="window_mat"]
-albedo_color = Color(0.05, 0.06, 0.08, 1)
+albedo_texture = ExtResource("tex_window_mat")
 roughness = 0.2
 metallic = 0.3
 

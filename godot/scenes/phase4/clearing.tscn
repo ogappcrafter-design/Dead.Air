@@ -8,8 +8,11 @@
 [ext_resource type="Script" uid="uid://be6swwtavc18m" path="res://src/visual/camera_rig.gd" id="6_rig"]
 [ext_resource type="Script" path="res://src/levels/clearing_segment.gd" id="7_seg"]
 [ext_resource type="Script" path="res://src/entities/tape_pickup.gd" id="8_tape"]
+
+[ext_resource type="Texture2D" path="res://assets/textures/environment/grass_ground.jpg" id="tex_grass_mat"]
+
 [sub_resource type="StandardMaterial3D" id="grass_mat"]
-albedo_color = Color(0.10, 0.12, 0.09, 1)
+albedo_texture = ExtResource("tex_grass_mat")
 roughness = 1.0
 [sub_resource type="StandardMaterial3D" id="wood_mat"]
 albedo_color = Color(0.25, 0.18, 0.12, 1)

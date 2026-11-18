@@ -8,11 +8,19 @@
 [ext_resource type="Resource" uid="uid://11e914f432000" path="res://src/data/band_config.tres" id="4_band"]
 [ext_resource type="Script" uid="uid://cn3ic8sfogvs3" path="res://src/audio/radio_static.gd" id="5_static"]
 [ext_resource type="Script" path="res://src/levels/staircase_segment.gd" id="6_seg"]
+
+[ext_resource type="Texture2D" path="res://assets/textures/environment/concrete_bunker.jpg" id="tex_step_mat"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/concrete_bunker.jpg" id="tex_concrete_mat"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/wood_panel.jpg" id="tex_era_mat_0"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/wood_panel.jpg" id="tex_era_mat_1"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/wood_panel.jpg" id="tex_era_mat_2"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/wood_panel.jpg" id="tex_era_mat_3"]
+
 [sub_resource type="StandardMaterial3D" id="step_mat"]
-albedo_color = Color(0.3, 0.3, 0.28, 1)
+albedo_texture = ExtResource("tex_step_mat")
 roughness = 0.9
 [sub_resource type="StandardMaterial3D" id="concrete_mat"]
-albedo_color = Color(0.55, 0.55, 0.52, 1)
+albedo_texture = ExtResource("tex_concrete_mat")
 roughness = 0.95
 [sub_resource type="Environment" id="env_dark"]
 background_mode = 1
@@ -21,19 +29,19 @@ ambient_light_energy = 0.3
 [sub_resource type="BoxShape3D" id="player_shape"]
 size = Vector3(0.5, 1.0, 0.5)
 [sub_resource type="StandardMaterial3D" id="era_mat_0"]
-albedo_color = Color(0.55, 0.55, 0.52, 1)
+albedo_texture = ExtResource("tex_era_mat_0")
 roughness = 0.95
 
 [sub_resource type="StandardMaterial3D" id="era_mat_1"]
-albedo_color = Color(0.45, 0.47, 0.50, 1)
+albedo_texture = ExtResource("tex_era_mat_1")
 roughness = 0.95
 
 [sub_resource type="StandardMaterial3D" id="era_mat_2"]
-albedo_color = Color(0.48, 0.38, 0.28, 1)
+albedo_texture = ExtResource("tex_era_mat_2")
 roughness = 0.95
 
 [sub_resource type="StandardMaterial3D" id="era_mat_3"]
-albedo_color = Color(0.35, 0.28, 0.20, 1)
+albedo_texture = ExtResource("tex_era_mat_3")
 roughness = 0.95
 
 [node name="Staircase" type="Node3D"]

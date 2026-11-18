@@ -7,14 +7,18 @@
 [ext_resource type="Script" uid="uid://cn3ic8sfogvs3" path="res://src/audio/radio_static.gd" id="5_static"]
 [ext_resource type="Script" uid="uid://be6swwtavc18m" path="res://src/visual/camera_rig.gd" id="6_rig"]
 [ext_resource type="Script" path="res://src/levels/highway_segment.gd" id="7_seg"]
+
+[ext_resource type="Texture2D" path="res://assets/textures/environment/asphalt_rough.jpg" id="tex_asphalt_mat"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/grass_ground.jpg" id="tex_grass_mat"]
+
 [sub_resource type="StandardMaterial3D" id="asphalt_mat"]
-albedo_color = Color(0.13, 0.13, 0.15, 1)
+albedo_texture = ExtResource("tex_asphalt_mat")
 roughness = 0.95
 [sub_resource type="StandardMaterial3D" id="dirt_mat"]
 albedo_color = Color(0.18, 0.14, 0.09, 1)
 roughness = 1.0
 [sub_resource type="StandardMaterial3D" id="grass_mat"]
-albedo_color = Color(0.07, 0.09, 0.06, 1)
+albedo_texture = ExtResource("tex_grass_mat")
 roughness = 1.0
 [sub_resource type="StandardMaterial3D" id="pole_mat"]
 albedo_color = Color(0.15, 0.15, 0.16, 1)

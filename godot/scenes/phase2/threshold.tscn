@@ -10,11 +10,16 @@
 [ext_resource type="Resource" uid="uid://11e914f432000" path="res://src/data/band_config.tres" id="9_band"]
 [ext_resource type="Script" uid="uid://cn3ic8sfogvs3" path="res://src/audio/radio_static.gd" id="10_static"]
 
+
+[ext_resource type="Texture2D" path="res://assets/textures/environment/carpet_shag.jpg" id="tex_floor_mat"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/wood_panel.jpg" id="tex_wood_panel_mat"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/house_siding.jpg" id="tex_door_mat"]
+
 [sub_resource type="StandardMaterial3D" id="floor_mat"]
-albedo_color = Color(0.22, 0.16, 0.1, 1)
+albedo_texture = ExtResource("tex_floor_mat")
 
 [sub_resource type="StandardMaterial3D" id="wood_panel_mat"]
-albedo_color = Color(0.35, 0.24, 0.14, 1)
+albedo_texture = ExtResource("tex_wood_panel_mat")
 
 [sub_resource type="StandardMaterial3D" id="brass_mat"]
 albedo_color = Color(0.72, 0.58, 0.28, 1)
@@ -22,7 +27,7 @@ metallic = 0.8
 roughness = 0.3
 
 [sub_resource type="StandardMaterial3D" id="door_mat"]
-albedo_color = Color(0.25, 0.17, 0.1, 1)
+albedo_texture = ExtResource("tex_door_mat")
 
 [sub_resource type="BoxShape3D" id="zone_a_shape"]
 size = Vector3(10, 3, 3)

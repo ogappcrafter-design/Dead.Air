@@ -7,14 +7,18 @@
 [ext_resource type="Script" uid="uid://cn3ic8sfogvs3" path="res://src/audio/radio_static.gd" id="5_static"]
 [ext_resource type="Script" uid="uid://be6swwtavc18m" path="res://src/visual/camera_rig.gd" id="6_rig"]
 [ext_resource type="Script" path="res://src/levels/liminal_space_segment.gd" id="7_seg"]
+
+[ext_resource type="Texture2D" path="res://assets/textures/environment/house_siding.jpg" id="tex_door_mat"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/wood_panel.jpg" id="tex_panel_mat"]
+
 [sub_resource type="StandardMaterial3D" id="void_mat"]
 albedo_color = Color(0.02, 0.02, 0.03, 1)
 roughness = 1.0
 [sub_resource type="StandardMaterial3D" id="door_mat"]
-albedo_color = Color(0.15, 0.13, 0.11, 1)
+albedo_texture = ExtResource("tex_door_mat")
 roughness = 0.8
 [sub_resource type="StandardMaterial3D" id="panel_mat"]
-albedo_color = Color(0.3, 0.3, 0.35, 1)
+albedo_texture = ExtResource("tex_panel_mat")
 roughness = 0.6
 [sub_resource type="StandardMaterial3D" id="room_mat"]
 albedo_color = Color(0.18, 0.16, 0.14, 1)
