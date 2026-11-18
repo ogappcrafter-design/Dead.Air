@@ -1,4 +1,4 @@
-[gd_scene load_steps=18 format=3 uid="uid://bp3highway1"]
+[gd_scene load_steps=22 format=3 uid="uid://bp3highway1"]
 
 [ext_resource type="Script" uid="uid://byfya25euxxwe" path="res://src/entities/player.gd" id="1_player"]
 [ext_resource type="Script" uid="uid://bnhl1nrqqywda" path="res://src/core/radio_tuner.gd" id="2_tuner"]
@@ -10,15 +10,23 @@
 
 [ext_resource type="Texture2D" path="res://assets/textures/environment/asphalt_rough.jpg" id="tex_asphalt_mat"]
 [ext_resource type="Texture2D" path="res://assets/textures/environment/grass_ground.jpg" id="tex_grass_mat"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/asphalt_rough_normal.jpg" id="nrm_tex_asphalt_mat"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/asphalt_rough_roughness.jpg" id="rgh_tex_asphalt_mat"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/grass_ground_normal.jpg" id="nrm_tex_grass_mat"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/grass_ground_roughness.jpg" id="rgh_tex_grass_mat"]
 
 [sub_resource type="StandardMaterial3D" id="asphalt_mat"]
 albedo_texture = ExtResource("tex_asphalt_mat")
+normal_texture = ExtResource("nrm_tex_asphalt_mat")
+roughness_texture = ExtResource("rgh_tex_asphalt_mat")
 roughness = 0.95
 [sub_resource type="StandardMaterial3D" id="dirt_mat"]
 albedo_color = Color(0.18, 0.14, 0.09, 1)
 roughness = 1.0
 [sub_resource type="StandardMaterial3D" id="grass_mat"]
 albedo_texture = ExtResource("tex_grass_mat")
+normal_texture = ExtResource("nrm_tex_grass_mat")
+roughness_texture = ExtResource("rgh_tex_grass_mat")
 roughness = 1.0
 [sub_resource type="StandardMaterial3D" id="pole_mat"]
 albedo_color = Color(0.15, 0.15, 0.16, 1)

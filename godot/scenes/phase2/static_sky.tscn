@@ -1,4 +1,4 @@
-[gd_scene load_steps=19 format=3 uid="uid://bp2skytwo01"]
+[gd_scene load_steps=25 format=3 uid="uid://bp2skytwo01"]
 
 [ext_resource type="Script" uid="uid://bp2skyscr" path="res://src/levels/static_sky_segment.gd" id="1_segment"]
 [ext_resource type="Script" uid="uid://bp2sky" path="res://src/visual/static_sky.gd" id="2_sky"]
@@ -14,13 +14,21 @@
 
 [ext_resource type="Texture2D" path="res://assets/textures/environment/asphalt_rough.jpg" id="tex_asphalt_mat"]
 [ext_resource type="Texture2D" path="res://assets/textures/environment/grass_ground.jpg" id="tex_grass_mat"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/asphalt_rough_normal.jpg" id="nrm_tex_asphalt_mat"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/asphalt_rough_roughness.jpg" id="rgh_tex_asphalt_mat"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/grass_ground_normal.jpg" id="nrm_tex_grass_mat"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/grass_ground_roughness.jpg" id="rgh_tex_grass_mat"]
 
 [sub_resource type="StandardMaterial3D" id="asphalt_mat"]
 albedo_texture = ExtResource("tex_asphalt_mat")
+normal_texture = ExtResource("nrm_tex_asphalt_mat")
+roughness_texture = ExtResource("rgh_tex_asphalt_mat")
 roughness = 0.95
 
 [sub_resource type="StandardMaterial3D" id="grass_mat"]
 albedo_texture = ExtResource("tex_grass_mat")
+normal_texture = ExtResource("nrm_tex_grass_mat")
+roughness_texture = ExtResource("rgh_tex_grass_mat")
 roughness = 1.0
 
 [sub_resource type="StandardMaterial3D" id="house_mat"]

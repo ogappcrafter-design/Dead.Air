@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3 uid="uid://bp4chamber01"]
+[gd_scene load_steps=25 format=3 uid="uid://bp4chamber01"]
 
 [ext_resource type="Script" uid="uid://byfya25euxxwe" path="res://src/entities/player.gd" id="1_player"]
 [ext_resource type="Script" uid="uid://bnhl1nrqqywda" path="res://src/core/radio_tuner.gd" id="2_tuner"]
@@ -11,19 +11,35 @@
 [ext_resource type="Texture2D" path="res://assets/textures/environment/wood_panel.jpg" id="tex_wood_mat"]
 [ext_resource type="Texture2D" path="res://assets/textures/environment/metal_locker.jpg" id="tex_brass_mat"]
 [ext_resource type="Texture2D" path="res://assets/textures/environment/night_window.jpg" id="tex_crystal_mat"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/concrete_bunker_normal.jpg" id="nrm_tex_earth_mat"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/concrete_bunker_roughness.jpg" id="rgh_tex_earth_mat"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/wood_panel_normal.jpg" id="nrm_tex_wood_mat"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/wood_panel_roughness.jpg" id="rgh_tex_wood_mat"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/metal_locker_normal.jpg" id="nrm_tex_brass_mat"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/metal_locker_roughness.jpg" id="rgh_tex_brass_mat"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/night_window_normal.jpg" id="nrm_tex_crystal_mat"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/night_window_roughness.jpg" id="rgh_tex_crystal_mat"]
 
 [sub_resource type="StandardMaterial3D" id="earth_mat"]
 albedo_texture = ExtResource("tex_earth_mat")
+normal_texture = ExtResource("nrm_tex_earth_mat")
+roughness_texture = ExtResource("rgh_tex_earth_mat")
 roughness = 1.0
 [sub_resource type="StandardMaterial3D" id="wood_mat"]
 albedo_texture = ExtResource("tex_wood_mat")
+normal_texture = ExtResource("nrm_tex_wood_mat")
+roughness_texture = ExtResource("rgh_tex_wood_mat")
 roughness = 0.9
 [sub_resource type="StandardMaterial3D" id="brass_mat"]
 albedo_texture = ExtResource("tex_brass_mat")
+normal_texture = ExtResource("nrm_tex_brass_mat")
+roughness_texture = ExtResource("rgh_tex_brass_mat")
 roughness = 0.35
 metallic = 0.85
 [sub_resource type="StandardMaterial3D" id="crystal_mat"]
 albedo_texture = ExtResource("tex_crystal_mat")
+normal_texture = ExtResource("nrm_tex_crystal_mat")
+roughness_texture = ExtResource("rgh_tex_crystal_mat")
 roughness = 0.1
 metallic = 0.3
 [sub_resource type="Environment" id="env_chamber"]

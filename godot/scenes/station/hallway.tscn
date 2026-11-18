@@ -1,4 +1,4 @@
-[gd_scene load_steps=15 format=3 uid="uid://bstation02hall"]
+[gd_scene load_steps=21 format=3 uid="uid://bstation02hall"]
 
 [ext_resource type="Script" uid="uid://dk6rm7a0v0721" path="res://src/visual/camera_zone.gd" id="1_zone"]
 [ext_resource type="Script" uid="uid://xilho0al60wt" path="res://src/visual/camera_angle.gd" id="2_angle"]
@@ -6,9 +6,17 @@
 [ext_resource type="Texture2D" path="res://assets/textures/environment/carpet_shag.jpg" id="tex_carpet"]
 [ext_resource type="Texture2D" path="res://assets/textures/environment/wallpaper_1970s.jpg" id="tex_wallpaper"]
 [ext_resource type="Texture2D" path="res://assets/textures/environment/ceiling_acoustic.jpg" id="tex_ceiling"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/carpet_shag_normal.jpg" id="nrm_tex_carpet"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/carpet_shag_roughness.jpg" id="rgh_tex_carpet"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/wallpaper_1970s_normal.jpg" id="nrm_tex_wallpaper"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/wallpaper_1970s_roughness.jpg" id="rgh_tex_wallpaper"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/ceiling_acoustic_normal.jpg" id="nrm_tex_ceiling"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/ceiling_acoustic_roughness.jpg" id="rgh_tex_ceiling"]
 
 [sub_resource type="StandardMaterial3D" id="floor_mat"]
 albedo_texture = ExtResource("tex_carpet")
+normal_texture = ExtResource("nrm_tex_carpet")
+roughness_texture = ExtResource("rgh_tex_carpet")
 albedo_color = Color(1, 1, 1, 1)
 uv1_scale = Vector3(4, 4, 1)
 uv1_triplanar = true
@@ -17,6 +25,8 @@ roughness = 1.0
 
 [sub_resource type="StandardMaterial3D" id="wall_mat"]
 albedo_texture = ExtResource("tex_wallpaper")
+normal_texture = ExtResource("nrm_tex_wallpaper")
+roughness_texture = ExtResource("rgh_tex_wallpaper")
 albedo_color = Color(1, 1, 1, 1)
 uv1_scale = Vector3(2, 2, 1)
 uv1_triplanar = true
@@ -25,6 +35,8 @@ roughness = 0.9
 
 [sub_resource type="StandardMaterial3D" id="ceiling_mat"]
 albedo_texture = ExtResource("tex_ceiling")
+normal_texture = ExtResource("nrm_tex_ceiling")
+roughness_texture = ExtResource("rgh_tex_ceiling")
 albedo_color = Color(1, 1, 1, 1)
 uv1_scale = Vector3(3, 3, 1)
 uv1_triplanar = true

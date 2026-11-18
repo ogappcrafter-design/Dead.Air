@@ -1,4 +1,4 @@
-[gd_scene load_steps=20 format=3 uid="uid://bp2follower01"]
+[gd_scene load_steps=28 format=3 uid="uid://bp2follower01"]
 
 [ext_resource type="Script" uid="uid://bp2followerscr" path="res://src/levels/follower_segment.gd" id="1_segment"]
 [ext_resource type="Script" uid="uid://be6swwtavc18m" path="res://src/visual/camera_rig.gd" id="2_rig"]
@@ -13,13 +13,23 @@
 [ext_resource type="Texture2D" path="res://assets/textures/environment/asphalt_rough.jpg" id="tex_asphalt_mat"]
 [ext_resource type="Texture2D" path="res://assets/textures/environment/grass_ground.jpg" id="tex_grass_mat"]
 [ext_resource type="Texture2D" path="res://assets/textures/environment/night_window.jpg" id="tex_window_mat"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/asphalt_rough_normal.jpg" id="nrm_tex_asphalt_mat"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/asphalt_rough_roughness.jpg" id="rgh_tex_asphalt_mat"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/grass_ground_normal.jpg" id="nrm_tex_grass_mat"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/grass_ground_roughness.jpg" id="rgh_tex_grass_mat"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/night_window_normal.jpg" id="nrm_tex_window_mat"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/night_window_roughness.jpg" id="rgh_tex_window_mat"]
 
 [sub_resource type="StandardMaterial3D" id="asphalt_mat"]
 albedo_texture = ExtResource("tex_asphalt_mat")
+normal_texture = ExtResource("nrm_tex_asphalt_mat")
+roughness_texture = ExtResource("rgh_tex_asphalt_mat")
 roughness = 0.95
 
 [sub_resource type="StandardMaterial3D" id="grass_mat"]
 albedo_texture = ExtResource("tex_grass_mat")
+normal_texture = ExtResource("nrm_tex_grass_mat")
+roughness_texture = ExtResource("rgh_tex_grass_mat")
 roughness = 1.0
 
 [sub_resource type="StandardMaterial3D" id="house_mat"]
@@ -40,6 +50,8 @@ roughness = 0.8
 
 [sub_resource type="StandardMaterial3D" id="window_mat"]
 albedo_texture = ExtResource("tex_window_mat")
+normal_texture = ExtResource("nrm_tex_window_mat")
+roughness_texture = ExtResource("rgh_tex_window_mat")
 roughness = 0.2
 metallic = 0.3
 

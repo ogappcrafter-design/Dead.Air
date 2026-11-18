@@ -1,4 +1,4 @@
-[gd_scene load_steps=15 format=3 uid="uid://bp3liminalsp"]
+[gd_scene load_steps=22 format=3 uid="uid://bp3liminalsp"]
 
 [ext_resource type="Script" uid="uid://byfya25euxxwe" path="res://src/entities/player.gd" id="1_player"]
 [ext_resource type="Script" uid="uid://bnhl1nrqqywda" path="res://src/core/radio_tuner.gd" id="2_tuner"]
@@ -10,15 +10,23 @@
 
 [ext_resource type="Texture2D" path="res://assets/textures/environment/house_siding.jpg" id="tex_door_mat"]
 [ext_resource type="Texture2D" path="res://assets/textures/environment/wood_panel.jpg" id="tex_panel_mat"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/house_siding_normal.jpg" id="nrm_tex_door_mat"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/house_siding_roughness.jpg" id="rgh_tex_door_mat"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/wood_panel_normal.jpg" id="nrm_tex_panel_mat"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/wood_panel_roughness.jpg" id="rgh_tex_panel_mat"]
 
 [sub_resource type="StandardMaterial3D" id="void_mat"]
 albedo_color = Color(0.02, 0.02, 0.03, 1)
 roughness = 1.0
 [sub_resource type="StandardMaterial3D" id="door_mat"]
 albedo_texture = ExtResource("tex_door_mat")
+normal_texture = ExtResource("nrm_tex_door_mat")
+roughness_texture = ExtResource("rgh_tex_door_mat")
 roughness = 0.8
 [sub_resource type="StandardMaterial3D" id="panel_mat"]
 albedo_texture = ExtResource("tex_panel_mat")
+normal_texture = ExtResource("nrm_tex_panel_mat")
+roughness_texture = ExtResource("rgh_tex_panel_mat")
 roughness = 0.6
 [sub_resource type="StandardMaterial3D" id="room_mat"]
 albedo_color = Color(0.18, 0.16, 0.14, 1)

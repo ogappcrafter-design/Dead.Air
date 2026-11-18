@@ -1,4 +1,4 @@
-[gd_scene load_steps=18 format=3 uid="uid://bp2firsthouse"]
+[gd_scene load_steps=31 format=3 uid="uid://bp2firsthouse"]
 
 [ext_resource type="Script" uid="uid://bp2firsthouses" path="res://src/levels/first_house_segment.gd" id="1_segment"]
 [ext_resource type="Script" uid="uid://byfya25euxxwe" path="res://src/entities/player.gd" id="2_player"]
@@ -11,17 +11,31 @@
 [ext_resource type="Texture2D" path="res://assets/textures/environment/carpet_shag.jpg" id="tex_floor"]
 [ext_resource type="Texture2D" path="res://assets/textures/environment/desk_laminate.jpg" id="tex_kitchen"]
 [ext_resource type="Texture2D" path="res://assets/textures/environment/night_window.jpg" id="tex_window"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/wood_panel_normal.jpg" id="nrm_tex_wall"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/wood_panel_roughness.jpg" id="rgh_tex_wall"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/carpet_shag_normal.jpg" id="nrm_tex_floor"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/carpet_shag_roughness.jpg" id="rgh_tex_floor"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/desk_laminate_normal.jpg" id="nrm_tex_kitchen"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/desk_laminate_roughness.jpg" id="rgh_tex_kitchen"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/night_window_normal.jpg" id="nrm_tex_window"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/night_window_roughness.jpg" id="rgh_tex_window"]
 
 [sub_resource type="StandardMaterial3D" id="wall_mat"]
 albedo_texture = ExtResource("tex_wall")
+normal_texture = ExtResource("nrm_tex_wall")
+roughness_texture = ExtResource("rgh_tex_wall")
 roughness = 0.85
 
 [sub_resource type="StandardMaterial3D" id="floor_mat"]
 albedo_texture = ExtResource("tex_floor")
+normal_texture = ExtResource("nrm_tex_floor")
+roughness_texture = ExtResource("rgh_tex_floor")
 roughness = 0.9
 
 [sub_resource type="StandardMaterial3D" id="kitchen_mat"]
 albedo_texture = ExtResource("tex_kitchen")
+normal_texture = ExtResource("nrm_tex_kitchen")
+roughness_texture = ExtResource("rgh_tex_kitchen")
 roughness = 0.8
 
 [sub_resource type="StandardMaterial3D" id="sofa_mat"]
@@ -30,6 +44,8 @@ roughness = 0.8
 
 [sub_resource type="StandardMaterial3D" id="window_mat"]
 albedo_texture = ExtResource("tex_window")
+normal_texture = ExtResource("nrm_tex_window")
+roughness_texture = ExtResource("rgh_tex_window")
 roughness = 0.2
 metallic = 0.3
 

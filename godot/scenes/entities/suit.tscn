@@ -1,7 +1,9 @@
-[gd_scene load_steps=7 format=3 uid="uid://suitentity125"]
+[gd_scene load_steps=9 format=3 uid="uid://suitentity125"]
 
 [ext_resource type="Script" uid="uid://be2qdmaf14jm1" path="res://src/entities/suit.gd" id="1_suit"]
 [ext_resource type="Texture2D" path="res://assets/textures/environment/suit_wool.jpg" id="tex_wool"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/suit_wool_normal.jpg" id="nrm_tex_wool"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/suit_wool_roughness.jpg" id="rgh_tex_wool"]
 
 [sub_resource type="CapsuleShape3D" id="suit_shape"]
 radius = 0.35
@@ -10,6 +12,8 @@ height = 1.8
 [sub_resource type="StandardMaterial3D" id="mat_suit"]
 resource_local_to_scene = true
 albedo_texture = ExtResource("tex_wool")
+normal_texture = ExtResource("nrm_tex_wool")
+roughness_texture = ExtResource("rgh_tex_wool")
 albedo_color = Color(1, 1, 1, 1)
 uv1_scale = Vector3(1, 1, 1)
 roughness = 0.9

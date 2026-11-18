@@ -1,4 +1,4 @@
-[gd_scene load_steps=15 format=3 uid="uid://bp4staircase"]
+[gd_scene load_steps=33 format=3 uid="uid://bp4staircase"]
 
 
 
@@ -15,12 +15,28 @@
 [ext_resource type="Texture2D" path="res://assets/textures/environment/wood_panel.jpg" id="tex_era_mat_1"]
 [ext_resource type="Texture2D" path="res://assets/textures/environment/wood_panel.jpg" id="tex_era_mat_2"]
 [ext_resource type="Texture2D" path="res://assets/textures/environment/wood_panel.jpg" id="tex_era_mat_3"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/concrete_bunker_normal.jpg" id="nrm_tex_step_mat"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/concrete_bunker_roughness.jpg" id="rgh_tex_step_mat"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/concrete_bunker_normal.jpg" id="nrm_tex_concrete_mat"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/concrete_bunker_roughness.jpg" id="rgh_tex_concrete_mat"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/wood_panel_normal.jpg" id="nrm_tex_era_mat_0"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/wood_panel_roughness.jpg" id="rgh_tex_era_mat_0"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/wood_panel_normal.jpg" id="nrm_tex_era_mat_1"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/wood_panel_roughness.jpg" id="rgh_tex_era_mat_1"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/wood_panel_normal.jpg" id="nrm_tex_era_mat_2"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/wood_panel_roughness.jpg" id="rgh_tex_era_mat_2"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/wood_panel_normal.jpg" id="nrm_tex_era_mat_3"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/wood_panel_roughness.jpg" id="rgh_tex_era_mat_3"]
 
 [sub_resource type="StandardMaterial3D" id="step_mat"]
 albedo_texture = ExtResource("tex_step_mat")
+normal_texture = ExtResource("nrm_tex_step_mat")
+roughness_texture = ExtResource("rgh_tex_step_mat")
 roughness = 0.9
 [sub_resource type="StandardMaterial3D" id="concrete_mat"]
 albedo_texture = ExtResource("tex_concrete_mat")
+normal_texture = ExtResource("nrm_tex_concrete_mat")
+roughness_texture = ExtResource("rgh_tex_concrete_mat")
 roughness = 0.95
 [sub_resource type="Environment" id="env_dark"]
 background_mode = 1
@@ -30,18 +46,26 @@ ambient_light_energy = 0.3
 size = Vector3(0.5, 1.0, 0.5)
 [sub_resource type="StandardMaterial3D" id="era_mat_0"]
 albedo_texture = ExtResource("tex_era_mat_0")
+normal_texture = ExtResource("nrm_tex_era_mat_0")
+roughness_texture = ExtResource("rgh_tex_era_mat_0")
 roughness = 0.95
 
 [sub_resource type="StandardMaterial3D" id="era_mat_1"]
 albedo_texture = ExtResource("tex_era_mat_1")
+normal_texture = ExtResource("nrm_tex_era_mat_1")
+roughness_texture = ExtResource("rgh_tex_era_mat_1")
 roughness = 0.95
 
 [sub_resource type="StandardMaterial3D" id="era_mat_2"]
 albedo_texture = ExtResource("tex_era_mat_2")
+normal_texture = ExtResource("nrm_tex_era_mat_2")
+roughness_texture = ExtResource("rgh_tex_era_mat_2")
 roughness = 0.95
 
 [sub_resource type="StandardMaterial3D" id="era_mat_3"]
 albedo_texture = ExtResource("tex_era_mat_3")
+normal_texture = ExtResource("nrm_tex_era_mat_3")
+roughness_texture = ExtResource("rgh_tex_era_mat_3")
 roughness = 0.95
 
 [node name="Staircase" type="Node3D"]

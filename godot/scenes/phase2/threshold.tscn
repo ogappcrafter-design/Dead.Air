@@ -1,4 +1,4 @@
-[gd_scene load_steps=17 format=3 uid="uid://bp2threshold01"]
+[gd_scene load_steps=26 format=3 uid="uid://bp2threshold01"]
 
 [ext_resource type="Script" uid="uid://bp2thresholdscr" path="res://src/levels/threshold_segment.gd" id="1_segment"]
 [ext_resource type="Script" uid="uid://xilho0al60wt" path="res://src/visual/camera_angle.gd" id="3_angle"]
@@ -14,12 +14,22 @@
 [ext_resource type="Texture2D" path="res://assets/textures/environment/carpet_shag.jpg" id="tex_floor_mat"]
 [ext_resource type="Texture2D" path="res://assets/textures/environment/wood_panel.jpg" id="tex_wood_panel_mat"]
 [ext_resource type="Texture2D" path="res://assets/textures/environment/house_siding.jpg" id="tex_door_mat"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/carpet_shag_normal.jpg" id="nrm_tex_floor_mat"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/carpet_shag_roughness.jpg" id="rgh_tex_floor_mat"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/wood_panel_normal.jpg" id="nrm_tex_wood_panel_mat"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/wood_panel_roughness.jpg" id="rgh_tex_wood_panel_mat"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/house_siding_normal.jpg" id="nrm_tex_door_mat"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/house_siding_roughness.jpg" id="rgh_tex_door_mat"]
 
 [sub_resource type="StandardMaterial3D" id="floor_mat"]
 albedo_texture = ExtResource("tex_floor_mat")
+normal_texture = ExtResource("nrm_tex_floor_mat")
+roughness_texture = ExtResource("rgh_tex_floor_mat")
 
 [sub_resource type="StandardMaterial3D" id="wood_panel_mat"]
 albedo_texture = ExtResource("tex_wood_panel_mat")
+normal_texture = ExtResource("nrm_tex_wood_panel_mat")
+roughness_texture = ExtResource("rgh_tex_wood_panel_mat")
 
 [sub_resource type="StandardMaterial3D" id="brass_mat"]
 albedo_color = Color(0.72, 0.58, 0.28, 1)
@@ -28,6 +38,8 @@ roughness = 0.3
 
 [sub_resource type="StandardMaterial3D" id="door_mat"]
 albedo_texture = ExtResource("tex_door_mat")
+normal_texture = ExtResource("nrm_tex_door_mat")
+roughness_texture = ExtResource("rgh_tex_door_mat")
 
 [sub_resource type="BoxShape3D" id="zone_a_shape"]
 size = Vector3(10, 3, 3)
