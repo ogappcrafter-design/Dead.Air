@@ -237,6 +237,51 @@
       "seamless": false,
       "intended_use": "Web favicon",
       "derived_from": "app_icon"
+    },
+    {
+      "id": "asphalt_rough",
+      "path": "godot/assets/textures/environment/asphalt_rough.jpg",
+      "category": "environment",
+      "size": "1024x1024",
+      "seamless": true,
+      "intended_use": "Road and parking lot surfaces",
+      "prompt": "Seamless tileable texture of weathered asphalt road surface, dark gray with fine aggregate, cracks and oil stains, matte roughness, flat orthographic scan, even diffuse lighting, no shadows, no perspective."
+    },
+    {
+      "id": "house_siding",
+      "path": "godot/assets/textures/environment/house_siding.jpg",
+      "category": "environment",
+      "size": "1024x1024",
+      "seamless": true,
+      "intended_use": "Exterior house walls",
+      "prompt": "Seamless tileable texture of 1970s wood house siding, faded white clapboard with paint chipping, slight grain, flat orthographic scan, even lighting."
+    },
+    {
+      "id": "grass_ground",
+      "path": "godot/assets/textures/environment/grass_ground.jpg",
+      "category": "environment",
+      "size": "1024x1024",
+      "seamless": true,
+      "intended_use": "Garden and ground surfaces",
+      "prompt": "Seamless tileable texture of overgrown patchy grass and dirt, muted green-brown, flat orthographic scan."
+    },
+    {
+      "id": "guardrail_metal",
+      "path": "godot/assets/textures/environment/guardrail_metal.jpg",
+      "category": "environment",
+      "size": "1024x1024",
+      "seamless": true,
+      "intended_use": "Highway guardrails",
+      "prompt": "Seamless tileable texture of rusted metal guardrail, dark steel with orange rust streaks, flat scan."
+    },
+    {
+      "id": "fluorescent_ceiling",
+      "path": "godot/assets/textures/environment/fluorescent_ceiling.jpg",
+      "category": "environment",
+      "size": "1024x1024",
+      "seamless": true,
+      "intended_use": "Bunker and industrial ceilings",
+      "prompt": "Seamless tileable texture of industrial fluorescent ceiling tiles, off-white with water stains and grid pattern, flat orthographic scan."
     }
   ]
 }
