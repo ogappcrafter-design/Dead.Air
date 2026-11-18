@@ -1,6 +1,9 @@
 shader_type canvas_item;
 render_mode unshaded, blend_mix;
 
+// Godot 4.7 removed the screen_texture builtin; the screen is now a uniform.
+uniform sampler2D screen_texture : hint_screen_texture, filter_linear_mipmap;
+
 // ============================================================================
 // CRT Post-Processing Shader — DEA-107 / DEA-142
 // Deadair's core visual identity: everything looks like an old CRT monitor.
@@ -185,17 +188,17 @@ void fragment() {
 
 	vec3 color;
 	if (abs(ca_uniform_px) > 0.001 || ca_radial_px > 0.001) {
-		float r = texture(SCREEN_TEXTURE, glitched_uv + ca_offset_r).r;
-		float g = texture(SCREEN_TEXTURE, glitched_uv).g;
-		float b = texture(SCREEN_TEXTURE, glitched_uv + ca_offset_b).b;
+		float r = texture(screen_texture, glitched_uv + ca_offset_r).r;
+		float g = texture(screen_texture, glitched_uv).g;
+		float b = texture(screen_texture, glitched_uv + ca_offset_b).b;
 		color = vec3(r, g, b);
 	} else {
-		color = texture(SCREEN_TEXTURE, glitched_uv).rgb;
+		color = texture(screen_texture, glitched_uv).rgb;
 	}
 
 	// --- Phosphor Bloom ---
 	if (bloom_intensity > 0.01) {
-		vec3 bloom = sample_blur(SCREEN_TEXTURE, glitched_uv, bloom_radius);
+		vec3 bloom = sample_blur(screen_texture, glitched_uv, bloom_radius);
 		// Apply phosphor color tint to bloom
 		bloom *= phosphor_color;
 		color += bloom * bloom_intensity;
@@ -208,7 +211,7 @@ void fragment() {
 	color *= mix(1.0, scanline, scanline_opacity);
 
 	// --- RGB Subpixel pattern (phosphor mask) ---
-	vec2 subpixel_pos = gl_FragCoord.xy;
+	vec2 subpixel_pos = FRAGCOORD.xy;
 	float subpixel_mask = mod(subpixel_pos.x, 3.0);
 	vec3 subpixel_color = vec3(1.0);
 	if (subpixel_mask < 1.0) {
@@ -237,7 +240,7 @@ void fragment() {
 	// --- Static Noise ---
 	float noise_scale = noise_density;
 	if (noise_scale > 0.001) {
-		vec2 noise_uv = gl_FragCoord.xy + vec2(time_sec * 100.0, time_sec * 50.0);
+		vec2 noise_uv = FRAGCOORD.xy + vec2(time_sec * 100.0, time_sec * 50.0);
 		float noise = hash(floor(noise_uv / 2.0));
 		// Only apply noise to some pixels (density control)
 		float noise_mask = step(1.0 - noise_scale, hash(floor(noise_uv / 3.0)));
