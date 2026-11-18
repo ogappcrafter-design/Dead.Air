@@ -50,3 +50,48 @@ func _setup_station() -> void:
 		StationState.register_wrongness_node("hallway_light", hallway_light)
 	if office_door:
 		StationState.register_wrongness_node("office_door", office_door)
+
+	# 6. Ambient motion: dust, flicker, drifting motes per room
+	_setup_ambient()
+
+
+## Adds an AmbientLife node to a room: warm dust motes + fluorescent flicker.
+## Lights are fetched by path so each room's tubes buzz independently.
+func _add_room_ambient(room_path: String, pos: Vector3, light_paths: Array,
+		flicker_depth: float, particle_color: Color, amount: int) -> void:
+	var lights: Array[Light3D] = []
+	for lp in light_paths:
+		var n := get_node_or_null(room_path + "/" + lp)
+		if n is Light3D:
+			lights.append(n)
+	var a := AmbientLife.new()
+	a.name = "Ambient_" + room_path.get_file()
+	a.mode = AmbientLife.ParticleMode.DUST
+	a.particle_color = particle_color
+	a.particle_amount = amount
+	a.particle_size = 0.018
+	a.volume = Vector3(3.6, 2.2, 3.6)
+	a.position = pos
+	a.flicker_lights = lights
+	a.flicker_depth = flicker_depth
+	a.flicker_speed = 1.0
+	add_child(a)
+
+
+func _setup_ambient() -> void:
+	var warm := Color(0.9, 0.85, 0.7, 0.22)
+	var cold := Color(0.7, 0.8, 0.95, 0.2)
+	# Broadcast booth: warm tungsten dust, gentle flicker.
+	_add_room_ambient("Booth", Vector3(0, 1.2, 0), ["WarmLight"], 0.18, warm, 36)
+	# Hallway: sparse cold dust, fluorescent buzz.
+	_add_room_ambient("Hallway", Vector3(20, 1.2, 0), ["HallwayLight"], 0.3, cold, 30)
+	# Bathroom: harsh fluorescent — deeper flicker, cooler motes.
+	_add_room_ambient("Bathroom", Vector3(40, 1.2, 0), ["FluorescentLight"], 0.45, cold, 34)
+	# Back office: two practicals, moderate flicker.
+	_add_room_ambient("BackOffice", Vector3(60, 1.2, 0), ["DeskLamp", "RoomLight"], 0.28, warm, 34)
+	# Rooftop: outdoor ash/drift, no flicker (moonlight stays steady).
+	var roof := AmbientLife.for_ash()
+	roof.name = "Ambient_Rooftop"
+	roof.position = Vector3(80, 6.5, 0)
+	roof.volume = Vector3(9, 5, 9)
+	add_child(roof)

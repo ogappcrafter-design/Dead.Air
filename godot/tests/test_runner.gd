@@ -71,6 +71,7 @@ func _run_tests() -> void:
 		["Phase4Endings", "res://tests/test_phase4_endings.gd"],
 		["Phase4Clearing", "res://tests/test_phase4_clearing.gd"],
 		["CRTDegradation", "res://tests/test_crt_degradation.gd"],
+		["AmbientLife", "res://tests/test_ambient_life.gd"],
 	]
 
 	for suite in test_suites:

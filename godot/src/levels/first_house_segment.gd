@@ -131,6 +131,8 @@ func _setup_and_start() -> void:
 	static_fx.name = "StaticCut"
 	add_child(static_fx)
 	static_fx.play(0.75)
+	# Ambient motion: drifting motes that follow the player.
+	add_child(AmbientLife.for_interior())
 	start_segment()
 
 

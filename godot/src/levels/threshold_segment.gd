@@ -110,6 +110,8 @@ func _setup_and_start() -> void:
 	add_child(static_fx)
 	static_fx.play(STATIC_CUT_DURATION)
 	# Start: Phase 2, seal the door, silence everything but the radio
+	# Ambient motion: drifting motes that follow the player.
+	add_child(AmbientLife.for_liminal())
 	start_segment()
 
 
