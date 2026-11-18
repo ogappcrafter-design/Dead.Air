@@ -1,4 +1,4 @@
-[gd_scene load_steps=21 format=3 uid="uid://bstation01booth"]
+[gd_scene load_steps=24 format=3 uid="uid://bstation01booth"]
 
 [ext_resource type="Script" uid="uid://dk6rm7a0v0721" path="res://src/visual/camera_zone.gd" id="1_zone"]
 [ext_resource type="Script" uid="uid://xilho0al60wt" path="res://src/visual/camera_angle.gd" id="2_angle"]
@@ -8,6 +8,7 @@
 [ext_resource type="Texture2D" path="res://assets/textures/environment/ceiling_acoustic.jpg" id="tex_ceiling"]
 [ext_resource type="Texture2D" path="res://assets/textures/environment/desk_laminate.jpg" id="tex_desk"]
 [ext_resource type="Texture2D" path="res://assets/textures/environment/suit_wool.jpg" id="tex_fabric"]
+[ext_resource type="Texture2D" path="res://assets/textures/props/on_air_sign.jpg" id="tex_on_air"]
 
 [sub_resource type="StandardMaterial3D" id="floor_mat"]
 albedo_texture = ExtResource("tex_carpet")
@@ -50,6 +51,18 @@ roughness = 0.95
 
 [sub_resource type="StandardMaterial3D" id="mug_mat"]
 albedo_color = Color(0.9, 0.9, 0.85, 1)
+
+[sub_resource type="StandardMaterial3D" id="sign_mat"]
+albedo_texture = ExtResource("tex_on_air")
+emission_enabled = true
+emission = Color(1, 1, 1, 1)
+emission_texture = ExtResource("tex_on_air")
+emission_energy_multiplier = 1.2
+roughness = 0.6
+
+[sub_resource type="QuadMesh" id="sign_mesh"]
+size = Vector2(0.9, 0.6)
+material = SubResource("sign_mat")
 
 [sub_resource type="Resource" id="angle_bt1"]
 script = ExtResource("2_angle")
@@ -164,6 +177,11 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.0, 0.82, 0.3)
 size = Vector3(0.08, 0.1, 0.08)
 material = SubResource("mug_mat")
 use_collision = true
+
+[node name="OnAirSign" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.7, 1.8, -1.44)
+mesh = SubResource("sign_mesh")
+cast_shadow = 0
 
 [node name="WarmLight" type="OmniLight3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.4, 0)

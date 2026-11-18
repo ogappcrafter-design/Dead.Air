@@ -1,4 +1,4 @@
-[gd_scene load_steps=20 format=3 uid="uid://bstation04offc"]
+[gd_scene load_steps=23 format=3 uid="uid://bstation04offc"]
 
 [ext_resource type="Script" uid="uid://dk6rm7a0v0721" path="res://src/visual/camera_zone.gd" id="1_zone"]
 [ext_resource type="Script" uid="uid://xilho0al60wt" path="res://src/visual/camera_angle.gd" id="2_angle"]
@@ -8,6 +8,7 @@
 [ext_resource type="Texture2D" path="res://assets/textures/environment/ceiling_acoustic.jpg" id="tex_ceiling"]
 [ext_resource type="Texture2D" path="res://assets/textures/environment/desk_laminate.jpg" id="tex_desk"]
 [ext_resource type="Texture2D" path="res://assets/textures/environment/suit_wool.jpg" id="tex_fabric"]
+[ext_resource type="Texture2D" path="res://assets/textures/props/poster_missing.jpg" id="tex_poster"]
 
 [sub_resource type="StandardMaterial3D" id="floor_mat"]
 albedo_texture = ExtResource("tex_carpet")
@@ -47,6 +48,14 @@ roughness = 0.95
 
 [sub_resource type="StandardMaterial3D" id="mug_mat"]
 albedo_color = Color(0.8, 0.7, 0.6, 1)
+
+[sub_resource type="StandardMaterial3D" id="poster_mat"]
+albedo_texture = ExtResource("tex_poster")
+roughness = 0.9
+
+[sub_resource type="QuadMesh" id="poster_mesh"]
+size = Vector2(0.7, 0.9)
+material = SubResource("poster_mat")
 
 [sub_resource type="StandardMaterial3D" id="door_mat"]
 albedo_texture = ExtResource("tex_wood")
@@ -173,6 +182,11 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0.82, 0.3)
 size = Vector3(0.08, 0.1, 0.08)
 material = SubResource("mug_mat")
 visible = false
+
+[node name="Poster" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.6, 1.55, -1.19)
+mesh = SubResource("poster_mesh")
+cast_shadow = 0
 
 [node name="DeskLamp" type="OmniLight3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.2, 1.3, 0)

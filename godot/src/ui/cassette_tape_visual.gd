@@ -4,6 +4,8 @@
 class_name CassetteTapeVisual
 extends Control
 
+const TAPE_LABEL_TEXTURE: Texture2D = preload("res://assets/textures/props/tape_label.jpg")
+
 signal tape_selected(tape_id: String)
 signal tape_hovered(tape_id: String)
 
@@ -81,6 +83,7 @@ func _build_ui() -> void:
 	_tape_icon.custom_minimum_size = Vector2(176, 110)
 	_tape_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	_tape_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_tape_icon.texture = TAPE_LABEL_TEXTURE
 	vbox.add_child(_tape_icon)
 
 	# Name label

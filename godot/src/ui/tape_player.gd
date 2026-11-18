@@ -11,6 +11,8 @@ signal playback_paused(tape_id: String)
 signal player_closed
 
 const _TAPE_LIBRARY_PATH := "res://src/data/tapes.tres"
+const TAPE_LABEL_TEXTURE: Texture2D = preload("res://assets/textures/props/tape_label.jpg")
+const CRT_BEZEL_TEXTURE: Texture2D = preload("res://assets/textures/props/crt_bezel_frame.jpg")
 
 @export var fade_duration: float = 0.5
 @export var tape_bus_index: int = 8
@@ -45,12 +47,35 @@ func _build_ui() -> void:
 	_bg_panel.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(_bg_panel)
 
+	# CRT bezel behind the controls
+	var bezel_center := CenterContainer.new()
+	bezel_center.set_anchors_preset(Control.PRESET_FULL_RECT)
+	bezel_center.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(bezel_center)
+
+	var bezel := TextureRect.new()
+	bezel.texture = CRT_BEZEL_TEXTURE
+	bezel.custom_minimum_size = Vector2(720, 540)
+	bezel.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	bezel.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	bezel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	bezel_center.add_child(bezel)
+
 	# Container
 	var container := VBoxContainer.new()
 	container.set_anchors_preset(Control.PRESET_FULL_RECT)
 	container.add_theme_constant_override("separation", 16)
 	container.alignment = BoxContainer.ALIGNMENT_CENTER
 	add_child(container)
+
+	# Cassette label artwork
+	var tape_label := TextureRect.new()
+	tape_label.texture = TAPE_LABEL_TEXTURE
+	tape_label.custom_minimum_size = Vector2(240, 150)
+	tape_label.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	tape_label.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	tape_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	container.add_child(tape_label)
 
 	# Title label
 	_title_label = Label.new()
