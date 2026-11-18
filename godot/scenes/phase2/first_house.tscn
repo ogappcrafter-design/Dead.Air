@@ -7,17 +7,21 @@
 [ext_resource type="Resource" uid="uid://11e914f432000" path="res://src/data/band_config.tres" id="5_band"]
 [ext_resource type="Script" uid="uid://cn3ic8sfogvs3" path="res://src/audio/radio_static.gd" id="6_static"]
 [ext_resource type="Script" uid="uid://be6swwtavc18m" path="res://src/visual/camera_rig.gd" id="7_rig"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/wood_panel.jpg" id="tex_wall"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/carpet_shag.jpg" id="tex_floor"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/desk_laminate.jpg" id="tex_kitchen"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/night_window.jpg" id="tex_window"]
 
 [sub_resource type="StandardMaterial3D" id="wall_mat"]
-albedo_color = Color(0.22, 0.19, 0.15, 1)
+albedo_texture = ExtResource("tex_wall")
 roughness = 0.85
 
 [sub_resource type="StandardMaterial3D" id="floor_mat"]
-albedo_color = Color(0.18, 0.13, 0.09, 1)
+albedo_texture = ExtResource("tex_floor")
 roughness = 0.9
 
 [sub_resource type="StandardMaterial3D" id="kitchen_mat"]
-albedo_color = Color(0.2, 0.2, 0.18, 1)
+albedo_texture = ExtResource("tex_kitchen")
 roughness = 0.8
 
 [sub_resource type="StandardMaterial3D" id="sofa_mat"]
@@ -25,7 +29,7 @@ albedo_color = Color(0.25, 0.18, 0.14, 1)
 roughness = 0.8
 
 [sub_resource type="StandardMaterial3D" id="window_mat"]
-albedo_color = Color(0.05, 0.06, 0.08, 1)
+albedo_texture = ExtResource("tex_window")
 roughness = 0.2
 metallic = 0.3
 
