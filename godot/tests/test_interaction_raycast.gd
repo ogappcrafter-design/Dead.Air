@@ -57,8 +57,8 @@ func _create_setup() -> Dictionary:
 func _teardown(setup: Dictionary) -> void:
 	var tree := _get_tree()
 	for key in setup.keys():
-		var node: Node = setup[key]
-		if is_instance_valid(node) and node is Node:
+		var node = setup[key]
+		if node is Node and is_instance_valid(node):
 			if node.get_parent():
 				node.get_parent().remove_child(node)
 			node.free()
@@ -84,12 +84,11 @@ func test_raycast_target_changed_signal() -> bool:
 	var raycast: InteractionRaycast = setup["raycast"]
 	var interactable: Interactable = setup["interactable"]
 
-	var signal_received := false
-	var received_target: Interactable = null
+	var observed := {"fired": false, "target": null}
 	raycast.target_changed.connect(
 		func(target: Interactable) -> void:
-			signal_received = true
-			received_target = target
+			observed["fired"] = true
+			observed["target"] = target
 	)
 
 	# Simulate a previously-detected target, then call _update_target.
@@ -98,8 +97,8 @@ func test_raycast_target_changed_signal() -> bool:
 	raycast.current_target = interactable
 	raycast._update_target()
 
-	var fired := signal_received == true
-	var lost_target := received_target == null
+	var fired: bool = observed["fired"] == true
+	var lost_target := observed["target"] == null
 
 	_teardown(setup)
 	return fired and lost_target
@@ -110,20 +109,19 @@ func test_raycast_interact_performed_signal() -> bool:
 	var raycast: InteractionRaycast = setup["raycast"]
 	var interactable: Interactable = setup["interactable"]
 
-	var signal_received := false
-	var received_target: Interactable = null
+	var observed := {"fired": false, "target": null}
 	raycast.interact_performed.connect(
 		func(target: Interactable) -> void:
-			signal_received = true
-			received_target = target
+			observed["fired"] = true
+			observed["target"] = target
 	)
 
 	# Set a target and call _try_interact — should dispatch interact and emit signal
 	raycast.current_target = interactable
 	raycast._try_interact()
 
-	var fired := signal_received == true
-	var correct_target := received_target == interactable
+	var fired: bool = observed["fired"] == true
+	var correct_target: bool = observed["target"] == interactable
 
 	_teardown(setup)
 	return fired and correct_target
@@ -139,18 +137,18 @@ func test_raycast_examine_performed_signal() -> bool:
 	note.note_content = "Examine payload test."
 	_get_tree().root.add_child(note)
 
-	var signal_received := false
-	var received_text: String = ""
+	var observed := {"fired": false, "text": ""}
 	raycast.examine_performed.connect(
 		func(_target: Interactable, text: String) -> void:
-			signal_received = true
-			received_text = text
+			observed["fired"] = true
+			observed["text"] = text
 	)
 
 	raycast.current_target = note
 	raycast._try_examine()
 
-	var fired := signal_received == true
+	var fired: bool = observed["fired"] == true
+	var received_text: String = observed["text"]
 	var text_ok := (
 		received_text.contains("Test Note") and received_text.contains("Examine payload test.")
 	)

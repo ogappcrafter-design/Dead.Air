@@ -133,6 +133,12 @@ func test_suit_spawns_after_delay() -> bool:
 func test_detection_costs_composure_and_relocates() -> bool:
 	var segment: Node = _load_segment()
 	await _wait_frames(3)
+	# Composure is a shared autoload drained by earlier suites; pin a known
+	# starting level so the 25-point assertion is deterministic.
+	var dc: Node = segment._get_dread_composure()
+	var original_composure: float = segment.get_composure()
+	if dc:
+		dc.set_composure(100.0)
 	var before: float = segment.get_composure()
 	var got_detect := [false]
 	var got_relocate := [false]
@@ -149,6 +155,8 @@ func test_detection_costs_composure_and_relocates() -> bool:
 		ok = after <= before - 25.0
 	if ok:
 		ok = got_relocate[0]
+	if dc:
+		dc.set_composure(original_composure)
 	_cleanup_segment(segment)
 	return ok
 

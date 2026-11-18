@@ -46,20 +46,20 @@ func test_base_defaults() -> bool:
 
 func test_base_interact_emits_signal() -> bool:
 	var inter := Interactable.new()
-	var signal_received := false
-	inter.interacted.connect(func(_interactor: Node) -> void: signal_received = true)
+	var observed := {"fired": false}
+	inter.interacted.connect(func(_interactor: Node) -> void: observed["fired"] = true)
 	inter.interact(null)
 	inter.free()
-	return signal_received
+	return observed["fired"]
 
 
 func test_base_examine_emits_signal() -> bool:
 	var inter := Interactable.new()
-	var signal_received := false
-	inter.examine_requested.connect(func(_interactor: Node) -> void: signal_received = true)
+	var observed := {"fired": false}
+	inter.examine_requested.connect(func(_interactor: Node) -> void: observed["fired"] = true)
 	inter.examine(null)
 	inter.free()
-	return signal_received
+	return observed["fired"]
 
 
 # --- CassetteTape ---

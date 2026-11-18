@@ -15,7 +15,7 @@ func run_tests() -> Dictionary:
 	results["test_overlap_below_ten"] = await test_overlap_below_ten()
 	results["test_call_drains_composure"] = await test_call_drains_composure()
 	results["test_line_corruption"] = test_line_corruption()
-	results["test_no_tapes_from_false_calls"] = test_no_tapes_from_false_calls()
+	results["test_no_tapes_from_false_calls"] = await test_no_tapes_from_false_calls()
 	return results
 
 

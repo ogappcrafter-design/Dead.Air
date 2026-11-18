@@ -23,6 +23,9 @@ func run_tests() -> Dictionary:
 
 func test_save_and_load() -> bool:
 	SaveManager.delete_all_saves()
+	# save_game syncs the live MoralChoiceTracker over the SaveData fields,
+	# so the tracker is the authority for empathy_score on the round trip.
+	MoralChoiceTracker.set_empathy_score(55)
 
 	var sd := SaveData.new()
 	sd.phase = 2
@@ -34,7 +37,7 @@ func test_save_and_load() -> bool:
 	sd.position_y = 0.0
 	sd.position_z = -3.0
 	sd.camera_zone = "booth"
-	sd.tapes_collected = ["tape_01", "tape_03"]
+	sd.tapes_collected = ["tape-001", "tape-003"]
 	sd.bands_unlocked = ["AM"]
 
 	var ok := SaveManager.save_game("test_01", sd)
@@ -60,8 +63,10 @@ func test_save_and_load() -> bool:
 	]
 
 	SaveManager.delete_save("test_01")
-	for check in checks:
-		if not check:
+	MoralChoiceTracker.reset()
+	for i in checks.size():
+		if not checks[i]:
+			print("    FAIL: check %d (%s)" % [i, checks[i]])
 			return false
 	return true
 

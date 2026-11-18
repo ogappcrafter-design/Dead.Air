@@ -85,15 +85,15 @@ func test_summary_save_disables_buttons() -> bool:
 func test_summary_continue_emits_signal() -> bool:
 	var summary := ShiftSummary.new()
 	Engine.get_main_loop().root.add_child(summary)
-	var signal_received := false
-	summary.continue_pressed.connect(func(): signal_received = true)
+	var observed := {"fired": false}
+	summary.continue_pressed.connect(func(): observed["fired"] = true)
 	var buttons := _find_buttons(summary)
 	for btn in buttons:
 		if "Continue" in btn.text:
 			btn.pressed.emit()
 			break
 	summary.queue_free()
-	return signal_received
+	return observed["fired"]
 
 
 func test_summary_set_data_updates_display() -> bool:

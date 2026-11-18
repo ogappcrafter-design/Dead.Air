@@ -157,12 +157,12 @@ func test_request_save_blocked_in_phase_2() -> bool:
 	_reset_phase_manager()
 	PhaseManager.set_phase(PhaseEnums.Phase.PHASE_2_BREAK)
 	# Track save_blocked signal
-	var blocked_reason := ""
-	PhaseManager.save_blocked.connect(func(reason: String) -> void: blocked_reason = reason)
+	var observed := {"reason": ""}
+	PhaseManager.save_blocked.connect(func(reason: String) -> void: observed["reason"] = reason)
 	var allowed := PhaseManager.request_save()
 	if allowed != false:
 		return false
-	if blocked_reason.is_empty():
+	if observed["reason"].is_empty():
 		return false
 	return true
 
