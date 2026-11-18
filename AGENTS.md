@@ -56,6 +56,10 @@ High contrast + text size: `HighContrastManager` (`godot/src/ui/high_contrast_ma
 
 The shader's `ca_radial_amount` / `signal_scanline_drift` uniforms (DEA-142) were restored by DEA-145 — they were removed in the companion sync only because their driver was gone; DEA-145's `compute_params` drives them again.
 
+## Ambient Motion System
+
+`AmbientLife` (`godot/src/visual/ambient_life.gd`, class_name) is the ambient motion layer: GPUParticles3D dust/fog/ash/static modes, fluorescent flicker with random dropouts (`flicker_lights`/`flicker_depth`), emissive pulses (`pulse_targets`), and an optional player-following emission volume (`follow_target` — lazy-acquired from group "player"; switches particles to world-space with an 80m visibility AABB). Presets: `for_interior(lights)`, `for_liminal()`, `for_ash()`, `for_static()`, `for_neon(pulse)`. station.gd wires per-room ambient (`_setup_ambient`); each phase segment script adds a mood preset before `start_segment()`. Tests: `tests/test_ambient_life.gd` (suite total 715); `tests/visual_driver_ambient.gd` proves live motion under Xvfb via frame diffs.
+
 ## Endless Night (DEA-86, mobile app)
 
 `useEndlessNight` hook (`hooks/useEndlessNight.ts`, mounted on the radio screen) drives the endless run loop: auto-starts after the first completed shift, schedules calls at `getEndlessCallInterval` (escalation-scaled, 25s floor), idle sanity drain, and submits the run to the leaderboard on game-over. Rare events use id base **6000** in `callManagerInstance` (keep that range reserved); core bands are 0–4 (the five fragment libraries all support the advanced call-type set). Game-over fires inside `gameStateSlice.decreaseSanity` **before** the no_rest wipe — keep that ordering.
