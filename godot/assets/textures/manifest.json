@@ -283,5 +283,6 @@
       "intended_use": "Bunker and industrial ceilings",
       "prompt": "Seamless tileable texture of industrial fluorescent ceiling tiles, off-white with water stains and grid pattern, flat orthographic scan."
     }
-  ]
+  ],
+  "commercial_model": "cf/@cf/black-forest-labs/flux-2-klein-9b"
 }
