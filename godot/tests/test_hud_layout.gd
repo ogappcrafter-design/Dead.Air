@@ -139,6 +139,9 @@ func get_total_encountered() -> int:
 signal tape_collected(tape_id)
 signal tape_consumed(tape_id)
 """
+	var err: int = script.reload()
+	if err != OK:
+		push_error("mock tape inventory script failed to compile: %d" % err)
 	inv.set_script(script)
 	return inv
 

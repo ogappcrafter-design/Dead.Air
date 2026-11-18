@@ -405,12 +405,12 @@ func test_redacted_reveal() -> bool:
 		return false
 
 	# Verify the redacted band reveal signal exists and can be connected.
-	var signal_received: bool = false
-	tuner.redacted_band_revealed.connect(func() -> void: signal_received = true)
+	var observed := {"fired": false}
+	tuner.redacted_band_revealed.connect(func() -> void: observed["fired"] = true)
 
 	# Switch to ████████ band (id=4).
 	tuner.set_band(4)
-	if not signal_received:
+	if not observed["fired"]:
 		print("    FAIL: redacted_band_revealed signal not emitted when switching to band 4")
 		return false
 
@@ -426,9 +426,9 @@ func test_redacted_reveal() -> bool:
 		return false
 
 	# Switch back to verify signal fires again.
-	signal_received = false
+	observed["fired"] = false
 	tuner.set_band(4)
-	if not signal_received:
+	if not observed["fired"]:
 		print("    FAIL: redacted_band_revealed signal not emitted on second switch to band 4")
 		return false
 

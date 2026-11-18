@@ -110,8 +110,7 @@ func _build_ui() -> void:
 	_signal_bar.min_value = 0.0
 	_signal_bar.max_value = 100.0
 	_signal_bar.show_percentage = false
-	_signal_bar.vertical = true
-	_signal_bar.fill_mode = ProgressBar.FILL_BEGIN_TO_END
+	_signal_bar.fill_mode = ProgressBar.FILL_BOTTOM_TO_TOP
 	_signal_bar.modulate = CRTText.PHOSPHOR_GREEN
 	_signal_bar_offset_top = _signal_bar.offset_top
 	_signal_bar_offset_bottom = _signal_bar.offset_bottom
@@ -131,7 +130,7 @@ func _build_ui() -> void:
 	_composure_bar.min_value = 0.0
 	_composure_bar.max_value = 100.0
 	_composure_bar.show_percentage = false
-	_composure_bar.vertical = true
+	_composure_bar.fill_mode = ProgressBar.FILL_BOTTOM_TO_TOP
 	_composure_bar.modulate = CRTText.AMBER
 	_composure_bar_offset_top = _composure_bar.offset_top
 	_composure_bar_offset_bottom = _composure_bar.offset_bottom
