@@ -66,6 +66,24 @@ The shader's `ca_radial_amount` / `signal_scanline_drift` uniforms (DEA-142) wer
 
 Godot 4.7 is installed at `/usr/local/bin/godot`, and `godot --headless --import` has generated `.import` sidecars for all 20 textures. Station scenes (`station/booth|hallway|bathroom|back_office|rooftop`), `phase3/bunker.tscn`, and `entities/suit.tscn` assign them; architecture materials use world triplanar mapping to keep texture orientation consistent across CSG box faces. Other phase scenes still use flat colors. Generated via the local 9router gateway with FLUX.2 Dev (`cf/@cf/black-forest-labs/flux-2-dev`) and post-processed with Pillow (1920x1080 key-art crops, roll-plus-feather seamless wrap, icon mat flood-fill). FLUX.2 [dev] is non-commercial: regenerate with FLUX.2 [klein] or FLUX.1 [schnell] (Apache-2.0) using `godot/assets/textures/regenerate.py` before shipping commercially.
 
+## Godot test suite and API gotchas
+
+Run the suite only through the runner (single `tests/test_*.gd` files fail at compile time because autoloads are unavailable to a bare `--script`):
+
+```bash
+cd godot && /usr/local/bin/godot --headless --path . --script res://tests/test_runner.gd > /tmp/godot_test.log 2>&1
+```
+
+Exit 1 is expected whenever any test fails; judge by `Total: / Passed: / Failed:`. Baseline after the 2026-11-18 graphics work: **709 total, 0 failed**.
+
+Sharp edges that caused the old 26-failure baseline:
+
+- **GDScript lambdas capture locals by value.** A test that does `var fired := false; sig.connect(func(): fired = true)` can never observe the signal. Use an `Array`/`Dictionary` holder (`var fired := [false]`) or a bound method.
+- **`ProgressBar.vertical` does not exist in Godot 4.7.** Setting it raises and aborts the rest of the builder function, leaving later nodes null. Use `fill_mode = ProgressBar.FILL_BOTTOM_TO_TOP` for vertical meters.
+- **`.tres` Colors need `Color(r, g, b, a)`.** The bare `color = 1.0, 0.55, 0.0, 1` form loads silently as black; `band_config.tres` had this bug.
+- **`save_game()` syncs live trackers over `SaveData`** (`CRTDegradation`, `MoralChoiceTracker`), so tests asserting those fields must set the tracker, not just the SaveData field.
+- **`GDScript.new()` + `source_code` needs `reload()`** before `set_script()`, otherwise the node has no methods.
+
 ## Maintaining this file
 
 Keep this file for knowledge useful to almost every future agent session in this project.
