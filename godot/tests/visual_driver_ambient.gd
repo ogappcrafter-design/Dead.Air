@@ -1,19 +1,29 @@
 extends Node
 ## Visual verification driver for AmbientLife.
-## Loads a scene, captures frames over time, and measures pixel change to
-## prove ambient motion (particles + flicker) is actually rendering.
+## Loads the station, captures frames over time, measures pixel change
+## (particles + flicker), samples emissive pulse (ON AIR sign + antenna
+## beacon), then repeats the motion check on the liminal phase scene.
 ## Usage: xvfb-run godot --path godot res://tests/visual_driver_ambient.tscn
 
 const OUT_DIR := "screenshot"
-const SCENE_PATH := "res://scenes/station/station.tscn"
+const STATION_PATH := "res://scenes/station/station.tscn"
+const LIMINAL_PATH := "res://scenes/phase3/liminal_space.tscn"
 
-var _frames: Array[Image] = []
+var _station_ok := false
+var _pulse_sign_ok := false
+var _pulse_beacon_ok := false
+var _liminal_ok := false
 
 
 func _ready() -> void:
 	DirAccess.open("user://").make_dir(OUT_DIR)
-	var scene: PackedScene = load(SCENE_PATH)
-	var inst := scene.instantiate()
+	await _run_station()
+	await _run_liminal()
+	_finish()
+
+
+func _run_station() -> void:
+	var inst: Node = (load(STATION_PATH) as PackedScene).instantiate()
 	inst.name = "Station"
 	get_tree().root.add_child.call_deferred(inst)
 	await get_tree().process_frame
@@ -22,27 +32,74 @@ func _ready() -> void:
 	# Aim the active camera into the booth interior so particles are in view.
 	var cam := get_viewport().get_camera_3d()
 	if cam != null:
-		cam.global_position = Vector3(-1.1, 1.6, 1.1)
-		cam.look_at(Vector3(1.4, 1.3, -0.9))
+		cam.global_position = Vector3(0, 1.7, 2.6)
+		cam.look_at(Vector3(0, 1.1, -1.5), Vector3.UP)
 	await get_tree().create_timer(0.5).timeout
-	await _capture_sequence()
-	_finish()
-
-
-func _snap(idx: int) -> Image:
-	await get_tree().process_frame
-	var img := get_viewport().get_texture().get_image()
-	img.save_png("user://%s/ambient_%d.png" % [OUT_DIR, idx])
-	return img
-
-
-func _capture_sequence() -> void:
-	# Three frames ~0.8s apart: ambient particles drift and lights flicker,
-	# so consecutive frames must differ if motion is live.
+	var frames: Array[Image] = []
 	for i in range(3):
-		_frames.append(await _snap(i))
+		frames.append(await _snap("station", i))
 		if i < 2:
 			await get_tree().create_timer(0.8).timeout
+	var d01 := _diff(frames[0], frames[1])
+	var d12 := _diff(frames[1], frames[2])
+	_station_ok = d01 > 0.001 and d12 > 0.001
+	print("[AmbientDriver] station diff 0->1: %.4f 1->2: %.4f" % [d01, d12])
+	_pulse_sign_ok = await _check_pulse("/root/Station/Booth/OnAirSign", false)
+	_pulse_beacon_ok = await _check_pulse("/root/Station/Rooftop/AntennaCrossbar", true)
+	print("[AmbientDriver] pulse sign=%s beacon=%s" % [
+		"YES" if _pulse_sign_ok else "NO",
+		"YES" if _pulse_beacon_ok else "NO"])
+	inst.queue_free()
+	await get_tree().process_frame
+
+
+func _check_pulse(node_path: String, is_override: bool) -> bool:
+	var n := get_node_or_null(node_path) as GeometryInstance3D
+	if n == null:
+		return false
+	var mat: StandardMaterial3D = null
+	if is_override and n.material_override is StandardMaterial3D:
+		mat = n.material_override as StandardMaterial3D
+	elif n.mesh != null:
+		var m: Material = n.get_active_material(0)
+		if m is StandardMaterial3D:
+			mat = m as StandardMaterial3D
+	if mat == null or not mat.emission_enabled:
+		return false
+	var lo := mat.emission_energy_multiplier
+	var hi := lo
+	for i in range(50):
+		await get_tree().process_frame
+		lo = minf(lo, mat.emission_energy_multiplier)
+		hi = maxf(hi, mat.emission_energy_multiplier)
+	return hi - lo > 0.05
+
+
+func _run_liminal() -> void:
+	var inst: Node = (load(LIMINAL_PATH) as PackedScene).instantiate()
+	inst.name = "Liminal"
+	get_tree().root.add_child.call_deferred(inst)
+	await get_tree().process_frame
+	await get_tree().process_frame
+	await get_tree().create_timer(2.0).timeout
+	var frames: Array[Image] = []
+	for i in range(3):
+		frames.append(await _snap("liminal", i))
+		if i < 2:
+			await get_tree().create_timer(0.8).timeout
+	var d01 := _diff(frames[0], frames[1])
+	var d12 := _diff(frames[1], frames[2])
+	_liminal_ok = d01 > 0.001 and d12 > 0.001
+	print("[AmbientDriver] liminal diff 0->1: %.4f 1->2: %.4f" % [d01, d12])
+	inst.queue_free()
+	await get_tree().process_frame
+
+
+func _snap(tag: String, idx: int) -> Image:
+	await get_tree().process_frame
+	var img := get_viewport().get_texture().get_image()
+	img.save_png("user://%s/ambient_%s_%d.png" % [OUT_DIR, tag, idx])
+	return img
 
 
 func _diff(a: Image, b: Image) -> float:
@@ -59,21 +116,11 @@ func _diff(a: Image, b: Image) -> float:
 	return total / maxf(count, 1.0)
 
 
-## Park the camera inside the booth looking across the dust volume, so the
-## motes drift through the warm light cone in frame.
-func _aim_camera() -> void:
-	var cam := get_viewport().get_camera_3d()
-	if cam == null:
-		return
-	cam.global_position = Vector3(0, 1.7, 2.6)
-	if cam.has_method("look_at"):
-		cam.look_at(Vector3(0, 1.1, -1.5), Vector3.UP)
-
 func _finish() -> void:
-	var d01 := _diff(_frames[0], _frames[1])
-	var d12 := _diff(_frames[1], _frames[2])
-	print("[AmbientDriver] frame diff 0->1: %.4f" % d01)
-	print("[AmbientDriver] frame diff 1->2: %.4f" % d12)
-	var moving := d01 > 0.001 and d12 > 0.001
-	print("[AmbientDriver] MOTION=%s" % ("YES" if moving else "NO"))
-	get_tree().quit(0 if moving else 1)
+	var ok := _station_ok and _pulse_sign_ok and _pulse_beacon_ok and _liminal_ok
+	print("[AmbientDriver] STATION_MOTION=%s PULSE_SIGN=%s PULSE_BEACON=%s LIMINAL_MOTION=%s" % [
+		"YES" if _station_ok else "NO",
+		"YES" if _pulse_sign_ok else "NO",
+		"YES" if _pulse_beacon_ok else "NO",
+		"YES" if _liminal_ok else "NO"])
+	get_tree().quit(0 if ok else 1)

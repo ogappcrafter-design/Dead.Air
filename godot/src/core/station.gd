@@ -58,7 +58,8 @@ func _setup_station() -> void:
 ## Adds an AmbientLife node to a room: warm dust motes + fluorescent flicker.
 ## Lights are fetched by path so each room's tubes buzz independently.
 func _add_room_ambient(room_path: String, pos: Vector3, light_paths: Array,
-		flicker_depth: float, particle_color: Color, amount: int) -> void:
+		flicker_depth: float, particle_color: Color, amount: int,
+		pulse_paths: Array = []) -> void:
 	var lights: Array[Light3D] = []
 	for lp in light_paths:
 		var n := get_node_or_null(room_path + "/" + lp)
@@ -75,6 +76,10 @@ func _add_room_ambient(room_path: String, pos: Vector3, light_paths: Array,
 	a.flicker_lights = lights
 	a.flicker_depth = flicker_depth
 	a.flicker_speed = 1.0
+	for pp in pulse_paths:
+		var pn := get_node_or_null(room_path + "/" + pp)
+		if pn is GeometryInstance3D:
+			a.pulse_targets.append(pn)
 	add_child(a)
 
 
@@ -82,7 +87,7 @@ func _setup_ambient() -> void:
 	var warm := Color(0.9, 0.85, 0.7, 0.22)
 	var cold := Color(0.7, 0.8, 0.95, 0.2)
 	# Broadcast booth: warm tungsten dust, gentle flicker.
-	_add_room_ambient("Booth", Vector3(0, 1.2, 0), ["WarmLight"], 0.18, warm, 36)
+	_add_room_ambient("Booth", Vector3(0, 1.2, 0), ["WarmLight"], 0.18, warm, 36, ["OnAirSign"])
 	# Hallway: sparse cold dust, fluorescent buzz.
 	_add_room_ambient("Hallway", Vector3(20, 1.2, 0), ["HallwayLight"], 0.3, cold, 30)
 	# Bathroom: harsh fluorescent — deeper flicker, cooler motes.
@@ -94,4 +99,16 @@ func _setup_ambient() -> void:
 	roof.name = "Ambient_Rooftop"
 	roof.position = Vector3(80, 6.5, 0)
 	roof.volume = Vector3(9, 5, 9)
+	var crossbar: GeometryInstance3D = get_node_or_null("Rooftop/AntennaCrossbar")
+	if crossbar != null:
+		# Aircraft-warning beacon: dark housing, red glow, slow deep sweep.
+		var beacon := StandardMaterial3D.new()
+		beacon.albedo_color = Color(0.15, 0.02, 0.02, 1)
+		beacon.emission_enabled = true
+		beacon.emission = Color(1.0, 0.08, 0.04, 1)
+		beacon.emission_energy_multiplier = 2.0
+		crossbar.material_override = beacon
+		roof.pulse_targets.append(crossbar)
+		roof.pulse_depth = 0.9
+		roof.pulse_speed = 0.8
 	add_child(roof)
