@@ -1,11 +1,17 @@
-[gd_scene load_steps=11 format=3 uid="uid://bstation05roof"]
+[gd_scene load_steps=12 format=3 uid="uid://bstation05roof"]
 
 [ext_resource type="Script" uid="uid://dk6rm7a0v0721" path="res://src/visual/camera_zone.gd" id="1_zone"]
 [ext_resource type="Script" uid="uid://xilho0al60wt" path="res://src/visual/camera_angle.gd" id="2_angle"]
 [ext_resource type="Script" uid="uid://51crg13hs5r6" path="res://src/core/door_trigger.gd" id="3_door"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/concrete_bunker.jpg" id="tex_concrete"]
 
 [sub_resource type="StandardMaterial3D" id="floor_mat"]
-albedo_color = Color(0.08, 0.08, 0.09, 1)
+albedo_texture = ExtResource("tex_concrete")
+albedo_color = Color(0.55, 0.58, 0.62, 1)
+uv1_scale = Vector3(4, 4, 1)
+uv1_triplanar = true
+uv1_world_triplanar = true
+roughness = 0.95
 
 [sub_resource type="StandardMaterial3D" id="railing_mat"]
 albedo_color = Color(0.1, 0.1, 0.1, 1)

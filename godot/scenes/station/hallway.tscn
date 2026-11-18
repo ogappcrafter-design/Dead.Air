@@ -1,17 +1,35 @@
-[gd_scene load_steps=12 format=3 uid="uid://bstation02hall"]
+[gd_scene load_steps=15 format=3 uid="uid://bstation02hall"]
 
 [ext_resource type="Script" uid="uid://dk6rm7a0v0721" path="res://src/visual/camera_zone.gd" id="1_zone"]
 [ext_resource type="Script" uid="uid://xilho0al60wt" path="res://src/visual/camera_angle.gd" id="2_angle"]
 [ext_resource type="Script" uid="uid://51crg13hs5r6" path="res://src/core/door_trigger.gd" id="3_door"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/carpet_shag.jpg" id="tex_carpet"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/wallpaper_1970s.jpg" id="tex_wallpaper"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/ceiling_acoustic.jpg" id="tex_ceiling"]
 
 [sub_resource type="StandardMaterial3D" id="floor_mat"]
-albedo_color = Color(0.1, 0.1, 0.09, 1)
+albedo_texture = ExtResource("tex_carpet")
+albedo_color = Color(1, 1, 1, 1)
+uv1_scale = Vector3(4, 4, 1)
+uv1_triplanar = true
+uv1_world_triplanar = true
+roughness = 1.0
 
 [sub_resource type="StandardMaterial3D" id="wall_mat"]
-albedo_color = Color(0.18, 0.18, 0.2, 1)
+albedo_texture = ExtResource("tex_wallpaper")
+albedo_color = Color(1, 1, 1, 1)
+uv1_scale = Vector3(2, 2, 1)
+uv1_triplanar = true
+uv1_world_triplanar = true
+roughness = 0.9
 
 [sub_resource type="StandardMaterial3D" id="ceiling_mat"]
-albedo_color = Color(0.22, 0.22, 0.24, 1)
+albedo_texture = ExtResource("tex_ceiling")
+albedo_color = Color(1, 1, 1, 1)
+uv1_scale = Vector3(3, 3, 1)
+uv1_triplanar = true
+uv1_world_triplanar = true
+roughness = 1.0
 
 [sub_resource type="Resource" id="angle_h1"]
 script = ExtResource("2_angle")

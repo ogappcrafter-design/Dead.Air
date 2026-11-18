@@ -1,17 +1,34 @@
-[gd_scene load_steps=13 format=3 uid="uid://bstation03bath"]
+[gd_scene load_steps=15 format=3 uid="uid://bstation03bath"]
 
 [ext_resource type="Script" uid="uid://dk6rm7a0v0721" path="res://src/visual/camera_zone.gd" id="1_zone"]
 [ext_resource type="Script" uid="uid://xilho0al60wt" path="res://src/visual/camera_angle.gd" id="2_angle"]
 [ext_resource type="Script" uid="uid://51crg13hs5r6" path="res://src/core/door_trigger.gd" id="3_door"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/concrete_bunker.jpg" id="tex_concrete"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/ceiling_acoustic.jpg" id="tex_ceiling"]
 
 [sub_resource type="StandardMaterial3D" id="floor_mat"]
-albedo_color = Color(0.15, 0.15, 0.16, 1)
+albedo_texture = ExtResource("tex_concrete")
+albedo_color = Color(0.8, 0.82, 0.84, 1)
+uv1_scale = Vector3(3, 3, 1)
+uv1_triplanar = true
+uv1_world_triplanar = true
+roughness = 0.95
 
 [sub_resource type="StandardMaterial3D" id="wall_mat"]
-albedo_color = Color(0.2, 0.22, 0.24, 1)
+albedo_texture = ExtResource("tex_concrete")
+albedo_color = Color(0.82, 0.9, 0.88, 1)
+uv1_scale = Vector3(2, 2, 1)
+uv1_triplanar = true
+uv1_world_triplanar = true
+roughness = 0.9
 
 [sub_resource type="StandardMaterial3D" id="ceiling_mat"]
-albedo_color = Color(0.24, 0.24, 0.26, 1)
+albedo_texture = ExtResource("tex_ceiling")
+albedo_color = Color(0.9, 0.9, 0.9, 1)
+uv1_scale = Vector3(3, 3, 1)
+uv1_triplanar = true
+uv1_world_triplanar = true
+roughness = 1.0
 
 [sub_resource type="StandardMaterial3D" id="sink_mat"]
 albedo_color = Color(0.7, 0.7, 0.72, 1)
