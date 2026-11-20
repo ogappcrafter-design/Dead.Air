@@ -88,6 +88,18 @@ Sharp edges that caused the old 26-failure baseline:
 - **`save_game()` syncs live trackers over `SaveData`** (`CRTDegradation`, `MoralChoiceTracker`), so tests asserting those fields must set the tracker, not just the SaveData field.
 - **`GDScript.new()` + `source_code` needs `reload()`** before `set_script()`, otherwise the node has no methods.
 
+## OpenDesign (`od`) — machine install and repo project
+
+OpenDesign ([nexu-io/open-design](https://github.com/nexu-io/open-design)) is installed from source on this machine; deadair is registered there as an imported-folder project. Nothing in this repo's build depends on it — OD is a design/tooling daemon used alongside the game work.
+
+- **Checkout:** `/home/vivi/open-design` (v0.27.2, pnpm 10.33.2 via corepack). `pnpm install` builds every package, including the daemon at `apps/daemon/dist/cli.js`.
+- **CLI:** `~/.local/bin/od` is a shim (`exec node .../apps/daemon/dist/cli.js "$@"`), also linked as `open-design`. It **shadows uutils coreutils `od`**; the system binary is still `/usr/bin/od`, so use the absolute path in scripts that need the octal dump.
+- **Daemon:** runs as the systemd user unit `od-daemon.service` (`~/.config/systemd/user/od-daemon.service`, `Restart=on-failure`, `OD_DATA_DIR` set; `Linger=yes` so it survives logout): `systemctl --user restart od-daemon`, logs via `journalctl --user -u od-daemon`. Do not park it in an agent shell session. Health: `curl -s http://127.0.0.1:7456/api/health`. Data root is repo-local: `/home/vivi/open-design/.od` (`OD_DATA_DIR`).
+- **This repo's project:** id `6b92a357-a3e1-449a-ac4e-37c7df836149`, `metadata.baseDir = /home/vivi/deadair`, kind `prototype`. Inspect with `od project list --json`; refresh by re-running `od project import /home/vivi/deadair --name "Dead Air"` against a running daemon.
+- **MCP:** `od mcp install <agent>` writes the stdio server entry from the daemon's `/api/mcp/install-info`. Installed for `codex` (`~/.codex/config.toml`), `opencode` (`~/.config/opencode/opencode.json`), and `claude` (`~/.claude.json`); remove with `--uninstall`, preview with `--print`.
+- **Build-script allowlist:** `node-pty`, `@ffmpeg-installer/linux-x64`, `@ffprobe-installer/linux-x64` must sit in the checkout root `package.json` `pnpm.onlyBuiltDependencies`; the same names in `pnpm-workspace.yaml` alone are ignored on this host, so pnpm reports "Ignored build scripts: node-pty" and no `pty.node` appears. After `pnpm install --force` the module lands at `node_modules/.pnpm/node-pty@1.1.0/node_modules/node-pty/build/Release/pty.node`, and `require('node-pty').spawn('/bin/sh',['-c','echo PTY_OK'])` prints `PTY_OK` (exit 0).
+- **`od doctor` speed:** the per-plugin `POST /api/plugins/:id/doctor` route reloads the whole plugin registry per call, so a 478-plugin sweep took ~66 s and looked like a hang. The checkout carries local (uncommitted) changes: a bulk `POST /api/plugins/doctor` route (`{ ids?: string[] }`, one registry load + one connector probe for the whole sweep) in `apps/daemon/src/routes/plugins/index.ts`, and `runDoctor` in `apps/daemon/src/cli.ts` calling it with a fallback to the old fan-out. Full sweep is ~0.7 s; it still exits 1 because 86 bundled templates fail with `manifest.warning`/`atom.unknown`.
+
 ## Maintaining this file
 
 Keep this file for knowledge useful to almost every future agent session in this project.
