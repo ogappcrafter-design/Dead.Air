@@ -22,7 +22,8 @@ static func snap_blend(ndc: Vector2, amount: float, grid: Vector2 = DEFAULT_SNAP
 	return ndc.lerp(snap_ndc(ndc, grid), clampf(amount, 0.0, 1.0))
 
 
-static func make_material(texture: Texture2D = null, affine: bool = false) -> ShaderMaterial:
+## `triplanar` matches the station's world-mapped architecture materials.
+static func make_material(texture: Texture2D = null, affine: bool = false, triplanar: bool = false) -> ShaderMaterial:
 	var shader: Shader = load(SHADER_PATH)
 	if shader == null:
 		push_error("PS1Geometry: failed to load shader at %s" % SHADER_PATH)
@@ -30,6 +31,7 @@ static func make_material(texture: Texture2D = null, affine: bool = false) -> Sh
 	var material := ShaderMaterial.new()
 	material.shader = shader
 	material.set_shader_parameter(&"affine_uv", affine)
+	material.set_shader_parameter(&"use_triplanar", triplanar)
 	if texture != null:
 		material.set_shader_parameter(&"albedo_texture", texture)
 	return material
