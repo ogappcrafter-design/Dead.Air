@@ -147,7 +147,7 @@ timeout 10s ./../build/deadair-test.x86_64
 echo "exit=$?"   # 124 means it survived idle; anything else is a (near-)immediate crash
 ```
 
-The exported build embeds its `.pck` (`binary_format/embed_pck=true`), leaves `scenes/test/*` out of the payload (`exclude_filter`), and starts at `res://scenes/main_menu.tscn`. The CRT post-process (`src/visual/crt_postprocess.gd`) ships as compiled bytecode, so no editor-only paths are required.
+The exported build embeds its `.pck` (`binary_format/embed_pck=true`), leaves `scenes/test/*` out of the payload (`exclude_filter`), and starts at `res://scenes/fmv_intro.tscn` (the 15 s cinematic, which hands off to `res://scenes/main_menu.tscn` — see `docs/fmv.md`). The CRT post-process (`src/visual/crt_postprocess.gd`) ships as compiled bytecode, so no editor-only paths are required.
 
 Expected artifact sizes are ~60–90 MB per platform (see the release PR for recorded values).
 
