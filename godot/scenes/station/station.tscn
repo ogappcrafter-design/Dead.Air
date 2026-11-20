@@ -5,6 +5,7 @@
 [ext_resource type="Script" uid="uid://be6swwtavc18m" path="res://src/visual/camera_rig.gd" id="3_rig"]
 [ext_resource type="Script" uid="uid://ceue68wyskfat" path="res://src/visual/screen_relative_movement.gd" id="4_movement"]
 [ext_resource type="Script" uid="uid://coj8h63n25pfs" path="res://src/visual/crt_postprocess.gd" id="5_crt"]
+[ext_resource type="Script" path="res://src/visual/ps1_dither.gd" id="12_ps1"]
 [ext_resource type="PackedScene" uid="uid://bstation01booth" path="res://scenes/station/booth.tscn" id="6_booth"]
 [ext_resource type="PackedScene" uid="uid://bstation02hall" path="res://scenes/station/hallway.tscn" id="7_hallway"]
 [ext_resource type="PackedScene" uid="uid://bstation03bath" path="res://scenes/station/bathroom.tscn" id="8_bathroom"]
@@ -85,3 +86,6 @@ script = ExtResource("3_rig")
 
 [node name="CRTPostProcess" type="CanvasLayer" parent="."]
 script = ExtResource("5_crt")
+
+[node name="PS1Dither" type="CanvasLayer" parent="."]
+script = ExtResource("12_ps1")

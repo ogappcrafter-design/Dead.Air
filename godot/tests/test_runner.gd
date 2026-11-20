@@ -73,6 +73,7 @@ func _run_tests() -> void:
 		["CRTDegradation", "res://tests/test_crt_degradation.gd"],
 		["AmbientLife", "res://tests/test_ambient_life.gd"],
 		["FMVPlayer", "res://tests/test_fmv_player.gd"],
+	["PS1Dither", "res://tests/test_ps1_dither.gd"],
 	]
 
 	for suite in test_suites:
