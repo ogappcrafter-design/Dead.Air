@@ -39,6 +39,8 @@ yarn-error.*
 pnpm-debug.*
 
 # Build artifacts
+# FMV delivery masters (regenerate with scripts/fmv/render_masters.py)
+/build/
 *.jks
 *.p8
 *.p12
@@ -47,6 +49,9 @@ pnpm-debug.*
 *.orig.*
 tsbuildinfo/
 *.tsbuildinfo
+
+# Intermediate FMV audio stems (regenerate with scripts/fmv/make_audio_bed.py)
+scripts/fmv/out/
 
 # Note: Godot .gd.uid sidecar files are TRACKED, not ignored. Scenes and
 # resources reference scripts by uid=, and regenerating a sidecar produces
