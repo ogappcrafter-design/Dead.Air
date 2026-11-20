@@ -1,0 +1,55 @@
+{
+  "project": "deadair",
+  "asset": "fmv-intro-trailer",
+  "source": {
+    "motionProjectId": "ab39a1e2-57d6-4887-a00b-de0c2192d58e",
+    "contentVersionId": "285f797e-f419-42bb-9781-df32f0d3a9c7",
+    "composition": "index.html",
+    "exportJobId": "2d18d1ad-d940-4416-9a7e-f4b52e7489c3",
+    "exportSha256": "bd7c4d749bfe8722f156fd5b090387e3cdea89b4acd533eb7002bd68d400f4ae"
+  },
+  "masters": {
+    "web": {
+      "path": "build/fmv/deadair_fmv_60s_h264.mp4",
+      "bytes": 57463626,
+      "duration_s": 60.01,
+      "video": "h264 1920x1080 30fps",
+      "audio": "aac 48kHz stereo 256k",
+      "sha256": "0b5f0ab5a2845e2e77dbbdb5cfe9043cfd73584c1b04083a22236e001a989ac0",
+      "cdnUrl": null
+    },
+    "compositing": {
+      "path": "build/fmv/deadair_fmv_60s_prores.mov",
+      "bytes": 3222322339,
+      "duration_s": 60.010667,
+      "video": "prores 4444 yuva444p10le 1920x1080 30fps",
+      "audio": "pcm_s24le 48kHz stereo",
+      "sha256": "639f94ebe2d4ce5178203209e96af2f82dc6133b28abf56adf16d4d544d9f120",
+      "cdnUrl": null
+    },
+    "godotRuntime": {
+      "path": "godot/assets/fmv/deadair_intro.ogv",
+      "bytes": 6204905,
+      "duration_s": 15.0,
+      "video": "theora 1920x1080 30fps",
+      "audio": "vorbis 48kHz stereo",
+      "sha256": "1d647c5f4833123be5ec3beee5e8b8c8a185b2bd95a9edd4b7a15388f8f5f55f",
+      "shipped": true
+    }
+  },
+  "loudness": {
+    "integrated_lufs": -14.2,
+    "true_peak_dbtp": -1.1,
+    "target_lufs": -14.0,
+    "tolerance_lu": 0.3
+  },
+  "provenance": {
+    "audio": "original synthesis, scripts/fmv/make_audio_bed.py (no library samples)",
+    "visuals": "FLUX.2 dev generated art pack, non-commercial licence; regenerate before commercial release",
+    "regenerate": "python3 scripts/fmv/render_masters.py --source <openmotion export mp4> --intro-seconds 15"
+  },
+  "cdn": {
+    "status": "blocked",
+    "reason": "no bucket credentials in this environment; upload the two build/fmv masters and fill cdnUrl"
+  }
+}
