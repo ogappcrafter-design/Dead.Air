@@ -44,6 +44,15 @@ func run_tests() -> Dictionary:
 	results["test_hud_floor_keeps_large_fonts"] = hc.readable_font_size(18, true) == 18
 	results["test_hud_floor_inactive_at_full_res"] = hc.readable_font_size(6, false) == 6
 
+	# --- station art-direction defaults (measured) ---
+	results["test_station_snap_grid"] = PS1Geometry.STATION_SNAP == Vector2(160, 120)
+	results["test_station_affine_off"] = PS1Geometry.STATION_AFFINE == false
+	var surf := PS1Geometry.make_surface_material(null)
+	results["test_surface_material_snap_off_by_default"] = float(surf.get_shader_parameter("snap_amount")) == 0.0
+	results["test_surface_material_keeps_tuned_grid"] = surf.get_shader_parameter("snap_resolution") == PS1Geometry.STATION_SNAP
+	results["test_surface_material_triplanar"] = bool(surf.get_shader_parameter("use_triplanar")) == true
+	results["test_untextured_surface_skipped"] = PS1Geometry.surface_texture(Node3D.new()) == null
+
 	results["test_canvas_filter_is_nearest"] = int(ProjectSettings.get_setting("rendering/textures/canvas_textures/default_texture_filter", -1)) == 0
 
 	# --- DEA-175: geometry shader ---

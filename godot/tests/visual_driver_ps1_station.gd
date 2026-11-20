@@ -1,13 +1,15 @@
 extends Node3D
-## DEA-175 art-direction pass: measures the ps1_geometry shader against the
-## real station scene, not a synthetic quad, to pick a snap grid and decide
-## whether affine UVs are safe on shipping geometry.
+## DEA-175 art-direction rig: measures the ps1_geometry shader on the real
+## station scene so snap_resolution and affine usage are chosen from pixels.
 ## Usage: xvfb-run -a godot --rendering-method gl_compatibility --path godot res://tests/visual_driver_ps1_station.tscn
+##
+## The tree stays unpaused: CSG brushes only rebuild their mesh in _process, so
+## pausing freezes the geometry and every setting measures the same stale mesh.
+## Ambient motion is disabled node-by-node instead.
 
 const STATION := "res://scenes/station/station.tscn"
-const GRIDS := [Vector2(0, 0), Vector2(160, 120), Vector2(320, 240), Vector2(640, 480)]
+const GRIDS := [Vector2(0.0, 0.0), Vector2(160.0, 120.0), Vector2(320.0, 240.0), Vector2(640.0, 480.0)]
 
-var _mesh_count := 0
 var _base: Image
 
 
@@ -18,24 +20,33 @@ func _ready() -> void:
 		retro.enabled = false
 	var station: Node = load(STATION).instantiate()
 	add_child(station)
+	_still(station)
 	var cam := Camera3D.new()
 	cam.position = Vector3(0.6, 1.6, 1.8)
-	cam.rotation_degrees = Vector3(-6, 18, 0)
+	cam.rotation_degrees = Vector3(-6.0, 18.0, 0.0)
 	add_child(cam)
 	cam.make_current()
-	# Freeze animation so frame deltas are the shader, not noise.
-	get_tree().paused = true
-	for n in station.find_children("*", "CanvasLayer", true, false):
-		(n as CanvasLayer).visible = false
-	for _i in range(6):
+	for _i in range(10):
 		await get_tree().process_frame
-	_base = await _frozen_capture()
-	print("PS1STATION meshes=%d base_luma=%.1f" % [_mesh_count, _mean(_base)])
+	_base = await _capture()
+	print("PS1STATION base luma=%.1f sum=%d" % [_mean(_base), _sum(_base)])
 	await _sweep(station)
 	get_tree().quit()
 
 
-## The station is built from CSG brushes, not imported meshes.
+## Kill animated content so a frame delta is the shader, not the noise.
+func _still(root: Node) -> void:
+	for n in root.find_children("*", "GPUParticles3D", true, false):
+		(n as GPUParticles3D).emitting = false
+	for n in root.find_children("*", "AnimationPlayer", true, false):
+		(n as AnimationPlayer).stop()
+	for n in root.find_children("*", "CanvasLayer", true, false):
+		(n as CanvasLayer).visible = false
+	for n in root.find_children("*", "", true, false):
+		if n.get_script() != null and String(n.get_script().resource_path).ends_with("ambient_life.gd"):
+			(n as Node).set_process(false)
+
+
 func _targets(node: Node) -> Array[Node]:
 	var out: Array[Node] = []
 	for child in node.find_children("*", "MeshInstance3D", true, false):
@@ -46,8 +57,6 @@ func _targets(node: Node) -> Array[Node]:
 	return out
 
 
-## Reuse whatever albedo texture the slot already had so the comparison is
-## about geometry, not about stripping the station's art.
 func _texture_of(n: Node) -> Texture2D:
 	var m: Material = null
 	if n is CSGShape3D:
@@ -61,7 +70,7 @@ func _texture_of(n: Node) -> Texture2D:
 	return null
 
 
-func _apply(n: Node, mat: ShaderMaterial) -> void:
+func _apply(n: Node, mat: Material) -> void:
 	if n is CSGShape3D:
 		(n as CSGShape3D).material = mat
 	else:
@@ -70,22 +79,26 @@ func _apply(n: Node, mat: ShaderMaterial) -> void:
 
 func _sweep(station: Node) -> void:
 	var targets := _targets(station)
-	_mesh_count = targets.size()
-	print("PS1STATION textures=%s" % str(_texture_of(targets[0]) != null if targets.size() > 0 else false))
+	var tex := 0
+	for mi in targets:
+		if _texture_of(mi) != null:
+			tex += 1
+	print("PS1STATION targets=%d textured=%d" % [targets.size(), tex])
+	var prev := _base
 	for affine in [false, true]:
 		for grid in GRIDS:
-			# One material per surface, keeping each brush's own albedo texture:
-			# a single shared texture repaints the whole station and makes every
-			# comparison meaningless.
+			# One material per surface, each keeping its own albedo texture.
 			for mi in targets:
 				var mat := PS1Geometry.make_material(_texture_of(mi), affine, true)
-				mat.set_shader_parameter(&"snap_resolution", grid if grid.x > 0.0 else Vector2(1e6, 1e6))
-				mat.set_shader_parameter(&"snap_amount", 1.0 if grid.x > 0.0 else 0.0)
-				mat.set_shader_parameter(&"albedo_color", Color.WHITE)
+				var snapped: bool = grid.x > 0.0
+				mat.set_shader_parameter(&"snap_resolution", grid if snapped else Vector2(1e6, 1e6))
+				mat.set_shader_parameter(&"snap_amount", 1.0 if snapped else 0.0)
 				_apply(mi, mat)
-			var img := await _frozen_capture()
-			print("PS1STATION affine=%s grid=%dx%d changed=%.4f luma=%.1f" % [
-				affine, int(grid.x), int(grid.y), _changed(_base, img), _mean(img)])
+			var img := await _capture()
+			print("PS1STATION affine=%s grid=%dx%d vs_base=%.4f vs_prev=%.4f luma=%.1f sum=%d" % [
+				affine, int(grid.x), int(grid.y), _changed(_base, img), _changed(prev, img),
+				_mean(img), _sum(img)])
+			prev = img
 	for mi in targets:
 		if mi is CSGShape3D:
 			(mi as CSGShape3D).material = null
@@ -93,10 +106,20 @@ func _sweep(station: Node) -> void:
 			(mi as MeshInstance3D).material_override = null
 
 
-func _frozen_capture() -> Image:
-	await RenderingServer.frame_post_draw
+func _capture() -> Image:
+	# Give CSG a rebuild frame, then wait for a completed draw.
+	await get_tree().process_frame
 	await RenderingServer.frame_post_draw
 	return get_viewport().get_texture().get_image()
+
+
+func _sum(img: Image) -> int:
+	var s := 0
+	for y in range(0, img.get_height(), 8):
+		for x in range(0, img.get_width(), 8):
+			var c := img.get_pixel(x, y)
+			s += int(c.r * 255.0) + int(c.g * 255.0) + int(c.b * 255.0)
+	return s
 
 
 func _mean(img: Image) -> float:

@@ -27,6 +27,9 @@ func _setup_station() -> void:
 	for zone in get_tree().get_nodes_in_group("camera_zone"):
 		CameraManager.register_zone(zone)
 
+	# 3b. DEA-175: dress textured architecture with the PS1 geometry shader.
+	PS1Geometry.dress_surfaces(self)
+
 	# 4. Register degradation targets with StationState
 	var mug: Node3D = get_node_or_null("Booth/CoffeeMug")
 	var chair: Node3D = get_node_or_null("Booth/Chair")
