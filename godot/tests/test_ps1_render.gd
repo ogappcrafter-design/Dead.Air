@@ -38,6 +38,12 @@ func run_tests() -> Dictionary:
 	window.content_scale_size = Vector2i.ZERO
 	window.content_scale_mode = Window.CONTENT_SCALE_MODE_DISABLED
 
+	# --- HUD readability at 320x240 ---
+	var hc: GDScript = load("res://src/ui/high_contrast_manager.gd")
+	results["test_hud_floor_raises_tiny_fonts"] = hc.readable_font_size(6, true) == 10
+	results["test_hud_floor_keeps_large_fonts"] = hc.readable_font_size(18, true) == 18
+	results["test_hud_floor_inactive_at_full_res"] = hc.readable_font_size(6, false) == 6
+
 	results["test_canvas_filter_is_nearest"] = int(ProjectSettings.get_setting("rendering/textures/canvas_textures/default_texture_filter", -1)) == 0
 
 	# --- DEA-175: geometry shader ---

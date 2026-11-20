@@ -92,7 +92,27 @@ func _apply_to_label(label: Label) -> void:
 		label.remove_theme_color_override("font_outline_color")
 	# Text size scaling applies independently of high contrast mode
 	var base_size := _get_base_font_size(label)
-	label.add_theme_font_size_override("font_size", int(base_size * _text_scale))
+	label.add_theme_font_size_override("font_size", readable_font_size(int(base_size * _text_scale), retro_resolution_active()))
+
+
+## DEA-174: at 320x240 every label is drawn into the low-res buffer, so sizes
+## below the floor turn to mush. Raise them instead of letting the HUD lose
+## legibility; a no-op when full-resolution rendering is in effect.
+const RETRO_FONT_FLOOR := 10
+
+
+static func readable_font_size(scaled_size: int, retro_active: bool) -> int:
+	if retro_active and scaled_size < RETRO_FONT_FLOOR:
+		return RETRO_FONT_FLOOR
+	return scaled_size
+
+
+static func retro_resolution_active() -> bool:
+	var loop := Engine.get_main_loop()
+	if loop == null:
+		return false
+	var retro := (loop as SceneTree).root.get_node_or_null("RetroResolutionManager")
+	return retro != null and bool(retro.get("enabled"))
 
 
 ## Apply border to ProgressBar (meters).
