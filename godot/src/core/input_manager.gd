@@ -76,7 +76,7 @@ func _apply_deadzones() -> void:
 	var motion_actions: Array[String] = [
 		"move_left", "move_right", "move_up", "move_down",
 		"radio_tune_left", "radio_tune_right",
-		"fine_tune", "hold_breath"
+		"fine_tune", "hold_breath", "sprint"
 	]
 	for action_name in motion_actions:
 		if not InputMap.has_action(action_name):

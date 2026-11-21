@@ -76,6 +76,7 @@ func _run_tests() -> void:
 	["PS1Dither", "res://tests/test_ps1_dither.gd"],
 	["PS1Render", "res://tests/test_ps1_render.gd"],
 	["PauseAndSettings", "res://tests/test_pause_and_settings.gd"],
+	["PlayerAbilities", "res://tests/test_player_abilities.gd"],
 	]
 
 	for suite in test_suites:

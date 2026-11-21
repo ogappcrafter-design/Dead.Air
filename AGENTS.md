@@ -87,6 +87,7 @@ Sharp edges that caused the old 26-failure baseline:
 - **`.tres` Colors need `Color(r, g, b, a)`.** The bare `color = 1.0, 0.55, 0.0, 1` form loads silently as black; `band_config.tres` had this bug.
 - **`save_game()` syncs live trackers over `SaveData`** (`CRTDegradation`, `MoralChoiceTracker`), so tests asserting those fields must set the tracker, not just the SaveData field.
 - **`GDScript.new()` + `source_code` needs `reload()`** before `set_script()`, otherwise the node has no methods.
+- **A brand-new `class_name` is not in the global class cache during headless runs.** Until the project is imported (`godot --headless --import`), another script that names it fails with `Parse Error: Could not find type "X"`, and every scene using that script fails to load. Reference new scripts by path (`const XScript = preload("res://.../x.gd")`, usable as a type annotation and for `.new()`) instead of the bare identifier; classes already in the cache are unaffected.
 
 ## PS1 render dressings (DEA-174/175)
 

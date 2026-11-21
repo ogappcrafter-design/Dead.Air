@@ -174,6 +174,9 @@ var _active: bool = true
 
 
 func _ready() -> void:
+	# Grouped so player systems (DEA-188 sprint noise) can reach every suit
+	# without a scene reference.
+	add_to_group("suit")
 	# Faceless suited character — no shadows.
 	_setup_appearance()
 	_resolve_references()
@@ -446,7 +449,18 @@ func _get_effective_range(base_range: float) -> float:
 	if _dread_composure != null:
 		dread = _dread_composure.dread
 	var bonus: float = floor(dread / 10.0) * DREAD_RANGE_BONUS_PER_10
-	return base_range + bonus
+	# DEA-187: a lit flashlight widens the range the suit can see the player.
+	return (base_range + bonus) * _get_player_visibility_multiplier()
+
+
+## DEA-187: the player reports how visible it is (flashlight on = >1.0).
+## Suits without a capable player (tests, scripted encounters) read 1.0.
+func _get_player_visibility_multiplier() -> float:
+	if _player != null and _player.has_method("get_visibility_multiplier"):
+		var mult: float = _player.get_visibility_multiplier()
+		if mult > 1.0:
+			return mult
+	return 1.0
 
 
 func _is_player_hidden() -> bool:

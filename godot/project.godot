@@ -159,6 +159,21 @@ hide={
 "events": [Object(InputEventJoypadButton,"button_index":1,"pressed":true), Object(InputEventKey,"keycode":32,"unicode":32,"echo":false)]
 }
 
+; Sprint — Shift / R2 (axis 5), hold while moving (DEA-188)
+; NOTE: joy button 1 is already `hide`, so sprint uses R2 instead.
+; 4194325 is KEY_SHIFT (fine_tune's 4194305 is KEY_ESCAPE — pre-existing).
+sprint={
+"deadzone": 0.5,
+"events": [Object(InputEventJoypadMotion,"axis":5,"axis_value":1.0,"deadzone":0.5), Object(InputEventKey,"keycode":4194325,"unicode":0,"echo":false)]
+}
+
+; Flashlight — L3 (button 7) / V, toggle (DEA-187)
+; NOTE: F is already `examine` (hold), so the keyboard toggle is V.
+flashlight={
+"deadzone": 0.5,
+"events": [Object(InputEventJoypadButton,"button_index":7,"pressed":true), Object(InputEventKey,"keycode":86,"unicode":118,"echo":false)]
+}
+
 ; Hold Breath — L2/LT (axis 4) / Ctrl (hold, while hiding)
 hold_breath={
 "deadzone": 0.5,
