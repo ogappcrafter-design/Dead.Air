@@ -96,11 +96,21 @@ var _rng: RandomNumberGenerator
 # so we track visibility ourselves for shift_controller to query.
 var _visible: bool = true
 
+## DEA-189: the live instance, so scene-agnostic systems (PauseMenu) can read the
+## safe-room rule without holding a scene reference. Cleared when it leaves the tree.
+static var instance: DreadComposure = null
+
 
 func _ready() -> void:
+	instance = self
 	_rng = RandomNumberGenerator.new()
 	if _rng_seed != 0:
 		_rng.seed = _rng_seed
+
+
+func _exit_tree() -> void:
+	if instance == self:
+		instance = null
 
 
 func _process(delta: float) -> void:
