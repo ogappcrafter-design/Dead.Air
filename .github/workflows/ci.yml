@@ -5,8 +5,6 @@ on:
     branches: [master]
   pull_request:
     branches: [master]
-  # Allow a manual run on any branch (used to validate CI changes that land on
-  # a stacked branch, where the pull_request filter above does not match).
   workflow_dispatch:
 
 concurrency:
@@ -19,13 +17,13 @@ permissions:
 jobs:
   lint:
     name: Lint & Typecheck
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, deadair-ci]
     steps:
       - uses: actions/checkout@v7
-      - uses: pnpm/action-setup@v6 # version read from packageManager in package.json
+      - uses: pnpm/action-setup@v6
       - uses: actions/setup-node@v7
         with:
-          node-version: 24
+          node-version: 24.18.0
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm run format:check
@@ -35,34 +33,32 @@ jobs:
 
   test:
     name: Test
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, deadair-ci]
     steps:
       - uses: actions/checkout@v7
-      - uses: pnpm/action-setup@v6 # version read from packageManager in package.json
+      - uses: pnpm/action-setup@v6
       - uses: actions/setup-node@v7
         with:
-          node-version: 24
+          node-version: 24.18.0
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm test --ci --coverage --coverage.reporter=text-summary
 
   godot-test:
     name: Godot Tests
-    runs-on: ubuntu-latest
-    # The suite takes ~20s when healthy. The old 30-minute job timeout was
-    # consumed by an intermittent engine deadlock (see the test step); with a
-    # bounded per-attempt timeout plus retries, a hang can no longer run the
-    # job into a cancellation.
+    runs-on: [self-hosted, deadair-ci]
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7
-      - name: Install Godot 4.7
+      - name: Ensure Godot 4.7
         run: |
-          curl -sL -o godot.zip https://github.com/godotengine/godot-builds/releases/download/4.7-stable/Godot_v4.7-stable_linux.x86_64.zip
-          echo "0b1a6c54c2c619c12e169fe9241edda4b81080b519451cec2984bf0d2c6cb73c  godot.zip" | sha256sum -c -
-          unzip -q godot.zip
-          chmod +x Godot_v4.7-stable_linux.x86_64
-          sudo mv Godot_v4.7-stable_linux.x86_64 /usr/local/bin/godot
+          if ! godot --version 2>/dev/null | grep -q '^4\.7'; then
+            curl -sL -o godot.zip https://github.com/godotengine/godot-builds/releases/download/4.7-stable/Godot_v4.7-stable_linux.x86_64.zip
+            echo "0b1a6c54c2c619c12e169fe9241edda4b81080b519451cec2984bf0d2c6cb73c  godot.zip" | sha256sum -c -
+            unzip -q godot.zip
+            chmod +x Godot_v4.7-stable_linux.x86_64
+            sudo mv Godot_v4.7-stable_linux.x86_64 /usr/local/bin/godot
+          fi
           godot --version
       - name: Import project
         working-directory: godot
@@ -72,15 +68,6 @@ jobs:
         working-directory: godot
         run: |
           set +e
-          # Known upstream bug: the headless engine intermittently deadlocks
-          # while the suite runs (the main thread waits on a lock held by a
-          # spinning engine thread). It lands in a different suite on every run
-          # and stops all output, so the old job ran into GitHub's 30-minute
-          # cancellation instead of reporting. Reproduced on ubuntu-latest and
-          # locally (~3 hangs in 18 loaded local runs); 4.7.2-stable did not fix
-          # it. Bound each attempt, retry a hung attempt, and keep every
-          # assertion: a genuine hang still fails the check, but with a clear
-          # "hung on every attempt" error and the last suite named.
           ATTEMPT_TIMEOUT_SECONDS=120
           MAX_ATTEMPTS=5
           GODOT_EXIT=1
@@ -90,9 +77,6 @@ jobs:
               godot --headless --path . --script res://tests/test_runner.gd 2>&1 | tee test_output.log
             GODOT_EXIT=${PIPESTATUS[0]}
             echo "::endgroup::"
-            # 124 = the attempt hit the per-attempt timeout (a hung engine, not
-            # an assertion failure). Retry only a hang; any other exit code is
-            # final so a real regression is never retried away.
             if [ "$GODOT_EXIT" -ne 124 ]; then
               break
             fi
@@ -101,8 +85,6 @@ jobs:
             sleep 2
           done
           set -e
-          # Ensure no lingering engine process so the runner doesn't kill an
-          # orphan and mark the job cancelled.
           pkill -f "godot --headless" 2>/dev/null || true
           if [ "$GODOT_EXIT" -eq 124 ]; then
             echo "::error::Godot test suite hung on every attempt (last suite: $(grep 'Running ' test_output.log | tail -1))"
@@ -118,9 +100,6 @@ jobs:
             echo "::error::Godot test runner produced no summary line"
             exit 1
           fi
-          # Known baseline: 28 pre-existing failures (HUDLayout, Interactable,
-          # MainMenu, BandSystem, PhaseManager, SaveManager, ShiftSummary,
-          # InteractionRaycast). Regression = failures above baseline.
           if [ "$FAILED" -gt 28 ]; then
             echo "::error::Godot test failures ($FAILED) exceed the known baseline of 28"
             exit 1
@@ -133,35 +112,35 @@ jobs:
 
   security:
     name: Security Scan
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-      - uses: pnpm/action-setup@v6 # version read from packageManager in package.json
-      - uses: actions/setup-node@v7
-        with:
-          node-version: 24
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - uses: aquasecurity/trivy-action@v0.36.0
-        with:
-          scan-type: fs
-          scanners: secret
-          severity: HIGH,CRITICAL
-          exit-code: '1'
-
-  deploy-check:
-    name: Build & Deploy Verification
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, deadair-ci]
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
       - uses: actions/setup-node@v7
         with:
-          node-version: 24
+          node-version: 24.18.0
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      # `pnpm run build --if-present` forwarded `--if-present` to the script
-      # itself, so expo rejected it ("Unknown arguments: --if-present"). pnpm
-      # only treats flags before the script name as pnpm flags; the build
-      # script is always present here, so run it directly.
+      - name: Trivy secret scan
+        run: |
+          docker run --rm -v "$PWD:/src" -w /src aquasec/trivy:latest fs \
+            --scanners secret --severity HIGH,CRITICAL --exit-code 1 .
+
+  web-build:
+    name: Web Build
+    runs-on: [self-hosted, deadair-ci]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24.18.0
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
       - run: pnpm run build
+      - uses: actions/upload-artifact@v5
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        with:
+          name: web-dist
+          path: dist
+          retention-days: 14

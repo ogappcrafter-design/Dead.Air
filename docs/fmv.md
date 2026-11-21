@@ -39,11 +39,11 @@ duration, and loudness for the files it produced.
 
 Measured on the 2026-11-20 render (version `285f797e-…`):
 
-| artifact | container | video | audio | loudness |
-| --- | --- | --- | --- | --- |
-| 60 s master | MP4 | H.264 1920×1080 30 fps | AAC 48 kHz stereo | −14.1 LUFS, −1.1 dBTP |
-| ProRes master | MOV | ProRes 4444 yuva444p10le | PCM 24-bit 48 kHz | source-identical |
-| runtime clip | Ogg | Theora 1920×1080 30 fps | Vorbis 48 kHz stereo | first 15 s |
+| artifact      | container | video                    | audio                | loudness              |
+| ------------- | --------- | ------------------------ | -------------------- | --------------------- |
+| 60 s master   | MP4       | H.264 1920×1080 30 fps   | AAC 48 kHz stereo    | −14.1 LUFS, −1.1 dBTP |
+| ProRes master | MOV       | ProRes 4444 yuva444p10le | PCM 24-bit 48 kHz    | source-identical      |
+| runtime clip  | Ogg       | Theora 1920×1080 30 fps  | Vorbis 48 kHz stereo | first 15 s            |
 
 ## Runtime integration (DEA-199)
 

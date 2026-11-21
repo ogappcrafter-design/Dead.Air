@@ -21,7 +21,7 @@ permissions:
 jobs:
   godot-test:
     name: Godot Tests (baseline 28)
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, deadair-ci]
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
@@ -68,7 +68,7 @@ jobs:
   godot-export:
     name: Godot Export (Linux + Windows)
     needs: godot-test
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, deadair-ci]
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
