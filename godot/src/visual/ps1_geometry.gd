@@ -34,9 +34,12 @@ const STATION_AFFINE := false
 ## Props keep their own UV mapping, so affine warping is the authentic PS1
 ## treatment for them; measured on the booth mug (see the station rig).
 const PROP_AFFINE := true
-## Snapping is tuned but off by default: at 160x120 the station measured ~38%
-## brighter than undressed because vertices move while normals do not. Ship the
-## grid, flip this on when the art pass accepts the lighting shift.
+## Snapping is off because it is invisible at the shipped grid, not because it
+## is broken. Isolating probe (one quad, same shader): 8x6 moves 2.9% of pixels,
+## 320x240 moves 0.24%, 160x120 moves 0.0000. Station geometry measures 0.0000
+## at every grid, because its brushes are large and flat. To get PS1 wobble,
+## coarsen STATION_SNAP or snap only small props; the current settings buy
+## nothing and cost vertex work.
 const STATION_SNAP_ENABLED := false
 
 
