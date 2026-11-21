@@ -88,6 +88,15 @@ Sharp edges that caused the old 26-failure baseline:
 - **`save_game()` syncs live trackers over `SaveData`** (`CRTDegradation`, `MoralChoiceTracker`), so tests asserting those fields must set the tracker, not just the SaveData field.
 - **`GDScript.new()` + `source_code` needs `reload()`** before `set_script()`, otherwise the node has no methods.
 
+## PS1 render dressings (DEA-174/175)
+
+`PS1Geometry` (`godot/src/visual/ps1_geometry.gd`) decides per surface from that surface's own material: triplanar brushes stay perspective-correct, ordinary-UV surfaces (props) get `affine_uv`. `dressing_enabled` turns the whole pass off for A/B.
+
+- **Always read materials through `material_texture()` / `surface_settings()`**, never `.albedo_texture` directly: once dressed, the texture lives in the `ShaderMaterial` parameter and a `BaseMaterial3D`-only read returns null, silently skipping every dressed surface.
+- **Rig:** `tests/visual_driver_ps1_station` (dressed vs undressed, prop affine) needs `xvfb-run` + `--rendering-method gl_compatibility`, and captures happen after the station's deferred `_setup_station`, so wait frames before touching materials. It gates on a measured noise floor (identical settings twice, currently 0.0000) instead of magic thresholds.
+- **Measured:** dressed vs undressed 54.1% of pixels, luma 38.4 -> 35.7; affine on a prop 24% (coarsely-mapped prop) to 0.2% (finely tessellated), 0% in wide framing.
+- **Snapping ships off because it is invisible at 160x120, not broken:** `tests/visual_driver_snap_probe` (one quad) gives 2.9% at 8x6, 0.24% at 320x240, 0.0000 at 160x120; station brushes read 0.0000 at every grid. Coarsen `STATION_SNAP` or snap only props if the wobble is wanted.
+
 ## OpenDesign (`od`) — machine install and repo project
 
 OpenDesign ([nexu-io/open-design](https://github.com/nexu-io/open-design)) is installed from source on this machine; deadair is registered there as an imported-folder project. Nothing in this repo's build depends on it — OD is a design/tooling daemon used alongside the game work.
