@@ -12,6 +12,7 @@
 [ext_resource type="Texture2D" path="res://assets/textures/environment/wallpaper_1970s_roughness.jpg" id="rgh_tex_wallpaper"]
 [ext_resource type="Texture2D" path="res://assets/textures/environment/ceiling_acoustic_normal.jpg" id="nrm_tex_ceiling"]
 [ext_resource type="Texture2D" path="res://assets/textures/environment/ceiling_acoustic_roughness.jpg" id="rgh_tex_ceiling"]
+[ext_resource type="PackedScene" path="res://scenes/entities/hide_spot.tscn" id="90_hide"]
 
 [sub_resource type="StandardMaterial3D" id="floor_mat"]
 albedo_texture = ExtResource("tex_carpet")
@@ -183,3 +184,6 @@ target_position = Vector3(60, 0.5, 0.5)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="DoorToBackOffice"]
 shape = SubResource("door_office_shape")
+
+[node name="LockerHide" parent="." instance=ExtResource("90_hide")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.2, 0, 1.6)

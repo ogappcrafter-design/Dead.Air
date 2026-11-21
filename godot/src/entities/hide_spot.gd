@@ -15,6 +15,11 @@ signal exited(occupant: Node)
 signal breath_exhaled(occupant: Node)
 signal caught(occupant: Node)
 signal blackout_started(seconds: float)
+## HUDs in group "hide_ui" get set_hiding(bool) so the meters can pull back.
+signal ui_state_changed(hiding: bool)
+
+## Optional one-shot played on enter, caught and exit; scenes may leave it empty.
+@export var sfx: AudioStreamPlayer3D = null
 
 const BREATH_MAX := 5.0
 const CAUGHT_COMPOSURE_LOSS := 25.0
@@ -90,6 +95,8 @@ func enter(player: Node) -> bool:
 		PhaseManager.enter_hide_mode()
 	_activate_camera()
 	_set_radio_muted(true)
+	_play_sfx()
+	_notify_ui(true)
 	hidden.emit(player)
 	return true
 
@@ -103,6 +110,7 @@ func exit() -> void:
 			PhaseManager.exit_hide_mode()
 		_restore_camera()
 		_set_radio_muted(false)
+		_notify_ui(false)
 		exited.emit(who)
 	breath = BREATH_MAX
 	exhaled = false
@@ -212,6 +220,7 @@ func _handle_caught() -> void:
 	exit()
 	# The radio stays dead through the blackout: being caught costs contact.
 	_set_radio_muted(true)
+	_play_sfx()
 	if player != null:
 		_relocate(player)
 	caught.emit(player)
@@ -321,6 +330,18 @@ func _set_radio_muted(value: bool) -> void:
 	for node in get_tree().get_nodes_in_group("radio"):
 		if node.has_method("set_muted"):
 			node.set_muted(value)
+
+
+func _play_sfx() -> void:
+	if sfx != null and sfx.stream != null:
+		sfx.play()
+
+
+func _notify_ui(hiding: bool) -> void:
+	ui_state_changed.emit(hiding)
+	for node in get_tree().get_nodes_in_group("hide_ui"):
+		if node.has_method("set_hiding"):
+			node.set_hiding(hiding)
 
 
 func get_prompt_text() -> String:

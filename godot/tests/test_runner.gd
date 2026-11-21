@@ -78,6 +78,7 @@ func _run_tests() -> void:
 	["PauseAndSettings", "res://tests/test_pause_and_settings.gd"],
 	["PlayerAbilities", "res://tests/test_player_abilities.gd"],
 	["HideSpot", "res://tests/test_hide_spot.gd"],
+	["HideSpotPlacement", "res://tests/test_hide_spot_placement.gd"],
 	]
 
 	for suite in test_suites:

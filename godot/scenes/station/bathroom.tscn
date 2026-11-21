@@ -9,6 +9,7 @@
 [ext_resource type="Texture2D" path="res://assets/textures/environment/concrete_bunker_roughness.jpg" id="rgh_tex_concrete"]
 [ext_resource type="Texture2D" path="res://assets/textures/environment/ceiling_acoustic_normal.jpg" id="nrm_tex_ceiling"]
 [ext_resource type="Texture2D" path="res://assets/textures/environment/ceiling_acoustic_roughness.jpg" id="rgh_tex_ceiling"]
+[ext_resource type="PackedScene" path="res://scenes/entities/hide_spot.tscn" id="90_hide"]
 
 [sub_resource type="StandardMaterial3D" id="floor_mat"]
 albedo_texture = ExtResource("tex_concrete")
@@ -160,3 +161,6 @@ shape = SubResource("door_shape")
 
 [node name="MirrorMarker" type="Marker3D" parent="." groups=["interactable"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, -0.85)
+
+[node name="StallHide" parent="." instance=ExtResource("90_hide")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.6, 0, -0.6)

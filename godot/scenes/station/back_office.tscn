@@ -19,6 +19,7 @@
 [ext_resource type="Texture2D" path="res://assets/textures/environment/desk_laminate_roughness.jpg" id="rgh_tex_desk"]
 [ext_resource type="Texture2D" path="res://assets/textures/environment/suit_wool_normal.jpg" id="nrm_tex_fabric"]
 [ext_resource type="Texture2D" path="res://assets/textures/environment/suit_wool_roughness.jpg" id="rgh_tex_fabric"]
+[ext_resource type="PackedScene" path="res://scenes/entities/hide_spot.tscn" id="90_hide"]
 
 [sub_resource type="StandardMaterial3D" id="floor_mat"]
 albedo_texture = ExtResource("tex_carpet")
@@ -252,3 +253,6 @@ shape = SubResource("door_rooftop_shape")
 
 [node name="DeskMarker" type="Marker3D" parent="." groups=["interactable"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.2, 0.82, 0)
+
+[node name="UnderDeskHide" parent="." instance=ExtResource("90_hide")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.2, 0, -1.1)
