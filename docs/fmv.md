@@ -75,9 +75,40 @@ cd godot && /usr/local/bin/godot --headless --path . --script res://tests/test_r
 single-transition guarding, natural playback end, and the missing-clip fallback:
 20 assertions, suite total 735 passing / 0 failing.
 
-## CDN hosting (open)
+## CDN hosting
 
-The delivery masters are rendered and verified locally. Uploading them to a CDN
-and recording the public URLs in `motion-assets.json` needs credentials for the
-hosting bucket — that step is blocked until the account is provided; the
-scripts above produce exactly the two files that upload needs.
+The delivery masters are published to Cloudflare R2 and served from a custom
+domain:
+
+```text
+https://cdn.timewarper.me/deadair/fmv/60s/deadair_fmv_60s_h264.mp4
+```
+
+`motion-assets.json` under `cdn` is the record: `status: published`, the bucket,
+the prefix and the URL. Publish and re-verify with:
+
+```bash
+set -a; . ./.env; set +a   # R2_ENDPOINT, R2_BUCKET, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY
+CDN_BASE_URL=https://cdn.timewarper.me python3 scripts/fmv/publish_masters.py
+CDN_BASE_URL=https://cdn.timewarper.me python3 scripts/fmv/publish_masters.py --check
+```
+
+`--check` reads the objects the manifest records as published, then fetches the
+recorded URL and compares the served byte count with the bucket object. It sends
+`deadair-fmv-publish/1.0`: the zone's bot protection rejects `Python-urllib`
+while curl and a Godot user agent pass.
+
+Things that are true of this host and worth knowing before republishing:
+
+- Binding a custom domain goes through `wrangler r2 bucket domain add`; the REST
+  `domains/custom` endpoint answers `10040 "The JSON you provided was not well
+formed"` to well-formed bodies. Until the domain reports `ssl: active` and
+  `ownership: active`, the hostname serves `403 error code: 1014`, and that
+  response stays cached at the edge for a while after activation.
+- Objects are served `immutable` for a year. A re-render replaces the same object
+  key, so a URL handed out earlier keeps resolving to the old bytes in any cache
+  that already holds it; publish a new prefix when the bytes must change.
+- `--with-compositing` uploads the 3.2 GB ProRes alpha under `deadair/fmv/60s/private/`.
+  The `private` prefix is a naming convention, not access control: on a publicly
+  readable bucket, anyone with the key can read it. Keep it off the public bucket
+  unless a bucket rule actually blocks that prefix.

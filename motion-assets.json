@@ -16,7 +16,7 @@
       "video": "h264 1920x1080 30fps",
       "audio": "aac 48kHz stereo 256k",
       "sha256": "0b5f0ab5a2845e2e77dbbdb5cfe9043cfd73584c1b04083a22236e001a989ac0",
-      "cdnUrl": null
+      "cdnUrl": "https://cdn.timewarper.me/deadair/fmv/60s/deadair_fmv_60s_h264.mp4"
     },
     "compositing": {
       "path": "build/fmv/deadair_fmv_60s_prores.mov",
@@ -49,7 +49,12 @@
     "regenerate": "python3 scripts/fmv/render_masters.py --source <openmotion export mp4> --intro-seconds 15"
   },
   "cdn": {
-    "status": "blocked",
-    "reason": "no bucket credentials in this environment; upload the two build/fmv masters and fill cdnUrl"
+    "status": "published",
+    "reason": null,
+    "bucket": "deadair-fmv",
+    "prefix": "deadair/fmv/60s",
+    "cdnUrl": "https://cdn.timewarper.me/deadair/fmv/60s/deadair_fmv_60s_h264.mp4",
+    "compositingObject": null,
+    "publishedAt": "2026-11-21T22:58:28+00:00"
   }
 }
