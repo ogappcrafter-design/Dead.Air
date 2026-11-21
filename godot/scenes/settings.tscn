@@ -18,7 +18,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.0392157, 0.0392157, 0.0392157, 1)
+color = Color(0.04, 0.05, 0.055, 1)
 
 [node name="Panel" type="CenterContainer" parent="."]
 layout_mode = 1
@@ -28,48 +28,26 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="VBox" type="VBoxContainer" parent="Panel"]
+[node name="Frame" type="PanelContainer" parent="Panel"]
 layout_mode = 2
-theme_override_constants/separation = 16
+custom_minimum_size = Vector2(620, 620)
 
-[node name="TitleLabel" type="Label" parent="Panel/VBox"]
+[node name="VBox" type="VBoxContainer" parent="Panel/Frame"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0, 1, 0.254902, 1)
-theme_override_font_sizes/font_size = 40
+theme_override_constants/separation = 10
+
+[node name="TitleLabel" type="Label" parent="Panel/Frame/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 32
 text = "SETTINGS"
 horizontal_alignment = 1
 
-[node name="MasterVolume" type="HSlider" parent="Panel/VBox"]
-custom_minimum_size = Vector2(360, 0)
+[node name="Scroll" type="ScrollContainer" parent="Panel/Frame/VBox"]
 layout_mode = 2
-max_value = 100.0
-value = 100.0
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
 
-[node name="RadioVolume" type="HSlider" parent="Panel/VBox"]
-custom_minimum_size = Vector2(360, 0)
+[node name="Sections" type="VBoxContainer" parent="Panel/Frame/VBox/Scroll"]
 layout_mode = 2
-max_value = 100.0
-value = 80.0
-
-[node name="AmbientVolume" type="HSlider" parent="Panel/VBox"]
-custom_minimum_size = Vector2(360, 0)
-layout_mode = 2
-max_value = 100.0
-value = 60.0
-
-[node name="SubtitlesToggle" type="CheckButton" parent="Panel/VBox"]
-layout_mode = 2
-text = "Subtitles"
-
-[node name="ReduceHorrorToggle" type="CheckButton" parent="Panel/VBox"]
-layout_mode = 2
-text = "Reduce audio horror"
-
-[node name="BackButton" type="Button" parent="Panel/VBox"]
-custom_minimum_size = Vector2(320, 48)
-layout_mode = 2
-theme_override_colors/font_color = Color(0, 1, 0.254902, 1)
-theme_override_colors/font_hover_color = Color(1, 0.647059, 0, 1)
-theme_override_colors/font_pressed_color = Color(1, 0.2, 0, 1)
-theme_override_font_sizes/font_size = 20
-text = "BACK"
+size_flags_horizontal = 3
+theme_override_constants/separation = 6
