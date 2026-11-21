@@ -54,7 +54,7 @@ static func make_surface_material(texture: Texture2D, affine: bool = STATION_AFF
 	return mat
 
 
-static func surface_material(n: Node) -> BaseMaterial3D:
+static func surface_material(n: Node) -> Material:
 	var m: Material = null
 	if n is CSGShape3D:
 		m = (n as CSGShape3D).material
@@ -62,21 +62,35 @@ static func surface_material(n: Node) -> BaseMaterial3D:
 		m = (n as MeshInstance3D).material_override
 		if m == null and (n as MeshInstance3D).mesh != null:
 			m = (n as MeshInstance3D).mesh.surface_get_material(0)
-	return m as BaseMaterial3D
+	return m
+
+
+## Texture of a material in either form: source BaseMaterial3D, or the
+## ShaderMaterial this pass builds. Reading only one silently skipped every
+## already-dressed surface.
+static func material_texture(m: Material) -> Texture2D:
+	if m is BaseMaterial3D:
+		return (m as BaseMaterial3D).albedo_texture
+	if m is ShaderMaterial:
+		return (m as ShaderMaterial).get_shader_parameter(&"albedo_texture") as Texture2D
+	return null
 
 
 ## True when a node already had an albedo texture to carry over. Untextured
 ## brushes are skipped: swapping them would repaint the room flat.
 static func surface_texture(n: Node) -> Texture2D:
-	var m := surface_material(n)
-	return m.albedo_texture if m != null else null
+	return material_texture(surface_material(n))
 
 
 ## The shader settings a given surface should get, derived from how that
 ## surface was already mapped.
 static func surface_settings(n: Node) -> Dictionary:
 	var m := surface_material(n)
-	var triplanar: bool = m != null and m.uv1_triplanar
+	var triplanar := false
+	if m is BaseMaterial3D:
+		triplanar = (m as BaseMaterial3D).uv1_triplanar
+	elif m is ShaderMaterial:
+		triplanar = bool((m as ShaderMaterial).get_shader_parameter(&"use_triplanar"))
 	return {
 		"triplanar": triplanar,
 		"affine": not triplanar,

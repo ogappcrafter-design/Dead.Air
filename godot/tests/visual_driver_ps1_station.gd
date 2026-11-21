@@ -26,6 +26,8 @@ func _ready() -> void:
 	var plain := await _capture_station(false)
 	var plain_stats: Dictionary = _stats.duplicate()
 	var dressed := await _capture_station(true)
+	var again := await _capture_station(true)
+	var noise := _changed(dressed, again)
 	var props := await _capture_station(true, true)
 	var prop_delta := await _prop_affine_closeup()
 
@@ -33,10 +35,23 @@ func _ready() -> void:
 		plain_stats["total"], plain_stats["triplanar"], plain_stats["props"]])
 	print("PS1STATION ab_dressed_vs_undressed=%.4f luma_plain=%.1f luma_dressed=%.1f" % [
 		_changed(plain, dressed), _mean(plain), _mean(dressed)])
+	print("PS1STATION noise_floor=%.4f" % noise)
+		_snapped, noise, _changed(dressed, fine), _mean(fine), _changed(dressed, coarse), _mean(coarse)])
 	print("PS1STATION prop_affine_wide=%.4f (props too small in this framing)" % _changed(dressed, props))
 	print("PS1STATION prop_affine_closeup=%.4f" % prop_delta)
 	print("PS1STATION %s" % ("PASS" if _verdict(plain, dressed, prop_delta) else "FAIL"))
 	get_tree().quit()
+
+
+var _snapped := 0
+
+
+func _snap(n: Node, tex: Texture2D, cfg: Dictionary, grid: Vector2) -> void:
+	var mat := PS1Geometry.make_surface_material(tex, cfg["affine"], cfg["triplanar"])
+	mat.set_shader_parameter(&"snap_resolution", grid)
+	mat.set_shader_parameter(&"snap_amount", 1.0)
+	_apply_prop(n, mat)
+	_snapped += 1
 
 
 func _verdict(plain: Image, dressed: Image, prop_delta: float) -> bool:
@@ -51,7 +66,7 @@ func _verdict(plain: Image, dressed: Image, prop_delta: float) -> bool:
 
 ## Render one station: dressing on/off, optionally forcing affine onto props.
 ## The station is destroyed between captures so the frames stay comparable.
-func _capture_station(dressing: bool, force_prop_affine: bool = false) -> Image:
+func _capture_station(dressing: bool, force_prop_affine: bool = false, snap_grid: Vector2 = Vector2.ZERO) -> Image:
 	PS1Geometry.dressing_enabled = dressing
 	var station: Node = load(STATION).instantiate()
 	add_child(station)
@@ -67,8 +82,12 @@ func _capture_station(dressing: bool, force_prop_affine: bool = false) -> Image:
 		var cfg := PS1Geometry.surface_settings(mi)
 		if cfg["triplanar"]:
 			tri += 1
+			if snap_grid != Vector2.ZERO:
+				_snap(mi, tex, cfg, snap_grid)
 		else:
 			props += 1
+			if snap_grid != Vector2.ZERO:
+				_snap(mi, tex, PS1Geometry.surface_settings(mi), snap_grid)
 			if force_prop_affine:
 				var mat := PS1Geometry.make_surface_material(tex, true, false)
 				if mi is CSGShape3D:
@@ -76,7 +95,7 @@ func _capture_station(dressing: bool, force_prop_affine: bool = false) -> Image:
 				else:
 					(mi as MeshInstance3D).material_override = mat
 	_stats = {"total": total, "triplanar": tri, "props": props}
-	for _i in range(6):
+	for _i in range(8):
 		await get_tree().process_frame
 	await RenderingServer.frame_post_draw
 	var img := get_viewport().get_texture().get_image()
@@ -110,14 +129,14 @@ func _prop_affine_closeup() -> float:
 	for mi in props:
 		var tex := PS1Geometry.surface_texture(mi)
 		_apply_prop(mi, PS1Geometry.make_surface_material(tex, false, false))
-	for _i in range(6):
+	for _i in range(8):
 		await get_tree().process_frame
 	await RenderingServer.frame_post_draw
 	var perspective := get_viewport().get_texture().get_image()
 	for mi in props:
 		var tex := PS1Geometry.surface_texture(mi)
 		_apply_prop(mi, PS1Geometry.make_surface_material(tex, true, false))
-	for _i in range(6):
+	for _i in range(8):
 		await get_tree().process_frame
 	await RenderingServer.frame_post_draw
 	var affine := get_viewport().get_texture().get_image()
