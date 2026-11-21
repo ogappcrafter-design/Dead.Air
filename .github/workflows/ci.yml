@@ -50,15 +50,23 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7
-      - name: Ensure Godot 4.7
+      - name: Ensure Godot 4.7-stable
         run: |
-          if ! godot --version 2>/dev/null | grep -q '^4\.7'; then
+          # The desktop export in godot-release.yml pins 4.7-stable, so tests must
+          # run the same build rather than whatever 4.7.x happens to be on the runner.
+          GODOT_BIN_SHA256=f85bbc6b15e22416c7d797cd60b63286dd67b9cb13498847056c18520ae55a75
+          if ! godot --version 2>/dev/null | grep -q '^4\.7\.stable\.official' \
+             || [ "$(sha256sum /usr/local/bin/godot | cut -d' ' -f1)" != "$GODOT_BIN_SHA256" ]; then
             curl -sL -o godot.zip https://github.com/godotengine/godot-builds/releases/download/4.7-stable/Godot_v4.7-stable_linux.x86_64.zip
             echo "0b1a6c54c2c619c12e169fe9241edda4b81080b519451cec2984bf0d2c6cb73c  godot.zip" | sha256sum -c -
             unzip -q godot.zip
             chmod +x Godot_v4.7-stable_linux.x86_64
             sudo mv Godot_v4.7-stable_linux.x86_64 /usr/local/bin/godot
           fi
+          test "$(sha256sum /usr/local/bin/godot | cut -d' ' -f1)" = "$GODOT_BIN_SHA256" || {
+            echo "installed engine does not match the pinned 4.7-stable build" >&2
+            exit 1
+          }
           godot --version
       - name: Import project
         working-directory: godot
