@@ -1,16 +1,15 @@
 extends Node3D
-## DEA-175 art-direction rig: measures the ps1_geometry shader on the real
-## station scene so snap_resolution and affine usage are chosen from pixels.
-## Usage: xvfb-run -a godot --rendering-method gl_compatibility --path godot res://tests/visual_driver_ps1_station.tscn
+## DEA-175 art-direction rig for the real station scene.
 ##
-## The tree stays unpaused: CSG brushes only rebuild their mesh in _process, so
-## pausing freezes the geometry and every setting measures the same stale mesh.
-## Ambient motion is disabled node-by-node instead.
+## Answers the two open questions with pixels:
+##   1. dressed vs undressed station - does the shipped pass look like the room?
+##   2. affine on props - visible where it is correct, absent where it is not.
+##
+## Usage: xvfb-run -a godot --rendering-method gl_compatibility --path godot res://tests/visual_driver_ps1_station.tscn
 
 const STATION := "res://scenes/station/station.tscn"
-const GRIDS := [Vector2(0.0, 0.0), Vector2(160.0, 120.0), Vector2(320.0, 240.0), Vector2(640.0, 480.0)]
 
-var _base: Image
+var _stats := {}
 
 
 func _ready() -> void:
@@ -18,20 +17,119 @@ func _ready() -> void:
 	var retro := get_node_or_null("/root/RetroResolutionManager")
 	if retro != null:
 		retro.enabled = false
-	var station: Node = load(STATION).instantiate()
-	add_child(station)
-	_still(station)
 	var cam := Camera3D.new()
 	cam.position = Vector3(0.6, 1.6, 1.8)
 	cam.rotation_degrees = Vector3(-6.0, 18.0, 0.0)
 	add_child(cam)
 	cam.make_current()
-	for _i in range(10):
-		await get_tree().process_frame
-	_base = await _capture()
-	print("PS1STATION base luma=%.1f sum=%d" % [_mean(_base), _sum(_base)])
-	await _sweep(station)
+
+	var plain := await _capture_station(false)
+	var plain_stats: Dictionary = _stats.duplicate()
+	var dressed := await _capture_station(true)
+	var props := await _capture_station(true, true)
+	var prop_delta := await _prop_affine_closeup()
+
+	print("PS1STATION surfaces=%d triplanar=%d props=%d" % [
+		plain_stats["total"], plain_stats["triplanar"], plain_stats["props"]])
+	print("PS1STATION ab_dressed_vs_undressed=%.4f luma_plain=%.1f luma_dressed=%.1f" % [
+		_changed(plain, dressed), _mean(plain), _mean(dressed)])
+	print("PS1STATION prop_affine_wide=%.4f (props too small in this framing)" % _changed(dressed, props))
+	print("PS1STATION prop_affine_closeup=%.4f" % prop_delta)
+	print("PS1STATION %s" % ("PASS" if _verdict(plain, dressed, prop_delta) else "FAIL"))
 	get_tree().quit()
+
+
+func _verdict(plain: Image, dressed: Image, prop_delta: float) -> bool:
+	if _mean(dressed) < 5.0 or _mean(dressed) > 250.0:
+		return false
+	if _changed(plain, dressed) > 0.95:
+		return false
+	if prop_delta < 0.01:
+		return false
+	return true
+
+
+## Render one station: dressing on/off, optionally forcing affine onto props.
+## The station is destroyed between captures so the frames stay comparable.
+func _capture_station(dressing: bool, force_prop_affine: bool = false) -> Image:
+	PS1Geometry.dressing_enabled = dressing
+	var station: Node = load(STATION).instantiate()
+	add_child(station)
+	_still(station)
+	var total := 0
+	var tri := 0
+	var props := 0
+	for mi in _targets(station):
+		var tex := PS1Geometry.surface_texture(mi)
+		if tex == null:
+			continue
+		total += 1
+		var cfg := PS1Geometry.surface_settings(mi)
+		if cfg["triplanar"]:
+			tri += 1
+		else:
+			props += 1
+			if force_prop_affine:
+				var mat := PS1Geometry.make_surface_material(tex, true, false)
+				if mi is CSGShape3D:
+					(mi as CSGShape3D).material = mat
+				else:
+					(mi as MeshInstance3D).material_override = mat
+	_stats = {"total": total, "triplanar": tri, "props": props}
+	for _i in range(6):
+		await get_tree().process_frame
+	await RenderingServer.frame_post_draw
+	var img := get_viewport().get_texture().get_image()
+	station.queue_free()
+	await get_tree().process_frame
+	await RenderingServer.frame_post_draw
+	return img
+
+
+## Affine only shows on UV-interpolated geometry, so measure one prop up close.
+## Returns the fraction of pixels affine changes; 0 when no prop exists.
+func _prop_affine_closeup() -> float:
+	PS1Geometry.dressing_enabled = true
+	var station: Node = load(STATION).instantiate()
+	add_child(station)
+	_still(station)
+	var props: Array[Node] = []
+	for mi in _targets(station):
+		if PS1Geometry.surface_texture(mi) == null:
+			continue
+		if not PS1Geometry.surface_settings(mi)["triplanar"]:
+			props.append(mi)
+	if props.is_empty():
+		station.queue_free()
+		return 0.0
+	var target := props[0] as Node3D
+	var cam := get_viewport().get_camera_3d()
+	var focus := target.global_position
+	cam.global_position = focus + Vector3(0.45, 0.25, 0.45)
+	cam.look_at(focus)
+	for mi in props:
+		var tex := PS1Geometry.surface_texture(mi)
+		_apply_prop(mi, PS1Geometry.make_surface_material(tex, false, false))
+	for _i in range(6):
+		await get_tree().process_frame
+	await RenderingServer.frame_post_draw
+	var perspective := get_viewport().get_texture().get_image()
+	for mi in props:
+		var tex := PS1Geometry.surface_texture(mi)
+		_apply_prop(mi, PS1Geometry.make_surface_material(tex, true, false))
+	for _i in range(6):
+		await get_tree().process_frame
+	await RenderingServer.frame_post_draw
+	var affine := get_viewport().get_texture().get_image()
+	station.queue_free()
+	return _changed(perspective, affine)
+
+
+func _apply_prop(n: Node, mat: Material) -> void:
+	if n is CSGShape3D:
+		(n as CSGShape3D).material = mat
+	else:
+		(n as MeshInstance3D).material_override = mat
 
 
 ## Kill animated content so a frame delta is the shader, not the noise.
@@ -43,7 +141,8 @@ func _still(root: Node) -> void:
 	for n in root.find_children("*", "CanvasLayer", true, false):
 		(n as CanvasLayer).visible = false
 	for n in root.find_children("*", "", true, false):
-		if n.get_script() != null and String(n.get_script().resource_path).ends_with("ambient_life.gd"):
+		var s = n.get_script()
+		if s != null and String(s.resource_path).ends_with("ambient_life.gd"):
 			(n as Node).set_process(false)
 
 
@@ -55,71 +154,6 @@ func _targets(node: Node) -> Array[Node]:
 	for child in node.find_children("*", "CSGShape3D", true, false):
 		out.append(child)
 	return out
-
-
-func _texture_of(n: Node) -> Texture2D:
-	var m: Material = null
-	if n is CSGShape3D:
-		m = (n as CSGShape3D).material
-	elif n is MeshInstance3D:
-		m = (n as MeshInstance3D).material_override
-		if m == null and (n as MeshInstance3D).mesh != null:
-			m = (n as MeshInstance3D).mesh.surface_get_material(0)
-	if m is BaseMaterial3D:
-		return (m as BaseMaterial3D).albedo_texture
-	return null
-
-
-func _apply(n: Node, mat: Material) -> void:
-	if n is CSGShape3D:
-		(n as CSGShape3D).material = mat
-	else:
-		(n as MeshInstance3D).material_override = mat
-
-
-func _sweep(station: Node) -> void:
-	var targets := _targets(station)
-	var tex := 0
-	for mi in targets:
-		if _texture_of(mi) != null:
-			tex += 1
-	print("PS1STATION targets=%d textured=%d" % [targets.size(), tex])
-	var prev := _base
-	for affine in [false, true]:
-		for grid in GRIDS:
-			# One material per surface, each keeping its own albedo texture.
-			for mi in targets:
-				var mat := PS1Geometry.make_material(_texture_of(mi), affine, true)
-				var snapped: bool = grid.x > 0.0
-				mat.set_shader_parameter(&"snap_resolution", grid if snapped else Vector2(1e6, 1e6))
-				mat.set_shader_parameter(&"snap_amount", 1.0 if snapped else 0.0)
-				_apply(mi, mat)
-			var img := await _capture()
-			print("PS1STATION affine=%s grid=%dx%d vs_base=%.4f vs_prev=%.4f luma=%.1f sum=%d" % [
-				affine, int(grid.x), int(grid.y), _changed(_base, img), _changed(prev, img),
-				_mean(img), _sum(img)])
-			prev = img
-	for mi in targets:
-		if mi is CSGShape3D:
-			(mi as CSGShape3D).material = null
-		else:
-			(mi as MeshInstance3D).material_override = null
-
-
-func _capture() -> Image:
-	# Give CSG a rebuild frame, then wait for a completed draw.
-	await get_tree().process_frame
-	await RenderingServer.frame_post_draw
-	return get_viewport().get_texture().get_image()
-
-
-func _sum(img: Image) -> int:
-	var s := 0
-	for y in range(0, img.get_height(), 8):
-		for x in range(0, img.get_width(), 8):
-			var c := img.get_pixel(x, y)
-			s += int(c.r * 255.0) + int(c.g * 255.0) + int(c.b * 255.0)
-	return s
 
 
 func _mean(img: Image) -> float:

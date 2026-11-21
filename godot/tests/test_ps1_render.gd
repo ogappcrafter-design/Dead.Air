@@ -53,6 +53,32 @@ func run_tests() -> Dictionary:
 	results["test_surface_material_triplanar"] = bool(surf.get_shader_parameter("use_triplanar")) == true
 	results["test_untextured_surface_skipped"] = PS1Geometry.surface_texture(Node3D.new()) == null
 
+	# --- dressing rules: mapping decides the treatment ---
+	var world_brush := CSGBox3D.new()
+	var world_mat := StandardMaterial3D.new()
+	world_mat.albedo_texture = Texture2D.new()
+	world_mat.uv1_triplanar = true
+	world_brush.material = world_mat
+	var world_cfg: Dictionary = PS1Geometry.surface_settings(world_brush)
+	results["test_architecture_stays_perspective"] = world_cfg["affine"] == false and world_cfg["triplanar"] == true
+	var prop := MeshInstance3D.new()
+	prop.mesh = BoxMesh.new()
+	var prop_mat := StandardMaterial3D.new()
+	prop_mat.albedo_texture = Texture2D.new()
+	prop.mesh.surface_set_material(0, prop_mat)
+	var prop_cfg: Dictionary = PS1Geometry.surface_settings(prop)
+	results["test_prop_gets_affine"] = prop_cfg["affine"] == true and prop_cfg["triplanar"] == false
+	results["test_prop_affine_constant"] = PS1Geometry.PROP_AFFINE == true
+	# dress_surfaces walks children, so mount the prop under a holder.
+	var holder := Node3D.new()
+	holder.add_child(prop)
+	PS1Geometry.dressing_enabled = false
+	results["test_dressing_switch_off"] = PS1Geometry.dress_surfaces(holder) == 0
+	PS1Geometry.dressing_enabled = true
+	results["test_dressing_switch_on"] = PS1Geometry.dress_surfaces(holder) == 1
+	world_brush.free()
+	holder.free()
+
 	results["test_canvas_filter_is_nearest"] = int(ProjectSettings.get_setting("rendering/textures/canvas_textures/default_texture_filter", -1)) == 0
 
 	# --- DEA-175: geometry shader ---
