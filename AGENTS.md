@@ -87,6 +87,7 @@ Sharp edges that caused the old 26-failure baseline:
 - **`.tres` Colors need `Color(r, g, b, a)`.** The bare `color = 1.0, 0.55, 0.0, 1` form loads silently as black; `band_config.tres` had this bug.
 - **`save_game()` syncs live trackers over `SaveData`** (`CRTDegradation`, `MoralChoiceTracker`), so tests asserting those fields must set the tracker, not just the SaveData field.
 - **`GDScript.new()` + `source_code` needs `reload()`** before `set_script()`, otherwise the node has no methods.
+- **Budget the full suite at 1500 s, not 900 s.** Runtime varies enough that a 900 s cap can land it mid-suite (seen in `Phase4Endings`) and a killed run reports no `Total:` line at all, which looks like a hang. A completed run of the same tree finishes well inside 1500 s.
 - **A brand-new `class_name` is not in the global class cache during headless runs.** Until the project is imported (`godot --headless --import`), another script that names it fails with `Parse Error: Could not find type "X"`, and every scene using that script fails to load. Reference new scripts by path (`const XScript = preload("res://.../x.gd")`, usable as a type annotation and for `.new()`) instead of the bare identifier; classes already in the cache are unaffected.
 
 ## PS1 render dressings (DEA-174/175)
@@ -109,6 +110,10 @@ OpenDesign ([nexu-io/open-design](https://github.com/nexu-io/open-design)) is in
 - **MCP:** `od mcp install <agent>` writes the stdio server entry from the daemon's `/api/mcp/install-info`. Installed for `codex` (`~/.codex/config.toml`), `opencode` (`~/.config/opencode/opencode.json`), and `claude` (`~/.claude.json`); remove with `--uninstall`, preview with `--print`.
 - **Build-script allowlist:** `node-pty`, `@ffmpeg-installer/linux-x64`, `@ffprobe-installer/linux-x64` must sit in the checkout root `package.json` `pnpm.onlyBuiltDependencies`; the same names in `pnpm-workspace.yaml` alone are ignored on this host, so pnpm reports "Ignored build scripts: node-pty" and no `pty.node` appears. After `pnpm install --force` the module lands at `node_modules/.pnpm/node-pty@1.1.0/node_modules/node-pty/build/Release/pty.node`, and `require('node-pty').spawn('/bin/sh',['-c','echo PTY_OK'])` prints `PTY_OK` (exit 0).
 - **`od doctor` speed:** the per-plugin `POST /api/plugins/:id/doctor` route reloads the whole plugin registry per call, so a 478-plugin sweep took ~66 s and looked like a hang. The checkout carries local (uncommitted) changes: a bulk `POST /api/plugins/doctor` route (`{ ids?: string[] }`, one registry load + one connector probe for the whole sweep) in `apps/daemon/src/routes/plugins/index.ts`, and `runDoctor` in `apps/daemon/src/cli.ts` calling it with a fallback to the old fan-out. Full sweep is ~0.7 s; it still exits 1 because 86 bundled templates fail with `manifest.warning`/`atom.unknown`.
+
+## Repo remotes and push rules
+
+Two remotes: `origin` (`git@github.com:daggerstuff/deadair.git`) and `macabre` (`git@github.com:ogappcrafter-design/Dead.Air.git`, branch `macabre`). As of 2026-11-21 `origin/master` rejects direct pushes (`GH013: Changes must be made through a pull request`), so a batch goes out as a feature branch plus a PR (`gh api --method POST repos/daggerstuff/deadair/pulls -f title=... -f head=... -f base=... -f body=...`; plain `gh pr create` still works but this host's `gh` prints unrelated extension output, and `merge` needs every review thread resolved first - `resolveReviewThread` by GraphQL). The `required_status_checks` rule was removed on 2026-11-21 because it named five checks that a paths-filtered or docs-only commit can never produce, which made every PR permanently unmergeable., while `macabre` fast-forwards directly.
 
 ## Maintaining this file
 
