@@ -8,7 +8,7 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
-DEFAULT_MODEL = "cf/@cf/black-forest-labs/flux-2-dev"
+DEFAULT_MODEL = "cf/@cf/black-forest-labs/flux-2-klein-9b"
 MANIFEST = Path(__file__).with_name("manifest.json")
 
 

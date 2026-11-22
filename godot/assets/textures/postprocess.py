@@ -64,16 +64,26 @@ def feather_mask(size: tuple[int, int], ramp: float = 0.18) -> Image.Image:
 
 
 def make_seamless(img: Image.Image) -> tuple[Image.Image, str]:
-    """Keep whichever of the original and a feathered roll has the smaller edge discontinuity."""
+    """Keep whichever of the original and a feathered roll scores lower on seam_energy."""
     w, h = img.size
     shifted = ImageChops.offset(img, w // 2, h // 2)
     mask = feather_mask((w, h))
     blended = ImageChops.offset(Image.composite(shifted, img, mask), -(w // 2), -(h // 2))
-    raw_gap = seam_gap(img)
-    blend_gap = seam_gap(blended)
-    if blend_gap < raw_gap:
-        return blended, f"rolled {raw_gap:.1f}->{blend_gap:.1f}"
-    return img, f"kept original {raw_gap:.1f}"
+    raw_score = seam_energy(img)
+    blend_score = seam_energy(blended)
+    affordable = seam_gap(blended) <= max(seam_gap(img) * 1.2, seam_gap(img) + 2.0)
+    if affordable and blend_score < raw_score:
+        return blended, f"rolled {raw_score:.1f}->{blend_score:.1f}"
+    return img, f"kept original {raw_score:.1f} gap {seam_gap(blended):.1f}"
+
+
+def seam_energy(img: Image.Image) -> float:
+    """Wrap-around edge gap plus the worst line the tile carries relative to its own gradient noise."""
+    a = np.asarray(img, dtype=float)
+    spikes = []
+    for diffs in (np.abs(np.diff(a, axis=0)).mean(axis=(1, 2)), np.abs(np.diff(a, axis=1)).mean(axis=(0, 2))):
+        spikes.append(max(0.0, float(diffs.max() - np.median(diffs))))
+    return seam_gap(img) + max(spikes)
 
 
 def seam_gap(img: Image.Image) -> float:

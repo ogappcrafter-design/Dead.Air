@@ -227,7 +227,8 @@
    "size": "1284x2778",
    "seamless": false,
    "intended_use": "Expo splash screen",
-   "prompt": "Vertical splash screen: centered glowing amber retro radio dial with concentric signal arcs on pure black, subtle CRT scanlines, faint phosphor green halo, lots of empty black space, minimal, no text."
+   "derived_from": "app_icon",
+   "note": "Derived by postprocess.py from app_icon; the image gateway rejects 1284x2778 requests."
   },
   {
    "id": "app_favicon",
