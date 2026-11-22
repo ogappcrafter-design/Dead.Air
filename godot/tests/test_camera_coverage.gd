@@ -33,7 +33,32 @@ func run_tests() -> Dictionary:
 	results["test_walking_cuts_to_next_zone"] = await test_walking_cuts_to_next_zone()
 	results["test_reset_clears_active_zone"] = await test_reset_clears_active_zone()
 	results["test_freed_zone_cannot_activate"] = await test_freed_zone_cannot_activate()
+	results["test_stale_active_zone_does_not_block_lower_priority"] = await test_stale_active_zone_does_not_block_lower_priority()
 	return results
+
+
+## A zone the player is no longer inside must not outrank a zone the player
+## walks into, whatever its priority. A teleport or a lost exit signal leaves
+## exactly this state, and it pins the camera to a box the player left while
+## every lower-priority angle in the scene becomes unreachable.
+func test_stale_active_zone_does_not_block_lower_priority() -> bool:
+	var cam_mgr: Node = _camera_manager()
+	if cam_mgr == null:
+		return false
+	cam_mgr.reset()
+	var high: CameraZone = CameraZone.new()
+	high.zone_priority = 5
+	var low: CameraZone = CameraZone.new()
+	low.zone_priority = 1
+	cam_mgr.register_zone(high)
+	cam_mgr.register_zone(low)
+	cam_mgr.activate_zone(high, true)
+	cam_mgr.activate_zone(low, true)
+	var ok: bool = cam_mgr.get_active_zone() == low
+	high.free()
+	low.free()
+	cam_mgr.reset()
+	return ok
 
 
 # ─── Helpers ─────────────────────────────────────────────────────────────────

@@ -93,8 +93,11 @@ func activate_zone(zone, silent: bool = false) -> void:
 	if zone == _active_zone and is_instance_valid(zone):
 		# Already the active angle; a second trigger must not re-cut.
 		return
-	if zone.zone_priority < _get_active_priority():
-		# Lower priority — ignore
+	if zone.zone_priority < _get_active_priority() and _active_zone_holds_player():
+		# Lower priority — ignore. Only a zone the player is still standing in
+		# may outrank the newcomer: a teleport or a lost exit signal otherwise
+		# pins the camera to a box the player left long ago and the whole
+		# scene's lower-priority angles become unreachable.
 		return
 
 	var old_id: String = ""
@@ -145,6 +148,19 @@ func _on_zone_exited(zone) -> void:
 			best = candidate
 	if best != null:
 		activate_zone(best)
+
+## True while the active zone still reports the camera's player inside it.
+## A zone with no overlapping body is stale, whatever its priority.
+func _active_zone_holds_player() -> bool:
+	if _active_zone == null or not is_instance_valid(_active_zone):
+		return false
+	var bodies: Array[Node3D] = _active_zone.get_overlapping_bodies()
+	if bodies.is_empty():
+		return false
+	if _rig != null and _rig.get_target() != null:
+		return bodies.has(_rig.get_target())
+	return true
+
 
 func _get_active_priority() -> int:
 	if _active_zone == null or not is_instance_valid(_active_zone):

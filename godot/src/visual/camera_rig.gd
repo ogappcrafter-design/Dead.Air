@@ -37,6 +37,9 @@ func _ready() -> void:
 func set_target(target: Node3D) -> void:
 	_target = target
 
+func get_target() -> Node3D:
+	return _target
+
 func transition_to(angle: CameraAngle, duration: float = 0.75) -> void:
 	if angle == null:
 		return
