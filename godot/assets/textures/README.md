@@ -89,7 +89,21 @@ python3 godot/assets/textures/regenerate.py --out /tmp/deadair-assets
 ```
 
 Pass `--model` to swap the model (for example `cf/@cf/black-forest-labs/flux-2-klein-9b`).
-Re-run the seamless pass after regenerating tileable textures.
+
+Then run the staging pass, which fits every asset to its declared size, gives
+tileable textures a feathered roll when that measurably closes the wrap seam,
+and writes the results under a staging root that mirrors the manifest paths:
+
+```bash
+python3 godot/assets/textures/postprocess.py --src /tmp/deadair-assets \
+    --out /tmp/deadair-staged --sheet /tmp/deadair-sheets
+```
+
+Copy the staged tree over the repository, re-run `generate_pbr.py` for the
+normal and roughness maps, and `godot --headless --import`. `postprocess.py`
+writes nothing into the repository itself, so the staged output can be reviewed
+(sheets land in `--sheet`) before anything shipped is replaced. Each seamless
+asset prints which candidate it kept and the edge-gap score it was chosen on.
 
 Verified 2026-11-22: `--model cf/@cf/black-forest-labs/flux-2-klein-9b --only keyart_title --out /tmp/assetout`
 wrote a 1920x1080 jpg into `/tmp/assetout` with nothing written to the repo
@@ -100,12 +114,14 @@ review of the new images, not a tooling gap.
 
 ## Provenance and licensing
 
-- Generated with `cf/@cf/black-forest-labs/flux-2-dev` through the local 9router
-  gateway (OpenAI-compatible `/v1/images/generations`), 2026-11-17.
-- Post-processed with Pillow: 1920x1080 crops for key art, seamless wrap for the
-  eight tileable textures, flood-fill of the icon mat, and icon/splash derivatives.
-- **Licensing caveat:** FLUX.2 [dev] is released under a non-commercial license.
-  Treat this pack as prototype art. Before a commercial release, regenerate with a
-  commercially licensed model available on the same gateway — FLUX.2 [klein]
-  (`cf/@cf/black-forest-labs/flux-2-klein-9b`, Apache-2.0) or FLUX.1 [schnell]
-  (`cf/@cf/black-forest-labs/flux-1-schnell`, Apache-2.0) — and re-check each image.
+- Generated with `cf/@cf/black-forest-labs/flux-2-klein-9b` through the local
+  9router gateway (OpenAI-compatible `/v1/images/generations`), 2026-11-22. The
+  earlier pack used `flux-2-dev`; every asset here has been repainted since, so
+  no dev-generated file remains.
+- Post-processed with `postprocess.py`: declared-size crops for key art, a
+  measured roll-plus-feather seam pass for tileable textures, and icon/splash
+  derivatives built from the generated icon. `generate_pbr.py` derives the
+  `_normal`/`_roughness` maps.
+- Licensing: FLUX.2 [klein] is commercially usable, so this pack ships under the
+  project licence. Re-check locally before release:
+  `python3 godot/assets/textures/regenerate.py --model cf/@cf/black-forest-labs/flux-2-klein-9b`
