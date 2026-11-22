@@ -8,6 +8,7 @@ extends Area3D
 signal tape_picked_up(tape_id: String)
 
 const _TAPE_LIBRARY_PATH := "res://src/data/tapes.tres"
+const InputGlyphs := preload("res://src/ui/input_glyphs.gd")
 
 @export var tape_id: String = ""
 @export var interaction_range: float = 2.5
@@ -97,7 +98,7 @@ func _setup_glow() -> void:
 
 func _setup_prompt() -> void:
 	_prompt_label = Label3D.new()
-	_prompt_label.text = "[E] Pick Up"
+	_prompt_label.text = _prompt_text()
 	_prompt_label.font_size = 48
 	_prompt_label.outline_modulate = Color.BLACK
 	_prompt_label.outline_size = 8
@@ -106,12 +107,31 @@ func _setup_prompt() -> void:
 	_prompt_label.no_depth_test = true
 	add_child(_prompt_label)
 
+	# Keep a shown prompt in sync with device and binding changes while the
+	# player stays in range.
+	if InputManager != null and InputManager.has_signal("device_changed"):
+		# device_changed emits new_device; this refresh ignores it.
+		InputManager.device_changed.connect(_on_prompt_display_changed.unbind(1))
+	if InputManager != null and InputManager.has_signal("bindings_changed"):
+		InputManager.bindings_changed.connect(_on_prompt_display_changed)
+
+
+func _prompt_text() -> String:
+	# Live glyph: a rebound interact key or a controller shows correctly.
+	return InputGlyphs.format_prompt("interact", "Pick Up", InputManager.get_last_device())
+
+
+func _on_prompt_display_changed() -> void:
+	if _prompt_label != null and _prompt_label.visible and not _collected:
+		_prompt_label.text = _prompt_text()
+
 
 func _on_body_entered(_body: Node3D) -> void:
 	if _collected:
 		return
 	_player_in_range = true
 	if _prompt_label:
+		_prompt_label.text = _prompt_text()
 		_prompt_label.visible = true
 
 

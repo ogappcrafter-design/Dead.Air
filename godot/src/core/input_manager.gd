@@ -13,6 +13,8 @@ extends Node
 signal mode_changed(old_mode: int, new_mode: int)
 signal action_triggered(action: String, type: int)
 signal band_selected(band_index: int)
+signal device_changed(new_device: int)
+signal bindings_changed
 
 var settings: ControlSettings
 var buffer: InputBuffer
@@ -22,6 +24,9 @@ var _mode: ControlEnums.ControlMode = ControlEnums.ControlMode.EXPLORE
 var _previous_mode: ControlEnums.ControlMode = ControlEnums.ControlMode.EXPLORE
 
 # --- Hold state tracking ---
+# Motion holds track the previous threshold crossing separately, so an
+# already-latched toggle can still flip on the next press.
+var _motion_held_state: Dictionary = {}
 # For toggle-mode actions: true = currently active (toggled on)
 # For hold-mode actions: true = physically held
 var _hold_active: Dictionary = {}         # action → bool (currently active)
@@ -35,20 +40,46 @@ var _mouse_tuning_active: bool = false
 # --- Active device tracking ---
 var _last_device: ControlEnums.DeviceType = ControlEnums.DeviceType.KEYBOARD
 
+# --- Default bindings cache ---
+var _default_bindings: Dictionary = {}
+
 # --- Constants ---
 const HOLD_ACTIONS: Array[String] = ["record", "hide", "hold_breath", "fine_tune"]
 const PRESS_ACTIONS: Array[String] = ["interact", "play_tape", "band_prev", "band_next", "band_cycle", "pause", "skip_call"]
 const BAND_KEY_START: int = 49   # KEY_1
 const BAND_KEY_END: int = 56     # KEY_8
 const SETTINGS_PATH: String = "user://control_settings.cfg"
+const CONTROLS_PATH: String = "user://controls.cfg"
+## Where rebind/reset persistence writes. Tests redirect this so the suite
+## never touches a player's real bindings file.
+var controls_path: String = CONTROLS_PATH
+## Where general preference persistence writes; tests redirect this too, so
+## preference setters (deadzone, toggle modes, ...) stay off the player's
+## real settings file during the suite.
+var settings_path: String = SETTINGS_PATH
 
 
 func _ready() -> void:
+	# Keep receiving input while the tree is paused so device switches made
+	# in the paused Controls screen still update glyphs (DEA-191). Action
+	# handling below is explicitly skipped while paused.
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	settings = ControlSettings.new()
 	buffer = InputBuffer.new(settings.input_buffer_ms)
+	_cache_default_bindings()
 	_load_settings()
+	load_controls()
 	_apply_deadzones()
 	_init_hold_states()
+
+
+func _cache_default_bindings() -> void:
+	_default_bindings.clear()
+	for action in InputMap.get_actions():
+		var events: Array = []
+		for ev in InputMap.action_get_events(action):
+			events.append(ev.duplicate(true))
+		_default_bindings[action] = events
 
 
 # ============================================================
@@ -56,17 +87,42 @@ func _ready() -> void:
 # ============================================================
 
 func _load_settings() -> void:
-	var err: Error = settings.load_from_config(SETTINGS_PATH)
+	var err: Error = settings.load_from_config(settings_path)
 	if err != OK:
 		# Use defaults — save them for next time
-		settings.save_to_config(SETTINGS_PATH)
+		settings.save_to_config(settings_path)
 	buffer._buffer_ms = float(settings.input_buffer_ms)
 
 
 func save_settings() -> void:
-	settings.save_to_config(SETTINGS_PATH)
+	settings.save_to_config(settings_path)
 	_apply_deadzones()
 	buffer._buffer_ms = float(settings.input_buffer_ms)
+
+
+func save_controls(path: String = "") -> Error:
+	if path.is_empty():
+		path = controls_path
+	var err: Error = settings.save_to_config(path)
+	save_settings()
+	return err
+
+
+func load_controls(path: String = "") -> Error:
+	if path.is_empty():
+		path = controls_path
+	# Bindings only: general preferences live in control_settings.cfg and must
+	# not be clobbered by stale values carried in the bindings file.
+	var err: Error = settings.load_bindings_from_config(path)
+	if err == OK and not settings.custom_bindings.is_empty():
+		for action in settings.custom_bindings.keys():
+			if not InputMap.has_action(action):
+				continue
+			InputMap.action_erase_events(action)
+			for ev in settings.custom_bindings[action]:
+				InputMap.action_add_event(action, ev)
+		_apply_deadzones()
+	return err
 
 
 func _apply_deadzones() -> void:
@@ -145,10 +201,18 @@ func is_hiding() -> bool:
 
 func _input(event: InputEvent) -> void:
 	# Track last device type
-	if event is InputEventKey or event is InputEventMouseButton or event is InputEventMouseMotion:
-		_last_device = ControlEnums.DeviceType.KEYBOARD
-	elif event is InputEventJoypadButton or event is InputEventJoypadMotion:
-		_last_device = ControlEnums.DeviceType.GAMEPAD
+	set_device_from_event(event)
+
+	# While paused only device tracking runs — no tuning, band keys or
+	# action processing (the pre-PROCESS_MODE_ALWAYS behaviour). Release
+	# events still clear tracked holds, or a fine tune held when the pause
+	# opened survives the pause as a stuck half-speed tuning multiplier.
+	if get_tree().paused:
+		if event is InputEventJoypadMotion:
+			_clear_paused_motion_holds(event)
+		elif (event is InputEventKey or event is InputEventJoypadButton or event is InputEventMouseButton) and not event.pressed:
+			_clear_paused_press_holds(event)
+		return
 
 	# Handle mouse motion for radio tuning
 	if event is InputEventMouseMotion:
@@ -158,9 +222,13 @@ func _input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo:
 		_handle_band_keys(event)
 
-	# Process hold/toggle actions
-	if event is InputEventJoypadButton or event is InputEventKey:
+	# Process hold/toggle actions (mouse buttons are bindable since DEA-191)
+	if event is InputEventJoypadButton or event is InputEventKey or event is InputEventMouseButton:
 		_process_hold_events(event)
+	# Hold actions bound to stick/trigger motion (e.g. the default L2 fine
+	# tune) never reach _process_hold_events, so motion gets its own dispatch.
+	elif event is InputEventJoypadMotion:
+		_process_hold_motion(event)
 
 
 func _handle_mouse_motion(event: InputEventMouseMotion) -> void:
@@ -213,23 +281,126 @@ func _process_hold_events(event: InputEvent) -> void:
 				action_triggered.emit(action, ControlEnums.ActionType.HOLD)
 
 		elif not event.pressed and _hold_active[action] and not is_toggle:
-			# Hold mode: deactivate on release
-			_hold_active[action] = false
-			_hold_start_time[action] = 0.0
-			action_triggered.emit(action, ControlEnums.ActionType.HOLD)
+			# Hold mode: deactivate on release — unless another bound source
+			# (e.g. the keyboard key while a trigger was released) still holds
+			# the action.
+			if not Input.is_action_pressed(action):
+				_hold_active[action] = false
+				_hold_start_time[action] = 0.0
+				action_triggered.emit(action, ControlEnums.ActionType.HOLD)
+
+
+## Hold/toggle handling for motion-bound actions (stick or trigger, e.g. the
+## default L2 fine tune). "Press" is the axis crossing the action's deadzone
+## in the bound direction; "release" is crossing back under it — the neutral
+## position carries no direction, so the hold is recomputed from the value
+## instead of matched against the binding's sign. Toggles flip on every
+## released-to-pressed crossing; the previous crossing state is tracked
+## separately from the latched toggle, which stays on past the release.
+func _process_hold_motion(event: InputEventJoypadMotion) -> void:
+	for action in HOLD_ACTIONS:
+		if not InputMap.has_action(action):
+			continue
+		if not _is_action_active_in_mode(action):
+			continue
+		var deadzone: float = InputMap.action_get_deadzone(action)
+		var is_toggle: bool = _is_toggle_action(action)
+		for ev in InputMap.action_get_events(action):
+			if not (ev is InputEventJoypadMotion):
+				continue
+			var binding := ev as InputEventJoypadMotion
+			if binding.axis != event.axis or binding.axis_value == 0.0:
+				continue
+			var held: bool = event.axis_value >= deadzone if binding.axis_value > 0.0 else event.axis_value <= -deadzone
+			var was_held: bool = _motion_held_state.get(action, false)
+			_motion_held_state[action] = held
+			if held and not was_held:
+				if is_toggle:
+					_toggle_state[action] = not _toggle_state[action]
+					_hold_active[action] = _toggle_state[action]
+					_hold_start_time[action] = Time.get_ticks_msec() if _hold_active[action] else 0.0
+				else:
+					_hold_active[action] = true
+					_hold_start_time[action] = Time.get_ticks_msec()
+				action_triggered.emit(action, ControlEnums.ActionType.HOLD)
+			elif not held and _hold_active[action] and not is_toggle and not Input.is_action_pressed(action):
+				_hold_active[action] = false
+				_hold_start_time[action] = 0.0
+				action_triggered.emit(action, ControlEnums.ActionType.HOLD)
+
+
+## Release events during pause: clear tracked non-toggle holds whose binding
+## went up while the tree was paused, without dispatching gameplay actions.
+func _clear_paused_motion_holds(event: InputEventJoypadMotion) -> void:
+	for action in HOLD_ACTIONS:
+		if not _hold_active.get(action, false) or _is_toggle_action(action):
+			continue
+		var deadzone: float = InputMap.action_get_deadzone(action)
+		for ev in InputMap.action_get_events(action):
+			if ev is InputEventJoypadMotion and (ev as InputEventJoypadMotion).axis == event.axis:
+				if abs(event.axis_value) < deadzone:
+					_hold_active[action] = false
+					_hold_start_time[action] = 0.0
+					# Reset the crossing state too, or the first squeeze
+					# after resuming looks like a held trigger and is
+					# ignored as a repeat rather than a new press.
+					_motion_held_state[action] = false
+				break
+
+
+func _clear_paused_press_holds(event: InputEvent) -> void:
+	for action in HOLD_ACTIONS:
+		if not _hold_active.get(action, false) or _is_toggle_action(action):
+			continue
+		for ev in InputMap.action_get_events(action):
+			if _event_triggers_binding(ev, event):
+				_hold_active[action] = false
+				_hold_start_time[action] = 0.0
+				break
 
 
 func _is_action_event(event: InputEvent, action: String) -> bool:
 	for ev in InputMap.action_get_events(action):
-		if ev is InputEventJoypadButton and event is InputEventJoypadButton:
-			if ev.button_index == event.button_index:
-				return true
-		elif ev is InputEventKey and event is InputEventKey:
-			if ev.keycode == event.keycode:
-				return true
-		elif ev is InputEventJoypadMotion and event is InputEventJoypadMotion:
-			if ev.axis == event.axis and sign(ev.axis_value) == sign(event.axis_value):
-				return true
+		if _event_triggers_binding(ev, event):
+			return true
+	return false
+
+
+## Dispatch predicate: does `event` trigger `binding` the way Godot's own
+## action matching does? A key binding fires while every modifier it requires
+## is held — extra modifiers on the input are ignored — and a key release
+## matches on the main key alone, so a hold ends no matter in which order
+## keys and modifiers come up. Non-key events match exactly.
+func _event_triggers_binding(binding: InputEvent, event: InputEvent) -> bool:
+	if binding is InputEventKey and event is InputEventKey:
+		var key_binding := binding as InputEventKey
+		var key_event := event as InputEventKey
+		# Compare the field the binding selects: logical keycode for logical
+		# bindings, physical_keycode for physical-only ones (an AZERTY press
+		# of the Q position carries keycode A + physical Q).
+		var same_key: bool = false
+		if key_binding.keycode != 0:
+			same_key = key_event.keycode == key_binding.keycode
+		else:
+			same_key = key_event.physical_keycode == key_binding.physical_keycode
+		if not same_key:
+			return false
+		if not key_event.pressed:
+			return true
+		return (
+			(not key_binding.ctrl_pressed or key_event.ctrl_pressed)
+			and (not key_binding.shift_pressed or key_event.shift_pressed)
+			and (not key_binding.alt_pressed or key_event.alt_pressed)
+			and (not key_binding.meta_pressed or key_event.meta_pressed)
+		)
+	if binding is InputEventJoypadButton and event is InputEventJoypadButton:
+		return (binding as InputEventJoypadButton).button_index == (event as InputEventJoypadButton).button_index
+	if binding is InputEventJoypadMotion and event is InputEventJoypadMotion:
+		var motion_binding := binding as InputEventJoypadMotion
+		var motion_event := event as InputEventJoypadMotion
+		return motion_binding.axis == motion_event.axis and sign(motion_binding.axis_value) == sign(motion_event.axis_value)
+	if binding is InputEventMouseButton and event is InputEventMouseButton:
+		return (binding as InputEventMouseButton).button_index == (event as InputEventMouseButton).button_index
 	return false
 
 
@@ -266,6 +437,8 @@ func _is_action_active_in_mode(action: String) -> bool:
 # ============================================================
 
 func _process(_delta: float) -> void:
+	if get_tree().paused:
+		return
 	buffer.update()
 	_process_press_actions()
 
@@ -376,6 +549,31 @@ func is_action_just_pressed(action: String) -> bool:
 	return Input.is_action_just_pressed(action) or buffer.consume_action(action)
 
 
+func _set_device(new_device: ControlEnums.DeviceType) -> void:
+	if _last_device != new_device:
+		_last_device = new_device
+		device_changed.emit(_last_device)
+
+
+func set_device(device: ControlEnums.DeviceType) -> void:
+	_set_device(device)
+
+
+## Update device tracking from a raw input event — the same classification
+## _input uses. The remap screen calls this for events it consumes before
+## InputManager ever sees them, so the glyphs refresh with the device that
+## produced the binding.
+func set_device_from_event(event: InputEvent) -> void:
+	if event is InputEventKey or event is InputEventMouseButton or event is InputEventMouseMotion:
+		_set_device(ControlEnums.DeviceType.KEYBOARD)
+	elif event is InputEventJoypadButton or event is InputEventJoypadMotion:
+		var joy_name := Input.get_joy_name(event.device).to_lower()
+		if "ps" in joy_name or "playstation" in joy_name or "dualshock" in joy_name or "dualsense" in joy_name or "sony" in joy_name:
+			_set_device(ControlEnums.DeviceType.PLAYSTATION)
+		else:
+			_set_device(ControlEnums.DeviceType.XBOX)
+
+
 ## Get the last-used input device type.
 func get_last_device() -> ControlEnums.DeviceType:
 	return _last_device
@@ -383,14 +581,14 @@ func get_last_device() -> ControlEnums.DeviceType:
 
 ## Check if the last-used device was a gamepad.
 func is_gamepad_active() -> bool:
-	return _last_device == ControlEnums.DeviceType.GAMEPAD
+	return _last_device != ControlEnums.DeviceType.KEYBOARD
 
 
 # ============================================================
 # Public API — Remapping
 # ============================================================
 
-## Rebind an action to a new input event. Updates the InputMap and saves to settings.
+## Rebind an action to a new input event. Updates the InputMap and saves to settings/controls.cfg.
 func rebind_action(action: String, new_event: InputEvent, old_event: InputEvent = null) -> void:
 	if not InputMap.has_action(action):
 		return
@@ -398,24 +596,101 @@ func rebind_action(action: String, new_event: InputEvent, old_event: InputEvent 
 	if old_event != null:
 		InputMap.action_erase_event(action, old_event)
 	else:
-		# Clear existing events for full rebind
-		InputMap.action_erase_events(action)
+		# Replace matching device category (keyboard/mouse vs gamepad)
+		var is_gamepad_new: bool = (new_event is InputEventJoypadButton or new_event is InputEventJoypadMotion)
+		for ev in InputMap.action_get_events(action):
+			var is_gamepad_ev: bool = (ev is InputEventJoypadButton or ev is InputEventJoypadMotion)
+			if is_gamepad_new == is_gamepad_ev:
+				InputMap.action_erase_event(action, ev)
 
 	InputMap.action_add_event(action, new_event)
 
 	# Store in custom bindings
 	var events: Array = InputMap.action_get_events(action)
 	settings.rebind_action(action, events)
-	save_settings()
+	save_controls()
+	_apply_deadzones()
+	bindings_changed.emit()
 
 
 ## Reset an action to its default binding from project.godot.
-## Note: Godot 4 does not store default bindings separately, so this reloads the project.
 func reset_action(action: String) -> void:
-	# Clear custom binding so defaults are used on next project load
+	if not InputMap.has_action(action):
+		return
+	if _default_bindings.has(action):
+		InputMap.action_erase_events(action)
+		for ev in _default_bindings[action]:
+			InputMap.action_add_event(action, (ev as InputEvent).duplicate(true))
 	if settings.custom_bindings.has(action):
 		settings.custom_bindings.erase(action)
-		save_settings()
+	save_controls()
+	_apply_deadzones()
+	bindings_changed.emit()
+
+
+## Reset all actions to default bindings.
+func reset_all_actions() -> void:
+	for action in _default_bindings.keys():
+		if InputMap.has_action(action):
+			InputMap.action_erase_events(action)
+			for ev in _default_bindings[action]:
+				InputMap.action_add_event(action, (ev as InputEvent).duplicate(true))
+	settings.custom_bindings.clear()
+	save_controls()
+	_apply_deadzones()
+	bindings_changed.emit()
+
+
+## Remove an input event from an action (conflict resolution) and persist the
+## result. The action's unrelated bindings are preserved.
+func remove_conflicting_event(action: String, event: InputEvent) -> void:
+	if not InputMap.has_action(action):
+		return
+	for ev in InputMap.action_get_events(action):
+		if event_overlaps_binding(ev, event):
+			InputMap.action_erase_event(action, ev)
+			break
+	var remaining: Array = InputMap.action_get_events(action)
+	# An action whose last binding was taken away stays explicitly unbound:
+	# persist an empty override so the default cannot return on restart.
+	settings.rebind_action(action, remaining)
+	save_controls()
+	_apply_deadzones()
+	bindings_changed.emit()
+
+
+## Conflict predicate: can some physical input trigger both? Godot fires a
+## plain-key binding even with extra modifiers held, so any two bindings on
+## the same main key share a trigger and overlap. Non-key events overlap only
+## on the exact button/axis.
+static func event_overlaps_binding(binding: InputEvent, event: InputEvent) -> bool:
+	if binding is InputEventKey and event is InputEventKey:
+		# Same field-consistent comparison as _event_triggers_binding.
+		if (binding as InputEventKey).keycode != 0:
+			return (event as InputEventKey).keycode == (binding as InputEventKey).keycode
+		return (event as InputEventKey).physical_keycode == (binding as InputEventKey).physical_keycode
+	if binding is InputEventJoypadButton and event is InputEventJoypadButton:
+		return (binding as InputEventJoypadButton).button_index == (event as InputEventJoypadButton).button_index
+	if binding is InputEventJoypadMotion and event is InputEventJoypadMotion:
+		var m1: InputEventJoypadMotion = binding as InputEventJoypadMotion
+		var m2: InputEventJoypadMotion = event as InputEventJoypadMotion
+		return m1.axis == m2.axis and sign(m1.axis_value) == sign(m2.axis_value)
+	if binding is InputEventMouseButton and event is InputEventMouseButton:
+		return (binding as InputEventMouseButton).button_index == (event as InputEventMouseButton).button_index
+	return false
+
+
+## Detect conflicting actions already using candidate_event.
+func detect_conflicts(action: String, candidate_event: InputEvent) -> Array[String]:
+	var conflicts: Array[String] = []
+	for act in InputMap.get_actions():
+		if act == action or act.begins_with("ui_"):
+			continue
+		for ev in InputMap.action_get_events(act):
+			if event_overlaps_binding(ev, candidate_event):
+				if not conflicts.has(act):
+					conflicts.append(act)
+	return conflicts
 
 
 # ============================================================

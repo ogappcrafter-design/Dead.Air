@@ -15,6 +15,8 @@
 extends Node
 class_name GameDirector
 
+const InputGlyphs := preload("res://src/ui/input_glyphs.gd")
+
 ## Emitted when all systems are wired and the shift is ready to start.
 signal systems_ready
 ## Emitted when the night shift ends.
@@ -30,6 +32,7 @@ var _call_manager: Node
 var _signal_strength: Node
 var _dread_composure: Node
 var _hud: Node
+var _interact_prompt: Node
 var _shift_stub: Node
 var _degradation_stub: Node
 var _interaction_raycast: Node
@@ -64,6 +67,8 @@ func _resolve_references() -> void:
 		_radio_tuner = radio_console.get_node_or_null("RadioTuner")
 	# HUD is a child of NightShift root
 	_hud = get_node_or_null("../HUD")
+	# Dedicated interaction prompt (night_shift.tscn InteractionUI)
+	_interact_prompt = get_node_or_null("../InteractionUI/InteractPrompt")
 	# Stubs are siblings
 	_shift_stub = get_node_or_null("../ShiftController")
 	_degradation_stub = get_node_or_null("../StationDegradation")
@@ -244,12 +249,26 @@ func _on_composure_break() -> void:
 
 
 func _on_interaction_target_changed(target: Node) -> void:
-	# Update HUD interaction prompt
+	# Update the interaction prompt with the live glyph for the "interact"
+	# action so rebinding and device switches are reflected (DEA-191).
+	var prompt := ""
+	if target and target.has_method("get_prompt_text"):
+		prompt = target.get_prompt_text()
+
+	# Dedicated prompt surface: the glyph comes from the current InputMap.
+	if _interact_prompt != null:
+		if prompt.is_empty():
+			_interact_prompt.hide_prompt()
+		else:
+			_interact_prompt.show_prompt_for_action("interact", prompt)
+
 	if _hud and target and _hud.has_method("set_subtitle"):
-		var prompt := ""
-		if target.has_method("get_prompt_text"):
-			prompt = target.get_prompt_text()
-		_hud.set_subtitle(prompt)
+		var subtitle := ""
+		if not prompt.is_empty() and _interact_prompt == null:
+			# No dedicated prompt node in this scene — fall back to the
+			# subtitle, formatted with the current interact glyph.
+			subtitle = InputGlyphs.format_prompt("interact", prompt, InputManager.get_last_device())
+		_hud.set_subtitle(subtitle)
 
 
 func _on_interact_performed(target: Node) -> void:

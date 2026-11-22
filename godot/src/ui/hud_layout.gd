@@ -9,6 +9,8 @@
 class_name HUDLayout
 extends Control
 
+const InputGlyphs := preload("res://src/ui/input_glyphs.gd")
+
 ## --- Data bindings (set in editor or via code) ---
 
 @export var radio_tuner: RadioTuner
@@ -304,6 +306,15 @@ func _connect_signals() -> void:
 		if pm.has_signal("phase_changed"):
 			pm.phase_changed.connect(_on_phase_changed)
 
+	# InputManager device tracking for dynamic HUD hints
+	if InputManager != null and InputManager.has_signal("device_changed"):
+		InputManager.device_changed.connect(_on_device_changed)
+		# Initialize from the device already in use instead of showing Xbox
+		# glyphs until the first switch.
+		_on_device_changed(InputManager.get_last_device())
+	if InputManager != null and InputManager.has_signal("bindings_changed"):
+		InputManager.bindings_changed.connect(_on_bindings_changed)
+
 
 ## Get PhaseManager autoload from the scene tree.
 func _get_phase_manager() -> Node:
@@ -352,6 +363,18 @@ func _on_mode_context_changed(_old_mode: int, new_mode: int) -> void:
 
 func _on_phase_changed(_old_phase: int, new_phase: int) -> void:
 	_update_clock_visibility(new_phase)
+
+
+func _on_device_changed(device: int) -> void:
+	if _control_hints_label != null:
+		_control_hints_label.text = InputGlyphs.get_hud_control_hints(device as ControlEnums.DeviceType)
+
+
+func _on_bindings_changed() -> void:
+	# A rebind or reset changed the InputMap — rebuild hints from the
+	# current bindings.
+	if InputManager != null:
+		_on_device_changed(InputManager.get_last_device())
 
 
 # --- Update helpers ---

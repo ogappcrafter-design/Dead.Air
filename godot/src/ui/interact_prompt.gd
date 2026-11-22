@@ -1,5 +1,7 @@
 class_name InteractPrompt
 extends Control
+
+const InputGlyphs := preload("res://src/ui/input_glyphs.gd")
 ## CRT-styled interaction prompt shown at bottom-left of the screen.
 ## Listens to InteractionRaycast.target_changed and fades in/out.
 ## Uses CRTText styling for the horror aesthetic.
@@ -43,6 +45,11 @@ func show_prompt(text: String) -> void:
 	if not _visible:
 		_visible = true
 		_fade_in()
+
+
+func show_prompt_for_action(action: String, description: String) -> void:
+	var dev := InputManager.get_last_device() if InputManager != null else ControlEnums.DeviceType.KEYBOARD
+	show_prompt(InputGlyphs.format_prompt(action, description, dev))
 
 
 func hide_prompt() -> void:

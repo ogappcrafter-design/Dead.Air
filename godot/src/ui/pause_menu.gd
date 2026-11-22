@@ -6,6 +6,7 @@ extends CanvasLayer
 
 const MENU_SCENE := "res://scenes/main_menu.tscn"
 const SETTINGS_SCENE := "res://scenes/settings.tscn"
+const ControlsRemapScreen := preload("res://src/ui/controls_remap_screen.gd")
 const REFUSAL_SECONDS := 2.5
 
 var is_open: bool = false
@@ -13,6 +14,7 @@ var is_open: bool = false
 var _panel: PanelContainer
 var _status: Label
 var _refusal_timer: float = 0.0
+var _controls_screen: Control
 
 
 func _ready() -> void:
@@ -54,6 +56,7 @@ func _build() -> void:
 
 	_button(vbox, "RESUME", resume)
 	_button(vbox, "SETTINGS", _open_settings)
+	_button(vbox, "CONTROLS", _open_controls)
 	_button(vbox, "QUIT TO TITLE", _quit_to_title)
 	_button(vbox, "QUIT GAME", _quit_game)
 
@@ -96,6 +99,7 @@ func try_pause() -> bool:
 
 func resume() -> void:
 	is_open = false
+	_close_controls()
 	get_tree().paused = false
 	hide()
 
@@ -117,6 +121,23 @@ func _process(delta: float) -> void:
 func _open_settings() -> void:
 	resume()
 	get_tree().change_scene_to_file(SETTINGS_SCENE)
+
+
+func _open_controls() -> void:
+	# Own the screen: one instance at a time, released on resume so it can
+	# never outlive the pause session or stack up on repeated presses.
+	if _controls_screen != null and is_instance_valid(_controls_screen):
+		return
+	var remap_screen := ControlsRemapScreen.new()
+	remap_screen.back_pressed.connect(_close_controls)
+	_controls_screen = remap_screen
+	add_child(remap_screen)
+
+
+func _close_controls() -> void:
+	if _controls_screen != null and is_instance_valid(_controls_screen):
+		_controls_screen.queue_free()
+	_controls_screen = null
 
 
 func _quit_to_title() -> void:

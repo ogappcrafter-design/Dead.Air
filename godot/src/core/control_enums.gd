@@ -25,4 +25,6 @@ enum ActionType {
 enum DeviceType {
 	KEYBOARD,
 	GAMEPAD,
+	XBOX,
+	PLAYSTATION,
 }

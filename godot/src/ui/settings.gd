@@ -5,12 +5,15 @@
 extends Control
 
 const MENU_SCENE := "res://scenes/main_menu.tscn"
+const ControlsRemapScreen := preload("res://src/ui/controls_remap_screen.gd")
 
 signal back_to_menu
 
 var _sliders: Dictionary = {}
 var _checks: Dictionary = {}
 var _sections: VBoxContainer
+var _remap_screen: Control
+var _remap_layer: CanvasLayer
 
 
 func _ready() -> void:
@@ -65,6 +68,12 @@ func _build() -> void:
 	_section("DIFFICULTY")
 	_slider("difficulty", "Preset (0 Easy / 1 Normal / 2 Hard / 3 Dead Air)", 0.0, 3.0, 1.0,
 		func(v: float) -> void: AccessibilityManager.set_difficulty_preset(int(v)))
+
+	_section("CONTROLS")
+	var remap_btn := Button.new()
+	remap_btn.text = "REMAP CONTROLS"
+	remap_btn.pressed.connect(_on_open_remap)
+	_sections.add_child(remap_btn)
 
 	var back := Button.new()
 	back.text = "BACK"
@@ -139,6 +148,30 @@ func _on_back() -> void:
 	back_to_menu.emit()
 	if is_inside_tree():
 		get_tree().change_scene_to_file(MENU_SCENE)
+
+
+func _on_open_remap() -> void:
+	if _remap_screen != null and is_instance_valid(_remap_screen):
+		return  # one instance at a time
+	var remap_screen := ControlsRemapScreen.new()
+	remap_screen.back_pressed.connect(_close_remap)
+	_remap_screen = remap_screen
+	# Host the overlay outside the Settings root's GUI propagation chain:
+	# the Settings Control is MOUSE_FILTER_STOP and would eat the empty-space
+	# clicks the rebind capture needs to fall through to unhandled input.
+	_remap_layer = CanvasLayer.new()
+	_remap_layer.layer = 10
+	_remap_layer.add_child(remap_screen)
+	add_child(_remap_layer)
+
+
+func _close_remap() -> void:
+	if _remap_layer != null and is_instance_valid(_remap_layer):
+		_remap_layer.queue_free()
+	_remap_layer = null
+	if _remap_screen != null and is_instance_valid(_remap_screen):
+		_remap_screen.queue_free()
+	_remap_screen = null
 
 
 ## Test hook: number of interactive options on the screen.

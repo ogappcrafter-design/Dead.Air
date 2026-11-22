@@ -4,6 +4,8 @@ extends RefCounted
 
 var test_name: String = "HUDLayout"
 
+const InputGlyphs := preload("res://src/ui/input_glyphs.gd")
+
 
 func run_tests() -> Dictionary:
 	var results: Dictionary = {}
@@ -402,12 +404,20 @@ func test_hud_control_hints_present() -> bool:
 	var hud: HUDLayout = ctx["hud"]
 	Engine.get_main_loop().root.add_child(hud)
 
-	# Control hints should contain the expected button labels.
+	# Hints must initialize from the device already in use instead of showing
+	# hardcoded gamepad strings to keyboard players (DEA-191).
+	InputManager.set_device(ControlEnums.DeviceType.KEYBOARD)
 	var text: String = hud._control_hints_label.text
-	var result: bool = text.contains("L-Stick") \
-		and text.contains("Tune") \
-		and text.contains("Record") \
-		and text.contains("Play") \
-		and text.contains("Interact")
+	var initialized_from_current_device: bool = text == InputGlyphs.get_hud_control_hints(ControlEnums.DeviceType.KEYBOARD)
+	var keyboard_hints: bool = text.contains("A/D: Tune") \
+		and text.contains(": Record") \
+		and text.contains(": Play") \
+		and text.contains(": Interact")
+
+	# A device switch re-renders the hints for the new device.
+	InputManager.set_device(ControlEnums.DeviceType.XBOX)
+	var switched: String = hud._control_hints_label.text
+	var gamepad_hints: bool = switched != text and switched.contains("Tune")
+	InputManager.set_device(ControlEnums.DeviceType.KEYBOARD)
 	hud.queue_free()
-	return result
+	return initialized_from_current_device and keyboard_hints and gamepad_hints
