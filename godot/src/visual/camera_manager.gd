@@ -62,6 +62,12 @@ func _prune() -> void:
 	if live.size() != _zones.size():
 		_zones = live
 
+## Live registered zones, pruned first so a caller never sees a freed node.
+func zones() -> Array[CameraZone]:
+	_prune()
+	return _zones
+
+
 func register_zone(zone: CameraZone) -> void:
 	# Connect zone signals
 	if not zone.zone_entered.is_connected(_on_zone_entered):
@@ -71,14 +77,16 @@ func register_zone(zone: CameraZone) -> void:
 	if not _zones.has(zone):
 		_zones.append(zone)
 
-func _on_zone_entered(zone: CameraZone) -> void:
+func _on_zone_entered(zone) -> void:
+	if not is_instance_valid(zone):
+		return
 	_prune()
 	activate_zone(zone)
 
 ## Enter `zone` as the active camera. `silent` skips the static cut and the
 ## blend — used for the angle the player spawns inside, where there is no
 ## transition to perform.
-func activate_zone(zone: CameraZone, silent: bool = false) -> void:
+func activate_zone(zone, silent: bool = false) -> void:
 	if zone == null or not is_instance_valid(zone):
 		return
 	_prune()
@@ -117,7 +125,10 @@ func activate_zone(zone: CameraZone, silent: bool = false) -> void:
 		var timer: SceneTreeTimer = get_tree().create_timer(duration)
 		timer.timeout.connect(func(): camera_transition_completed.emit(finished_id))
 
-func _on_zone_exited(zone: CameraZone) -> void:
+func _on_zone_exited(zone) -> void:
+	if not is_instance_valid(zone):
+		_prune()
+		return
 	if zone != _active_zone:
 		return
 	# Leaving the shot the camera was in: fall back to the best zone that still

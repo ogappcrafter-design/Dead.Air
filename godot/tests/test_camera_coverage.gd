@@ -32,6 +32,7 @@ func run_tests() -> Dictionary:
 	results["test_scene_registers_spawn_zone"] = await test_scene_registers_spawn_zone()
 	results["test_walking_cuts_to_next_zone"] = await test_walking_cuts_to_next_zone()
 	results["test_reset_clears_active_zone"] = await test_reset_clears_active_zone()
+	results["test_freed_zone_cannot_activate"] = await test_freed_zone_cannot_activate()
 	return results
 
 
@@ -167,6 +168,33 @@ func test_reset_clears_active_zone() -> bool:
 	if ok:
 		cam_mgr.reset()
 		ok = cam_mgr.get_active_angle_id() == ""
+	_cleanup(segment)
+	await _wait_frames(2)
+	return ok
+
+
+## A zone freed by a scene unload must not survive in the manager's list, and
+## activating it must not cut the camera onto a dead box.
+func test_freed_zone_cannot_activate() -> bool:
+	var segment: Node = _load_static_sky()
+	await _wait_frames(4)
+	var cam_mgr: Node = _camera_manager()
+	if cam_mgr == null:
+		_cleanup(segment)
+		return false
+	var size_before: int = cam_mgr.zones().size()
+	var zone: CameraZone = CameraZone.new()
+	cam_mgr.register_zone(zone)
+	if cam_mgr.zones().size() != size_before + 1:
+		zone.free()
+		_cleanup(segment)
+		return false
+	var angle_before: String = cam_mgr.get_active_angle_id()
+	zone.queue_free()
+	await _wait_frames(2)
+	cam_mgr.activate_zone(zone)
+	var ok: bool = cam_mgr.get_active_angle_id() == angle_before
+	ok = ok and cam_mgr.zones().size() == size_before
 	_cleanup(segment)
 	await _wait_frames(2)
 	return ok
