@@ -52,6 +52,16 @@ func reset() -> void:
 func get_active_zone() -> CameraZone:
 	return _active_zone
 
+## Drop zones whose nodes were freed by a scene unload. A stale entry would let
+## `activate_zone` touch a freed instance and keep a dead box eligible to win.
+func _prune() -> void:
+	var live: Array[CameraZone] = []
+	for zone in _zones:
+		if is_instance_valid(zone):
+			live.append(zone)
+	if live.size() != _zones.size():
+		_zones = live
+
 func register_zone(zone: CameraZone) -> void:
 	# Connect zone signals
 	if not zone.zone_entered.is_connected(_on_zone_entered):
@@ -62,14 +72,16 @@ func register_zone(zone: CameraZone) -> void:
 		_zones.append(zone)
 
 func _on_zone_entered(zone: CameraZone) -> void:
+	_prune()
 	activate_zone(zone)
 
 ## Enter `zone` as the active camera. `silent` skips the static cut and the
 ## blend — used for the angle the player spawns inside, where there is no
 ## transition to perform.
 func activate_zone(zone: CameraZone, silent: bool = false) -> void:
-	if zone == null:
+	if zone == null or not is_instance_valid(zone):
 		return
+	_prune()
 	if zone == _active_zone and is_instance_valid(zone):
 		# Already the active angle; a second trigger must not re-cut.
 		return
