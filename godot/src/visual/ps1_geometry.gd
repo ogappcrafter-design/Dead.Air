@@ -90,13 +90,25 @@ static func surface_texture(n: Node) -> Texture2D:
 static func surface_settings(n: Node) -> Dictionary:
 	var m := surface_material(n)
 	var triplanar := false
+	var affine := false
+	var authored_affine := false
 	if m is BaseMaterial3D:
 		triplanar = (m as BaseMaterial3D).uv1_triplanar
 	elif m is ShaderMaterial:
-		triplanar = bool((m as ShaderMaterial).get_shader_parameter(&"use_triplanar"))
+		var sm := m as ShaderMaterial
+		triplanar = bool(sm.get_shader_parameter(&"use_triplanar"))
+		# DEA-175: a surface that authors affine_uv keeps that choice. Without
+		# this, the triplanar default below made affine unreachable for props,
+		# which are world-mapped like the architecture around them.
+		var authored = sm.get_shader_parameter(&"affine_uv")
+		if authored != null:
+			affine = bool(authored)
+			authored_affine = true
+	if not authored_affine:
+		affine = not triplanar
 	return {
 		"triplanar": triplanar,
-		"affine": not triplanar,
+		"affine": affine,
 	}
 
 

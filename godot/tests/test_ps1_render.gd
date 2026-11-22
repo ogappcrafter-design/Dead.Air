@@ -104,4 +104,21 @@ func run_tests() -> Dictionary:
 	results["test_material_built"] = mat is ShaderMaterial and mat.shader == shader
 	results["test_material_affine_set"] = mat != null and bool(mat.get_shader_parameter(&"affine_uv")) == true
 
+	# A surface that authors affine_uv keeps it even when world-triplanar.
+	var authored := PS1Geometry.make_material(null, true, true)
+	var authored_node := MeshInstance3D.new()
+	authored_node.material_override = authored
+	var authored_cfg := PS1Geometry.surface_settings(authored_node)
+	results["test_authored_affine_survives_triplanar"] = bool(authored_cfg["triplanar"]) and bool(authored_cfg["affine"])
+	authored_node.free()
+
+	# An unauthored surface still derives affine from the triplanar default.
+	var derived := PS1Geometry.make_material(null, false, true)
+	derived.set_shader_parameter(&"affine_uv", null)
+	var derived_node := MeshInstance3D.new()
+	derived_node.material_override = derived
+	var derived_cfg := PS1Geometry.surface_settings(derived_node)
+	results["test_unauthored_affine_derives_from_triplanar"] = bool(derived_cfg["triplanar"]) and not bool(derived_cfg["affine"])
+	derived_node.free()
+
 	return results

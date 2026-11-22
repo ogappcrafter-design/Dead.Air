@@ -20,7 +20,7 @@ def load_assets(only: set[str] | None) -> list[dict]:
     return assets
 
 
-def generate(base_url: str, key: str, model: str, asset: dict) -> Path:
+def generate(base_url: str, key: str, model: str, asset: dict, out_dir: Path) -> Path:
     payload = json.dumps(
         {
             "model": model,
@@ -42,7 +42,7 @@ def generate(base_url: str, key: str, model: str, asset: dict) -> Path:
         body = response.read()
     if len(body) < 5000:
         raise RuntimeError(f"{asset['id']}: response too small ({len(body)} bytes)")
-    path = Path(asset["id"] + ".jpg")
+    path = out_dir / (asset["id"] + ".jpg")
     path.write_bytes(body)
     return path
 
@@ -81,7 +81,7 @@ def main() -> int:
     failures = 0
     for asset in assets:
         try:
-            generate(base_url, key, args.model, asset)
+            generate(base_url, key, args.model, asset, out_dir)
             print(f"ok   {asset['id']}  {asset['size']}")
         except (urllib.error.URLError, RuntimeError, OSError) as exc:
             failures += 1

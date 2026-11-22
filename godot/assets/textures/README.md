@@ -91,6 +91,13 @@ python3 godot/assets/textures/regenerate.py --out /tmp/deadair-assets
 Pass `--model` to swap the model (for example `cf/@cf/black-forest-labs/flux-2-klein-9b`).
 Re-run the seamless pass after regenerating tileable textures.
 
+Verified 2026-11-22: `--model cf/@cf/black-forest-labs/flux-2-klein-9b --only keyart_title --out /tmp/assetout`
+wrote a 1920x1080 jpg into `/tmp/assetout` with nothing written to the repo
+root. The gateway API key lives in `~/.9router/data.sqlite` (`apiKeys.key`,
+`isActive=1`) and is exported as `NINEROUTER_KEY`; the gateway answers on
+`http://localhost:20128`. Repainting the whole pack is still pending visual
+review of the new images, not a tooling gap.
+
 ## Provenance and licensing
 
 - Generated with `cf/@cf/black-forest-labs/flux-2-dev` through the local 9router
