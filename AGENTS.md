@@ -121,3 +121,4 @@ Keep this file for knowledge useful to almost every future agent session in this
 Do not repeat what the codebase already shows; point to the authoritative file or command instead.
 Prefer rewriting or pruning existing entries over appending new ones.
 When updating this file, preserve this bar for all agents and keep entries concise.
+- **The suite intermittently stalls for real, in whichever scene suite it is on** (2026-11-22, DEA-177): output stops mid-suite and the process keeps burning a full core (26 min observed) with no `Total:` line. Seen on the feature branch inside `FMVPlayer` and on pristine `master` inside `Phase3LiminalSpace`, so it is pre-existing and not attributable to one ticket; about half of all runs complete. It is not a buffered log (reproduces under `stdbuf -o0`) and not leftover processes. Retry until a run prints `Total:`; judge a single attempt hung only after ~1500 s, never by a frozen line count.

@@ -1,4 +1,4 @@
-[gd_scene load_steps=33 format=3 uid="uid://bp4staircase"]
+[gd_scene load_steps=34 format=3 uid="uid://bp4staircase"]
 
 
 
@@ -8,6 +8,7 @@
 [ext_resource type="Resource" uid="uid://11e914f432000" path="res://src/data/band_config.tres" id="4_band"]
 [ext_resource type="Script" uid="uid://cn3ic8sfogvs3" path="res://src/audio/radio_static.gd" id="5_static"]
 [ext_resource type="Script" path="res://src/levels/staircase_segment.gd" id="6_seg"]
+[ext_resource type="Script" uid="uid://be6swwtavc18m" path="res://src/visual/camera_rig.gd" id="rig_cam"]
 
 [ext_resource type="Texture2D" path="res://assets/textures/environment/concrete_bunker.jpg" id="tex_step_mat"]
 [ext_resource type="Texture2D" path="res://assets/textures/environment/concrete_bunker.jpg" id="tex_concrete_mat"]
@@ -314,6 +315,7 @@ shape = SubResource("player_shape")
 
 [node name="CameraRig" type="Camera3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, 0, 7, 0.001)
+script = ExtResource("rig_cam")
 
 [node name="PortableRadio" type="Node" parent="."]
 

@@ -203,9 +203,10 @@ func test_camera_snaps_forward() -> bool:
 	await _wait_frames(3)
 	var ok: bool = segment.get_camera_index() == 0
 	if ok:
-		# Walk past the first snap threshold (next camera at x=70; snaps at x>45).
+		# DEA-177: the shot cuts when the player walks into the next zone
+		# (HW2 covers x 45..85), so the index follows the Area3D trigger.
 		segment.walk_for_testing(50.0)
-		segment._process(0.016)
+		await _wait_physics_frames(3)
 		ok = segment.get_camera_index() == 1
 	_cleanup_segment(segment)
 	return ok
@@ -221,3 +222,8 @@ func test_reset_restores_phase1() -> bool:
 func _wait_frames(count: int) -> void:
 	for i in range(count):
 		await (Engine.get_main_loop() as SceneTree).process_frame
+
+
+func _wait_physics_frames(count: int) -> void:
+	for i in range(count):
+		await (Engine.get_main_loop() as SceneTree).physics_frame

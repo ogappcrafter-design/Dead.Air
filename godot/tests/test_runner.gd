@@ -70,6 +70,7 @@ func _run_tests() -> void:
 		["Phase4Chamber", "res://tests/test_phase4_chamber.gd"],
 		["Phase4Endings", "res://tests/test_phase4_endings.gd"],
 		["Phase4Clearing", "res://tests/test_phase4_clearing.gd"],
+		["CameraCoverage", "res://tests/test_camera_coverage.gd"],
 		["CRTDegradation", "res://tests/test_crt_degradation.gd"],
 		["AmbientLife", "res://tests/test_ambient_life.gd"],
 		["FMVPlayer", "res://tests/test_fmv_player.gd"],

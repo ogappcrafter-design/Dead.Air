@@ -73,9 +73,8 @@ const HIDING_SILENCED_BUSES: Array[StringName] = [
 
 ## Fixed camera: behind the player, low, so the road ahead is visible and
 ## the player cannot turn around to see the follower.
-const CAMERA_TRACK_OFFSET := Vector3(0, 0, 4.5)
-const CAMERA_TRACK_HEIGHT := 2.2
-const CAMERA_TRACK_PITCH_DEG := -6.0
+## DEA-177: camera coverage lives in segment_camera.gd, keyed by scene name.
+const SegmentCameraScript = preload("res://src/visual/segment_camera.gd")
 
 ## --- Node refs ---
 var _player: CharacterBody3D
@@ -124,6 +123,8 @@ func _setup() -> void:
 	_radio_tuner = get_node_or_null("PortableRadio/RadioTuner") as RadioTuner
 	_signal_strength = get_node_or_null("PortableRadio/SignalStrength") as SignalStrength
 	_shadow_light = get_node_or_null("House/WindowShadow") as DirectionalLight3D
+	# Fixed camera: the player cannot turn around, so the road cuts the shot.
+	SegmentCameraScript.wire(self, _camera_rig, _player, "follower")
 
 	if _house_door and not _house_door.body_entered.is_connected(_on_house_door_entered):
 		_house_door.body_entered.connect(_on_house_door_entered)
@@ -222,7 +223,6 @@ func _process(delta: float) -> void:
 		Phase.PASSED:
 			_process_passed(delta)
 
-	_update_camera()
 	_update_presence_audio()
 
 
@@ -457,17 +457,6 @@ func _make_breath_stream() -> AudioStreamGenerator:
 
 
 var _breath_phase := 0.0
-
-
-## --- Camera: fixed behind the player (cannot turn around) ---
-func _update_camera() -> void:
-	if _camera_rig == null or _player == null:
-		return
-	var target_pos: Vector3 = _player.global_position + CAMERA_TRACK_OFFSET
-	target_pos.y = CAMERA_TRACK_HEIGHT
-	var basis := Basis.from_euler(Vector3(0.0, 0.0, 0.0))
-	basis = basis * Basis.from_euler(Vector3(deg_to_rad(CAMERA_TRACK_PITCH_DEG), 0.0, 0.0))
-	_camera_rig.global_transform = Transform3D(basis, target_pos)
 
 
 func _face_player(direction: Vector3) -> void:

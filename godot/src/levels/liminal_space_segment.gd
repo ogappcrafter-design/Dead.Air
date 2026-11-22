@@ -105,6 +105,8 @@ var _static_stream_playback: AudioStreamGeneratorPlayback
 var _safe_tone_player: AudioStreamPlayer
 var _safe_phase := 0.0
 var _safe_stream_playback: AudioStreamGeneratorPlayback
+## DEA-177: camera coverage lives in segment_camera.gd, keyed by scene name.
+const SegmentCameraScript = preload("res://src/visual/segment_camera.gd")
 const AUDIO_SR := 44100.0
 
 
@@ -123,6 +125,7 @@ func _setup_and_start() -> void:
 	_setup_static_sky()
 	_setup_audio()
 	_place_player()
+	SegmentCameraScript.wire(self, _camera_rig, _player, "liminal_space")
 	_setup_door_areas()
 	_silence_world()
 	_setup_radio()

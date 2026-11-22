@@ -110,6 +110,8 @@ var _hum_player: AudioStreamPlayer
 var _hum_phase := 0.0
 var _hum_stream: AudioStreamGeneratorPlayback
 const HUM_HZ := 61.0            # wrong: should be 60
+## DEA-177: camera coverage lives in segment_camera.gd, keyed by scene name.
+const SegmentCameraScript = preload("res://src/visual/segment_camera.gd")
 const DRIP_INTERVAL := 3.7
 var _drip_timer := 0.0
 
@@ -128,7 +130,7 @@ func _setup_and_start() -> void:
 	_alarm_light = get_node_or_null("AlarmLight") as OmniLight3D
 	_setup_audio()
 	_place_player()
-	_setup_camera()
+	SegmentCameraScript.wire(self, _camera_rig, _player, "bunker")
 	_silence_world()
 	_setup_radio()
 	_spawn_suits()
@@ -152,13 +154,6 @@ func _place_player() -> void:
 	if _player:
 		_player.global_position = Vector3(0, 0.5, 8)
 		_face_player(Vector3(0, 0, -1))
-
-
-func _setup_camera() -> void:
-	if _camera_rig:
-		# Entrance camera: from inside, looking back down the corridor.
-		_camera_rig.look_at_from_position(Vector3(0, 2.5, 12), Vector3(0, 1, 4), Vector3.UP)
-		_camera_rig.fov = 60.0
 
 
 func _setup_audio() -> void:
