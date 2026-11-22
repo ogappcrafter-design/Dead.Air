@@ -78,7 +78,7 @@ Run the suite only through the runner (single `tests/test_*.gd` files fail at co
 cd godot && /usr/local/bin/godot --headless --path . --script res://tests/test_runner.gd > /tmp/godot_test.log 2>&1
 ```
 
-Exit 1 is expected whenever any test fails; judge by `Total: / Passed: / Failed:`. Baseline after the 2026-11-18 ambient-motion work: **715 total, 0 failed**.
+Exit 1 is expected whenever any test fails; judge by `Total: / Passed: / Failed:`. Baseline after the 2026-11-22 graphics-pack work (klein repaint + PBR maps): **826 total, 0 failed**.
 
 Sharp edges that caused the old 26-failure baseline:
 
