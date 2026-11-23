@@ -12,6 +12,10 @@ const CassetteSaveRitualScene := preload("res://src/ui/cassette_save_ritual.gd")
 
 signal save_requested(tape_id: String)
 signal load_requested(tape_id: String)
+## A slot write landed through this browser's own ritual. Owners attribute the
+## write from here rather than from SaveManager.save_completed, which also fires
+## for saves written by other panels.
+signal slot_saved(slot_id: String)
 signal closed
 
 enum Mode { SAVE, LOAD }
@@ -130,6 +134,7 @@ func _build_ui() -> void:
 	_save_ritual.name = "CassetteSaveRitual"
 	_save_ritual.checkpoint_save = not enforce_safe_room
 	_save_ritual.ritual_started.connect(_on_ritual_started)
+	_save_ritual.slot_written.connect(_on_slot_written)
 	_save_ritual.ritual_completed.connect(_on_ritual_completed)
 	add_child(_save_ritual)
 
@@ -515,6 +520,12 @@ func _capture_current_game_state(slot_id: String) -> SaveData:
 		data.dread = DreadComposure.instance.dread
 		data.composure = DreadComposure.instance.composure
 	data.playtime_seconds = SaveManager.tracked_playtime_seconds
+	# The post-shift room is a real place to be standing when the tape is
+	# ejected, so the snapshot has to carry which phase it was taken in and how
+	# many calls had been banked; loading restores both.
+	if ShiftController:
+		data.shift_phase = int(ShiftController.get_current_phase())
+		data.completed_calls = ShiftController.get_completed_call_count()
 
 	# Player position: the same "player" group the level segments read.
 	var players := get_tree().get_nodes_in_group("player")
@@ -561,13 +572,24 @@ func _on_ritual_started(_slot_id: String) -> void:
 		_pending_confirm_action = Callable()
 
 
-func _on_ritual_completed(slot_id: String, _success: bool) -> void:
+func _on_ritual_completed(_slot_id: String, _success: bool) -> void:
 	_refresh_display()
 	grab_default_focus()
 	# A successful ejection is the end of this browser's errand: close it so the
 	# owner can take back over. A failed ritual stays open for a retry.
+	# slot_saved already fired when the file landed, so closing must not re-announce
+	# the write.
 	if _success:
 		closed.emit()
+
+
+## Announce the write as soon as the slot file lands. The owner spends the
+## cassette that opened this browser by its per-shift key and reads that key
+## when the spend is recorded, so waiting for the ejection animation would let a
+## shift that advances mid-animation charge the next night's key instead.
+func _on_slot_written(slot_id: String, success: bool) -> void:
+	if success:
+		slot_saved.emit(slot_id)
 
 
 func _show_confirm_dialog(title: String, desc: String, ok_text: String, on_confirm: Callable) -> void:

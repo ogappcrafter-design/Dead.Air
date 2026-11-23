@@ -57,9 +57,21 @@ extends Resource
 # --- Entity States ---
 @export var entity_states: Dictionary = {}
 
+# --- Shift phase (ShiftController.ShiftPhase) ---
+## Which part of the night the snapshot was taken in. A save written at the
+## post-shift summary resumes that window; without it loading replays a night
+## the player already finished. 0 means the value predates this field.
+@export var shift_phase: int = 0
+## Calls the player completed before the snapshot, so a restored post-shift
+## summary shows the same count the player saw when they saved.
+@export var completed_calls: int = 0
+
 # --- Metadata ---
 @export var playtime_seconds: float = 0.0
 @export var save_timestamp: String = ""
+## Absolute capture time. save_timestamp is wall-clock text without an
+## offset, so it sorts wrongly across a DST change; this orders saves.
+@export var save_unix_time: float = 0.0
 @export var tape_id: String = ""  # The cassette tape used for this save
 
 # --- Save schema version for forward-compat ---
@@ -102,8 +114,11 @@ static func from_dict(data: Dictionary) -> SaveData:
 	sd.crt_degradation = data.get("crt_degradation", 0.0)
 	sd.ending_flags = data.get("ending_flags", {})
 	sd.entity_states = data.get("entity_states", {})
+	sd.shift_phase = data.get("shift_phase", 0)
+	sd.completed_calls = data.get("completed_calls", 0)
 	sd.playtime_seconds = data.get("playtime_seconds", 0.0)
 	sd.save_timestamp = data.get("save_timestamp", "")
+	sd.save_unix_time = data.get("save_unix_time", 0.0)
 	sd.tape_id = data.get("tape_id", "")
 	sd.schema_version = data.get("schema_version", 1)
 	return sd
@@ -141,8 +156,11 @@ func to_dict() -> Dictionary:
 		"crt_degradation": crt_degradation,
 		"ending_flags": ending_flags,
 		"entity_states": entity_states,
+		"shift_phase": shift_phase,
+		"completed_calls": completed_calls,
 		"playtime_seconds": playtime_seconds,
 		"save_timestamp": save_timestamp,
+		"save_unix_time": save_unix_time,
 		"tape_id": tape_id,
 		"schema_version": schema_version,
 	}
@@ -177,6 +195,7 @@ func set_position(pos: Vector3) -> void:
 ## Stamp the save timestamp.
 func stamp_timestamp() -> void:
 	save_timestamp = Time.get_datetime_string_from_system()
+	save_unix_time = Time.get_unix_time_from_system()
 
 
 static func _to_string_array(arr: Array) -> Array[String]:

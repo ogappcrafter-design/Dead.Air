@@ -61,28 +61,40 @@ func register_wrongness_node(key: String, node: Node) -> void:
 	_wrongness_nodes[key] = node
 
 
+## A registration outlives its scene: a night transition frees the station while
+## this autoload keeps the node, so a later shift would write into a dead
+## instance and abort the rest of the degradation pass. Drop those here.
+func _live_target(targets: Dictionary, key: String) -> Node:
+	# Typed as Variant: assigning a freed instance to a typed Node raises
+	# "invalid previously freed instance" before the check can run.
+	var raw: Variant = targets.get(key)
+	if raw == null or not is_instance_valid(raw):
+		targets.erase(key)
+		return null
+	return raw as Node
+
+
 ## Apply Shift 1→2 visual degradation to registered nodes.
 func _apply_degradation() -> void:
 	# Coffee mug rotated 90°
-	if _degradation_nodes.has("coffee_mug"):
-		var mug: Node3D = _degradation_nodes["coffee_mug"]
+	var mug := _live_target(_degradation_nodes, "coffee_mug") as Node3D
+	if mug != null:
 		mug.rotation.y = deg_to_rad(90.0)
 
 	# Chair angled 15°
-	if _degradation_nodes.has("chair"):
-		var chair: Node3D = _degradation_nodes["chair"]
+	var chair := _live_target(_degradation_nodes, "chair") as Node3D
+	if chair != null:
 		chair.rotation.y = deg_to_rad(15.0)
 
 	# Second mug appears in back office (was hidden during Shift 1)
-	if _degradation_nodes.has("second_mug"):
-		var second_mug: Node3D = _degradation_nodes["second_mug"]
+	var second_mug := _live_target(_degradation_nodes, "second_mug") as Node3D
+	if second_mug != null:
 		second_mug.visible = true
 
 	# CRT 1-frame glitch
-	if _degradation_nodes.has("crt"):
-		var crt: Node = _degradation_nodes["crt"]
-		if crt.has_method("trigger_glitch_burst"):
-			crt.trigger_glitch_burst(0.8, 0.1)
+	var crt := _live_target(_degradation_nodes, "crt")
+	if crt != null and crt.has_method("trigger_glitch_burst"):
+		crt.trigger_glitch_burst(0.8, 0.1)
 
 
 ## Check for timed wrongness events during Shift 2+.
@@ -100,7 +112,7 @@ func _check_wrongness_events() -> void:
 
 ## E1: Hallway light flickers 3 times.
 func _trigger_e1() -> void:
-	var light: OmniLight3D = _wrongness_nodes.get("hallway_light")
+	var light := _live_target(_wrongness_nodes, "hallway_light") as OmniLight3D
 	if light == null:
 		return
 	var tween: Tween = create_tween()
@@ -112,7 +124,7 @@ func _trigger_e1() -> void:
 
 ## E2: Back office door handle jiggles + breathing sound.
 func _trigger_e2() -> void:
-	var door: Node3D = _wrongness_nodes.get("office_door")
+	var door := _live_target(_wrongness_nodes, "office_door") as Node3D
 	if door != null:
 		var tween: Tween = create_tween()
 		for _i in range(4):

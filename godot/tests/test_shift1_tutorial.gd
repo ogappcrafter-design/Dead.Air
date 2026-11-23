@@ -366,7 +366,8 @@ func test_end_condition_shift_completes() -> bool:
 	if result["arg"] != 1:
 		ShiftController._reset_for_testing()
 		return false
-	if ShiftController.is_shift_active():
+	# Completion advances the campaign to Shift 2 (first save-enabled shift).
+	if not ShiftController.is_shift_active() or ShiftController.get_current_shift() != 2:
 		ShiftController._reset_for_testing()
 		return false
 

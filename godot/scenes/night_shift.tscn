@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=3 uid="uid://bnightshift01"]
+[gd_scene load_steps=10 format=3 uid="uid://bnightshift01"]
 
 [ext_resource type="PackedScene" uid="uid://bstation00root" path="res://scenes/station/station.tscn" id="1_station"]
 [ext_resource type="PackedScene" uid="uid://0a8a6e3dd5739" path="res://scenes/radio_integration.tscn" id="2_radio"]
@@ -8,6 +8,8 @@
 [ext_resource type="Script" uid="uid://qpon4pjyakdi" path="res://src/core/shift_stub.gd" id="6_shift"]
 [ext_resource type="Script" uid="uid://damg7dd4dbqv" path="res://src/core/degradation_stub.gd" id="7_degradation"]
 [ext_resource type="Script" uid="uid://duc1ns6ihmhvr" path="res://tests/night_integration_runner.gd" id="8_test_runner"]
+[ext_resource type="Script" uid="uid://tp1vs4ak8vt2" path="res://src/ui/examine_display.gd" id="9_examine"]
+[ext_resource type="PackedScene" path="res://scenes/shift_summary.tscn" id="10_summary"]
 
 [node name="NightShift" type="Node3D"]
 
@@ -42,6 +44,12 @@ script = ExtResource("4_prompt")
 fade_duration = 0.3
 offset_from_bottom = 120.0
 offset_from_left = 0.0
+
+[node name="ExamineDisplay" type="Control" parent="InteractionUI"]
+script = ExtResource("9_examine")
+
+[node name="ShiftSummary" parent="InteractionUI" instance=ExtResource("10_summary")]
+visible = false
 
 [node name="ShiftController" type="Node" parent="."]
 script = ExtResource("6_shift")

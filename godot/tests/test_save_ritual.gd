@@ -13,6 +13,7 @@ extends RefCounted
 var test_name: String = "SaveRitual"
 
 const CassetteSaveRitualScene := preload("res://src/ui/cassette_save_ritual.gd")
+const CassetteTapeScene := preload("res://src/interactables/cassette_tape.gd")
 const SaveLoadScreenScene := preload("res://src/ui/save_load_screen.gd")
 const PauseMenuScene := preload("res://src/ui/pause_menu.gd")
 const MainMenuScene := preload("res://scenes/main_menu.tscn")
@@ -61,6 +62,12 @@ func run_tests() -> Dictionary:
 	)
 	results["test_pause_menu_load_integration"] = test_pause_menu_load_integration()
 	results["test_main_menu_load_integration"] = test_main_menu_load_integration()
+	results["test_slot_saved_fires_at_write_not_at_ejection_end"] = (
+		await test_slot_saved_fires_at_write_not_at_ejection_end()
+	)
+	results["test_browser_save_spends_only_the_cassette_that_opened_it"] = (
+		test_browser_save_spends_only_the_cassette_that_opened_it()
+	)
 
 	_teardown()
 	return results
@@ -930,3 +937,93 @@ func test_main_menu_load_integration() -> bool:
 	var exists := (load_btn != null)
 	main_menu.queue_free()
 	return exists
+
+## 25. A slot write announces itself when the file lands, not when the ejection
+## animation finishes: the cassette that opened the browser spends itself by its
+## per-shift key, read at the moment the spend is recorded, so a shift that
+## advances mid-animation must not charge the next night's key while tonight's
+## cassette stays on offer.
+func test_slot_saved_fires_at_write_not_at_ejection_end() -> bool:
+	SaveManager._reset_for_testing()
+	SaveManager.set_save_available(true)
+	var pause_anywhere: bool = AccessibilityManager.pause_anywhere
+	AccessibilityManager.pause_anywhere = true
+
+	var browser: SaveLoadScreen = SaveLoadScreenScene.new()
+	Engine.get_main_loop().root.add_child(browser)
+	var saved: Array = []
+	var closed: Array = []
+	browser.slot_saved.connect(func(slot_id: String): saved.append(slot_id))
+	browser.closed.connect(func(): closed.append(true))
+
+	var ritual: CassetteSaveRitual = browser._save_ritual
+	ritual._current_slot_id = "slot_1"
+	ritual._current_save_data = _make_sample_data(2, PhaseEnums.Phase.PHASE_1_STATION, 10.0)
+	ritual._on_save_timer_timeout()
+
+	var announced_at_write: bool = saved == ["slot_1"] and closed.is_empty()
+	var still_ejecting: bool = int(ritual.current_state) == int(CassetteSaveRitual.State.EJECTING)
+	var on_disk: bool = bool(SaveManager.get_slot_metadata("slot_1").get("exists", false))
+
+	# The ejection animation then ends and closes the browser, without
+	# announcing the write a second time.
+	var tree: SceneTree = Engine.get_main_loop() as SceneTree
+	var deadline: int = Time.get_ticks_msec() + 2000
+	while closed.is_empty() and Time.get_ticks_msec() < deadline:
+		await tree.process_frame
+	var closed_without_double_announce: bool = not closed.is_empty() and saved == ["slot_1"]
+
+	browser.queue_free()
+	AccessibilityManager.pause_anywhere = pause_anywhere
+	SaveManager._reset_for_testing()
+	return announced_at_write and still_ejecting and on_disk and closed_without_double_announce
+
+
+## Beyond the signal timing, the room-browser save must spend only the cassette
+## that opened it: the next night's cassette stays on offer, tonight's cannot
+## save twice, and a fresh run starts with nothing spent.
+func test_browser_save_spends_only_the_cassette_that_opened_it() -> bool:
+	SaveManager._reset_for_testing()
+	var gd := GameDirector.new()
+	Engine.get_main_loop().root.add_child(gd)
+
+	var tonight := CassetteTapeScene.new()
+	tonight.is_save_point = true
+	tonight.tape_id = "booth"
+	tonight.save_shift = 1
+	var tomorrow := CassetteTapeScene.new()
+	tomorrow.is_save_point = true
+	tomorrow.tape_id = "booth"
+	tomorrow.save_shift = 2
+	var tonight_id: String = tonight.get_save_id()
+	var tomorrow_id: String = tomorrow.get_save_id()
+	var distinct_keys: bool = tonight_id != tomorrow_id
+
+	gd._open_save_room_browser(tonight)
+	var browser: Node = gd.get_node_or_null("SaveRoomBrowser")
+	var browser_wired: bool = browser != null and browser.slot_saved.is_connected(Callable(gd, "_on_save_point_saved"))
+	if browser != null:
+		browser.slot_saved.emit("slot_1")
+	var tonight_spent: bool = SaveManager.is_save_point_spent(tonight_id)
+	var tomorrow_offered: bool = not SaveManager.is_save_point_spent(tomorrow_id)
+
+	# The post-shift summary saves through SaveManager.save_completed, so that
+	# signal firing after the browser spent its tape must not spend another one.
+	SaveManager.save_completed.emit("slot_2")
+	var summary_write_kept_tomorrow: bool = (
+		SaveManager.is_save_point_spent(tonight_id)
+		and not SaveManager.is_save_point_spent(tomorrow_id)
+	)
+
+	SaveManager.clear_spent_save_points()
+	var fresh_run_clears: bool = not SaveManager.is_save_point_spent(tonight_id)
+	gd.queue_free()
+	SaveManager._reset_for_testing()
+	return (
+		browser_wired
+		and distinct_keys
+		and tonight_spent
+		and tomorrow_offered
+		and summary_write_kept_tomorrow
+		and fresh_run_clears
+	)

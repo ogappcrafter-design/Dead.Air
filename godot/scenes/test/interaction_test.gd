@@ -21,5 +21,5 @@ func _on_target_changed(target: Interactable, prompt: InteractPrompt) -> void:
 		prompt.hide_prompt()
 
 
-func _on_examine_performed(_target: Interactable, text: String, examine: ExamineDisplay) -> void:
-	examine.show_text(text)
+func _on_examine_performed(target: Interactable, text: String, examine: ExamineDisplay) -> void:
+	examine.show_examine(target, text)

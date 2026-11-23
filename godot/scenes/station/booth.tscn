@@ -1,4 +1,4 @@
-[gd_scene load_steps=34 format=3 uid="uid://bstation01booth"]
+[gd_scene load_steps=43 format=3 uid="uid://bstation01booth"]
 
 [ext_resource type="Script" uid="uid://dk6rm7a0v0721" path="res://src/visual/camera_zone.gd" id="1_zone"]
 [ext_resource type="Script" uid="uid://xilho0al60wt" path="res://src/visual/camera_angle.gd" id="2_angle"]
@@ -20,6 +20,9 @@
 [ext_resource type="Texture2D" path="res://assets/textures/environment/suit_wool_normal.jpg" id="nrm_tex_fabric"]
 [ext_resource type="Texture2D" path="res://assets/textures/environment/suit_wool_roughness.jpg" id="rgh_tex_fabric"]
 [ext_resource type="PackedScene" path="res://scenes/entities/hide_spot.tscn" id="90_hide"]
+[ext_resource type="Script" uid="uid://dsuq12qke0ho7" path="res://src/interactables/note_interactable.gd" id="91_note"]
+[ext_resource type="Script" uid="uid://dlpv55lf0vmy7" path="res://src/interactables/item_interactable.gd" id="92_item"]
+[ext_resource type="Script" uid="uid://chavs8x7l11dq" path="res://src/interactables/cassette_tape.gd" id="93_tape"]
 
 [sub_resource type="StandardMaterial3D" id="floor_mat"]
 albedo_texture = ExtResource("tex_carpet")
@@ -115,6 +118,26 @@ size = Vector3(2, 3, 3)
 
 [sub_resource type="BoxShape3D" id="door_shape"]
 size = Vector3(0.5, 2, 1)
+
+[sub_resource type="BoxShape3D" id="shape_note"]
+size = Vector3(0.3, 0.4, 0.02)
+
+[sub_resource type="BoxShape3D" id="shape_item"]
+size = Vector3(0.12, 0.08, 0.12)
+
+[sub_resource type="BoxMesh" id="mesh_battery"]
+size = Vector3(0.12, 0.08, 0.12)
+
+[sub_resource type="BoxShape3D" id="shape_tape"]
+size = Vector3(0.34, 0.1, 0.22)
+
+[sub_resource type="StandardMaterial3D" id="note_mat"]
+albedo_color = Color(0.92, 0.9, 0.84, 1)
+roughness = 0.95
+
+[sub_resource type="BoxMesh" id="mesh_note"]
+material = SubResource("note_mat")
+size = Vector3(0.3, 0.4, 0.02)
 
 [node name="Booth" type="Node3D"]
 
@@ -241,6 +264,52 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.2, 0.82, 0)
 
 [node name="SaveCassetteMarker" type="Marker3D" parent="." groups=["interactable"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.4, 0.82, 0.3)
+
+[node name="NightLog" type="Area3D" parent="."]
+collision_layer = 4
+collision_mask = 0
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.15, -1.43)
+script = ExtResource("91_note")
+note_title = "Night Shift Log"
+note_content = "02:40 AM - The static on 88.5 is louder than the record. I checked the transmitter. It is off.\n\nDo not answer the phone after 03:30."
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NightLog"]
+shape = SubResource("shape_note")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="NightLog"]
+mesh = SubResource("mesh_note")
+
+[node name="BatteryShelf" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.6, 2.09, -1.38)
+size = Vector3(0.6, 0.04, 0.16)
+material = SubResource("console_mat")
+
+[node name="SpareBattery" type="Area3D" parent="."]
+collision_layer = 4
+collision_mask = 0
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.75, 2.15, -1.36)
+script = ExtResource("92_item")
+item_id = "spare_battery"
+item_name = "Spare Battery"
+item_description = "A corroded D-cell. The casing is warm."
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="SpareBattery"]
+shape = SubResource("shape_item")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="SpareBattery"]
+mesh = SubResource("mesh_battery")
+
+[node name="BoothTape" type="Area3D" parent="."]
+collision_layer = 4
+collision_mask = 0
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.45, 2.16, -1.36)
+script = ExtResource("93_tape")
+is_save_point = true
+tape_id = "booth_save"
+tape_label = "SPARE CASSETTE"
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="BoothTape"]
+shape = SubResource("shape_tape")
 
 [node name="CabinetHide" parent="." instance=ExtResource("90_hide")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.6, 0, -1.0)

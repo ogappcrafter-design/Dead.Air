@@ -7,6 +7,12 @@ extends Control
 
 signal ritual_started(slot_id: String)
 signal ritual_completed(slot_id: String, success: bool)
+## Fires the moment the slot file has landed, before the ejection animation.
+## The cassette that opened the browser spends itself by its per-shift key, and
+## that key is read when the spend is recorded: reporting only at the end of the
+## animation lets a shift that advances mid-ejection charge the next night's key
+## while tonight's cassette stays on offer.
+signal slot_written(slot_id: String, success: bool)
 
 enum State { IDLE, INSERTING, SAVING, EJECTING, FINISHED }
 
@@ -172,6 +178,8 @@ func _execute_instant_ritual() -> void:
 			success = false
 		else:
 			success = SaveManager.save_slot(_current_slot_id, _current_save_data)
+		# No data means no write happened, so there is nothing to announce.
+		slot_written.emit(_current_slot_id, success)
 
 	current_state = State.EJECTING
 	_crt_label.text = "SAVE COMPLETED" if success else "SAVE FAILED"
@@ -237,6 +245,8 @@ func _on_save_timer_timeout() -> void:
 			success = false
 		else:
 			success = SaveManager.save_slot(_current_slot_id, _current_save_data)
+		# No data means no write happened, so there is nothing to announce.
+		slot_written.emit(_current_slot_id, success)
 
 	if _pulse_tween != null and _pulse_tween.is_valid():
 		_pulse_tween.kill()

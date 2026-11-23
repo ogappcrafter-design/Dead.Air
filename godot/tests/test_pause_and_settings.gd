@@ -14,6 +14,7 @@ func run_tests() -> Dictionary:
 	results["test_pause_allowed_in_safe_room"] = test_pause_allowed_in_safe_room()
 	results["test_pause_anywhere_overrides_rule"] = test_pause_anywhere_overrides_rule()
 	results["test_resume_clears_pause"] = test_resume_clears_pause()
+	results["test_quit_to_title_aborts_shift"] = test_quit_to_title_aborts_shift()
 	results["test_settings_expose_every_option"] = test_settings_expose_every_option()
 	results["test_settings_reflects_live_state"] = test_settings_reflects_live_state()
 	results["test_refused_journey_load_leaves_state"] = test_refused_journey_load_leaves_state()
@@ -89,6 +90,31 @@ func test_resume_clears_pause() -> bool:
 	_reset_state()
 	return (not paused) and (not open)
 
+
+func test_quit_to_title_aborts_shift() -> bool:
+	_reset_state()
+	ShiftController._reset_for_testing()
+	ShiftController._set_testing_mode(true)
+	ShiftController.start_shift(1)
+	ShiftController._process(0.1)
+	var menu := _new_pause()
+	var requested := {"path": ""}
+	menu.request_scene_change = func(path: String) -> void:
+		requested["path"] = path
+	menu._quit_to_title()
+	# A completed countdown must not start Night 2 on the title screen.
+	ShiftController._process(
+		ShiftController.POST_SHIFT_DURATION + ShiftController.SHIFT_TRANSITION_DURATION + 1.0
+	)
+	var stopped: bool = (
+		not ShiftController.is_shift_active()
+		and ShiftController.get_current_shift() == 0
+	)
+	var went_to_title: bool = requested["path"] == "res://scenes/main_menu.tscn"
+	menu.queue_free()
+	ShiftController._reset_for_testing()
+	_reset_state()
+	return stopped and went_to_title
 
 ## A tape in a phase with no resume path must be refused before any of its
 ## state is applied, so the live run keeps its own moral choices and CRT level.

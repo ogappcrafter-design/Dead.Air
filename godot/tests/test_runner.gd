@@ -39,6 +39,7 @@ func _run_tests() -> void:
 		["TapePlayer", "res://tests/test_tape_player.gd"],
 		["Interactable", "res://tests/test_interactable.gd"],
 		["InteractionRaycast", "res://tests/test_interaction_raycast.gd"],
+		["ExamineCloseUp", "res://tests/test_examine_close_up.gd"],
 		["MainMenu", "res://tests/test_main_menu.gd"],
 		["NightTransition", "res://tests/test_night_transition.gd"],
 		["ShiftSummary", "res://tests/test_shift_summary.gd"],

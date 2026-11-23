@@ -97,19 +97,22 @@ func start_game(shift_number: int = 1) -> void:
 	# tear it down so start_shift accepts the (re)start.
 	if ShiftController.is_shift_active():
 		ShiftController.reset_shift()
+	# Cassettes spent during an earlier run carry the same shift-scoped keys, so
+	# a fresh start clears them or the shift 1 booth cassette arrives used.
+	SaveManager.clear_spent_save_points()
 	ShiftController.start_shift(shift_number)
 	new_game_started.emit()
 	_request_scene(NIGHT_SHIFT_SCENE)
 
 
 func _on_continue() -> void:
-	var tapes := SaveManager.get_used_tapes()
-	if tapes.is_empty():
+	var latest_tape := SaveManager.get_latest_tape_id()
+	if latest_tape.is_empty():
 		start_game(1)
 		return
 	# Decide from the side-effect-free metadata first: load_game applies the
 	# moral-choice and CRT state, so a refused tape must never reach it.
-	var decision := SaveManager.inspect_slot_for_load(tapes[0])
+	var decision := SaveManager.inspect_slot_for_load(latest_tape)
 	if bool(decision["unreadable"]):
 		# A missing or corrupt save falls back to a fresh shift 1.
 		start_game(1)
@@ -121,7 +124,7 @@ func _on_continue() -> void:
 		if _save_load_screen != null:
 			_save_load_screen.show_load_error(str(decision["message"]))
 		return
-	var save_data := SaveManager.load_game(tapes[0])
+	var save_data := SaveManager.load_game(latest_tape)
 	if save_data == null:
 		start_game(1)
 		return
@@ -139,6 +142,14 @@ func start_loaded_game(save_data: SaveData) -> void:
 	ShiftController.start_shift(maxi(1, int(save_data.shift)))
 	PhaseManager.set_phase(save_data.phase)
 	SaveManager.apply_loaded_game_state(save_data)
+	# A tape ejected in the post-shift room resumes there, with the banked call
+	# count it was saved with, instead of dropping the player back into the shift
+	# with no summary to reach.
+	var phases := ShiftController.ShiftPhase.values()
+	if not phases.is_empty():
+		var saved_phase: int = int(phases[clampi(int(save_data.shift_phase), 0, phases.size() - 1)])
+		if saved_phase == ShiftController.ShiftPhase.POST_SHIFT:
+			ShiftController.resume_post_shift(save_data.completed_calls)
 	continue_started.emit()
 	_request_scene(NIGHT_SHIFT_SCENE)
 

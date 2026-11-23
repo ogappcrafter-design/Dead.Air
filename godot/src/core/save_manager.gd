@@ -402,12 +402,77 @@ func is_tape_used(tape_id: String) -> bool:
 	return _save_index.has(tape_id)
 
 
+## Save points consumed on this run. A numbered-slot save writes slot_N, not
+## the cassette's own per-shift key, so is_tape_used stays false and the booth
+## cassette keeps offering a save it already wrote. Whatever lands the slot
+## records the key here so the save point stays spent for that night.
+var _spent_save_points: Dictionary = {}
+
+
+func mark_save_point_spent(save_point_id: String) -> void:
+	if save_point_id.is_empty():
+		return
+	_spent_save_points[save_point_id] = true
+
+
+func is_save_point_spent(save_point_id: String) -> bool:
+	return _spent_save_points.has(save_point_id)
+
+
+## A fresh run must not inherit spent cassettes: the keys are shift-scoped, so
+## a New Game on shift 1 would otherwise arrive with the last run's booth
+## cassette already used.
+func clear_spent_save_points() -> void:
+	_spent_save_points.clear()
+
+
 ## Get all tape IDs that have saves.
 func get_used_tapes() -> Array[String]:
 	var result: Array[String] = []
 	for key in _save_index.keys():
 		result.append(key)
 	return result
+
+
+## Newest save slot by capture time, with the shift as a same-second
+## tiebreaker. Reads the files without applying load side effects.
+##
+## Ordering uses save_unix_time rather than save_timestamp: that stamp is
+## wall-clock text with no offset, so a DST fall-back repeats an hour of
+## local timestamps and the older save can sort higher. Snapshots written
+## before the field existed carry 0 and fall back to the stamp.
+func get_latest_tape_id() -> String:
+	var latest_id := ""
+	var latest_unix := -1.0
+	var latest_stamp := ""
+	var latest_shift := -1
+	for tape_id in _save_index.keys():
+		# Same checksum path as load_game: a corrupt tape must not outrank an
+		# intact one and send Continue to a fresh shift 1.
+		if not validate_save(tape_id):
+			continue
+		var file := FileAccess.open(get_save_path(tape_id), FileAccess.READ)
+		if file == null:
+			continue
+		var parsed = JSON.parse_string(file.get_as_text())
+		file.close()
+		if typeof(parsed) != TYPE_DICTIONARY:
+			continue
+		var data: Dictionary = parsed
+		var unix := float(data.get("save_unix_time", 0.0))
+		var stamp := str(data.get("save_timestamp", ""))
+		var shift := int(data.get("shift", 0))
+		if (
+			latest_id.is_empty()
+			or unix > latest_unix
+			or (unix == latest_unix and stamp > latest_stamp)
+			or (unix == latest_unix and stamp == latest_stamp and shift > latest_shift)
+		):
+			latest_id = tape_id
+			latest_unix = unix
+			latest_stamp = stamp
+			latest_shift = shift
+	return latest_id
 
 
 ## Delete a save file for a given tape_id (admin/debug only).
@@ -471,6 +536,7 @@ func _reset_for_testing() -> void:
 	_ensure_save_directory()
 	delete_all_saves()
 	_pending_scene_state = null
+	_spent_save_points.clear()
 	tracked_playtime_seconds = 0.0
 	_save_available = false
 

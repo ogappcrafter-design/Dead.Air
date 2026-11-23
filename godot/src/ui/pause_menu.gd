@@ -158,6 +158,8 @@ func _close_controls() -> void:
 	if _controls_screen != null and is_instance_valid(_controls_screen):
 		_controls_screen.queue_free()
 	_controls_screen = null
+
+
 func _open_load() -> void:
 	if _save_load_screen == null:
 		_save_load_screen = SaveLoadScreen.new()
@@ -213,8 +215,11 @@ func _on_load_requested(slot_id: String) -> void:
 
 
 func _quit_to_title() -> void:
+	# Leaving the station must end the shift and cancel its countdown; otherwise
+	# the unpaused controller keeps advancing and starts calls on the title.
+	ShiftController.abort_shift()
 	resume()
-	get_tree().change_scene_to_file(MENU_SCENE)
+	request_scene_change.call(MENU_SCENE)
 
 
 func _quit_game() -> void:

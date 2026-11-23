@@ -6,6 +6,8 @@ class_name ItemInteractable extends Interactable
 @export var item_description: String = "An unremarkable object."
 @export var quantity: int = 1
 @export var is_consumable: bool = false
+@export var item_mesh: Mesh = null
+@export var is_document: bool = false
 
 
 func can_interact() -> bool:
@@ -28,3 +30,19 @@ func get_prompt_text() -> String:
 
 func get_examine_text() -> String:
 	return "%s\n\n%s" % [item_name, item_description]
+
+
+func get_examine_mode() -> String:
+	return "note" if is_document else "prop"
+
+
+func get_examine_title() -> String:
+	return item_name
+
+
+func get_examine_content() -> String:
+	return item_description
+
+
+func get_examine_mesh() -> Mesh:
+	return item_mesh

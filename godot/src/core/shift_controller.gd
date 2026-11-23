@@ -31,7 +31,7 @@ enum ShiftPhase {
 # ─── Constants ───────────────────────────────────────────────────────────────
 
 const PRE_SHIFT_DURATION: float = 120.0  # 2 minutes of free exploration
-const POST_SHIFT_DURATION: float = 0.0  # 0 = wait for player input
+const POST_SHIFT_DURATION: float = 120.0  # Post-shift free exploration before the time skip
 const SHIFT_TRANSITION_DURATION: float = 3.0  # Short time-skip transition
 
 const MAX_IMPLEMENTED_SHIFTS: int = 5  # Shifts 1-5 implemented
@@ -150,6 +150,12 @@ func get_current_phase() -> ShiftPhase:
 
 func get_current_phase_name() -> String:
 	return _phase_to_string(_current_phase)
+
+
+## Calls the player has completed this night. The post-shift summary reports it
+## so the recap matches the night the player just played.
+func get_completed_call_count() -> int:
+	return _call_count
 
 
 func is_shift_active() -> bool:
@@ -282,10 +288,39 @@ func reset_shift() -> void:
 		BandController.lock_all_bands()
 
 
+## Leave POST_SHIFT for the time skip. The post-shift timer drives this; the
+## summary's Continue button only dismisses itself, so the player keeps the
+## rest of the free-exploration window.
+func confirm_post_shift() -> void:
+	if _current_phase == ShiftPhase.POST_SHIFT:
+		_enter_shift_transition()
+
+
+## Resume a night whose save was written at the post-shift summary.
+## start_shift always re-enters PRE_SHIFT, so without this a loaded save
+## replays the calls the player already took and only then reaches the window
+## it was saved from.
+func resume_post_shift(completed_calls: int = -1) -> void:
+	if not _shift_active:
+		return
+	if completed_calls >= 0:
+		_call_count = completed_calls
+	_enter_post_shift()
+
+
+## Quit-to-title abort: end the active shift and cancel its timers so a
+## completed countdown cannot start the next night on the title screen.
+func abort_shift() -> void:
+	reset_shift()
+	_phase_timer = 0.0
+
+
 func advance_to_next_shift() -> void:
 	if _shift_active:
+		# _complete_shift starts the next shift for implemented campaigns.
 		_complete_shift()
-	start_shift(_current_shift + 1, false)
+	else:
+		start_shift(_current_shift + 1, false)
 
 
 # ─── Phase Transitions (internal) ────────────────────────────────────────────
@@ -325,6 +360,11 @@ func _complete_shift() -> void:
 	# The point of no return: after Shift 5, Phase 2 begins (DEA-117).
 	if completed_shift >= MAX_IMPLEMENTED_SHIFTS:
 		phase2_transition_ready.emit()
+	else:
+		# Advance the campaign so the next shift starts on its own. Shift 2 is
+		# the first save-enabled shift, so this is the only path to saving.
+		# Advancing inside a run keeps the playtime already served.
+		start_shift(completed_shift + 1, false)
 
 
 # ─── Signal Handlers ─────────────────────────────────────────────────────────

@@ -14,6 +14,19 @@ func run_tests() -> Dictionary:
 	results["test_base_examine_emits_signal"] = test_base_examine_emits_signal()
 	results["test_cassette_tape_prompt"] = test_cassette_tape_prompt()
 	results["test_cassette_tape_pickup_hides"] = test_cassette_tape_pickup_hides()
+	results["test_cassette_save_point_stays"] = test_cassette_save_point_stays()
+	results["test_cassette_save_point_prompt"] = test_cassette_save_point_prompt()
+	results["test_cassette_save_point_spent"] = test_cassette_save_point_spent()
+	results["test_cassette_save_point_uses_shift_id"] = test_cassette_save_point_uses_shift_id()
+	results["test_cassette_save_point_reusable_next_shift"] = (
+		test_cassette_save_point_reusable_next_shift()
+	)
+	results["test_cassette_save_point_disabled_shift"] = (
+		test_cassette_save_point_disabled_shift()
+	)
+	results["test_cassette_empty_id_resolves_to_save_key"] = (
+		test_cassette_empty_id_resolves_to_save_key()
+	)
 	results["test_radio_toggle"] = test_radio_toggle()
 	results["test_radio_prompt"] = test_radio_prompt()
 	results["test_note_read_state"] = test_note_read_state()
@@ -87,6 +100,105 @@ func test_cassette_tape_pickup_hides() -> bool:
 		if not check:
 			return false
 	return true
+
+
+func test_cassette_save_point_stays() -> bool:
+	var tape := CassetteTape.new()
+	# A safe-room save cassette saves on interaction and stays in the world.
+	tape.is_save_point = true
+	tape.interact(null)
+	var checks: Array[bool] = [
+		tape.visible == true,
+		tape.can_interact() == true,
+	]
+	tape.free()
+	for check in checks:
+		if not check:
+			return false
+	return true
+
+
+func test_cassette_save_point_spent() -> bool:
+	var tape := CassetteTape.new()
+	tape.is_save_point = true
+	tape.tape_label = "SPARE CASSETTE"
+	# SaveManager consumes the tape after a successful save.
+	tape.is_spent = true
+	var checks: Array[bool] = [
+		tape.can_interact() == false,
+		tape.get_prompt_text() == "SPARE CASSETTE (used)",
+	]
+	tape.free()
+	for check in checks:
+		if not check:
+			return false
+	return true
+
+
+func test_cassette_save_point_prompt() -> bool:
+	var tape := CassetteTape.new()
+	tape.is_save_point = true
+	tape.tape_label = "SPARE CASSETTE"
+	var prompt := tape.get_prompt_text()
+	tape.free()
+	return prompt == "Save at SPARE CASSETTE"
+
+
+func test_cassette_save_point_uses_shift_id() -> bool:
+	var tape := CassetteTape.new()
+	tape.is_save_point = true
+	tape.tape_id = "booth_save"
+	tape.configure_save_shift(2)
+	var shift_two := tape.get_save_id()
+	tape.configure_save_shift(3)
+	var shift_three := tape.get_save_id()
+	tape.free()
+	return shift_two == "booth_save_shift_2" and shift_three == "booth_save_shift_3"
+
+
+func test_cassette_save_point_reusable_next_shift() -> bool:
+	var base := "test_reuse_%d" % Time.get_ticks_usec()
+	var save_data := SaveData.new()
+	save_data.shift = 2
+	var wrote := SaveManager.save_game(base + "_shift_2", save_data)
+	var tape := CassetteTape.new()
+	tape.is_save_point = true
+	tape.tape_id = base
+	# In the tree so _refresh_spent can resolve the SaveManager autoload.
+	Engine.get_main_loop().root.add_child(tape)
+	tape.configure_save_shift(2)
+	var restored_spent: bool = tape.is_spent and not tape.can_interact()
+	tape.configure_save_shift(3)
+	var available_in_three: bool = not tape.is_spent and tape.can_interact()
+	tape.free()
+	SaveManager.delete_save(base + "_shift_2")
+	return wrote and restored_spent and available_in_three
+
+
+func test_cassette_save_point_disabled_shift() -> bool:
+	var tape := CassetteTape.new()
+	tape.is_save_point = true
+	tape.tape_id = "test_disabled_%d" % Time.get_ticks_usec()
+	tape.tape_label = "SPARE CASSETTE"
+	tape.configure_save_shift(1, false)
+	var disabled: bool = (
+		not tape.can_interact() and tape.get_prompt_text() == "SPARE CASSETTE (no save)"
+	)
+	tape.configure_save_shift(2, true)
+	var enabled: bool = (
+		tape.can_interact() and tape.get_prompt_text() == "Save at SPARE CASSETTE"
+	)
+	tape.free()
+	return disabled and enabled
+
+
+func test_cassette_empty_id_resolves_to_save_key() -> bool:
+	var tape := CassetteTape.new()
+	tape.is_save_point = true
+	tape.configure_save_shift(2)
+	var resolved := tape.get_save_id()
+	tape.free()
+	return resolved == "auto_shift_2"
 
 
 # --- RadioInteractable ---

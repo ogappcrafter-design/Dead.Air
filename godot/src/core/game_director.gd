@@ -16,6 +16,7 @@ extends Node
 class_name GameDirector
 
 const InputGlyphs := preload("res://src/ui/input_glyphs.gd")
+const PHASE2_SCENE := "res://scenes/phase2/threshold.tscn"
 const SaveLoadScreen := preload("res://src/ui/save_load_screen.gd")
 
 ## Emitted when all systems are wired and the shift is ready to start.
@@ -26,6 +27,8 @@ signal night_complete(shift_num: int, success: bool)
 ## Track wiring state for verification.
 var _wiring_complete: bool = false
 var _shift_number: int = 1
+# Scene-change seam: tests shadow this instead of swapping the runner scene.
+var request_scene_change: Callable = Callable()
 
 ## References resolved at runtime via the scene tree.
 var _radio_tuner: Node
@@ -34,6 +37,8 @@ var _signal_strength: Node
 var _dread_composure: Node
 var _hud: Node
 var _interact_prompt: Node
+var _examine_display: Node
+var _shift_summary: ShiftSummary
 var _shift_stub: Node
 var _degradation_stub: Node
 var _interaction_raycast: Node
@@ -42,16 +47,26 @@ var _camera_manager: Node
 var _shift_controller: Node
 var _tutorial_manager: Node
 var _save_load_screen: SaveLoadScreen = null
+# Save cassette that opened the room browser, so a completed slot write can
+# spend it: the numbered slot is not the tape's own key.
+var _active_save_point: CassetteTape = null
 
 
 func _ready() -> void:
 	_resolve_references()
+	if request_scene_change.is_null() or not request_scene_change.is_valid():
+		request_scene_change = Callable(get_tree(), "change_scene_to_file")
 	# Create TutorialManager as child of GameDirector
 	_tutorial_manager = TutorialManager.new()
 	_tutorial_manager.name = "TutorialManager"
 	add_child(_tutorial_manager)
 	_wire_signals()
+	_refresh_save_points()
 	_apply_loaded_scene_state()
+	# A tape loaded from the title restores its shift phase before this scene is
+	# built, so shift_phase_changed has already fired and the summary would stay
+	# hidden. Re-apply the controller's phase once the listeners exist.
+	_sync_restored_shift_phase()
 	_wiring_complete = true
 	systems_ready.emit()
 	print("[GameDirector] All systems wired. Shift %d ready." % _shift_number)
@@ -70,8 +85,10 @@ func _resolve_references() -> void:
 		_radio_tuner = radio_console.get_node_or_null("RadioTuner")
 	# HUD is a child of NightShift root
 	_hud = get_node_or_null("../HUD")
-	# Dedicated interaction prompt (night_shift.tscn InteractionUI)
+	# Dedicated interaction prompt + close-up display (night_shift.tscn InteractionUI)
 	_interact_prompt = get_node_or_null("../InteractionUI/InteractPrompt")
+	_examine_display = get_node_or_null("../InteractionUI/ExamineDisplay")
+	_shift_summary = get_node_or_null("../InteractionUI/ShiftSummary") as ShiftSummary
 	# Stubs are siblings
 	_shift_stub = get_node_or_null("../ShiftController")
 	_degradation_stub = get_node_or_null("../StationDegradation")
@@ -117,6 +134,8 @@ func _wire_signals() -> void:
 		_interaction_raycast.target_changed.connect(_on_interaction_target_changed)
 	if _interaction_raycast and _interaction_raycast.has_signal("interact_performed"):
 		_interaction_raycast.interact_performed.connect(_on_interact_performed)
+	if _interaction_raycast and _interaction_raycast.has_signal("examine_performed"):
+		_interaction_raycast.examine_performed.connect(_on_examine_performed)
 	# 6. TapePickup.tape_picked_up → TapeInventory (handled in tape_pickup.gd itself)
 	# But we wire it for notification + degradation
 	# 7. ShiftStub signals
@@ -125,6 +144,14 @@ func _wire_signals() -> void:
 			_shift_stub.shift_started.connect(_on_stub_shift_started)
 		if _shift_stub.has_signal("shift_ended"):
 			_shift_stub.shift_ended.connect(_on_stub_shift_ended)
+	# The ShiftController autoload is authoritative for the shift number and
+	# save availability, so refresh save slots when it starts a shift.
+	if _shift_controller and _shift_controller.has_signal("shift_started"):
+		_shift_controller.shift_started.connect(_on_controller_shift_started)
+	if _shift_controller and _shift_controller.has_signal("shift_phase_changed"):
+		_shift_controller.shift_phase_changed.connect(_on_shift_phase_changed)
+	if _shift_controller and _shift_controller.has_signal("phase2_transition_ready"):
+		_shift_controller.phase2_transition_ready.connect(_on_phase2_transition_ready)
 	# 8. DegradationStub signals
 	if _degradation_stub:
 		if _degradation_stub.has_signal("degradation_changed"):
@@ -204,6 +231,7 @@ func _on_shift_started(shift_num: int) -> void:
 	# are 1-indexed. Convert before storing or forwarding.
 	var shift_num_1: int = shift_num + 1
 	_shift_number = shift_num_1
+	_refresh_save_points()
 	# Initialize signal and dread for the shift
 	if _signal_strength and _signal_strength.has_method("start_shift"):
 		_signal_strength.start_shift()
@@ -274,11 +302,21 @@ func _on_interaction_target_changed(target: Node) -> void:
 		_hud.set_subtitle(subtitle)
 
 
+func _on_examine_performed(target: Node, text: String) -> void:
+	# DEA-193: open the close-up overlay for the examined target.
+	if _examine_display != null and _examine_display.has_method("show_examine"):
+		_examine_display.show_examine(target, text)
+
+
 func _on_interact_performed(target: Node) -> void:
 	# Handle interaction — target.interact() is already called by InteractionRaycast
-	# Check for save cassette via type check
+	# Only safe-room save cassettes save; pickup cassettes are consumed by
+	# interact() and must not double as a save point.
 	if target is CassetteTape:
-		_open_save_room_browser()
+		var tape := target as CassetteTape
+		if not tape.is_save_point:
+			return
+		_open_save_room_browser(tape)
 	# Check for tape pickup via type check
 	elif target is TapePickup:
 		# TapePickup handles its own collection
@@ -287,20 +325,118 @@ func _on_interact_performed(target: Node) -> void:
 			_degradation_stub.add_degradation(-0.02)  # collecting tapes reduces degradation
 
 
+## Shift number the save slots belong to. The ShiftController autoload is
+## authoritative; the stub and CallManager hooks keep _shift_number current.
+func _current_shift_number() -> int:
+	if _shift_controller != null and _shift_controller.has_method("get_current_shift"):
+		var current := int(_shift_controller.get_current_shift())
+		if current > 0:
+			return current
+	return _shift_number
+
+
+## Give every save cassette the current shift's slot. A save in one shift then
+## does not consume the booth cassette for the next shift (GDD: Shifts 2-4).
+func _refresh_save_points() -> void:
+	var shift := _current_shift_number()
+	var save_available := true
+	if _shift_controller != null and _shift_controller.has_method("is_save_available"):
+		save_available = bool(_shift_controller.is_save_available())
+	for node in get_tree().get_nodes_in_group("interactable"):
+		var tape := node as CassetteTape
+		if tape != null and tape.is_save_point:
+			tape.configure_save_shift(shift, save_available)
+
+
+func _on_controller_shift_started(shift_number: int) -> void:
+	_shift_number = shift_number
+	_refresh_save_points()
+
+
+func _on_shift_phase_changed(phase: String) -> void:
+	if _shift_summary == null:
+		return
+	if phase == "post_shift":
+		var bands := 0
+		if _shift_controller and _shift_controller.has_method("get_unlocked_bands"):
+			bands = _shift_controller.get_unlocked_bands().size()
+		var tapes := 0
+		if TapeInventory != null and TapeInventory.has_method("get_collected_count"):
+			tapes = TapeInventory.get_collected_count()
+		var completed := 0
+		if _shift_controller and _shift_controller.has_method("get_completed_call_count"):
+			completed = _shift_controller.get_completed_call_count()
+		_shift_summary.set_summary_data(_shift_number, completed, tapes, bands)
+		var save_available := false
+		if _shift_controller and _shift_controller.has_method("is_save_available"):
+			save_available = bool(_shift_controller.is_save_available())
+		_shift_summary.set_save_available(save_available)
+		_shift_summary.visible = true
+	else:
+		_shift_summary.visible = false
+
+
+## Re-apply the phase a loaded tape resumed into. The post-shift summary is the
+## case that matters: resume_post_shift() runs from the title menu, before the
+## gameplay scene that listens for it exists, so without this the loaded night
+## opens with no summary and no Continue control.
+func _sync_restored_shift_phase() -> void:
+	if _shift_controller == null or not _shift_controller.has_method("is_shift_active"):
+		return
+	if not bool(_shift_controller.is_shift_active()):
+		return
+	if not _shift_controller.has_method("get_current_phase_name"):
+		return
+	if _shift_controller.has_method("get_current_shift"):
+		_shift_number = int(_shift_controller.get_current_shift())
+	_on_shift_phase_changed(String(_shift_controller.get_current_phase_name()))
+
+
+func _on_phase2_transition_ready() -> void:
+	if PhaseManager != null:
+		PhaseManager.set_phase(PhaseEnums.Phase.PHASE_2_BREAK)
+	request_scene_change.call(PHASE2_SCENE)
+
 ## Open the slot browser in SAVE mode: interacting with the save-room
 ## cassette no longer writes a bare legacy tape directly — the player picks
 ## a numbered slot and the cassette ritual plays.
-func _open_save_room_browser() -> void:
+func _open_save_room_browser(point: CassetteTape = null) -> void:
+	_active_save_point = point
 	if _save_load_screen == null:
 		_save_load_screen = SaveLoadScreen.new()
 		_save_load_screen.name = "SaveRoomBrowser"
-		_save_load_screen.set_mode(SaveLoadScreen.Mode.SAVE)
+		# The station cassette is itself the safe room, so a write from here is
+		# always allowed. This has to land before add_child(): _ready() builds the
+		# ritual and copies the policy from this flag, and a ritual still requiring
+		# DreadComposure.in_safe_room reports SAVE FAILED on a slot the browser had
+		# just offered.
+		_save_load_screen.enforce_safe_room = false
+		# Consume the cassette from this browser's own write, not from the global
+		# SaveManager signal: the post-shift summary saves through the same signal,
+		# and that must not spend a cassette that never opened a room.
+		_save_load_screen.slot_saved.connect(_on_save_point_saved)
 		_save_load_screen.closed.connect(_on_save_browser_closed)
 		add_child(_save_load_screen)
 	else:
 		_save_load_screen.set_mode(SaveLoadScreen.Mode.SAVE)
+		_save_load_screen.enforce_safe_room = false
 		_save_load_screen.show()
 	_save_load_screen.refresh()
+
+
+## A slot write through the room browser consumes the cassette that opened it.
+## The write lands in a numbered slot, so the tape's own save index stays empty
+## and only this bookkeeping stops the same cassette saving twice tonight.
+func _on_save_point_saved(_slot_id: String) -> void:
+	var point := _active_save_point
+	_active_save_point = null
+	if point == null or not is_instance_valid(point):
+		return
+	var save_mgr := get_node_or_null("/root/SaveManager")
+	if save_mgr != null and save_mgr.has_method("mark_save_point_spent"):
+		save_mgr.mark_save_point_spent(point.get_save_id())
+	if point.has_method("mark_spent"):
+		point.mark_spent()
 
 
 ## Hide the save browser when it reports Back, so the full-screen panel does
@@ -311,6 +447,9 @@ func _on_save_browser_closed() -> void:
 		# reopening cannot replay the old callback.
 		_save_load_screen.cancel_pending_confirmation()
 		_save_load_screen.hide()
+	# Back ends the errand: a cassette that opened the browser but wrote nothing
+	# must not be spent by a later save from somewhere else.
+	_active_save_point = null
 
 
 ## Apply the staged parts of a loaded save (player position, radio state)
@@ -349,6 +488,7 @@ func _apply_loaded_scene_state() -> void:
 
 func _on_stub_shift_started(shift_num: int) -> void:
 	_shift_number = shift_num
+	_refresh_save_points()
 	print("[GameDirector] ShiftStub: shift %d started." % shift_num)
 
 

@@ -16,9 +16,23 @@ func run_tests() -> Dictionary:
 	results["test_validate_save"] = test_validate_save()
 	results["test_empty_tape_id"] = test_empty_tape_id()
 	results["test_duplicate_save_rejected"] = test_duplicate_save_rejected()
+	results["test_latest_save_prefers_newest"] = test_latest_save_prefers_newest()
+	results["test_latest_save_skips_corrupt"] = test_latest_save_skips_corrupt()
+	results["test_clear_spent_save_points"] = test_clear_spent_save_points()
 	# Clean up
 	SaveManager.delete_all_saves()
 	return results
+
+
+func test_clear_spent_save_points() -> bool:
+	SaveManager.delete_all_saves()
+	SaveManager.mark_save_point_spent("save_point_1_booth")
+	if not SaveManager.is_save_point_spent("save_point_1_booth"):
+		return false
+	# A New Game replays the same shift, so the booth cassette has to offer its
+	# save again instead of inheriting the previous run's spent mark.
+	SaveManager.clear_spent_save_points()
+	return not SaveManager.is_save_point_spent("save_point_1_booth")
 
 
 func test_save_and_load() -> bool:
@@ -104,6 +118,86 @@ func test_tape_consumption() -> bool:
 
 	SaveManager.delete_save("consumed_test")
 	TapeInventory.reset()
+	return true
+
+
+func test_latest_save_prefers_newest() -> bool:
+	SaveManager.delete_all_saves()
+	# The newer save has the lower shift, so this can only pass on timestamp
+	# ordering, not on the shift tiebreaker.
+	var older := SaveData.new()
+	older.shift = 3
+	var newer := SaveData.new()
+	newer.shift = 1
+	if not SaveManager.save_game("latest_older", older):
+		return false
+	if not SaveManager.save_game("latest_newer", newer):
+		return false
+	var stamped: bool = (
+		_set_save_timestamp("latest_older", "2026-01-01T00:00:00")
+		and _set_save_timestamp("latest_newer", "2026-01-02T00:00:00")
+	)
+	var latest := SaveManager.get_latest_tape_id()
+	SaveManager.delete_save("latest_older")
+	SaveManager.delete_save("latest_newer")
+	return stamped and latest == "latest_newer"
+
+
+func test_latest_save_skips_corrupt() -> bool:
+	SaveManager.delete_all_saves()
+	var intact := SaveData.new()
+	intact.shift = 2
+	var corrupt := SaveData.new()
+	corrupt.shift = 3
+	if not SaveManager.save_game("intact_save", intact):
+		return false
+	if not SaveManager.save_game("corrupt_save", corrupt):
+		return false
+	var stamped: bool = (
+		_set_save_timestamp("intact_save", "2026-01-01T00:00:00")
+		and _set_save_timestamp("corrupt_save", "2026-01-02T00:00:00")
+	)
+	# Change the payload after the checksum was written. The JSON still parses,
+	# so only the checksum validation can reject this save.
+	var path := SaveManager.get_save_path("corrupt_save")
+	var file := FileAccess.open(path, FileAccess.READ)
+	if file == null:
+		return false
+	var parsed = JSON.parse_string(file.get_as_text())
+	file.close()
+	if typeof(parsed) != TYPE_DICTIONARY:
+		return false
+	var data: Dictionary = parsed
+	data["shift"] = 5
+	var out := FileAccess.open(path, FileAccess.WRITE)
+	if out == null:
+		return false
+	out.store_string(JSON.stringify(data, "\t"))
+	out.close()
+	var latest := SaveManager.get_latest_tape_id()
+	SaveManager.delete_save("intact_save")
+	SaveManager.delete_save("corrupt_save")
+	return stamped and latest == "intact_save"
+
+
+func _set_save_timestamp(tape_id: String, stamp: String) -> bool:
+	var path := SaveManager.get_save_path(tape_id)
+	var file := FileAccess.open(path, FileAccess.READ)
+	if file == null:
+		return false
+	var parsed = JSON.parse_string(file.get_as_text())
+	file.close()
+	if typeof(parsed) != TYPE_DICTIONARY:
+		return false
+	var data: Dictionary = parsed
+	data["save_timestamp"] = stamp
+	data.erase("_checksum")
+	data["_checksum"] = SaveManager._compute_checksum(JSON.stringify(data))
+	var out := FileAccess.open(path, FileAccess.WRITE)
+	if out == null:
+		return false
+	out.store_string(JSON.stringify(data, "\t"))
+	out.close()
 	return true
 
 

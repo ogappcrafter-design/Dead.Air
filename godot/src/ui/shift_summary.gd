@@ -10,6 +10,7 @@ signal save_requested
 signal continue_pressed
 
 var _background: ColorRect
+var _scroll: ScrollContainer
 var _title_label: Label
 var _stats_container: VBoxContainer
 var _save_yes_button: Button
@@ -31,12 +32,38 @@ func _ready() -> void:
 	_build_ui()
 
 
+## Continue dismisses the summary instead of ending the phase, so the player
+## spends the rest of the post-shift window at the station. The phase timer
+## still ends the night.
+func _on_continue_pressed() -> void:
+	visible = false
+
+
+## The Continue control, so a test can activate it the way a player does.
+func get_continue_button() -> Button:
+	return _continue_button
+
+
 func set_summary_data(shift: int, calls: int, tapes: int, bands: int) -> void:
 	_shift_number = shift
 	_calls_completed = calls
 	_tapes_collected = tapes
 	_bands_unlocked = bands
+	# Every night opens with the save prompt available again: last night's
+	# save latched these controls off and disabled them, and the summary is
+	# per-shift, not per-run.
+	_reset_save_state()
 	_update_display()
+
+
+func _reset_save_state() -> void:
+	_save_done = false
+	if _save_yes_button != null:
+		_save_yes_button.disabled = false
+		_save_yes_button.focus_mode = Control.FOCUS_ALL
+	if _save_no_button != null:
+		_save_no_button.disabled = false
+		_save_no_button.focus_mode = Control.FOCUS_ALL
 
 
 func set_save_available(available: bool) -> void:
@@ -53,11 +80,20 @@ func _build_ui() -> void:
 	_background.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(_background)
 
-	# Root VBox
+	# Root VBox, inside a scroll container: the summary's text stack is taller
+	# than a 320x240 display, and Continue sat below the bottom edge with no way
+	# to reach it. follow_focus keeps the focused control scrolled into view.
+	_scroll = ScrollContainer.new()
+	_scroll.name = "SummaryScroll"
+	_scroll.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_scroll.follow_focus = true
+	add_child(_scroll)
+
 	var root := VBoxContainer.new()
-	root.set_anchors_preset(Control.PRESET_FULL_RECT)
+	root.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	root.alignment = BoxContainer.ALIGNMENT_CENTER
-	add_child(root)
+	_scroll.add_child(root)
 
 	# Title
 	_title_label = Label.new()
@@ -219,3 +255,4 @@ func _on_save_no() -> void:
 func _on_continue() -> void:
 	print("[ShiftSummary] Continue to Night %d" % (_shift_number + 1))
 	continue_pressed.emit()
+	_on_continue_pressed()

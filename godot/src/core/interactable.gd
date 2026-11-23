@@ -35,3 +35,20 @@ func get_prompt_text() -> String:
 ## Returns the examine text shown when the player examines this object.
 func get_examine_text() -> String:
 	return ""
+
+
+## DEA-193: Returns the examine mode for the close-up system: "prop", "tape", "note", "photo", "text".
+## Defaults to text-only: doors, switches, and radios have no close-up mesh and
+## should not fall back to the placeholder prop cube.
+func get_examine_mode() -> String:
+	return "text"
+
+
+## DEA-193: Returns the title for the examine close-up view.
+func get_examine_title() -> String:
+	return get_prompt_text()
+
+
+## DEA-193: Returns the detailed content text for the examine close-up view.
+func get_examine_content() -> String:
+	return get_examine_text()
