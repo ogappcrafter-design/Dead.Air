@@ -37,6 +37,9 @@ func _ready() -> void:
 func set_target(target: Node3D) -> void:
 	_target = target
 
+func get_target() -> Node3D:
+	return _target
+
 func transition_to(angle: CameraAngle, duration: float = 0.75) -> void:
 	if angle == null:
 		return
@@ -51,13 +54,15 @@ func transition_to(angle: CameraAngle, duration: float = 0.75) -> void:
 	)
 	# Set FOV
 	fov = angle.fov
-	# Apply DOF if enabled
-	if angle.use_dof:
-		attributes.dof_blur_far_enabled = true
-		attributes.dof_blur_far_distance = angle.dof_focus_distance
-		attributes.dof_blur_far_amount = angle.dof_focus_length
-	else:
-		attributes.dof_blur_far_enabled = false
+	# Apply DOF if enabled. A rig with no CameraAttributes resource simply keeps
+	# its default depth of field instead of erroring on every cut.
+	if attributes != null:
+		if angle.use_dof:
+			attributes.dof_blur_far_enabled = true
+			attributes.dof_blur_far_distance = angle.dof_focus_distance
+			attributes.dof_blur_far_amount = angle.dof_focus_length
+		else:
+			attributes.dof_blur_far_enabled = false
 
 func _process(delta: float) -> void:
 	if current_angle == null:

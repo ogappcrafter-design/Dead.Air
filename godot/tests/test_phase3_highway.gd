@@ -18,6 +18,7 @@ func run_tests() -> Dictionary:
 	results["test_dirt_road_requires_conditions"] = await test_dirt_road_requires_conditions()
 	results["test_dirt_road_entry_completes"] = await test_dirt_road_entry_completes()
 	results["test_camera_snaps_forward"] = await test_camera_snaps_forward()
+	results["test_dirt_road_exit_cuts_to_hw2"] = await test_dirt_road_exit_cuts_to_hw2()
 	results["test_reset_restores_phase1"] = await test_reset_restores_phase1()
 	return results
 
@@ -203,9 +204,10 @@ func test_camera_snaps_forward() -> bool:
 	await _wait_frames(3)
 	var ok: bool = segment.get_camera_index() == 0
 	if ok:
-		# Walk past the first snap threshold (next camera at x=70; snaps at x>45).
+		# DEA-177: the shot cuts when the player walks into the next zone
+		# (HW2 covers x 45..85), so the index follows the Area3D trigger.
 		segment.walk_for_testing(50.0)
-		segment._process(0.016)
+		await _wait_physics_frames(3)
 		ok = segment.get_camera_index() == 1
 	_cleanup_segment(segment)
 	return ok
@@ -221,3 +223,25 @@ func test_reset_restores_phase1() -> bool:
 func _wait_frames(count: int) -> void:
 	for i in range(count):
 		await (Engine.get_main_loop() as SceneTree).process_frame
+
+
+## The dirt-road completion point sits past the road edge. HW2's trigger has to
+## reach it, or walking the exit leaves the rig on the previous shot.
+func test_dirt_road_exit_cuts_to_hw2() -> bool:
+	var segment: Node = _load_segment()
+	await _wait_frames(3)
+	var ok: bool = segment.get_camera_index() == 0
+	var player: CharacterBody3D = segment.get_player()
+	if ok and player != null:
+		player.global_position = Vector3(60.0, 0.5, 7.0)
+		await _wait_physics_frames(3)
+		ok = segment.get_camera_index() == 1
+	else:
+		ok = false
+	_cleanup_segment(segment)
+	return ok
+
+
+func _wait_physics_frames(count: int) -> void:
+	for i in range(count):
+		await (Engine.get_main_loop() as SceneTree).physics_frame

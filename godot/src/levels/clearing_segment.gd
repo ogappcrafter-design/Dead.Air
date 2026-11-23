@@ -77,6 +77,7 @@ var _birds_stream: AudioStreamGeneratorPlayback
 var _hum_player: AudioStreamPlayer3D
 var _hum_phase := 0.0
 var _hum_stream: AudioStreamGeneratorPlayback
+const SegmentCameraScript = preload("res://src/visual/segment_camera.gd")
 const AUDIO_SR := 44100.0
 const ORIGIN_HZ := 105.0      # formal male voice, distant
 const WIND_HZ := 400.0
@@ -99,7 +100,7 @@ func _setup_and_start() -> void:
 		_fragments[kind] = get_node_or_null("Fragments/" + cap)
 	_setup_audio()
 	_place_player()
-	_setup_camera()
+	SegmentCameraScript.wire(self, _camera_rig, _player, "clearing")
 	_silence_world()
 	_setup_radio()
 	_connect_tape_pickup()
@@ -171,15 +172,6 @@ func _place_player() -> void:
 	if _player:
 		_player.global_position = Vector3(0, 0.5, 0)
 		_face_player(TOWER_POS - Vector3(0, 0.5, 0))
-
-
-func _setup_camera() -> void:
-	if _camera_rig:
-		# Wide, ground-level: the tower dominates the frame.
-		var pos := Vector3(0, 1.5, 12)
-		_camera_rig.look_at_from_position(pos, TOWER_POS + Vector3(0, 10, 0), Vector3.UP)
-		_camera_rig.fov = 70.0
-		_camera_rig.current = true
 
 
 func _silence_world() -> void:

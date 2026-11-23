@@ -67,12 +67,8 @@ const WALL_BREATH_AMPLITUDE := 0.04
 const WALL_BREATH_RATE_HZ := 0.4
 
 ## Fixed cameras (world-space positions and look targets).
-const CAM_LIVING_POS := Vector3(-6.5, 2.0, 0.0)
-const CAM_LIVING_LOOK := Vector3(0.0, 1.0, 0.1)
-const CAM_LIVING_FOV := 55.0
-const CAM_KITCHEN_POS := Vector3(-2.0, 2.0, -7.0)
-const CAM_KITCHEN_LOOK := Vector3(2.0, 1.0, -2.8)
-const CAM_KITCHEN_FOV := 60.0
+## DEA-177: camera coverage lives in segment_camera.gd, keyed by scene name.
+const SegmentCameraScript = preload("res://src/visual/segment_camera.gd")
 
 ## The voice always emanates from here (kitchen, spatialized).
 const KITCHEN_VOICE_POS := Vector3(3.0, 1.2, -3.5)
@@ -122,7 +118,7 @@ func _ready() -> void:
 func _setup_and_start() -> void:
 	_resolve_references()
 	_place_player()
-	_apply_camera(false)
+	SegmentCameraScript.wire(self, _camera_rig, _player, "first_house")
 	_silence_world()
 	_setup_radio()
 	_load_voice_script()
@@ -177,17 +173,6 @@ func _place_player() -> void:
 		_player.look_at(_player.global_position + Vector3(1, 0, 0), Vector3.UP)
 
 
-func _apply_camera(kitchen: bool) -> void:
-	if _camera_rig == null:
-		return
-	var pos := CAM_LIVING_POS if not kitchen else CAM_KITCHEN_POS
-	var look := CAM_LIVING_LOOK if not kitchen else CAM_KITCHEN_LOOK
-	var fov := CAM_LIVING_FOV if not kitchen else CAM_KITCHEN_FOV
-	_camera_rig.look_at_from_position(pos, look, Vector3.UP)
-	_camera_rig.fov = fov
-	_camera_rig.current = true
-
-
 func _silence_world() -> void:
 	var abm := _autoload("AudioBusManager")
 	if abm == null:
@@ -238,7 +223,6 @@ func _enter_phase(p: int) -> void:
 			_voice_on = true
 		Phase.KITCHEN:
 			kitchen_entered.emit()
-			_apply_camera(true)
 			var static_fx := StaticTransition.new()
 			static_fx.name = "KitchenCut"
 			add_child(static_fx)

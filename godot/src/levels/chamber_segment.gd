@@ -80,6 +80,7 @@ var _voice_stream: AudioStreamGeneratorPlayback
 var _heart_player: AudioStreamPlayer
 var _heart_phase := 0.0
 var _heart_stream: AudioStreamGeneratorPlayback
+const SegmentCameraScript = preload("res://src/visual/segment_camera.gd")
 const AUDIO_SR := 44100.0
 const VOICE_HZ := 110.0
 const HEART_BPM := 72.0
@@ -97,7 +98,7 @@ func _setup_and_start() -> void:
 	_dais = get_node_or_null("Dais")
 	_setup_audio()
 	_place_player()
-	_setup_camera()
+	SegmentCameraScript.wire(self, _camera_rig, _player, "chamber")
 	_silence_all_but_heart()
 	_setup_radio()
 	var fx := StaticTransition.new()
@@ -139,14 +140,6 @@ func _place_player() -> void:
 		# Enters from the right of the frame.
 		_player.global_position = Vector3(6, -200.5, 4)
 		_face_player(Vector3(-1, 0, -0.5))
-
-
-func _setup_camera() -> void:
-	if _camera_rig:
-		# Single fixed shot: dais center, no movement.
-		_camera_rig.look_at_from_position(Vector3(0, -197, 10), Vector3(0, -200, 0), Vector3.UP)
-		_camera_rig.fov = 55.0
-		_camera_rig.current = true
 
 
 ## Everything mutes except Master (voice + heartbeat live there).

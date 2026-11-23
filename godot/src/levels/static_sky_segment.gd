@@ -62,9 +62,8 @@ const SILENCED_BUS_NAMES: Array[StringName] = [
 ]
 
 ## High wide camera: player small on a long road.
-const CAMERA_POSITION := Vector3(14.0, 11.0, 18.0)
-const CAMERA_LOOK_AT := Vector3(26.0, 0.5, 0.0)
-const CAMERA_FOV := 55.0
+## DEA-177: camera coverage lives in segment_camera.gd, keyed by scene name.
+const SegmentCameraScript = preload("res://src/visual/segment_camera.gd")
 
 ## Where the road bends and houses appear.
 const BEND_X := 34.0
@@ -112,15 +111,9 @@ func _setup_and_start() -> void:
 	if _fragments and _radio_tuner and not _fragments.fragment_started.is_connected(_on_fragment):
 		_fragments.fragment_started.connect(_on_fragment)
 
-	# Camera: fixed high wide. Set position and look at the road.
-	if _camera_rig:
-		_camera_rig.current = true
-		_camera_rig.look_at_from_position(CAMERA_POSITION, CAMERA_LOOK_AT, Vector3.UP)
-		_camera_rig.fov = CAMERA_FOV
-	var cam_mgr := _autoload("CameraManager")
-	if cam_mgr:
-		cam_mgr.set_rig(_camera_rig)
-		cam_mgr.set_player(_player)
+	# DEA-177: fixed coverage per road segment; the spawn box is the high wide
+	# shot this scene used to hard-code.
+	SegmentCameraScript.wire(self, _camera_rig, _player, "static_sky")
 
 	# Static cut entering this segment (hallway door → outdoors).
 	var static_fx := StaticTransition.new()

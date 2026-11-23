@@ -89,6 +89,7 @@ var _footstep_stream: AudioStreamGeneratorPlayback
 var _whisper_player: AudioStreamPlayer
 var _whisper_phase := 0.0
 var _whisper_stream: AudioStreamGeneratorPlayback
+const SegmentCameraScript = preload("res://src/visual/segment_camera.gd")
 const AUDIO_SR := 44100.0
 const FOOTSTEP_DELAY := 1.0
 var _footstep_ring_buffer: Array = []
@@ -106,7 +107,7 @@ func _setup_and_start() -> void:
 	_collect_era_walls()
 	_setup_audio()
 	_place_player()
-	_setup_camera()
+	SegmentCameraScript.wire(self, _camera_rig, _player, "staircase")
 	_silence_world()
 	_setup_radio()
 	var fx := StaticTransition.new()
@@ -163,20 +164,6 @@ func _place_player() -> void:
 	if _player:
 		_player.global_position = Vector3(0, -1, 0)
 		_face_player(Vector3(0, 0, -1))
-
-
-func _setup_camera() -> void:
-	if _camera_rig:
-		# Top-down: looking straight down, following the player.
-		_update_camera()
-
-
-func _update_camera() -> void:
-	if _camera_rig and _player:
-		var pos: Vector3 = _player.global_position + Vector3(0, 8, 0.001)
-		_camera_rig.look_at_from_position(pos, _player.global_position, Vector3.FORWARD)
-		_camera_rig.fov = 60.0
-		_camera_rig.current = true
 
 
 func _silence_world() -> void:
@@ -236,7 +223,6 @@ func _process(delta: float) -> void:
 	_update_static_audio(delta)
 	_update_footstep_audio(delta)
 	_update_whisper_audio(delta)
-	_update_camera()
 
 
 ## Static rises with depth; heartbeat speeds up; walls change era; calls fire.

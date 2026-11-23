@@ -114,12 +114,8 @@ var _engine_stream_playback: AudioStreamGeneratorPlayback
 var _wind_stream_playback: AudioStreamGeneratorPlayback
 var _advisory_stream_playback: AudioStreamGeneratorPlayback
 
-## Camera long-shot positions (walk toward camera, snap to next).
-const CAMERA_POSITIONS: Array[Vector3] = [
-	Vector3(30, 6, 12),
-	Vector3(70, 6, 12),
-	Vector3(110, 6, 12),
-]
+## DEA-177: camera coverage lives in segment_camera.gd, keyed by scene name.
+const SegmentCameraScript = preload("res://src/visual/segment_camera.gd")
 var _camera_index := 0
 
 ## Loop sign texts (degrade each loop).
@@ -147,7 +143,10 @@ func _setup_and_start() -> void:
 	_tower_pulse_light = get_node_or_null("RadioTower/TowerLight") as OmniLight3D
 	_setup_audio()
 	_place_player()
-	_apply_camera_position(0)
+	var cam_mgr := _autoload("CameraManager")
+	if cam_mgr and not cam_mgr.camera_transition_started.is_connected(_on_camera_transition):
+		cam_mgr.camera_transition_started.connect(_on_camera_transition)
+	SegmentCameraScript.wire(self, _camera_rig, _player, "highway")
 	_silence_world()
 	_setup_radio()
 
@@ -268,8 +267,7 @@ func _process_drive(delta: float) -> void:
 		if _loop_distance_walked >= LOOP_DISTANCE:
 			_loop_distance_walked = 0.0
 			_do_loop()
-	# Camera snap: when the player passes the next camera position, snap.
-	_update_camera_snap()
+	# Camera: the zone the player walks into cuts the shot (DEA-177).
 	# Advisories play on a timer.
 	_advisory_timer += delta
 	if _advisory_timer >= ADVISORY_INTERVAL and _advisory_index < ADVISORIES.size() - 1:
@@ -337,23 +335,16 @@ func _update_sign_text() -> void:
 		_sign_label.text = SIGN_TEXTS[text_index]
 
 
-## Camera: long shot; snap to the next position as the player advances.
-func _update_camera_snap() -> void:
-	if _player == null or _camera_rig == null:
-		return
-	if _camera_index < CAMERA_POSITIONS.size() - 1:
-		var next: Vector3 = CAMERA_POSITIONS[_camera_index + 1]
-		if _player.global_position.x > next.x - 25.0:
-			_camera_index += 1
-			_apply_camera_position(_camera_index)
-
-
-func _apply_camera_position(index: int) -> void:
-	if _camera_rig == null or index >= CAMERA_POSITIONS.size():
-		return
-	var pos: Vector3 = CAMERA_POSITIONS[index]
-	_camera_rig.look_at_from_position(pos, Vector3(pos.x - 30.0, 0.5, 0.0), Vector3.UP)
-	_camera_rig.current = true
+## Camera: zone cuts report through CameraManager; keep the test-facing index
+## in step with the angle the player is in (HW1/HW2/HW3).
+func _on_camera_transition(new_id: String, _old_id: String) -> void:
+	match new_id:
+		"HW1":
+			_camera_index = 0
+		"HW2":
+			_camera_index = 1
+		"HW3":
+			_camera_index = 2
 
 
 ## --- Advisories ---

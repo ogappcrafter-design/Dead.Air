@@ -1,4 +1,4 @@
-[gd_scene load_steps=23 format=3 uid="uid://bp3bunker01"]
+[gd_scene load_steps=24 format=3 uid="uid://bp3bunker01"]
 
 [ext_resource type="Script" uid="uid://byfya25euxxwe" path="res://src/entities/player.gd" id="1_player"]
 [ext_resource type="Script" uid="uid://bnhl1nrqqywda" path="res://src/core/radio_tuner.gd" id="2_tuner"]
@@ -6,6 +6,7 @@
 [ext_resource type="Resource" uid="uid://11e914f432000" path="res://src/data/band_config.tres" id="4_band"]
 [ext_resource type="Script" uid="uid://cn3ic8sfogvs3" path="res://src/audio/radio_static.gd" id="5_static"]
 [ext_resource type="Script" path="res://src/levels/bunker_segment.gd" id="6_seg"]
+[ext_resource type="Script" uid="uid://be6swwtavc18m" path="res://src/visual/camera_rig.gd" id="rig_cam"]
 [ext_resource type="Texture2D" path="res://assets/textures/environment/concrete_bunker.jpg" id="tex_concrete"]
 [ext_resource type="Texture2D" path="res://assets/textures/environment/metal_locker.jpg" id="tex_metal"]
 [ext_resource type="Texture2D" path="res://assets/textures/environment/desk_laminate.jpg" id="tex_desk"]
@@ -189,6 +190,7 @@ shape = SubResource("player_shape")
 
 [node name="CameraRig" type="Camera3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, 12)
+script = ExtResource("rig_cam")
 
 [node name="PortableRadio" type="Node" parent="."]
 
