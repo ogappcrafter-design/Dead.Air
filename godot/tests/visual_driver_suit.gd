@@ -17,9 +17,15 @@ var _stages: Array[Dictionary] = [
 	{
 		"name": "hallway",
 		"scene": "res://scenes/station/hallway.tscn",
-		"suit_pos": Vector3(0.0, 0.0, -2.5),
-		"cam_pos": Vector3(0.0, 1.4, 1.5),
+		# The hallway runs along X (floor 4 x 1.5), so subject and camera sit inside
+		# the corridor; earlier values put both outside the walls.
+		"suit_pos": Vector3(-1.1, 0.0, 0.0),
+		"cam_pos": Vector3(1.4, 1.4, 0.0),
 		"state": Suit.State.APPROACH,
+		# Approach walks toward its last known position and drops to SEARCH within
+		# a second of staged placement; freeze the machine so the capture shows the
+		# state the stage declares (animation playback is unaffected).
+		"freeze_state": true,
 		"out": "res://screenshot/dea180_suit_hallway.png"
 	},
 	{
@@ -64,6 +70,9 @@ func _run_next_stage() -> void:
 	_current_root.add_child(suit)
 	suit.global_position = stage["suit_pos"]
 	suit.force_state(stage["state"])
+	if stage.get("freeze_state", false):
+		suit.set_process(false)
+		suit.set_physics_process(false)
 
 	var cam := Camera3D.new()
 	cam.name = "CaptureCam"
@@ -72,11 +81,14 @@ func _run_next_stage() -> void:
 	cam.look_at(stage["suit_pos"] + Vector3(0.0, 1.2, 0.0))
 	cam.current = true
 
-	# Wait for transitions and lighting to settle
 	await get_tree().create_timer(1.0).timeout
 	cam.current = true
 	for i in range(5):
 		await get_tree().process_frame
+
+	# Logged here, not at setup: physics keeps running through the settle, so this
+	# is the state the captured frame actually shows.
+	print("[VisualDriverSuit] State at capture: ", stage["name"], " = ", suit.get_state_name())
 
 	if not _capture(stage["out"]):
 		printerr("[VisualDriverSuit] Screenshot failed at stage: ", stage["name"])
