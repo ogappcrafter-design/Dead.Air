@@ -50,6 +50,7 @@ func _run_tests() -> void:
 		["AccessibilityManager", "res://tests/test_accessibility_manager.gd"],
 		["AudioBusManager", "res://tests/test_audio_bus_manager.gd"],
 		["SuitEntity", "res://tests/test_suits.gd"],
+		["SuitModelRig", "res://tests/test_suit_model_rig.gd"],
 		["VisualAccessibility", "res://tests/test_visual_accessibility.gd"],
 		["Shift1Tutorial", "res://tests/test_shift1_tutorial.gd"],
 		["Shift2Tutorial", "res://tests/test_shift2_tutorial.gd"],

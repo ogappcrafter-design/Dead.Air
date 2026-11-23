@@ -136,8 +136,8 @@ func spawn_for_phase(
 func despawn_all() -> void:
 	for suit in _active_suits:
 		if suit != null and is_instance_valid(suit):
-			suit.despawn()
-			suit.queue_free()
+			# The suit frees itself when its exit clip ends; freeing it here would cut the clip.
+			suit.despawn(true)
 	_active_suits.clear()
 	# Reset signal drain: no suits nearby.
 	if _signal_strength != null and _signal_strength.has_method("set_entity_count"):

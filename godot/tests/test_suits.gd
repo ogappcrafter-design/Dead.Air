@@ -429,7 +429,8 @@ func test_stutter_only_in_approach() -> bool:
 	var suit := _make_suit([Vector3(0, 0, 0), Vector3(10, 0, 0)])
 	suit.spawn_at(0)
 	suit.global_position = Vector3(0, 0, 0)
-	suit.global_rotation = Vector3.ZERO
+	# Already facing the first leg: this test is about the stutter branch, not the pivot.
+	suit.global_rotation = Vector3(0.0, -PI / 2.0, 0.0)
 	# In PATROL, stutter timers must never trigger the freeze branch.
 	# Two ticks: the first flips the patrol index (suit already sits on
 	# waypoint 0), the second actually moves toward waypoint 1.

@@ -138,7 +138,7 @@ const SIGNAL_NEEDLE_RANGE: float = 8.0
 
 ## ─── Internal State ─────────────────────────────────────────────────────
 
-var _state: int = State.IDLE
+var _state: int = -1
 var _player: Node3D = null
 var _dread_composure: DreadComposure = null
 var _signal_strength: SignalStrength = null
@@ -170,6 +170,34 @@ var _noise_events: Array[Dictionary] = []  # Pending noise events: {position, ra
 ## Whether the suit is actively enabled (spawned and active for the current phase).
 var _active: bool = true
 
+## ─── Model & Rig References (DEA-180) ──────────────────────────────────
+var _visual_model: Node3D = null
+var _anim_player: AnimationPlayer = null
+var _head_node: Node3D = null
+var _neck_node: Node3D = null
+var _tie_mesh: MeshInstance3D = null
+
+## A re-face wider than this (75 degrees) plays the `turn` clip before walking on.
+const TURN_ANGLE_THRESHOLD: float = 1.309
+var _turning: bool = false
+
+## Seconds the pivot may hold movement if the clip never reports its end. The clip is the
+## authority; this only keeps a stopped or freed AnimationPlayer from freezing the suit.
+var _turn_hold_left: float = 0.0
+
+## Set while the despawn clip plays: the suit stays visible until that clip ends.
+var _despawning: bool = false
+
+## Set when the caller retires the suit outright: it frees itself once the clip ends.
+var _free_after_despawn: bool = false
+
+## Head tracking towards player (DEA-180)
+var _head_tracking_rot: Vector3 = Vector3.ZERO
+
+## LOD state (DEA-180)
+const LOD_FAR_DISTANCE: float = 14.0
+var _is_far_lod: bool = false
+
 ## ─── Lifecycle ──────────────────────────────────────────────────────────
 
 
@@ -183,6 +211,8 @@ func _ready() -> void:
 	_rng.randomize()
 	if _active and patrol_points.size() > 0:
 		_set_state(State.PATROL)
+	else:
+		_set_state(State.IDLE)
 
 
 func _physics_process(delta: float) -> void:
@@ -201,9 +231,11 @@ func _physics_process(delta: float) -> void:
 		State.RELOCATE:
 			_process_relocate(delta)
 		State.IDLE:
-			pass
+			_play_animation("idle")
 	_update_radio_proximity(delta)
 	_update_hide_breath(delta)
+	_update_head_torso_tracking(delta)
+	_update_lod(delta)
 
 
 ## ─── Reference Resolution ───────────────────────────────────────────────
@@ -230,15 +262,67 @@ func _resolve_references() -> void:
 
 
 func _setup_appearance() -> void:
-	# The Suits do not cast shadows.
-	# Set cast_shadow on any GeometryInstance3D children to false.
-	for child in get_children():
+	# Ensure visual model exists (instantiates suit_model if instantiated via Suit.new())
+	if get_node_or_null("VisualModel") == null:
+		var model_scene: PackedScene = load("res://scenes/entities/suit_model.tscn") as PackedScene
+		if model_scene != null:
+			var vm := model_scene.instantiate() as Node3D
+			vm.name = "VisualModel"
+			add_child(vm)
+		else:
+			var builder := load("res://src/entities/suit_builder.gd")
+			if builder != null:
+				var vm: Node3D = builder.build_suit_visuals()
+				add_child(vm)
+
+	_resolve_model_nodes()
+	_apply_shadow_settings(self)
+
+
+func _resolve_model_nodes() -> void:
+	_visual_model = get_node_or_null("VisualModel") as Node3D
+	if _visual_model != null:
+		_anim_player = _visual_model.get_node_or_null("AnimationPlayer") as AnimationPlayer
+		_head_node = _visual_model.find_child("Head", true, false) as Node3D
+		_neck_node = _visual_model.find_child("Neck", true, false) as Node3D
+		_tie_mesh = _visual_model.find_child("TieMesh", true, false) as MeshInstance3D
+		if _anim_player != null and not _anim_player.animation_finished.is_connected(
+				_on_animation_finished
+			):
+			_anim_player.animation_finished.connect(_on_animation_finished)
+
+
+func _apply_shadow_settings(node: Node) -> void:
+	# The Suits do not cast shadows per GDD.
+	# Set cast_shadow on all GeometryInstance3D descendants recursively.
+	for child in node.get_children():
 		if child is GeometryInstance3D:
 			(child as GeometryInstance3D).cast_shadow = (
 				GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 				if not cast_shadows
 				else GeometryInstance3D.SHADOW_CASTING_SETTING_ON
 			)
+		_apply_shadow_settings(child)
+
+
+func _play_animation(anim_name: String, custom_blend: float = 0.2, speed: float = 1.0) -> void:
+	if _anim_player == null or not _anim_player.has_animation(anim_name):
+		return
+	# A pivot owns the clip until it ends: the walking states request their walk clip every
+	# physics tick, and play() clears the queue, so those requests would cut the turn short
+	# and leave _turning set. _set_state clears _turning first, so a real state change and
+	# despawn still interrupt the pivot.
+	if _turning and anim_name != "turn":
+		return
+	if _anim_player.current_animation == anim_name and _anim_player.is_playing():
+		# Same clip at a new rate (walk -> jog). Changing speed_scale keeps the stride phase
+		# instead of restarting the clip from its first frame.
+		_anim_player.speed_scale = speed
+		return
+	# One rate control: play() sets the clip's custom speed and get_playing_speed()
+	# multiplies it by speed_scale, so passing the rate to both compounded it (1.2 -> 1.44).
+	_anim_player.play(anim_name, custom_blend, 1.0)
+	_anim_player.speed_scale = speed
 
 
 ## ─── State Machine ─────────────────────────────────────────────────────
@@ -249,6 +333,9 @@ func _set_state(new_state: int) -> void:
 		return
 	var old := _state
 	_state = new_state
+	# A pivot belongs to the state that asked for it; the new state owns the clip now.
+	_turning = false
+	_turn_hold_left = 0.0
 	# Reset per-state timers.
 	_investigate_timer = 0.0
 	_search_timer = 0.0
@@ -256,6 +343,22 @@ func _set_state(new_state: int) -> void:
 	_player_detected = false
 	if new_state == State.APPROACH:
 		_player_detected = true
+
+	# Play corresponding animation for state
+	match new_state:
+		State.IDLE:
+			_play_animation("idle", 0.2, 1.0)
+		State.PATROL:
+			_play_animation("patrol", 0.2, 1.0)
+		State.INVESTIGATE:
+			_play_animation("patrol", 0.2, 1.2)
+		State.APPROACH:
+			_play_animation("approach", 0.15, 1.0)
+		State.SEARCH:
+			_play_animation("search", 0.2, 1.0)
+		State.RELOCATE:
+			_play_animation("relocate", 0.1, 1.0)
+
 	state_changed.emit(old, new_state)
 	# Fire stinger on first detection.
 	if new_state == State.APPROACH and _stinger_system != null:
@@ -279,11 +382,17 @@ func get_state_name() -> String:
 
 func _process_patrol(delta: float) -> void:
 	if patrol_points.is_empty():
-		return
-	var target := patrol_points[_current_patrol_index]
-	_move_toward(target, PATROL_SPEED, delta)
-	if global_position.distance_to(target) < 0.5:
-		_current_patrol_index = (_current_patrol_index + 1) % patrol_points.size()
+		# A Suit with no route has nowhere to walk. Idling keeps the legs from marching
+		# against a body that is standing still; it still sees and hears while it waits.
+		_play_animation("idle", 0.2, 1.0)
+	else:
+		# A route can arrive after the suit spawned without one, and walking is the clip as
+		# well as the movement, so it is requested here and not only on entering PATROL.
+		_play_animation("patrol", 0.2, 1.0)
+		var target := patrol_points[_current_patrol_index]
+		_move_toward(target, PATROL_SPEED, delta)
+		if global_position.distance_to(target) < 0.5:
+			_current_patrol_index = (_current_patrol_index + 1) % patrol_points.size()
 	# Detection check.
 	if _check_detection(DETECTION_RANGE_PATROL):
 		_detection_timer += delta
@@ -301,9 +410,11 @@ func _process_investigate(delta: float) -> void:
 	# Move to investigation point, then wait.
 	var dist := global_position.distance_to(_investigate_position)
 	if dist > 0.5:
+		_play_animation("patrol", 0.2, 1.2)
 		_move_toward(_investigate_position, INVESTIGATE_SPEED, delta)
 	else:
 		# Arrived — wait 10 seconds, listening.
+		_play_animation("search", 0.2, 1.0)
 		_investigate_timer += delta
 		# Detection check while investigating has wider range.
 		if _check_detection(DETECTION_RANGE_INVESTIGATE):
@@ -359,12 +470,16 @@ func _process_search(delta: float) -> void:
 			_detection_timer = 0.0
 		# Wander toward last known position, then patrol points.
 		if global_position.distance_to(_last_known_player_pos) > 1.0:
+			_play_animation("patrol", 0.2, 1.0)
 			_move_toward(_last_known_player_pos, SEARCH_SPEED, delta)
 		elif not patrol_points.is_empty():
 			var wp := patrol_points[_current_patrol_index]
+			_play_animation("patrol", 0.2, 1.0)
 			_move_toward(wp, SEARCH_SPEED, delta)
 			if global_position.distance_to(wp) < 0.5:
 				_current_patrol_index = (_current_patrol_index + 1) % patrol_points.size()
+		else:
+			_play_animation("search", 0.2, 1.0)
 	else:
 		# Search expired — return to patrol.
 		_set_state(State.PATROL)
@@ -565,10 +680,29 @@ func _move_toward(target: Vector3, speed: float, delta: float) -> void:
 		return
 	var dir := to_target.normalized()
 
+	# Face the direction of travel (smooth rotation), and pivot on the spot when the heading
+	# delta is wide enough for the one-shot turn clip.
+	var target_angle := atan2(-dir.x, -dir.z)
+	var current_angle := rotation.y
+	var heading_delta := wrapf(target_angle - current_angle, -PI, PI)
+	# The pivot plays in place: advancing through the corner while the clip runs reads as
+	# sliding. The clip's end hands the walk clip back in _on_animation_finished; the hold is
+	# a fallback for an AnimationPlayer that never reports it (stopped, paused, freed).
+	if not _turning and absf(heading_delta) > TURN_ANGLE_THRESHOLD \
+			and _anim_player != null and _anim_player.has_animation("turn"):
+		_turning = true
+		_turn_hold_left = _anim_player.get_animation("turn").length + 0.1
+		_play_animation("turn", 0.1, 1.0)
+	elif _turning:
+		_turn_hold_left -= delta
+		if _turn_hold_left <= 0.0:
+			_end_turn()
+
 	# APPROACH stutter (GDD: 1-2 frame position jump, "as if dropping
 	# frames"). Every 0.7-1.5s the suit jumps slightly ahead and freezes
 	# for a couple of frames. Other states walk smoothly.
-	if _state == State.APPROACH:
+	# The stutter belongs to walking: a pivot neither jumps nor consumes the pending one.
+	if _state == State.APPROACH and not _turning:
 		_stutter_timer -= delta
 		if _stutter_freeze > 0.0:
 			_stutter_freeze -= delta
@@ -579,16 +713,13 @@ func _move_toward(target: Vector3, speed: float, delta: float) -> void:
 			global_position += dir * speed * 0.1
 			return
 
-	# Smooth, human walk — never robotic, never running.
-	var move := dir * speed * delta
-	if move.length() > dist:
-		move = to_target
-	global_position += move
-	# Face the direction of movement (smooth rotation).
-	if dir.length() > 0.01:
-		var target_angle := atan2(-dir.x, -dir.z)
-		var current_angle := rotation.y
-		global_rotation.y = lerp_angle(current_angle, target_angle, delta * 5.0)
+	if not _turning:
+		# Smooth, human walk — never robotic, never running.
+		var move := dir * speed * delta
+		if move.length() > dist:
+			move = to_target
+		global_position += move
+	global_rotation.y = lerp_angle(current_angle, target_angle, delta * 5.0)
 
 
 ## ─── Radio Proximity (signal spikes, static intensifies) ───────────────
@@ -637,19 +768,141 @@ func spawn_at(position_index: int = -1) -> void:
 	elif not patrol_points.is_empty():
 		global_position = patrol_points[0]
 	_active = true
+	# A respawned suit is visible again even if its despawn clip was still playing.
+	_despawning = false
+	_free_after_despawn = false
+	visible = true
 	_set_state(State.PATROL)
 
 
 ## Despawn this suit (Phase 4: no suits).
-func despawn() -> void:
+## `free_after` retires the suit outright: it frees itself when the clip ends, so the exit
+## clip is seen instead of the node vanishing the same frame it starts.
+func despawn(free_after: bool = false) -> void:
 	_active = false
 	_entity_nearby = false
 	_player_detected = false
+	# Go through _set_state so listeners hear the IDLE transition; a direct write left
+	# every subscriber believing the suit was still in its previous state.
 	_set_state(State.IDLE)
+	_despawning = true
+	_free_after_despawn = free_after
+	_play_animation("despawn", 0.1, 1.0)
 	if _dread_composure != null:
 		_dread_composure.entity_nearby = false
 		_dread_composure.hiding_detected = false
-	visible = false
+	# Hide only once the clip has played; without a player to hide for, hide now.
+	if _anim_player == null or not _anim_player.is_playing():
+		_despawning = false
+		visible = false
+		if _free_after_despawn:
+			queue_free()
+
+
+## The clip a walking state resumes with when a one-shot ends. The pivot only ever starts
+## from _move_toward, and APPROACH never requests a clip on its own.
+func _walk_clip_name(state_id: int) -> String:
+	match state_id:
+		State.APPROACH:
+			return "approach"
+		State.PATROL, State.INVESTIGATE, State.SEARCH:
+			return "patrol"
+		_:
+			return "idle"
+
+
+## Playback rate of the walking clip: INVESTIGATE covers ground 20% faster than PATROL.
+func _walk_clip_speed(state_id: int) -> float:
+	return 1.2 if state_id == State.INVESTIGATE else 1.0
+
+
+## Ends a pivot: ownership clears and the state's walk clip resumes.
+func _end_turn() -> void:
+	if not _turning:
+		return
+	_turning = false
+	_turn_hold_left = 0.0
+	_play_animation(_walk_clip_name(_state), 0.2, _walk_clip_speed(_state))
+
+
+## One-shot clips announce their end here; the turn hand-back and the despawn hide hang off it.
+func _on_animation_finished(anim_name: StringName) -> void:
+	if anim_name == "turn":
+		# The clip is never queued, so this handler is the only place a pivot ends: it clears
+		# ownership and hands control back to the walk clip the state uses.
+		_end_turn()
+	elif anim_name == "despawn" and _despawning:
+		_despawning = false
+		visible = false
+		if _free_after_despawn:
+			queue_free()
+
+
+## ─── Head/Torso Tracking & LOD (DEA-180) ────────────────────────────────
+
+
+func _update_head_torso_tracking(delta: float) -> void:
+	var should_track: bool = false
+	if _player != null and is_instance_valid(_player):
+		if _state == State.APPROACH or _player_detected:
+			should_track = true
+		elif _state == State.INVESTIGATE and _is_player_visible():
+			should_track = true
+
+	if should_track and _neck_node != null:
+		var target_pos := _get_player_pos() + Vector3(0.0, 1.4, 0.0)
+		var to_target := target_pos - _neck_node.global_position
+		if to_target.length_squared() > 0.01:
+			# The rig is authored facing +Z and corrected to face the body's -Z, so the head's
+			# own +Z is the front to aim and yaw is measured from -Z. atan2(x, -z) mirrored
+			# the neck the wrong way for a target off to the side.
+			var local_dir: Vector3 = global_transform.basis.inverse() * to_target.normalized()
+			var target_yaw := atan2(-local_dir.x, -local_dir.z)
+			var target_pitch := -asin(clamp(local_dir.y, -1.0, 1.0))
+
+			# Uncanny clamp limits: head/neck turns up to 65 deg yaw, 30 deg pitch
+			target_yaw = clamp(target_yaw, -deg_to_rad(65.0), deg_to_rad(65.0))
+			target_pitch = clamp(target_pitch, -deg_to_rad(30.0), deg_to_rad(30.0))
+
+			_head_tracking_rot.y = lerp_angle(_head_tracking_rot.y, target_yaw, delta * 6.0)
+			_head_tracking_rot.x = lerp_angle(_head_tracking_rot.x, target_pitch, delta * 6.0)
+	else:
+		_head_tracking_rot.y = lerp_angle(_head_tracking_rot.y, 0.0, delta * 4.0)
+		_head_tracking_rot.x = lerp_angle(_head_tracking_rot.x, 0.0, delta * 4.0)
+
+	if _neck_node != null:
+		# The Neck joint is the one joint no clip keys (the clips animate the Head below it),
+		# so it is the only place head tracking can live without a clip overwriting it.
+		_neck_node.rotation.y = _head_tracking_rot.y
+		_neck_node.rotation.x = _head_tracking_rot.x
+
+
+func _update_lod(_delta: float) -> void:
+	if _player == null or not is_instance_valid(_player):
+		return
+	var dist := global_position.distance_to(_get_player_pos())
+	var should_be_far: bool = dist >= LOD_FAR_DISTANCE
+	if should_be_far != _is_far_lod:
+		_is_far_lod = should_be_far
+		if _tie_mesh != null and is_instance_valid(_tie_mesh):
+			_tie_mesh.visible = not _is_far_lod
+
+
+## Public helper for testing animation playback (DEA-180)
+func get_current_animation() -> String:
+	if _anim_player != null and _anim_player.is_playing():
+		return _anim_player.current_animation
+	return ""
+
+
+## Public helper for checking LOD state (DEA-180)
+func is_far_lod() -> bool:
+	return _is_far_lod
+
+
+## Public helper for getting head tracking rotation (DEA-180)
+func get_head_tracking_rotation() -> Vector3:
+	return _head_tracking_rot
 
 
 ## Set dread composure reference (for testing / manual wiring).
@@ -706,6 +959,17 @@ func force_state(new_state: int) -> void:
 ## Set patrol waypoints.
 func set_patrol_points(points: Array[Vector3]) -> void:
 	patrol_points = points
+	# The index was measured against the route that is being replaced: index 1 on a two-point
+	# route is still 1 when a one-point route arrives, and the next _process_patrol() would
+	# index past the end and abort. Keep a valid index, and a route-less suit starts over.
+	if patrol_points.is_empty():
+		_current_patrol_index = 0
+	else:
+		_current_patrol_index = clampi(_current_patrol_index, 0, patrol_points.size() - 1)
+	# A Suit that spawned without a route idles. A route arriving later has to hand it back
+	# to PATROL, or it keeps the idle clip with somewhere to walk.
+	if not points.is_empty() and _active and not _despawning and _state == State.IDLE:
+		_set_state(State.PATROL)
 
 
 ## Set safe areas for relocation.
