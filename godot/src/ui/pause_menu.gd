@@ -7,7 +7,9 @@ extends CanvasLayer
 const MENU_SCENE := "res://scenes/main_menu.tscn"
 const SETTINGS_SCENE := "res://scenes/settings.tscn"
 const ControlsRemapScreen := preload("res://src/ui/controls_remap_screen.gd")
+const NIGHT_SHIFT_SCENE := "res://scenes/night_shift.tscn"
 const REFUSAL_SECONDS := 2.5
+const SaveLoadScreen := preload("res://src/ui/save_load_screen.gd")
 
 var is_open: bool = false
 
@@ -15,13 +17,29 @@ var _panel: PanelContainer
 var _status: Label
 var _refusal_timer: float = 0.0
 var _controls_screen: Control
+var _save_load_screen: SaveLoadScreen = null
+
+# Last scene path requested via _request_scene. Read by tests; not part of
+# runtime behavior.
+var last_requested_scene: String = ""
+# Callable that performs the actual scene swap. Bound to the SceneTree in
+# _ready; tests may shadow it with a stub to avoid a real scene change.
+var request_scene_change: Callable = Callable()
 
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	layer = 100
+	if request_scene_change.is_null() or not request_scene_change.is_valid():
+		request_scene_change = Callable(get_tree(), "change_scene_to_file")
 	_build()
 	hide()
+
+
+func _request_scene(scene_path: String) -> void:
+	last_requested_scene = scene_path
+	if request_scene_change.is_valid():
+		request_scene_change.call(scene_path)
 
 
 func _build() -> void:
@@ -55,6 +73,7 @@ func _build() -> void:
 	vbox.add_child(_status)
 
 	_button(vbox, "RESUME", resume)
+	_button(vbox, "LOAD", _open_load)
 	_button(vbox, "SETTINGS", _open_settings)
 	_button(vbox, "CONTROLS", _open_controls)
 	_button(vbox, "QUIT TO TITLE", _quit_to_title)
@@ -100,6 +119,7 @@ func try_pause() -> bool:
 func resume() -> void:
 	is_open = false
 	_close_controls()
+	_close_load_browser()
 	get_tree().paused = false
 	hide()
 
@@ -138,6 +158,58 @@ func _close_controls() -> void:
 	if _controls_screen != null and is_instance_valid(_controls_screen):
 		_controls_screen.queue_free()
 	_controls_screen = null
+func _open_load() -> void:
+	if _save_load_screen == null:
+		_save_load_screen = SaveLoadScreen.new()
+		_save_load_screen.set_mode(SaveLoadScreen.Mode.LOAD)
+		_save_load_screen.closed.connect(_on_save_load_closed)
+		_save_load_screen.load_requested.connect(_on_load_requested)
+		add_child(_save_load_screen)
+	else:
+		_save_load_screen.set_mode(SaveLoadScreen.Mode.LOAD)
+		_save_load_screen.show()
+		_save_load_screen.refresh()
+	_save_load_screen.grab_default_focus()
+	_panel.hide()
+
+
+## Reset the browser so every resume path — Back, pause key, or a successful
+## load — leaves the autoloaded menu ready for a clean next pause.
+func _close_load_browser() -> void:
+	if _save_load_screen != null:
+		_save_load_screen.cancel_pending_confirmation()
+		_save_load_screen.hide()
+	_panel.show()
+
+
+func _on_save_load_closed() -> void:
+	_close_load_browser()
+
+
+func _on_load_requested(slot_id: String) -> void:
+	# Decide from the side-effect-free metadata first: load_slot applies the
+	# moral-choice and CRT state, so a refused tape must never reach it.
+	var decision := SaveManager.inspect_slot_for_load(slot_id)
+	if not bool(decision["resumable"]):
+		# Unreadable or unresumable tape: keep the browser open and surface
+		# the refusal instead of dropping the player into a fresh shift.
+		if _save_load_screen != null:
+			_save_load_screen.show_load_error(str(decision["message"]))
+		return
+	var save_data := SaveManager.load_slot(slot_id)
+	if save_data == null:
+		if _save_load_screen != null:
+			_save_load_screen.show_load_error()
+		return
+	resume()
+	if ShiftController.is_shift_active():
+		ShiftController.reset_shift()
+	ShiftController.start_shift(maxi(1, int(save_data.shift)))
+	# start_shift pins the phase to the station default; restoring the saved
+	# phase after it means later-phase saves resume in their own phase.
+	PhaseManager.set_phase(save_data.phase)
+	SaveManager.apply_loaded_game_state(save_data)
+	_request_scene(NIGHT_SHIFT_SCENE)
 
 
 func _quit_to_title() -> void:

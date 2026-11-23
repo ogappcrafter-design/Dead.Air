@@ -181,7 +181,7 @@ func is_shift_implemented(shift_number: int) -> bool:
 # ─── Shift Lifecycle ─────────────────────────────────────────────────────────
 
 
-func start_shift(shift_number: int = 1) -> void:
+func start_shift(shift_number: int = 1, reset_playtime: bool = true) -> void:
 	if _shift_active:
 		push_warning("ShiftController: shift already active (shift %d)" % _current_shift)
 		return
@@ -193,6 +193,12 @@ func start_shift(shift_number: int = 1) -> void:
 	_current_shift = shift_number
 	_shift_active = true
 	_call_count = 0
+
+	# A new run starts from zero playtime; menu time between runs (a stale
+	# active shift after Quit to Title) must not leak into the next save.
+	# Advancing within a run keeps the time the player already served.
+	if reset_playtime and SaveManager:
+		SaveManager.tracked_playtime_seconds = 0.0
 
 	var data: Dictionary = get_shift_data(shift_number)
 
@@ -279,7 +285,7 @@ func reset_shift() -> void:
 func advance_to_next_shift() -> void:
 	if _shift_active:
 		_complete_shift()
-	start_shift(_current_shift + 1)
+	start_shift(_current_shift + 1, false)
 
 
 # ─── Phase Transitions (internal) ────────────────────────────────────────────

@@ -384,11 +384,12 @@ func _do_save() -> void:
 		office_saved.emit()
 		return
 	var data := SaveData.new()
-	data.phase = 3
+	data.phase = PhaseEnums.Phase.PHASE_3_JOURNEY
 	if _player:
 		data.position_x = _player.global_position.x
 		data.position_y = _player.global_position.y
 		data.position_z = _player.global_position.z
+		data.has_position = true
 	var ok: bool = save_mgr.save_game(OFFICE_SAVE_TAPE, data)
 	if ok:
 		_saved_here = true

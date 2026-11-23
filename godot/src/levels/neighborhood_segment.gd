@@ -435,7 +435,7 @@ func _do_save() -> void:
 	if _saved_tapes.has(SHED_SAVE_TAPE_ID):
 		return
 	var data := SaveData.new()
-	data.phase = 3
+	data.phase = PhaseEnums.Phase.PHASE_3_JOURNEY
 	data.shift = 0
 	data.composure = _dc.composure if _dc and "composure" in _dc else 100.0
 	data.dread = _dc.dread if _dc and "dread" in _dc else 0.0
@@ -443,6 +443,7 @@ func _do_save() -> void:
 		data.position_x = _player.global_position.x
 		data.position_y = _player.global_position.y
 		data.position_z = _player.global_position.z
+		data.has_position = true
 	var ok: bool = save_mgr.save_game(SHED_SAVE_TAPE_ID, data)
 	if ok:
 		_saved_tapes[SHED_SAVE_TAPE_ID] = true

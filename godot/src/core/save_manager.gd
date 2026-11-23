@@ -11,14 +11,43 @@ signal load_failed(tape_id: String, reason: String)
 signal corruption_detected(tape_id: String)
 
 ## Save file extension and prefix
-const SAVE_DIR := "user://saves/"
+const DEFAULT_SAVE_DIR := "user://saves/"
+## Writable so the test suite can point the save system somewhere other
+## than the player profile; production never reassigns it.
+static var SAVE_DIR := DEFAULT_SAVE_DIR
+const TEST_SAVE_DIR := "user://test_saves/"
 const SAVE_PREFIX := "tape_"
 const SAVE_SUFFIX := "_save.json"
 const CHECKSUM_FIELD := "_checksum"
 const CORRUPTION_MARKER := "THIS TAPE IS DAMAGED"
 
+## DEA-192: 3-slot save management
+const MAX_SLOTS := 3
+const SLOT_IDS: Array[String] = ["slot_1", "slot_2", "slot_3"]
+
+## Shown when a tape cannot be read at all; shared by every load surface.
+const UNREADABLE_TAPE_MESSAGE := "TAPE UNREADABLE — select another tape."
+
 ## All save slots indexed by tape_id
 var _save_index: Dictionary = {}
+
+## Elapsed playtime of the current run, accumulated while a shift is active
+## and seeded from a loaded save so consecutive saves compound.
+var tracked_playtime_seconds: float = 0.0
+
+## Shift save availability, driven by ShiftController.start_shift() from the
+## shift's save_unlocked flag. False until a saving-enabled shift starts.
+var _save_available := false
+
+## Loaded snapshot staged for the gameplay scene (player position, radio
+## state). Set by apply_loaded_game_state, claimed once by the scene that
+## resumes the save.
+var _pending_scene_state: SaveData = null
+
+
+func _process(delta: float) -> void:
+	if ShiftController != null and ShiftController.is_shift_active():
+		tracked_playtime_seconds += delta
 
 
 func _ready() -> void:
@@ -34,6 +63,235 @@ func _ensure_save_directory() -> void:
 ## Get the full file path for a given tape_id.
 func get_save_path(tape_id: String) -> String:
 	return SAVE_DIR + SAVE_PREFIX + tape_id + SAVE_SUFFIX
+
+
+## Mirrors the active shift's save_unlocked flag (set by ShiftController).
+func set_save_available(available: bool) -> void:
+	_save_available = available
+
+
+## Whether the active shift permits saving, ignoring the safe-room rule.
+## Used by checkpoint surfaces like the post-shift summary, which is itself
+## the save point.
+func can_save_checkpoint() -> bool:
+	if not _save_available:
+		return false
+	if PhaseManager != null and not PhaseManager.can_save():
+		return false
+	return true
+
+
+## Check whether saving is allowed (safe room or accessibility override).
+func can_save() -> bool:
+	if AccessibilityManager != null and AccessibilityManager.pause_anywhere:
+		return true
+	if not can_save_checkpoint():
+		return false
+	var dread: DreadComposure = DreadComposure.instance
+	if dread != null:
+		return dread.in_safe_room
+	return false
+
+
+## Save game state to a specific slot (slot_1, slot_2, slot_3).
+## Unlike save_game(), save_slot() explicitly permits overwriting existing slot saves.
+func save_slot(slot_id: String, data: SaveData) -> bool:
+	if slot_id.is_empty():
+		save_failed.emit(slot_id, "slot_id is empty")
+		return false
+
+	data.tape_id = slot_id
+	data.stamp_timestamp()
+
+	# DEA-145: Sync live CRT degradation level into the save data
+	if CRTDegradation:
+		data.crt_degradation = CRTDegradation.get_permanent_degradation()
+
+	# Build save dict once, compute checksum on un-indented stringification
+	var save_dict := data.to_dict()
+	# DEA-98: Sync live MoralChoiceTracker state into the save dict
+	if MoralChoiceTracker:
+		MoralChoiceTracker.save_to(save_dict)
+	var normalized = JSON.parse_string(JSON.stringify(save_dict))
+	if typeof(normalized) != TYPE_DICTIONARY:
+		save_failed.emit(slot_id, "save dict failed to serialize")
+		return false
+	var checksum := _compute_checksum(JSON.stringify(normalized))
+	save_dict[CHECKSUM_FIELD] = checksum
+
+	var full_json := JSON.stringify(save_dict, "\t")
+	var path := get_save_path(slot_id)
+
+	# Write to a temporary file first: opening the destination with WRITE
+	# truncates an occupied slot before the replacement is known-good, so a
+	# failed write could destroy the previous save. The old save is also moved
+	# to a backup before the replacement lands and restored if the move fails —
+	# Godot's Windows rename deletes the destination before moving
+	# (DirAccessWindows::rename: remove(new_path) then MoveFileW), so renaming
+	# straight over the destination would leave nothing behind on a failed move.
+	var tmp_path := path + ".tmp"
+	var file := FileAccess.open(tmp_path, FileAccess.WRITE)
+	if file == null:
+		save_failed.emit(
+			slot_id, "cannot open file: %s (error: %d)" % [tmp_path, FileAccess.get_open_error()]
+		)
+		return false
+
+	file.store_string(full_json)
+	var write_error := file.get_error()
+	file.close()
+	if write_error != OK:
+		DirAccess.remove_absolute(tmp_path)
+		save_failed.emit(slot_id, "write failed (error: %d)" % write_error)
+		return false
+
+	var backup_path := path + ".bak"
+	var had_previous := FileAccess.file_exists(path)
+	if had_previous and DirAccess.rename_absolute(path, backup_path) != OK:
+		DirAccess.remove_absolute(tmp_path)
+		save_failed.emit(slot_id, "cannot back up the previous save before replacing it")
+		return false
+
+	if DirAccess.rename_absolute(tmp_path, path) != OK:
+		DirAccess.remove_absolute(tmp_path)
+		if had_previous:
+			DirAccess.rename_absolute(backup_path, path)
+		save_failed.emit(slot_id, "cannot replace file: %s" % path)
+		return false
+
+	if had_previous:
+		DirAccess.remove_absolute(backup_path)
+
+	_save_index[slot_id] = path
+	save_completed.emit(slot_id)
+	return true
+
+
+## Load a save from a slot.
+func load_slot(slot_id: String) -> SaveData:
+	return load_game(slot_id)
+
+
+## Delete a slot save.
+func delete_slot(slot_id: String) -> bool:
+	return delete_save(slot_id)
+
+
+## Check if a slot exists and has a save.
+func has_slot(slot_id: String) -> bool:
+	var path := get_save_path(slot_id)
+	return FileAccess.file_exists(path) and _save_index.has(slot_id)
+
+
+## Get slot metadata without applying side-effects (e.g. not mutating MoralChoiceTracker or CRTDegradation).
+func get_slot_metadata(slot_id: String) -> Dictionary:
+	var path := get_save_path(slot_id)
+	if not FileAccess.file_exists(path):
+		return {
+			"exists": false,
+			"slot_id": slot_id,
+			"corrupted": false,
+		}
+
+	var file := FileAccess.open(path, FileAccess.READ)
+	if file == null:
+		return {
+			"exists": false,
+			"slot_id": slot_id,
+			"corrupted": true,
+		}
+
+	var json_string := file.get_as_text()
+	file.close()
+
+	var parsed = JSON.parse_string(json_string)
+	if typeof(parsed) != TYPE_DICTIONARY:
+		return {
+			"exists": true,
+			"slot_id": slot_id,
+			"corrupted": true,
+		}
+
+	var save_dict: Dictionary = parsed
+	var stored_checksum: String = save_dict.get(CHECKSUM_FIELD, "")
+	if stored_checksum.is_empty():
+		return {
+			"exists": true,
+			"slot_id": slot_id,
+			"corrupted": true,
+		}
+
+	var data_only := save_dict.duplicate()
+	data_only.erase(CHECKSUM_FIELD)
+	var recomputed := _compute_checksum(JSON.stringify(data_only))
+	if stored_checksum != recomputed:
+		return {
+			"exists": true,
+			"slot_id": slot_id,
+			"corrupted": true,
+		}
+
+	var ending_marker: String = ""
+	var ending_flags = save_dict.get("ending_flags", {})
+	if typeof(ending_flags) == TYPE_DICTIONARY and ending_flags.has("marker"):
+		ending_marker = str(ending_flags["marker"])
+
+	return {
+		"exists": true,
+		"slot_id": slot_id,
+		"timestamp": str(save_dict.get("save_timestamp", "")),
+		"shift": int(save_dict.get("shift", 1)),
+		"phase": int(save_dict.get("phase", 1)),
+		"ending_marker": ending_marker,
+		"playtime_seconds": float(save_dict.get("playtime_seconds", 0.0)),
+		"dread": float(save_dict.get("dread", 0.0)),
+		"composure": float(save_dict.get("composure", 100.0)),
+		"corrupted": false,
+	}
+
+
+## Whether a tape in this phase has a resume path. Only the Station does:
+## the Journey and the Descent have no segment-restore flow yet, and the
+## Break is a linear walk with no resumable scene, so a tape recorded there
+## would open the station's room. Legacy tapes that stored a 1-based journey
+## id (3) land on the Descent entry and are refused with it.
+func is_resumable_phase(phase: int) -> bool:
+	return phase == PhaseEnums.Phase.PHASE_1_STATION
+
+
+## The refusal a load surface shows for a tape in this phase, worded per
+## phase so a Break, Journey or Descent recording explains itself.
+func get_load_refusal_message(phase: int) -> String:
+	match phase:
+		PhaseEnums.Phase.PHASE_2_BREAK:
+			return "BREAK RECORDING — the Break has no resumable scene. The tape is kept."
+		PhaseEnums.Phase.PHASE_3_JOURNEY:
+			return "JOURNEY CHECKPOINT — resuming journey locations is not supported yet. The tape is kept."
+		PhaseEnums.Phase.PHASE_4_DESCENT:
+			return "DESCENT RECORDING — the final act has no resume path. The tape is kept."
+	return "UNSUPPORTED TAPE — this recording cannot be resumed. The tape is kept."
+
+
+## Decide whether a slot can be loaded without applying any of its state: the
+## phase comes from the side-effect-free metadata read, so a refused tape never
+## mutates the live run. Returns {resumable, unreadable, message}; the message
+## is what a load surface shows on refusal.
+func inspect_slot_for_load(slot_id: String) -> Dictionary:
+	var meta := get_slot_metadata(slot_id)
+	if not bool(meta.get("exists", false)) or bool(meta.get("corrupted", false)):
+		return {
+			"resumable": false,
+			"unreadable": true,
+			"message": UNREADABLE_TAPE_MESSAGE,
+		}
+	var phase := int(meta.get("phase", 1))
+	if is_resumable_phase(phase):
+		return {"resumable": true, "unreadable": false, "message": ""}
+	return {
+		"resumable": false,
+		"unreadable": false,
+		"message": get_load_refusal_message(phase),
+	}
 
 
 ## Save game state to a cassette tape slot.
@@ -173,10 +431,48 @@ func delete_all_saves() -> int:
 	return count
 
 
-## Reset all in-memory save state for tests: delete every save on disk and
-## clear the index.
+## Apply a loaded save to the live autoload state (stress meters, playtime)
+## and stage the scene-level snapshot for the gameplay scene to consume on
+## its next _ready. Called by both load paths (MainMenu and PauseMenu).
+func apply_loaded_game_state(save_data: SaveData) -> void:
+	if save_data == null:
+		return
+	tracked_playtime_seconds = save_data.playtime_seconds
+	var dread: DreadComposure = DreadComposure.instance
+	if dread != null:
+		dread.set_dread(save_data.dread)
+		dread.set_composure(save_data.composure)
+	_pending_scene_state = save_data
+
+
+## Drop a staged snapshot whose scene request never landed, so a later
+## New Game cannot resume from a tape the player never loaded.
+func clear_pending_scene_state() -> void:
+	_pending_scene_state = null
+
+
+## Claim the staged scene-level snapshot (position, radio) once; null when
+## nothing is pending.
+func consume_pending_scene_state() -> SaveData:
+	var staged := _pending_scene_state
+	_pending_scene_state = null
+	return staged
+
+
+## Reset all in-memory save state for tests: delete every save on disk,
+## clear the index, and restore defaults.
 func _reset_for_testing() -> void:
+	# The suite must not read, truncate or delete the player's real saves, so
+	# the reset sends every save path through a scratch directory first.
+	SAVE_DIR = TEST_SAVE_DIR
+	# The scratch directory does not exist yet — _ready only ever created the
+	# production root — and without it every save_slot call fails to open its
+	# temp file.
+	_ensure_save_directory()
 	delete_all_saves()
+	_pending_scene_state = null
+	tracked_playtime_seconds = 0.0
+	_save_available = false
 
 
 ## Rebuild the save index from files on disk.

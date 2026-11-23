@@ -26,6 +26,7 @@ func _run_tests() -> void:
 	var test_suites: Array = [
 		["SaveData", "res://tests/test_save_data.gd"],
 		["SaveManager", "res://tests/test_save_manager.gd"],
+		["SaveRitual", "res://tests/test_save_ritual.gd"],
 		["RadioTuner", "res://tests/test_radio_tuner.gd"],
 		["DreadComposure", "res://tests/test_dread_composure.gd"],
 		["DreadAudio", "res://tests/test_dread_audio.gd"],

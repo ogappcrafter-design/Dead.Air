@@ -16,6 +16,7 @@ func run_tests() -> Dictionary:
 	results["test_resume_clears_pause"] = test_resume_clears_pause()
 	results["test_settings_expose_every_option"] = test_settings_expose_every_option()
 	results["test_settings_reflects_live_state"] = test_settings_reflects_live_state()
+	results["test_refused_journey_load_leaves_state"] = test_refused_journey_load_leaves_state()
 	return results
 
 
@@ -87,6 +88,40 @@ func test_resume_clears_pause() -> bool:
 	menu.queue_free()
 	_reset_state()
 	return (not paused) and (not open)
+
+
+## A tape in a phase with no resume path must be refused before any of its
+## state is applied, so the live run keeps its own moral choices and CRT level.
+func test_refused_journey_load_leaves_state() -> bool:
+	_reset_state()
+	SaveManager._reset_for_testing()
+	SaveManager.set_save_available(true)
+	MoralChoiceTracker.reset()
+	CRTDegradation.reset()
+	MoralChoiceTracker.set_empathy_score(77)
+	CRTDegradation.set_degradation(0.6)
+	var sd := SaveData.new()
+	sd.phase = PhaseEnums.Phase.PHASE_3_JOURNEY
+	var wrote: bool = SaveManager.save_slot("slot_1", sd)
+	var decision := SaveManager.inspect_slot_for_load("slot_1")
+	# The refusal must come from the phase, not from a missing tape: otherwise
+	# this test would pass with nothing written and the trackers never at risk.
+	var refused_for_phase: bool = (
+		not bool(decision["resumable"]) and not bool(decision["unreadable"])
+	)
+	MoralChoiceTracker.reset()
+	CRTDegradation.reset()
+
+	var menu := _new_pause()
+	menu._on_load_requested("slot_1")
+	var untouched: bool = (
+		MoralChoiceTracker.get_empathy_score() == 0
+		and is_zero_approx(CRTDegradation.get_permanent_degradation())
+		and menu.last_requested_scene.is_empty()
+	)
+	menu.queue_free()
+	SaveManager._reset_for_testing()
+	return wrote and refused_for_phase and untouched
 
 
 func test_settings_expose_every_option() -> bool:

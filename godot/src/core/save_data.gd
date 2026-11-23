@@ -7,6 +7,10 @@ extends Resource
 # --- Progression ---
 @export var phase: int = 1
 @export var shift: int = 1
+## True when this snapshot actually captured a world position. Tapes that
+## store only station/progress state leave it false so loading does not
+## teleport the player to the origin.
+@export var has_position: bool = false
 @export var position_x: float = 0.0
 @export var position_y: float = 0.0
 @export var position_z: float = 0.0
@@ -67,9 +71,14 @@ static func from_dict(data: Dictionary) -> SaveData:
 	var sd := SaveData.new()
 	sd.phase = data.get("phase", 1)
 	sd.shift = data.get("shift", 1)
+	sd.has_position = data.get("has_position", false)
 	sd.position_x = data.get("position_x", 0.0)
 	sd.position_y = data.get("position_y", 0.0)
 	sd.position_z = data.get("position_z", 0.0)
+	# Older saves captured positions before the flag existed, so nonzero
+	# coordinates mean a real captured position even when the key is absent.
+	if not sd.has_position and (sd.position_x != 0.0 or sd.position_y != 0.0 or sd.position_z != 0.0):
+		sd.has_position = true
 	sd.camera_zone = data.get("camera_zone", "")
 	sd.radio_band = data.get("radio_band", "")
 	sd.radio_signal = data.get("radio_signal", 80.0)
@@ -105,6 +114,7 @@ func to_dict() -> Dictionary:
 	return {
 		"phase": phase,
 		"shift": shift,
+		"has_position": has_position,
 		"position_x": position_x,
 		"position_y": position_y,
 		"position_z": position_z,
@@ -161,6 +171,7 @@ func set_position(pos: Vector3) -> void:
 	position_x = pos.x
 	position_y = pos.y
 	position_z = pos.z
+	has_position = true
 
 
 ## Stamp the save timestamp.

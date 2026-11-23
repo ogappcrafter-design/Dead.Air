@@ -4,6 +4,8 @@
 class_name ShiftSummary
 extends Control
 
+const SaveLoadScreen := preload("res://src/ui/save_load_screen.gd")
+
 signal save_requested
 signal continue_pressed
 
@@ -21,6 +23,7 @@ var _calls_completed: int = 0
 var _tapes_collected: int = 0
 var _bands_unlocked: int = 0
 var _save_done: bool = false
+var _save_load_screen: SaveLoadScreen = null
 
 
 func _ready() -> void:
@@ -164,33 +167,46 @@ func _style_button(btn: Button) -> void:
 func _on_save_yes() -> void:
 	if _save_done:
 		return
-	print("[ShiftSummary] Saving game...")
 	save_requested.emit()
-	# Create save data from current StationState
-	var save_data := SaveData.new()
-	save_data.phase = PhaseManager.get_phase()
-	save_data.shift = StationState.shift_number
-	save_data.callers_helped = _calls_completed
-	save_data.tapes_collected = (
-		TapeInventory.get_collected_tapes()
-		if TapeInventory.has_method("get_collected_tapes")
-		else []
-	)
-	save_data.bands_unlocked = []
-	save_data.stamp_timestamp()
-	var tape_id := "night_%d" % _shift_number
-	var save_ok: bool = SaveManager.save_game(tape_id, save_data)
-	if not save_ok:
-		print("[ShiftSummary] Save FAILED (tape_id=%s) — tape may already be used" % tape_id)
-		_save_yes_button.text = "Save Failed"
-		_save_yes_button.disabled = true
-		_save_no_button.disabled = true
-		_save_done = true
-		return
+	# The summary is the checkpoint: open the slot browser in SAVE mode so the
+	# player records (or overwrites) a numbered slot through the cassette
+	# ritual instead of consuming an unnumbered legacy tape.
+	if _save_load_screen == null:
+		_save_load_screen = SaveLoadScreen.new()
+		_save_load_screen.name = "SlotSaveBrowser"
+		_save_load_screen.enforce_safe_room = false
+		_save_load_screen.closed.connect(_on_save_browser_closed)
+		add_child(_save_load_screen)
+	_save_load_screen.set_mode(SaveLoadScreen.Mode.SAVE)
+	_save_load_screen.refresh()
+	_save_load_screen.show()
+	# The summary is still on screen behind the browser and its buttons stay
+	# pressable by keyboard, so hand focus to the browser and take the summary
+	# controls out of the focus chain until it closes.
+	_save_load_screen.grab_default_focus()
+	_save_yes_button.focus_mode = Control.FOCUS_NONE
+	_save_no_button.focus_mode = Control.FOCUS_NONE
+	if not SaveManager.save_completed.is_connected(_on_slot_save_completed):
+		SaveManager.save_completed.connect(_on_slot_save_completed)
+
+
+func _on_slot_save_completed(_tape_id: String) -> void:
 	_save_done = true
 	_save_yes_button.disabled = true
 	_save_no_button.disabled = true
-	print("[ShiftSummary] Save complete (tape_id=%s)" % tape_id)
+	# save_completed fires inside the slot write, before the ritual ejects, so
+	# hiding here would swallow the ejection. The browser closes itself when its
+	# own ritual ends and reports back through `closed`.
+
+
+func _on_save_browser_closed() -> void:
+	if _save_load_screen != null:
+		_save_load_screen.hide()
+	# A successful save leaves the summary buttons disabled; otherwise the player
+	# gets them back now that the browser is gone.
+	if not _save_done:
+		_save_yes_button.focus_mode = Control.FOCUS_ALL
+		_save_no_button.focus_mode = Control.FOCUS_ALL
 
 
 func _on_save_no() -> void:

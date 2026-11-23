@@ -16,6 +16,7 @@ extends Node
 class_name GameDirector
 
 const InputGlyphs := preload("res://src/ui/input_glyphs.gd")
+const SaveLoadScreen := preload("res://src/ui/save_load_screen.gd")
 
 ## Emitted when all systems are wired and the shift is ready to start.
 signal systems_ready
@@ -40,6 +41,7 @@ var _camera_manager: Node
 # DEA-111: ShiftController autoload (shift data lookup) + TutorialManager
 var _shift_controller: Node
 var _tutorial_manager: Node
+var _save_load_screen: SaveLoadScreen = null
 
 
 func _ready() -> void:
@@ -49,6 +51,7 @@ func _ready() -> void:
 	_tutorial_manager.name = "TutorialManager"
 	add_child(_tutorial_manager)
 	_wire_signals()
+	_apply_loaded_scene_state()
 	_wiring_complete = true
 	systems_ready.emit()
 	print("[GameDirector] All systems wired. Shift %d ready." % _shift_number)
@@ -275,18 +278,73 @@ func _on_interact_performed(target: Node) -> void:
 	# Handle interaction — target.interact() is already called by InteractionRaycast
 	# Check for save cassette via type check
 	if target is CassetteTape:
-		var save_mgr := get_node_or_null("/root/SaveManager")
-		if save_mgr and save_mgr.has_method("save_game"):
-			var tape_id: String = target.get("tape_id") if "tape_id" in target else "auto"
-			var save_data := SaveData.new()
-			save_data.shift = _shift_number
-			save_mgr.save_game(tape_id, save_data)
+		_open_save_room_browser()
 	# Check for tape pickup via type check
 	elif target is TapePickup:
 		# TapePickup handles its own collection
 		# But we can add degradation feedback
 		if _degradation_stub and _degradation_stub.has_method("add_degradation"):
 			_degradation_stub.add_degradation(-0.02)  # collecting tapes reduces degradation
+
+
+## Open the slot browser in SAVE mode: interacting with the save-room
+## cassette no longer writes a bare legacy tape directly — the player picks
+## a numbered slot and the cassette ritual plays.
+func _open_save_room_browser() -> void:
+	if _save_load_screen == null:
+		_save_load_screen = SaveLoadScreen.new()
+		_save_load_screen.name = "SaveRoomBrowser"
+		_save_load_screen.set_mode(SaveLoadScreen.Mode.SAVE)
+		_save_load_screen.closed.connect(_on_save_browser_closed)
+		add_child(_save_load_screen)
+	else:
+		_save_load_screen.set_mode(SaveLoadScreen.Mode.SAVE)
+		_save_load_screen.show()
+	_save_load_screen.refresh()
+
+
+## Hide the save browser when it reports Back, so the full-screen panel does
+## not sit over live gameplay.
+func _on_save_browser_closed() -> void:
+	if _save_load_screen != null:
+		# Back can hide the browser while a confirmation is still armed; drop it so
+		# reopening cannot replay the old callback.
+		_save_load_screen.cancel_pending_confirmation()
+		_save_load_screen.hide()
+
+
+## Apply the staged parts of a loaded save (player position, radio state)
+## once the gameplay scene exists to own them.
+func _apply_loaded_scene_state() -> void:
+	var save_data: SaveData = SaveManager.consume_pending_scene_state()
+	if save_data == null:
+		return
+	# Only a snapshot that actually captured a position may move the player;
+	# a tape that stored progress alone would otherwise teleport it to the
+	# origin. Coordinates stay scene-relative, so the station player takes
+	# the snapshot that belongs to the scene this load flow builds: a Phase 1
+	# position. Journey-segment coordinates (liminal safe rooms) belong to
+	# scenes this flow does not load — the load paths refuse those tapes.
+	var players := get_tree().get_nodes_in_group("player")
+	if (
+		save_data.has_position
+		and save_data.phase == PhaseEnums.Phase.PHASE_1_STATION
+		and not players.is_empty()
+		and players[0] is Node3D
+	):
+		(players[0] as Node3D).global_position = Vector3(
+			save_data.position_x, save_data.position_y, save_data.position_z
+		)
+	if save_data.radio_band.is_empty() or not (_radio_tuner is RadioTuner):
+		return
+	var tuner: RadioTuner = _radio_tuner as RadioTuner
+	if not (save_data.radio_band in tuner.band_config.get_band_names()):
+		return
+	var band: BandData = tuner.band_config.get_band_by_name(save_data.radio_band)
+	BandController.unlock_band(band.id)
+	tuner.set_band(band.id)
+	if save_data.radio_frequency > 0.0:
+		tuner.set_frequency(save_data.radio_frequency)
 
 
 func _on_stub_shift_started(shift_num: int) -> void:

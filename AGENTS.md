@@ -78,7 +78,7 @@ Run the suite only through the runner (single `tests/test_*.gd` files fail at co
 cd godot && /usr/local/bin/godot --headless --path . --script res://tests/test_runner.gd > /tmp/godot_test.log 2>&1
 ```
 
-Exit 1 is expected whenever any test fails; judge by `Total: / Passed: / Failed:`. Baseline after the 2026-11-22 graphics-pack work (klein repaint + PBR maps), plus the DEA-191 ControlsRemap suite: **856 total, 0 failed**.
+Exit 1 is expected whenever any test fails; judge by `Total: / Passed: / Failed:`. Baseline after the DEA-192 save-room-ritual review fixes (SaveRitual suite extended to 24 tests): **884 total, 0 failed**.
 
 Sharp edges that caused the old 26-failure baseline:
 
@@ -87,6 +87,8 @@ Sharp edges that caused the old 26-failure baseline:
 - **`.tres` Colors need `Color(r, g, b, a)`.** The bare `color = 1.0, 0.55, 0.0, 1` form loads silently as black; `band_config.tres` had this bug.
 - **`save_game()` syncs live trackers over `SaveData`** (`CRTDegradation`, `MoralChoiceTracker`), so tests asserting those fields must set the tracker, not just the SaveData field.
 - **`GDScript.new()` + `source_code` needs `reload()`** before `set_script()`, otherwise the node has no methods.
+- **`var x := (dict.get(...) == 1)` fails to compile**: `Dictionary.get()` is Variant, so `:=` cannot infer a type and the suite reports `[SKIP] ... script compilation error` instead of a failure. Type it: `var x: bool = int(dict.get(...)) == 1`.
+- **UI tests must instantiate the `.tscn`, not `Script.new()`**: `main_menu.gd.new()` is a bare `Control` with none of its `PanelCenter/VBox/*` children, so every `@onready` lookup errors and the test fails for the wrong reason. `preload("res://scenes/main_menu.tscn").instantiate()` is the real surface.
 - **Budget the full suite at 1500 s, not 900 s.** Runtime varies enough that a 900 s cap can land it mid-suite (seen in `Phase4Endings`) and a killed run reports no `Total:` line at all, which looks like a hang. A completed run of the same tree finishes well inside 1500 s.
 - **The suite can stall for real, in whichever scene suite it is on** (2026-11-22, DEA-177): output stops mid-suite and the process keeps burning a full core (26 min observed) with no `Total:` line. Seen on the feature branch inside `FMVPlayer` and on pristine `master` inside `Phase3LiminalSpace`, so it is pre-existing and not attributable to one ticket; about half of all runs complete. It is not a buffered log (reproduces under `stdbuf -o0`) and not leftover processes. Retry until a run prints `Total:`; judge a single attempt hung only after the full budget, never by a frozen line count.
 - **A typed parameter cannot receive a freed object.** `func f(z: CameraZone)` raises `SCRIPT ERROR: Invalid type in function ... (previously freed) is not a subclass of the expected argument class` at argument binding, so an `is_instance_valid(z)` guard inside the body never runs. Signal handlers carrying node refs across a scene unload need the parameter untyped (`z`), with the validity check in the body; `camera_manager.gd` is the worked example, pinned by `tests/test_camera_coverage.gd::test_freed_zone_cannot_activate`.

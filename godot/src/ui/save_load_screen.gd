@@ -1,9 +1,14 @@
-## SaveLoadScreen — Visual cassette tape selection screen for save/load.
-## Shows cassette tapes (not file names) per DEA-153 acceptance criterion 8.
-## Supports both save mode (select a collected tape to save) and load mode (select a used tape to load).
-## See: docs/plans/redesign-gdd.md (lines 1555-1592) and DEA-153 brief.
+## SaveLoadScreen — 3-slot cassette tape save/load management screen.
+## Handles slot metadata inspection (timestamp, shift, phase, playtime, ending marker),
+## overwrite & delete confirmations, safe-room gating, and cassette ritual playback.
+## DEA-192 acceptance: 3 slots save, load, overwrite, delete without data loss.
+## DEA-174: the layout fits the 320×240 logical viewport — slots are compact
+## rows inside a scroll area with Back pinned below it, and legacy tapes are
+## listed alongside the numbered slots so every indexed save is reachable.
 class_name SaveLoadScreen
 extends Control
+
+const CassetteSaveRitualScene := preload("res://src/ui/cassette_save_ritual.gd")
 
 signal save_requested(tape_id: String)
 signal load_requested(tape_id: String)
@@ -12,237 +17,586 @@ signal closed
 enum Mode { SAVE, LOAD }
 
 @export var mode: Mode = Mode.SAVE
+## Whether SAVE-mode recording requires a safe room. The in-world save-room
+## ritual keeps it on; checkpoint surfaces (post-shift summary) turn it off
+## because the summary itself is the save point.
+@export var enforce_safe_room: bool = true
 
 # UI Components
 var _title_label: Label
-var _tape_container: GridContainer
+var _subtitle_label: Label
+var _warning_label: Label
+var _slot_container: VBoxContainer
 var _back_button: Button
-var _corruption_screen: CorruptionScreen
-var _scroll_container: ScrollContainer
+var _confirm_overlay: Control
+var _confirm_title: Label
+var _confirm_desc: Label
+var _confirm_ok_btn: Button
+var _confirm_cancel_btn: Button
+var _pending_confirm_action: Callable = Callable()
 
-# Currently displayed tape visuals
-var _tape_visuals: Array[CassetteTapeVisual] = []
+var _save_ritual: CassetteSaveRitual
+
+# Row elements dictionary: tape_id -> { card, title, meta_label, action_btn, delete_btn }
+var _slot_cards: Dictionary = {}
 
 
 func _ready() -> void:
+	set_anchors_preset(Control.PRESET_FULL_RECT)
 	_build_ui()
-	_refresh_tape_display()
+	_refresh_display()
 
 
 func _build_ui() -> void:
-	# Dark background
+	# Dark background with CRT vignette tone
 	var bg := ColorRect.new()
 	bg.color = Color(0.03, 0.03, 0.05, 0.98)
 	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(bg)
 
-	# VBox layout
 	var root_vbox := VBoxContainer.new()
 	root_vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
-	root_vbox.add_theme_constant_override("separation", 20)
-	root_vbox.offset_left = 40
-	root_vbox.offset_top = 40
-	root_vbox.offset_right = -40
-	root_vbox.offset_bottom = -40
+	root_vbox.add_theme_constant_override("separation", 4)
+	root_vbox.offset_left = 8
+	root_vbox.offset_top = 4
+	root_vbox.offset_right = -8
+	root_vbox.offset_bottom = -4
 	add_child(root_vbox)
 
 	# Title
 	_title_label = Label.new()
+	_title_label.name = "TitleLabel"
 	_title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_title_label.add_theme_font_size_override("font_size", 32)
-	_title_label.add_theme_color_override("font_color", Color(0.8, 0.8, 0.85))
+	_title_label.add_theme_font_size_override("font_size", 16)
+	_title_label.add_theme_color_override("font_color", Color(0.85, 0.85, 0.9))
 	root_vbox.add_child(_title_label)
 
-	# Subtitle/instructions
-	var subtitle := Label.new()
-	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	subtitle.add_theme_font_size_override("font_size", 14)
-	subtitle.add_theme_color_override("font_color", Color(0.5, 0.5, 0.55))
-	subtitle.text = "Select a cassette tape to continue..."
-	subtitle.name = "SubtitleLabel"
-	root_vbox.add_child(subtitle)
+	# Subtitle / instructions
+	_subtitle_label = Label.new()
+	_subtitle_label.name = "SubtitleLabel"
+	_subtitle_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_subtitle_label.add_theme_font_size_override("font_size", 10)
+	_subtitle_label.add_theme_color_override("font_color", Color(0.5, 0.5, 0.55))
+	root_vbox.add_child(_subtitle_label)
 
-	# Scroll container for tape grid
-	_scroll_container = ScrollContainer.new()
-	_scroll_container.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	root_vbox.add_child(_scroll_container)
+	# Safe room refusal / load error notice
+	_warning_label = Label.new()
+	_warning_label.name = "WarningLabel"
+	_warning_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_warning_label.add_theme_font_size_override("font_size", 10)
+	_warning_label.add_theme_color_override("font_color", Color(1.0, 0.25, 0.2))
+	# Wrap inside the panel: a long refusal must grow downward instead of
+	# widening the column and pushing the slot rows' DELETE buttons out of
+	# the 320-pixel viewport.
+	_warning_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_warning_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_warning_label.text = "SAVING REFUSED: You can only save in a safe room."
+	_warning_label.visible = false
+	root_vbox.add_child(_warning_label)
 
-	# Grid of cassette tapes
-	_tape_container = GridContainer.new()
-	_tape_container.columns = 4
-	_tape_container.add_theme_constant_override("h_separation", 20)
-	_tape_container.add_theme_constant_override("v_separation", 20)
-	_tape_container.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	_scroll_container.add_child(_tape_container)
+	# Scrollable slot rows: three numbered slots plus any legacy tapes. The
+	# Back button stays outside the scroll area so it never scrolls away.
+	var scroll := ScrollContainer.new()
+	scroll.name = "SlotScroll"
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	# Keep a focused row visible when keyboard/controller focus moves past the fold.
+	scroll.follow_focus = true
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	root_vbox.add_child(scroll)
+
+	_slot_container = VBoxContainer.new()
+	_slot_container.name = "SlotContainer"
+	_slot_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_slot_container.add_theme_constant_override("separation", 4)
+	scroll.add_child(_slot_container)
+
+	_build_slot_cards()
 
 	# Back button
 	_back_button = Button.new()
-	_back_button.text = "Back"
-	_back_button.custom_minimum_size = Vector2(120, 40)
+	_back_button.name = "BackButton"
+	_back_button.text = "BACK"
+	_back_button.custom_minimum_size = Vector2(96, 26)
 	_back_button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	_back_button.pressed.connect(_on_back_pressed)
 	root_vbox.add_child(_back_button)
 
-	_update_title()
+	_build_confirmation_dialog()
+
+	# Save ritual component. Its write-time policy gate must match the policy
+	# this browser's RECORD buttons use: checkpoint browsers may record outside
+	# a safe room, so their ritual must not re-apply the safe-room rule.
+	_save_ritual = CassetteSaveRitualScene.new()
+	_save_ritual.name = "CassetteSaveRitual"
+	_save_ritual.checkpoint_save = not enforce_safe_room
+	_save_ritual.ritual_started.connect(_on_ritual_started)
+	_save_ritual.ritual_completed.connect(_on_ritual_completed)
+	add_child(_save_ritual)
 
 
-func _update_title() -> void:
+## Every tape that can appear as a row: the three numbered slots, then any
+## indexed legacy tapes (night_N) that older flows wrote.
+func _tape_ids() -> Array[String]:
+	var ids: Array[String] = []
+	for slot_id in SaveManager.SLOT_IDS:
+		ids.append(slot_id)
+	for tape_id in SaveManager.get_used_tapes():
+		if not (tape_id in SaveManager.SLOT_IDS) and not ids.has(tape_id):
+			ids.append(tape_id)
+	return ids
+
+
+func _build_slot_cards() -> void:
+	for tape_id in _tape_ids():
+		_build_slot_card(tape_id)
+
+
+func _build_slot_card(tape_id: String) -> void:
+	var slot_card := PanelContainer.new()
+	slot_card.name = "Card_" + tape_id
+	slot_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.08, 0.08, 0.1, 0.95)
+	style.border_color = Color(0.25, 0.25, 0.3)
+	style.border_width_left = 2
+	style.border_width_right = 2
+	style.border_width_top = 2
+	style.border_width_bottom = 2
+	style.corner_radius_top_left = 4
+	style.corner_radius_top_right = 4
+	style.corner_radius_bottom_left = 4
+	style.corner_radius_bottom_right = 4
+	slot_card.add_theme_stylebox_override("panel", style)
+
+	# Two-line row: the button line keeps the slot title and actions, the
+	# full-width metadata line below it carries the save details that a
+	# single cramped line would clip at 320 logical pixels.
+	var card_vbox := VBoxContainer.new()
+	card_vbox.add_theme_constant_override("separation", 2)
+	slot_card.add_child(card_vbox)
+
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
+	card_vbox.add_child(row)
+
+	# Slot header
+	var slot_title := Label.new()
+	slot_title.name = "SlotTitle"
+	slot_title.text = tape_id.replace("_", " ").to_upper()
+	slot_title.add_theme_font_size_override("font_size", 12)
+	slot_title.add_theme_color_override("font_color", Color(0, 1, 0.25))
+	slot_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	slot_title.clip_text = true
+	row.add_child(slot_title)
+
+	# Primary Action Button (Save / Load / Overwrite)
+	var action_btn := Button.new()
+	action_btn.name = "ActionButton"
+	action_btn.custom_minimum_size = Vector2(72, 24)
+	action_btn.add_theme_font_size_override("font_size", 10)
+	row.add_child(action_btn)
+
+	# Secondary Delete Button (Load mode only)
+	var delete_btn := Button.new()
+	delete_btn.name = "DeleteButton"
+	delete_btn.text = "DELETE"
+	delete_btn.custom_minimum_size = Vector2(58, 22)
+	delete_btn.add_theme_font_size_override("font_size", 9)
+	delete_btn.add_theme_color_override("font_color", Color(0.9, 0.3, 0.3))
+	row.add_child(delete_btn)
+
+	# Metadata line, full card width
+	var meta_label := Label.new()
+	meta_label.name = "MetaLabel"
+	meta_label.add_theme_font_size_override("font_size", 10)
+	meta_label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.75))
+	meta_label.clip_text = true
+	card_vbox.add_child(meta_label)
+
+	# Connect button actions
+	var captured_id := tape_id
+	action_btn.pressed.connect(func() -> void: _on_action_button_pressed(captured_id))
+	delete_btn.pressed.connect(func() -> void: _on_delete_button_pressed(captured_id))
+
+	_slot_container.add_child(slot_card)
+	_slot_cards[tape_id] = {
+		"card": slot_card,
+		"title": slot_title,
+		"meta": meta_label,
+		"action_btn": action_btn,
+		"delete_btn": delete_btn,
+	}
+
+
+func _build_confirmation_dialog() -> void:
+	_confirm_overlay = ColorRect.new()
+	_confirm_overlay.name = "ConfirmOverlay"
+	_confirm_overlay.color = Color(0, 0, 0, 0.8)
+	_confirm_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_confirm_overlay.visible = false
+	add_child(_confirm_overlay)
+
+	var center := CenterContainer.new()
+	center.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_confirm_overlay.add_child(center)
+
+	var dialog_panel := PanelContainer.new()
+	dialog_panel.custom_minimum_size = Vector2(280, 120)
+	var d_style := StyleBoxFlat.new()
+	d_style.bg_color = Color(0.1, 0.1, 0.12, 0.98)
+	d_style.border_color = Color(1.0, 0.65, 0.0)
+	d_style.border_width_left = 2
+	d_style.border_width_right = 2
+	d_style.border_width_top = 2
+	d_style.border_width_bottom = 2
+	dialog_panel.add_theme_stylebox_override("panel", d_style)
+	center.add_child(dialog_panel)
+
+	var d_vbox := VBoxContainer.new()
+	d_vbox.add_theme_constant_override("separation", 10)
+	d_vbox.offset_left = 14
+	d_vbox.offset_top = 14
+	d_vbox.offset_right = -14
+	d_vbox.offset_bottom = -14
+	dialog_panel.add_child(d_vbox)
+
+	_confirm_title = Label.new()
+	_confirm_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_confirm_title.add_theme_font_size_override("font_size", 16)
+	_confirm_title.add_theme_color_override("font_color", Color(1.0, 0.65, 0.0))
+	d_vbox.add_child(_confirm_title)
+
+	_confirm_desc = Label.new()
+	_confirm_desc.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_confirm_desc.add_theme_font_size_override("font_size", 11)
+	_confirm_desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	d_vbox.add_child(_confirm_desc)
+
+	var btn_hbox := HBoxContainer.new()
+	btn_hbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	btn_hbox.add_theme_constant_override("separation", 14)
+	d_vbox.add_child(btn_hbox)
+
+	_confirm_ok_btn = Button.new()
+	_confirm_ok_btn.name = "ConfirmOkButton"
+	_confirm_ok_btn.custom_minimum_size = Vector2(90, 28)
+	_confirm_ok_btn.pressed.connect(_on_confirm_ok_pressed)
+	btn_hbox.add_child(_confirm_ok_btn)
+
+	_confirm_cancel_btn = Button.new()
+	_confirm_cancel_btn.name = "ConfirmCancelButton"
+	_confirm_cancel_btn.text = "CANCEL"
+	_confirm_cancel_btn.custom_minimum_size = Vector2(90, 28)
+	_confirm_cancel_btn.pressed.connect(_on_confirm_cancel_pressed)
+	btn_hbox.add_child(_confirm_cancel_btn)
+
+
+## Set mode (SAVE or LOAD) and refresh display.
+func set_mode(new_mode: Mode) -> void:
+	mode = new_mode
+	if is_inside_tree():
+		_rebuild_rows()
+		_refresh_display()
+
+
+func refresh() -> void:
+	if is_inside_tree():
+		_rebuild_rows()
+		_refresh_display()
+
+
+## Rows are rebuilt so tapes created or deleted elsewhere — including legacy
+## night_N tapes written by older flows — appear without recreating the screen.
+func _rebuild_rows() -> void:
+	for key in _slot_cards.keys():
+		if not (key in SaveManager.SLOT_IDS) and not SaveManager.is_tape_used(key):
+			var stale: Dictionary = _slot_cards[key]
+			var card: Control = stale["card"]
+			_slot_cards.erase(key)
+			card.queue_free()
+	for tape_id in _tape_ids():
+		if not _slot_cards.has(tape_id):
+			_build_slot_card(tape_id)
+
+
+## Move keyboard/gamepad focus to the always-present Back button so opening
+## the browser never leaves focus on the covered menu behind it.
+func grab_default_focus() -> void:
+	if _back_button != null and _back_button.is_visible_in_tree():
+		_back_button.grab_focus()
+
+
+## Surface a load failure without closing the browser.
+func show_load_error(message: String = "") -> void:
+	var shown := message if not message.is_empty() else SaveManager.UNREADABLE_TAPE_MESSAGE
+	_warning_label.text = shown
+	_warning_label.visible = true
+
+
+func _current_can_save() -> bool:
+	return SaveManager.can_save() if enforce_safe_room else SaveManager.can_save_checkpoint()
+
+
+func _refresh_display() -> void:
+	var can_save_state := _current_can_save()
+
 	match mode:
 		Mode.SAVE:
-			_title_label.text = "INSERT CASSETTE TO SAVE"
+			_title_label.text = "SAVE CASSETTE TAPE"
+			_subtitle_label.text = "Select a slot to record your progress."
+			_warning_label.visible = not can_save_state
 		Mode.LOAD:
-			_title_label.text = "SELECT TAPE TO LOAD"
+			_title_label.text = "LOAD CASSETTE TAPE"
+			_subtitle_label.text = "Select a saved tape to resume your broadcast."
+			_warning_label.visible = false
+
+	for tape_id in _slot_cards.keys():
+		_refresh_slot_card(tape_id, can_save_state)
 
 
-## Refresh the tape display based on current mode and game state.
-func _refresh_tape_display() -> void:
-	# Clear existing visuals
-	for child in _tape_container.get_children():
-		child.queue_free()
-	_tape_visuals.clear()
+func _refresh_slot_card(tape_id: String, can_save_state: bool) -> void:
+	var elements: Dictionary = _slot_cards.get(tape_id, {})
+	if elements.is_empty():
+		return
 
-	match mode:
-		Mode.SAVE:
-			_show_save_mode()
-		Mode.LOAD:
-			_show_load_mode()
+	var card: Control = elements["card"]
+	var meta_label: Label = elements["meta"]
+	# The metadata row outgrows a single line once the ending marker is present,
+	# so wrap it instead of clipping the fields the player is comparing.
+	meta_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	var action_btn: Button = elements["action_btn"]
+	var delete_btn: Button = elements["delete_btn"]
 
+	# The numbered slots are the recordable surface; legacy tapes are history
+	# and only ever appear in LOAD mode.
+	var is_numbered_slot: bool = tape_id in SaveManager.SLOT_IDS
+	if not is_numbered_slot and mode == Mode.SAVE:
+		card.visible = false
+		return
+	card.visible = true
 
-## In SAVE mode: show collected (available) tapes. Consumed tapes shown as used.
-func _show_save_mode() -> void:
-	var available_tapes := TapeInventory.get_collected_tapes()
-	var used_tapes := TapeInventory.get_consumed_tapes()
+	var meta := SaveManager.get_slot_metadata(tape_id)
+	var has_save: bool = meta.get("exists", false)
+	var is_corrupt: bool = meta.get("corrupted", false)
 
-	# Available tapes (can save)
-	for tape_id in available_tapes:
-		var visual := _create_tape_visual(tape_id, true)
-		_tape_container.add_child(visual)
-		_tape_visuals.append(visual)
+	if is_corrupt:
+		meta_label.text = "DAMAGED TAPE — checksum failure"
+		meta_label.add_theme_color_override("font_color", Color(0.9, 0.2, 0.2))
+		# A damaged numbered slot stays unreadable in LOAD mode, but in SAVE mode
+		# it is still a recordable row: let the player overwrite it (with the
+		# usual confirmation) instead of stranding the slot forever.
+		if mode == Mode.SAVE and is_numbered_slot:
+			action_btn.text = "OVERWRITE"
+			action_btn.disabled = not can_save_state
+			delete_btn.visible = false
+		else:
+			action_btn.text = "UNREADABLE"
+			action_btn.disabled = true
+			delete_btn.visible = (mode == Mode.LOAD)
+			delete_btn.disabled = false
+		return
 
-	# Used tapes (cannot save, already consumed)
-	for tape_id in used_tapes:
-		var visual := _create_tape_visual(tape_id, false)
-		_tape_container.add_child(visual)
-		_tape_visuals.append(visual)
+	if not has_save:
+		meta_label.text = "— no broadcast recorded —"
+		meta_label.add_theme_color_override("font_color", Color(0.4, 0.4, 0.45))
 
-	# Show empty message if no tapes
-	if available_tapes.is_empty() and used_tapes.is_empty():
-		_show_no_tapes_message("No cassette tapes found.\nFind tapes in safe rooms to save your progress.")
+		if mode == Mode.SAVE:
+			action_btn.text = "RECORD"
+			action_btn.disabled = not can_save_state
+			action_btn.visible = true
+			delete_btn.visible = false
+		else:
+			action_btn.text = "NO DATA"
+			action_btn.disabled = true
+			action_btn.visible = true
+			delete_btn.visible = false
+		return
 
+	# Format metadata
+	var shift_val: int = meta.get("shift", 1)
+	var phase_val: int = meta.get("phase", 1)
+	var timestamp_val: String = meta.get("timestamp", "")
+	var playtime_sec: float = meta.get("playtime_seconds", 0.0)
+	var dread_val: float = meta.get("dread", 0.0)
+	var composure_val: float = meta.get("composure", 100.0)
+	var ending_marker: String = meta.get("ending_marker", "")
 
-## In LOAD mode: show all tapes with saves on disk. Corrupted ones marked.
-func _show_load_mode() -> void:
-	var used_tapes := SaveManager.get_used_tapes()
+	# Shortened save timestamp ("2026-11-22T23:59:59" -> "11-22 23:59") so two
+	# tapes from the same shift are still distinguishable at a glance.
+	var saved_at := "UNKNOWN"
+	if timestamp_val.length() >= 16:
+		saved_at = timestamp_val.substr(5, 11).replace("T", " ")
 
-	for tape_id in used_tapes:
-		var is_valid := SaveManager.validate_save(tape_id)
-		var visual := _create_tape_visual(tape_id, false)
-		visual.is_corrupted = not is_valid
-		visual.has_save = true
-		visual._update_status()
-		visual._update_appearance()
-		_tape_container.add_child(visual)
-		_tape_visuals.append(visual)
+	var hours := int(playtime_sec / 3600.0)
+	var minutes := int(fmod(playtime_sec, 3600.0) / 60.0)
+	var seconds := int(fmod(playtime_sec, 60.0))
+	var info := "Ph%d Sh%d • Saved %s • %02d:%02d:%02d • D%d%% C%d%%" % [
+		phase_val, shift_val, saved_at, hours, minutes, seconds, int(dread_val), int(composure_val)
+	]
+	if not ending_marker.is_empty():
+		info += " • " + ending_marker.replace("_", " ")
 
-	# Show empty message if no saves
-	if used_tapes.is_empty():
-		_show_no_tapes_message("No saved tapes found.\nSave your progress by finding cassette tapes in safe rooms.")
+	meta_label.text = info
+	meta_label.add_theme_color_override("font_color", Color(0.75, 0.75, 0.8))
 
-
-## Create a CassetteTapeVisual with appropriate state.
-func _create_tape_visual(tape_id: String, is_available: bool) -> CassetteTapeVisual:
-	var visual := CassetteTapeVisual.new()
-	var display_name := _get_tape_display_name(tape_id)
-	var is_used := TapeInventory.is_tape_consumed(tape_id)
-	var has_save := SaveManager.is_tape_used(tape_id)
-	var subtitle := _get_tape_subtitle(tape_id)
-
-	visual.set_tape_data(tape_id, display_name, is_used, is_available, has_save, false, subtitle)
-	visual.tape_selected.connect(_on_tape_selected)
-	visual.tape_hovered.connect(_on_tape_hovered)
-	return visual
-
-
-## Get display name for a tape. In production, load from TapeLibrary.
-func _get_tape_display_name(tape_id: String) -> String:
-	# Try to load from TapeLibrary resource
-	if ResourceLoader.exists("res://src/data/tapes.tres"):
-		var library := load("res://src/data/tapes.tres") as TapeLibrary
-		if library:
-			var tape := library.get_tape_by_id(tape_id)
-			if tape:
-				return tape.display_name
-	# Fallback: format from ID
-	return "Tape #%s" % tape_id
-
-
-## Get subtitle for a tape (phase/shift from save, or location hint).
-func _get_tape_subtitle(tape_id: String) -> String:
-	if SaveManager.is_tape_used(tape_id):
-		var save_data := SaveManager.load_game(tape_id)
-		if save_data:
-			return "Phase %d - Shift %d" % [save_data.phase, save_data.shift]
-	return "Unused"
-
-
-func _show_no_tapes_message(msg: String) -> void:
-	var label := Label.new()
-	label.text = msg
-	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	label.add_theme_font_size_override("font_size", 16)
-	label.add_theme_color_override("font_color", Color(0.5, 0.5, 0.55))
-	label.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_tape_container.add_child(label)
+	if mode == Mode.SAVE:
+		action_btn.text = "OVERWRITE"
+		action_btn.disabled = not can_save_state
+		action_btn.visible = true
+		delete_btn.visible = false
+	else:
+		action_btn.text = "LOAD"
+		action_btn.disabled = false
+		action_btn.visible = true
+		delete_btn.visible = true
+		delete_btn.disabled = false
 
 
-## Handle tape selection.
-func _on_tape_selected(tape_id: String) -> void:
-	match mode:
-		Mode.SAVE:
-			# Only allow selecting available tapes
-			if TapeInventory.has_tape(tape_id):
-				save_requested.emit(tape_id)
-		Mode.LOAD:
-			# Check for corruption before loading
-			if not SaveManager.validate_save(tape_id):
-				_show_corruption_screen(tape_id)
-			else:
-				load_requested.emit(tape_id)
+func _on_action_button_pressed(slot_id: String) -> void:
+	if mode == Mode.SAVE:
+		if not _current_can_save():
+			_warning_label.visible = true
+			return
+
+		var meta := SaveManager.get_slot_metadata(slot_id)
+		if meta.get("exists", false):
+			# Overwrite confirmation
+			_show_confirm_dialog(
+				"OVERWRITE SLOT?",
+				"Existing broadcast data in %s will be replaced. Continue?" % slot_id.replace("_", " ").to_upper(),
+				"OVERWRITE",
+				func() -> void:
+					# The safe-room window can close while the dialog is up, so the
+					# eligibility check has to run again before the slot is written.
+					if not _current_can_save():
+						_warning_label.visible = true
+						return
+					_execute_slot_save(slot_id)
+			)
+		else:
+			_execute_slot_save(slot_id)
+
+	elif mode == Mode.LOAD:
+		load_requested.emit(slot_id)
 
 
-func _on_tape_hovered(_tape_id: String) -> void:
-	# Could play a sound here
-	pass
+func _on_delete_button_pressed(slot_id: String) -> void:
+	_show_confirm_dialog(
+		"DELETE TAPE?",
+		"Delete %s permanently? This cannot be undone." % slot_id.replace("_", " ").to_upper(),
+		"DELETE",
+		func() -> void:
+			var deleted := SaveManager.delete_slot(slot_id)
+			# Refresh first: rendering the cards clears the warning banner, so the
+			# failure has to be raised after the list has been rebuilt.
+			refresh()
+			if not deleted:
+				var label := slot_id.replace("_", " ").to_upper()
+				_warning_label.text = "DELETE FAILED: %s is still on the tape." % label
+				_warning_label.visible = true
+	)
 
 
-## Show the corruption screen when a damaged tape is selected.
-func _show_corruption_screen(tape_id: String) -> void:
-	_corruption_screen = CorruptionScreen.new()
-	_corruption_screen.set_anchors_preset(Control.PRESET_FULL_RECT)
-	add_child(_corruption_screen)
-	_corruption_screen.acknowledged.connect(_on_corruption_acknowledged)
+func _execute_slot_save(slot_id: String) -> void:
+	save_requested.emit(slot_id)
+	# Trigger cassette save ritual
+	var current_save_data := _capture_current_game_state(slot_id)
+	_save_ritual.play_ritual(slot_id, current_save_data, false)
 
 
-func _on_corruption_acknowledged() -> void:
-	if _corruption_screen:
-		_corruption_screen.queue_free()
-		_corruption_screen = null
+## Builds SaveData snapshot from live game state or defaults.
+func _capture_current_game_state(slot_id: String) -> SaveData:
+	var data := SaveData.new()
+	data.tape_id = slot_id
+	data.shift = ShiftController.get_current_shift() if ShiftController else 1
+	data.phase = PhaseManager.get_phase() if PhaseManager else 1
+	if DreadComposure.instance:
+		data.dread = DreadComposure.instance.dread
+		data.composure = DreadComposure.instance.composure
+	data.playtime_seconds = SaveManager.tracked_playtime_seconds
+
+	# Player position: the same "player" group the level segments read.
+	var players := get_tree().get_nodes_in_group("player")
+	if not players.is_empty() and players[0] is Node3D:
+		var player_pos: Vector3 = (players[0] as Node3D).global_position
+		data.position_x = player_pos.x
+		data.position_y = player_pos.y
+		data.position_z = player_pos.z
+		data.has_position = true
+
+	var marker := EndingSequences.get_completion_marker()
+	if not marker.is_empty():
+		data.ending_flags = {"marker": marker}
+
+	var tuner := _find_radio_tuner()
+	if tuner != null:
+		var band: BandData = tuner.get_current_band()
+		if band != null:
+			data.radio_band = band.name
+		data.radio_frequency = tuner.current_frequency
+		data.radio_signal = tuner.get_signal()
+
+	if TapeSaveBridge:
+		TapeSaveBridge.apply_inventory_to_save_data(data)
+	return data
+
+
+func _find_radio_tuner() -> RadioTuner:
+	var night_root := get_tree().root.get_node_or_null("NightShift")
+	if night_root == null:
+		return null
+	var tuner := night_root.get_node_or_null("RadioConsole/RadioTuner")
+	return tuner if tuner is RadioTuner else null
+
+
+func _on_ritual_started(_slot_id: String) -> void:
+	# The ritual overlay only stops the mouse; keyboard activation on the
+	# still-focused row buttons must not start a second ritual.
+	for elements in _slot_cards.values():
+		(elements["action_btn"] as Button).disabled = true
+		(elements["delete_btn"] as Button).disabled = true
+	if _confirm_overlay.visible:
+		_confirm_overlay.visible = false
+		_pending_confirm_action = Callable()
+
+
+func _on_ritual_completed(slot_id: String, _success: bool) -> void:
+	_refresh_display()
+	grab_default_focus()
+	# A successful ejection is the end of this browser's errand: close it so the
+	# owner can take back over. A failed ritual stays open for a retry.
+	if _success:
+		closed.emit()
+
+
+func _show_confirm_dialog(title: String, desc: String, ok_text: String, on_confirm: Callable) -> void:
+	_confirm_title.text = title
+	_confirm_desc.text = desc
+	_confirm_ok_btn.text = ok_text
+	_pending_confirm_action = on_confirm
+	_confirm_overlay.visible = true
+
+
+func _on_confirm_ok_pressed() -> void:
+	_confirm_overlay.visible = false
+	if _pending_confirm_action.is_valid():
+		_pending_confirm_action.call()
+		_pending_confirm_action = Callable()
+
+
+func _on_confirm_cancel_pressed() -> void:
+	_confirm_overlay.visible = false
+	_pending_confirm_action = Callable()
+
+
+## Drop any pending confirmation so a browser that is hidden by its owner
+## (pause key, resume, scene change) cannot reuse the old selection.
+func cancel_pending_confirmation() -> void:
+	if _confirm_overlay != null:
+		_confirm_overlay.visible = false
+	_pending_confirm_action = Callable()
 
 
 func _on_back_pressed() -> void:
 	closed.emit()
-
-
-## Set the mode (save or load) and refresh.
-func set_mode(new_mode: Mode) -> void:
-	mode = new_mode
-	if is_inside_tree():
-		_update_title()
-		_refresh_tape_display()
-
-
-## Refresh the display (call when tape inventory changes).
-func refresh() -> void:
-	if is_inside_tree():
-		_refresh_tape_display()
