@@ -197,6 +197,11 @@ var visual_cues_enabled: bool = false
 var colorblind_patterns: bool = false
 var hearing_impaired_mode: bool = false
 var reduce_audio_horror: bool = false
+var reduce_horror: bool:
+	get:
+		return reduce_audio_horror
+	set(value):
+		set_reduce_horror(value)
 var hold_breath_toggle_mode: bool = false
 var pause_anywhere: bool = false
 ## DEA-88: radio text mode — persistent transcript for deaf/HoH players.
@@ -433,6 +438,11 @@ func set_reduce_audio_horror(enabled: bool) -> void:
 	_apply_all_volumes()
 	_apply_sub_bass_filter()
 	reduce_horror_toggled.emit(enabled)
+
+
+## Master toggle for reduce-horror mode (audio and visual/atmosphere).
+func set_reduce_horror(enabled: bool) -> void:
+	set_reduce_audio_horror(enabled)
 
 
 ## Apply or remove the high-pass filter on DREAD_LAYER for sub-bass removal.

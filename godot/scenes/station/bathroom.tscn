@@ -11,6 +11,21 @@
 [ext_resource type="Texture2D" path="res://assets/textures/environment/ceiling_acoustic_roughness.jpg" id="rgh_tex_ceiling"]
 [ext_resource type="PackedScene" path="res://scenes/entities/hide_spot.tscn" id="90_hide"]
 
+[sub_resource type="Environment" id="env_bathroom"]
+background_mode = 1
+ambient_light_source = 2
+ambient_light_color = Color(0.08, 0.10, 0.08, 1)
+ambient_light_energy = 0.75
+tonemap_mode = 2
+tonemap_exposure = 1.05
+glow_enabled = true
+glow_intensity = 0.55
+glow_bloom = 0.15
+glow_blend_mode = 2
+fog_enabled = true
+fog_light_color = Color(0.025, 0.035, 0.025, 1)
+fog_density = 0.02
+
 [sub_resource type="StandardMaterial3D" id="floor_mat"]
 albedo_texture = ExtResource("tex_concrete")
 normal_texture = ExtResource("nrm_tex_concrete")
@@ -135,11 +150,15 @@ size = Vector3(0.4, 0.4, 0.3)
 material = SubResource("toilet_mat")
 use_collision = true
 
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("env_bathroom")
+
 [node name="FluorescentLight" type="OmniLight3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.4, 0)
-light_color = Color(0.8, 0.9, 1, 1)
-light_energy = 1.0
-light_range = 4.0
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.3, 0)
+light_color = Color(0.82, 0.94, 0.85, 1)
+light_energy = 1.05
+omni_range = 6.0
+shadow_enabled = true
 
 [node name="ZoneBR1" type="Area3D" parent="." groups=["camera_zone"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)

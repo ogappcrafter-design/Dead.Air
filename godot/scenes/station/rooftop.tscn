@@ -7,6 +7,21 @@
 [ext_resource type="Texture2D" path="res://assets/textures/environment/concrete_bunker_normal.jpg" id="nrm_tex_concrete"]
 [ext_resource type="Texture2D" path="res://assets/textures/environment/concrete_bunker_roughness.jpg" id="rgh_tex_concrete"]
 
+[sub_resource type="Environment" id="env_rooftop"]
+background_mode = 1
+ambient_light_source = 2
+ambient_light_color = Color(0.05, 0.06, 0.09, 1)
+ambient_light_energy = 0.65
+tonemap_mode = 2
+tonemap_exposure = 1.05
+glow_enabled = true
+glow_intensity = 0.7
+glow_bloom = 0.15
+glow_blend_mode = 2
+fog_enabled = true
+fog_light_color = Color(0.03, 0.04, 0.06, 1)
+fog_density = 0.018
+
 [sub_resource type="StandardMaterial3D" id="floor_mat"]
 albedo_texture = ExtResource("tex_concrete")
 normal_texture = ExtResource("nrm_tex_concrete")
@@ -108,16 +123,26 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.5, 1, 1.5)
 size = Vector3(0.8, 2, 0.1)
 material = SubResource("building_mat")
 
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("env_rooftop")
+
 [node name="Moonlight" type="DirectionalLight3D" parent="."]
 transform = Transform3D(0.866, 0.25, 0.433, 0, 0.866, -0.5, -0.5, 0.433, 0.75, 0, 10, 5)
-light_color = Color(0.4, 0.5, 0.7, 1)
-light_energy = 0.5
+light_color = Color(0.65, 0.75, 0.95, 1)
+light_energy = 0.8
+shadow_enabled = true
 
 [node name="AmbientLight" type="OmniLight3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 0)
-light_color = Color(0.3, 0.4, 0.6, 1)
-light_energy = 0.3
-light_range = 10.0
+light_color = Color(0.4, 0.5, 0.7, 1)
+light_energy = 0.4
+omni_range = 15.0
+
+[node name="BeaconGlow" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5, 3.5, -1.5)
+light_color = Color(1, 0.2, 0.1, 1)
+light_energy = 0.9
+omni_range = 6.0
 
 [node name="ZoneR1" type="Area3D" parent="." groups=["camera_zone"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)

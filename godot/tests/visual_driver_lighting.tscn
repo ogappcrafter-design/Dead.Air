@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://visdriverdea178"]
+
+[ext_resource type="Script" path="res://tests/visual_driver_lighting.gd" id="1_vis"]
+
+[node name="VisualDriverLighting" type="Node"]
+script = ExtResource("1_vis")

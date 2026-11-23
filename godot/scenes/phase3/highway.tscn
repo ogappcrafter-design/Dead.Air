@@ -39,11 +39,18 @@ roughness = 0.7
 albedo_color = Color(0.04, 0.04, 0.05, 1)
 [sub_resource type="Environment" id="env_fog"]
 background_mode = 1
+ambient_light_source = 2
 ambient_light_color = Color(0.05, 0.05, 0.07, 1)
-ambient_light_energy = 0.25
+ambient_light_energy = 0.7
+tonemap_mode = 2
+tonemap_exposure = 1.05
+glow_enabled = true
+glow_intensity = 0.6
+glow_bloom = 0.15
+glow_blend_mode = 2
 fog_enabled = true
 fog_light_color = Color(0.04, 0.04, 0.06, 1)
-fog_density = 0.06
+fog_density = 0.035
 [sub_resource type="BoxShape3D" id="player_shape"]
 size = Vector3(0.5, 1.0, 0.5)
 
@@ -228,15 +235,14 @@ material = SubResource("pole_mat")
 [node name="TowerLight" type="OmniLight3D" parent="RadioTower"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 30, 0)
 light_color = Color(1, 0.2, 0.2, 1)
-light_energy = 0.0
+light_energy = 1.0
 omni_range = 40.0
 
 [node name="MoonLight" type="DirectionalLight3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 100, 20, 0)
-light_color = Color(0.6, 0.65, 0.8, 1)
-light_energy = 0.15
-shadow_enabled = true
 transform = Transform3D(-0.65, 0.35, 0.67, 0, -0.88, 0.47, -0.76, -0.31, -0.57, 100, 20, 0)
+light_color = Color(0.65, 0.7, 0.85, 1)
+light_energy = 0.65
+shadow_enabled = true
 
 [node name="Player" type="CharacterBody3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)

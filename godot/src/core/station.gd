@@ -57,6 +57,95 @@ func _setup_station() -> void:
 	# 6. Ambient motion: dust, flicker, drifting motes per room
 	_setup_ambient()
 
+	# 7. DEA-178: Room atmosphere coordinator — tunes WorldEnvironment on room changes
+	_setup_atmosphere_transitions()
+
+
+## Room-specific atmosphere profiles (DEA-178).
+const ROOM_ATMOSPHERES: Dictionary = {
+	"BT": {
+		"ambient": Color(0.12, 0.10, 0.08, 1),
+		"energy": 0.85,
+		"glow": 0.6,
+		"fog_color": Color(0.03, 0.025, 0.02, 1),
+		"fog_density": 0.015,
+	},
+	"H": {
+		"ambient": Color(0.07, 0.08, 0.10, 1),
+		"energy": 0.75,
+		"glow": 0.55,
+		"fog_color": Color(0.02, 0.025, 0.035, 1),
+		"fog_density": 0.02,
+	},
+	"BR": {
+		"ambient": Color(0.08, 0.10, 0.08, 1),
+		"energy": 0.75,
+		"glow": 0.55,
+		"fog_color": Color(0.025, 0.035, 0.025, 1),
+		"fog_density": 0.02,
+	},
+	"B": {
+		"ambient": Color(0.09, 0.08, 0.07, 1),
+		"energy": 0.8,
+		"glow": 0.6,
+		"fog_color": Color(0.03, 0.025, 0.02, 1),
+		"fog_density": 0.015,
+	},
+	"R": {
+		"ambient": Color(0.05, 0.06, 0.09, 1),
+		"energy": 0.65,
+		"glow": 0.7,
+		"fog_color": Color(0.03, 0.04, 0.06, 1),
+		"fog_density": 0.018,
+	},
+}
+
+
+## The station owns one WorldEnvironment for the whole world, so a room's authored
+## ambient energy and glow only reach the screen if the coordinator copies them.
+func _reapply_environment_accessibility(env: Environment, profile: Dictionary) -> void:
+	var am := get_node_or_null("/root/AccessibilityManager")
+	if am == null:
+		return
+	var vac := am.get_node_or_null("VisualAccessibilityController")
+	if vac == null or not vac.has_method("apply_atmosphere_to_environment"):
+		return
+	vac.apply_atmosphere_to_environment(env, am.reduce_audio_horror,
+			float(profile["energy"]), float(profile["fog_density"]))
+
+
+func _setup_atmosphere_transitions() -> void:
+	if CameraManager != null and CameraManager.has_signal("camera_transition_started"):
+		CameraManager.camera_transition_started.connect(_on_camera_transition_started)
+
+
+func _on_camera_transition_started(new_angle_id: String, _old_angle_id: String) -> void:
+	var we: WorldEnvironment = get_node_or_null("WorldEnvironment")
+	if we == null or we.environment == null:
+		return
+	var room_key := ""
+	if new_angle_id.begins_with("BT"):
+		room_key = "BT"
+	elif new_angle_id.begins_with("BR"):
+		room_key = "BR"
+	elif new_angle_id.begins_with("H"):
+		room_key = "H"
+	elif new_angle_id.begins_with("B"):
+		room_key = "B"
+	elif new_angle_id.begins_with("R"):
+		room_key = "R"
+	if ROOM_ATMOSPHERES.has(room_key):
+		var profile: Dictionary = ROOM_ATMOSPHERES[room_key]
+		we.environment.ambient_light_color = profile["ambient"]
+		we.environment.ambient_light_energy = profile["energy"]
+		we.environment.glow_intensity = profile["glow"]
+		we.environment.fog_light_color = profile["fog_color"]
+		we.environment.fog_density = profile["fog_density"]
+		# Accessibility mods are derived from the room baseline, so re-derive them
+		# after the profile write instead of restoring the previous room's baseline.
+		_reapply_environment_accessibility(we.environment, profile)
+
+
 
 ## Adds an AmbientLife node to a room: warm dust motes + fluorescent flicker.
 ## Lights are fetched by path so each room's tubes buzz independently.

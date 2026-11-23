@@ -63,11 +63,18 @@ size = Vector3(0.5, 1.0, 0.5)
 
 [sub_resource type="Environment" id="env_night"]
 background_mode = 1
+ambient_light_source = 2
 ambient_light_color = Color(0.06, 0.07, 0.1, 1)
-ambient_light_energy = 0.3
+ambient_light_energy = 0.75
+tonemap_mode = 2
+tonemap_exposure = 1.05
+glow_enabled = true
+glow_intensity = 0.55
+glow_bloom = 0.15
+glow_blend_mode = 2
 fog_enabled = true
 fog_light_color = Color(0.04, 0.04, 0.07, 1)
-fog_density = 0.014
+fog_density = 0.015
 
 [node name="FollowerSegment" type="Node3D"]
 script = ExtResource("1_segment")
@@ -96,11 +103,18 @@ use_collision = true
 [node name="MoonLight" type="DirectionalLight3D" parent="."]
 transform = Transform3D(-0.65, 0.35, 0.67, 0, -0.88, 0.47, -0.76, -0.31, -0.57, 25, 20, 0)
 light_color = Color(0.7, 0.75, 0.85, 1)
-light_energy = 0.22
+light_energy = 0.65
 shadow_enabled = true
 
 [node name="House" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40, 0, 0)
+
+[node name="PorchLight" type="OmniLight3D" parent="House"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.2, 2.5, 0)
+light_color = Color(1, 0.85, 0.6, 1)
+light_energy = 1.2
+omni_range = 9.0
+shadow_enabled = true
 
 [node name="Body" type="CSGBox3D" parent="House"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.2, 0)

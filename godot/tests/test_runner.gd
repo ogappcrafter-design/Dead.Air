@@ -84,6 +84,7 @@ func _run_tests() -> void:
 	["HideSpot", "res://tests/test_hide_spot.gd"],
 	["HideSpotPlacement", "res://tests/test_hide_spot_placement.gd"],
 	["ControlsRemap", "res://tests/test_controls_remap.gd"],
+	["LightingAtmosphere", "res://tests/test_lighting_atmosphere.gd"],
 	]
 
 	for suite in test_suites:
