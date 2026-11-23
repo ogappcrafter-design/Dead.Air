@@ -146,9 +146,14 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm run build
+      # The build result is the gate; the artifact is a convenience. The account's
+      # artifact storage is shared and its quota can be exhausted at any time, which
+      # failed this job with the build itself green (run 45195643828 on 8fa9de0).
       - uses: actions/upload-artifact@v5
         if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        continue-on-error: true
         with:
           name: web-dist
           path: dist
-          retention-days: 14
+          retention-days: 3
+          if-no-files-found: ignore
