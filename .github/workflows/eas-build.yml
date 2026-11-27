@@ -25,11 +25,11 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version: 24.18.0
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
         with:
           version: 11
       - run: pnpm install --frozen-lockfile
-      - uses: expo/expo-github-action@v8
+      - uses: expo/expo-github-action@v9
         with:
           expo-version: latest
           eas-version: latest

@@ -24,7 +24,7 @@ jobs:
     runs-on: [self-hosted, deadair-ci]
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Install Godot 4.7
         run: |
           curl -sL -o godot.zip https://github.com/godotengine/godot-builds/releases/download/4.7-stable/Godot_v4.7-stable_linux.x86_64.zip
@@ -71,7 +71,7 @@ jobs:
     runs-on: [self-hosted, deadair-ci]
     timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Compute release tag
         id: tag
@@ -142,7 +142,7 @@ jobs:
           cat deadair.x86_64.sha256 deadair.exe.sha256
 
       - name: Upload Linux artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: deadair-${{ steps.tag.outputs.tag }}-linux-x86_64
           path: |
@@ -150,7 +150,7 @@ jobs:
             build/deadair.x86_64.sha256
 
       - name: Upload Windows artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: deadair-${{ steps.tag.outputs.tag }}-windows-x86_64
           path: |
